@@ -3,211 +3,257 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LifeSync — Your life, in sync</title>
-  <meta name="description" content="LifeSync brings finances, habits, workouts, and nutrition into one futuristic dashboard." />
+  <title>LifeSync — One App. Total Life Control.</title>
+  <meta name="description" content="Finance, habits, workouts, and nutrition — all in one smart daily app." />
+  <meta name="theme-color" content="#f6f7ff" />
+  <link rel="preload" as="image" href="./assets/hero.png" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div class="haze"></div>
-  <div class="bg-grid"></div>
-
   <header class="nav">
     <div class="container nav-inner">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>LifeSync</h1>
-          <p>Futuristic wellness + finance OS</p>
-        </div>
-      </div>
-      <nav class="links">
-        <a href="#features">Modules</a>
-        <a href="#demo">Web demo</a>
-        <a href="#get">Get</a>
+      <a class="brand" href="#top" aria-label="LifeSync home">
+        <img class="brand-mark" src="./assets/lifesync-logo.svg" alt="" />
+        <span class="brand-name">LifeSync</span>
+      </a>
+
+      <nav class="links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#why">Why LifeSync?</a>
+        <a href="#pricing">Pricing</a>
       </nav>
-      <a class="btn primary" href="./app/">Open Web App</a>
+
+      <a class="btn btn-primary" href="#get">Get Started</a>
     </div>
   </header>
 
-  <main class="container">
+  <main id="top">
+    <!-- HERO -->
     <section class="hero">
-      <div class="grid">
-        <div class="reveal">
-          <span class="badge"><span class="pulse"></span> GitHub Pages-ready • Zero build • Instant demo</span>
-          <h2>All signals. One system.</h2>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <h1>One App. Total<br/>Life Control.</h1>
           <p class="sub">
-            LifeSync merges your money, habits, workouts, and nutrition into a single,
-            high-clarity dashboard — designed like a futuristic control panel.
+            Finance, Habits, Workouts, and Nutrition — all in one smart daily app.
           </p>
-          <div class="actions">
-            <a class="btn primary" href="./app/">Launch Web App Demo</a>
-            <a class="btn" href="#features">Explore modules</a>
-            <a class="btn ghost" href="#get">Join waitlist</a>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#get">Get Started</a>
+            <a class="btn btn-ghost" href="#demo" aria-label="Watch demo">▶ Watch Demo</a>
           </div>
 
-          <div class="kpis">
-            <div class="glass2 kpi">
-              <div class="label">Weekly streak</div>
-              <div class="value" id="kStreak">—</div>
-              <div class="chip"><span class="dot"></span> habits</div>
-            </div>
-            <div class="glass2 kpi">
-              <div class="label">Projected savings</div>
-              <div class="value" id="kSave">—</div>
-              <div class="chip"><span class="dot"></span> finances</div>
-            </div>
-            <div class="glass2 kpi">
-              <div class="label">Training load</div>
-              <div class="value" id="kLoad">—</div>
-              <div class="chip"><span class="dot"></span> workouts</div>
-            </div>
-          </div>
+          <p class="micro">Start free — sync your life.</p>
         </div>
 
-        <div class="glass reveal">
-          <div class="mock">
-            <div class="mock-inner">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <img src="./assets/lifesync-logo.svg" alt="LifeSync logo" style="width:42px;height:42px;border-radius:16px" />
-                  <div>
-                    <div style="font-weight:1000">Mission Control</div>
-                    <div class="small">Real-time overview</div>
-                  </div>
-                </div>
-                <span class="badge" style="font-size:12px"><span class="pulse"></span> LIVE</span>
-              </div>
-              <hr class="sep" />
-              <div class="grid3" style="grid-template-columns:repeat(2,1fr)">
-                <div class="glass2" style="padding:14px">
-                  <div class="small">Balance</div>
-                  <div style="font-size:24px;font-weight:1000;letter-spacing:-.5px">$2,450</div>
-                  <div class="small" style="margin-top:10px">Net this month</div>
-                  <div style="font-weight:950;color:rgba(255,255,255,.85)">+$380</div>
-                </div>
-                <div class="glass2" style="padding:14px">
-                  <div class="small">Habits</div>
-                  <div style="font-size:24px;font-weight:1000;letter-spacing:-.5px">6/8</div>
-                  <div class="small" style="margin-top:10px">Workouts</div>
-                  <div style="font-weight:950;color:rgba(255,255,255,.85)">3 this week</div>
-                </div>
-              </div>
-              <div class="glass2" style="padding:14px;margin-top:12px">
-                <div class="small">Nutrition</div>
-                <div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px">
-                  <div style="font-weight:1000">1480 / 2100 kcal</div>
-                  <div class="badge" style="font-size:12px">Protein 110g</div>
-                </div>
-                <div style="height:10px"></div>
-                <div style="height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.10)">
-                  <div style="height:100%;width:70%;background:linear-gradient(90deg, rgba(110,231,255,.85), rgba(167,139,250,.70), rgba(52,211,153,.70));"></div>
-                </div>
-              </div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-                <span class="badge" style="font-size:12px">Finances</span>
-                <span class="badge" style="font-size:12px">Habits</span>
-                <span class="badge" style="font-size:12px">Workouts</span>
-                <span class="badge" style="font-size:12px">Nutrition</span>
-              </div>
-            </div>
-          </div>
+        <div class="hero-visual" aria-hidden="true">
+          <img class="hero-img" src="./assets/hero.png" alt="" />
+          <div class="hero-glow"></div>
         </div>
       </div>
     </section>
 
+    <!-- VALUE / FEATURES -->
     <section id="features" class="section">
-      <h2 class="reveal">Modules</h2>
-      <div class="grid3">
-        <div class="glass feature reveal">
-          <div class="ico">📊</div>
-          <h3>Dashboard</h3>
-          <p>Unified telemetry: balance, streaks, training load, and macros — in one view.</p>
+      <div class="container">
+        <div class="section-head">
+          <h2>One Dashboard. Endless Insights.</h2>
+          <p class="sub">
+            Simplify your life with a single, smart daily dashboard.
+          </p>
         </div>
-        <div class="glass feature reveal">
-          <div class="ico">💳</div>
-          <h3>Finances</h3>
-          <p>Fast transactions, simple categories, and progress tracking with clean clarity.</p>
-        </div>
-        <div class="glass feature reveal">
-          <div class="ico">🔥</div>
-          <h3>Habits</h3>
-          <p>Streak-first habit tracking designed for consistency and momentum.</p>
-        </div>
-      </div>
-      <div style="height:12px"></div>
-      <div class="grid3">
-        <div class="glass feature reveal">
-          <div class="ico">🏋️</div>
-          <h3>Workouts</h3>
-          <p>Log sessions instantly and monitor weekly load.</p>
-        </div>
-        <div class="glass feature reveal">
-          <div class="ico">🥗</div>
-          <h3>Nutrition</h3>
-          <p>Track calories + protein with simple meals and macro targets.</p>
-        </div>
-        <div class="glass feature reveal">
-          <div class="ico">🧠</div>
-          <h3>LifeOS</h3>
-          <p>Design language: glass, neon accents, responsive layout, and zero friction.</p>
+
+        <div class="feature-panel">
+          <div class="feature-col">
+            <div class="feature">
+              <div class="feature-ico">
+                <span class="ico-sq i1"></span>
+              </div>
+              <div>
+                <h3>Financial Tracking</h3>
+                <p>Manage budgets, track spending & expenses.</p>
+              </div>
+            </div>
+
+            <div class="feature">
+              <div class="feature-ico">
+                <span class="ico-sq i2"></span>
+              </div>
+              <div>
+                <h3>Habit Building</h3>
+                <p>Stay on track with daily habits & routines.</p>
+              </div>
+            </div>
+
+            <div class="feature">
+              <div class="feature-ico">
+                <span class="ico-sq i3"></span>
+              </div>
+              <div>
+                <h3>Smart Workouts</h3>
+                <p>Follow tailored workouts & track progress.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-phone">
+            <div class="phone-frame">
+              <img src="./assets/hero.png" alt="" />
+            </div>
+          </div>
+
+          <div class="feature-col">
+            <div class="feature">
+              <div class="feature-ico">
+                <span class="ico-spark"></span>
+              </div>
+              <div>
+                <h3>Modular</h3>
+                <p>Finance, Habits, Workouts, Nutrition — all in one.</p>
+              </div>
+            </div>
+
+            <div class="feature">
+              <div class="feature-ico">
+                <span class="ico-bulb"></span>
+              </div>
+              <div>
+                <h3>Styled</h3>
+                <p>Modern, seamless design that’s easy to use.</p>
+              </div>
+            </div>
+
+            <div class="feature">
+              <div class="feature-ico">
+                <span class="ico-eye"></span>
+              </div>
+              <div>
+                <h3>Insightful</h3>
+                <p>Real-time, personalized insights on your progress.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section id="demo" class="section">
-      <h2 class="reveal">Working web app demo</h2>
-      <div class="glass reveal" style="padding:18px">
-        <p class="sub" style="margin:0 0 14px">
-          Runs fully on GitHub Pages. Saves data locally in your browser. No backend required.
-        </p>
-        <a class="btn primary" href="./app/">Launch LifeSync Web App</a>
-      </div>
-    </section>
-
-    <section id="get" class="section">
-      <div class="glass reveal" style="padding:18px">
-        <h2 style="margin:0 0 10px">Get notified</h2>
-        <p class="sub" style="margin:0 0 14px">Email waitlist — works anywhere.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a class="btn primary" href="mailto:hello@lifesync.app?subject=LifeSync%20Waitlist&body=Please%20add%20me%20to%20the%20LifeSync%20waitlist.%0A%0AName:%0AEmail:%0A">
-            Join via email
-          </a>
-          <a class="btn" href="./app/">Try the demo</a>
+    <!-- WHY -->
+    <section id="why" class="section section-soft">
+      <div class="container why-grid">
+        <div class="why-card">
+          <h2>Why LifeSync?</h2>
+          <p class="sub">
+            Most apps track one thing. LifeSync connects the dots so you can make better decisions daily.
+          </p>
+          <ul class="bullets">
+            <li><b>One score</b> that reflects your day across money, health, and consistency.</li>
+            <li><b>Less friction</b> with quick actions and simple inputs.</li>
+            <li><b>Clear momentum</b> with streaks, trends, and small wins.</li>
+          </ul>
+        </div>
+        <div class="why-card why-mini">
+          <div class="mini">
+            <div class="mini-kpi">
+              <span class="kpi-label">Daily Balance</span>
+              <span class="kpi-value">82</span>
+            </div>
+            <div class="mini-row">
+              <span class="pill">Finance</span>
+              <span class="pill">Habits</span>
+              <span class="pill">Workouts</span>
+              <span class="pill">Nutrition</span>
+            </div>
+            <div class="mini-bar" aria-hidden="true"><span></span></div>
+            <p class="micro">Designed to feel calm, clear, and in control.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <footer class="footer">
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
-        <div>© <span id="y"></span> LifeSync</div>
-        <div class="small">GitHub Pages • <a href="./app/" style="text-decoration:underline;text-decoration-color:rgba(255,255,255,.25)">Web app</a></div>
+    <!-- PRICING -->
+    <section id="pricing" class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>Simple pricing</h2>
+          <p class="sub">Start free. Upgrade when you want deeper insights.</p>
+        </div>
+
+        <div class="pricing">
+          <div class="price-card">
+            <h3>Free</h3>
+            <div class="price">$0<span>/mo</span></div>
+            <ul>
+              <li>Core dashboard</li>
+              <li>Habits + workouts</li>
+              <li>Basic finance tracking</li>
+            </ul>
+            <a class="btn btn-ghost btn-full" href="#get">Get Started</a>
+          </div>
+
+          <div class="price-card price-featured">
+            <div class="badge">Most popular</div>
+            <h3>Pro</h3>
+            <div class="price">$6<span>/mo</span></div>
+            <ul>
+              <li>Advanced insights</li>
+              <li>Trends + weekly summaries</li>
+              <li>Goals & reminders</li>
+            </ul>
+            <a class="btn btn-primary btn-full" href="#get">Start Free Trial</a>
+          </div>
+
+          <div class="price-card">
+            <h3>Team</h3>
+            <div class="price">$12<span>/mo</span></div>
+            <ul>
+              <li>Shared dashboards</li>
+              <li>Challenges & streaks</li>
+              <li>Priority support</li>
+            </ul>
+            <a class="btn btn-ghost btn-full" href="#get">Contact</a>
+          </div>
+        </div>
       </div>
-    </footer>
+    </section>
+
+    <!-- DEMO -->
+    <section id="demo" class="section section-soft">
+      <div class="container demo">
+        <div class="demo-card">
+          <h2>See it in action</h2>
+          <p class="sub">A lightweight demo section you can swap for a video/embed later.</p>
+          <div class="demo-box" role="img" aria-label="Demo placeholder">
+            <div class="demo-ring"></div>
+            <div class="demo-text">Demo placeholder</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="get" class="cta">
+      <div class="container">
+        <h2>Ready to Sync Your Life?</h2>
+        <p class="sub">Start free and see real results in days.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary btn-lg" href="mailto:hello@lifesync.app?subject=LifeSync%20Waitlist&body=Please%20add%20me%20to%20the%20LifeSync%20waitlist.%0A%0AName:%0AEmail:%0A">Get Started</a>
+        </div>
+        <div class="stores" aria-label="Stores (placeholders)">
+          <span class="store"> App Store</span>
+          <span class="store">▶ Google Play</span>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer class="footer">
+    <div class="container foot">
+      <span>© <span id="y"></span> LifeSync</span>
+      <a href="#top">Back to top</a>
+    </div>
+  </footer>
 
   <script>
     document.getElementById('y').textContent = new Date().getFullYear();
-    // simple animated KPIs (visual flair)
-    function lerp(a,b,t){return a+(b-a)*t}
-    const t0=performance.now();
-    function tick(){
-      const t=(performance.now()-t0)/1200;
-      const s=Math.round(lerp(2, 8, (Math.sin(t)+1)/2));
-      const save=Math.round(lerp(120, 640, (Math.sin(t*0.9+1.2)+1)/2));
-      const load=Math.round(lerp(24, 68, (Math.sin(t*1.1+2.0)+1)/2));
-      document.getElementById('kStreak').textContent=s + " days";
-      document.getElementById('kSave').textContent="$" + save;
-      document.getElementById('kLoad').textContent=load;
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-
-    // reveal on scroll
-    const els=[...document.querySelectorAll('.reveal')];
-    const io=new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');}})
-    },{threshold:.12});
-    els.forEach(el=>io.observe(el));
   </script>
 </body>
 </html>
