@@ -1,2 +1,2 @@
-import DashboardScreen from "../src/screens";
+import DashboardScreen from "../../src/screens";
 export default DashboardScreen;

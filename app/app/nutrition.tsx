@@ -1,2 +1,2 @@
-import NutritionScreen from "../src/screens";
+import NutritionScreen from "../../src/screens";
 export default NutritionScreen;

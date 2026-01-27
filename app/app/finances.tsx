@@ -1,2 +1,2 @@
-import FinancesScreen from "../src/screens";
+import FinancesScreen from "../../src/screens";
 export default FinancesScreen;

@@ -1,2 +1,2 @@
-import HabitsScreen from "../src/screens";
+import HabitsScreen from "../../src/screens";
 export default HabitsScreen;
