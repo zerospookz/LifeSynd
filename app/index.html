@@ -3,27 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LifeSync Web App</title>
+  <title>LifeSync — Web App</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <div class="haze"></div>
+  <div class="bg-grid"></div>
+
   <div class="wrap">
-    <div class="card top">
-      <div class="brand">
+    <div class="glass topbar">
+      <div class="title">
         <div class="logo" aria-hidden="true"></div>
         <div>
-          <div style="font-size:16px">LifeSync Web App</div>
-          <div class="small">GitHub Pages static demo • local save</div>
+          <h1>LifeSync Web App</h1>
+          <p>Futuristic demo • runs on GitHub Pages • local save</p>
         </div>
       </div>
-      <a class="small" href="../">← Back</a>
+      <a class="btn" href="../">← Back</a>
     </div>
 
     <div class="tabs" id="tabs"></div>
     <div id="view"></div>
 
-    <div class="footer">Data is stored in <b>localStorage</b> (this browser only).</div>
+    <div class="footer">Data is stored in <b>localStorage</b> (this browser only). Click an item to delete.</div>
   </div>
+
   <script src="./app.js"></script>
 </body>
 </html>
