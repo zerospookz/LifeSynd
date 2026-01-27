@@ -1,213 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LifeSync — Your life, in sync</title>
-  <meta name="description" content="LifeSync brings finances, habits, workouts, and nutrition into one futuristic dashboard." />
-  <link rel="stylesheet" href="./styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeSync — Personal Mission Control</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div class="haze"></div>
-  <div class="bg-grid"></div>
+  <div class="bg"></div>
 
   <header class="nav">
-    <div class="container nav-inner">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>LifeSync</h1>
-          <p>Futuristic wellness + finance OS</p>
-        </div>
-      </div>
-      <nav class="links">
-        <a href="#features">Modules</a>
-        <a href="#demo">Web demo</a>
-        <a href="#get">Get</a>
-      </nav>
-      <a class="btn primary" href="./app/">Open Web App</a>
-    </div>
+    <div class="logo">LifeSync</div>
+    <nav>
+      <a href="#">Product</a>
+      <a href="#">Features</a>
+      <a href="#">Roadmap</a>
+      <a href="#">Login</a>
+    </nav>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <div class="grid">
-        <div class="reveal">
-          <span class="badge"><span class="pulse"></span> GitHub Pages-ready • Zero build • Instant demo</span>
-          <h2>All signals. One system.</h2>
-          <p class="sub">
-            LifeSync merges your money, habits, workouts, and nutrition into a single,
-            high-clarity dashboard — designed like a futuristic control panel.
-          </p>
-          <div class="actions">
-            <a class="btn primary" href="./app/">Launch Web App Demo</a>
-            <a class="btn" href="#features">Explore modules</a>
-            <a class="btn ghost" href="#get">Join waitlist</a>
-          </div>
-
-          <div class="kpis">
-            <div class="glass2 kpi">
-              <div class="label">Weekly streak</div>
-              <div class="value" id="kStreak">—</div>
-              <div class="chip"><span class="dot"></span> habits</div>
-            </div>
-            <div class="glass2 kpi">
-              <div class="label">Projected savings</div>
-              <div class="value" id="kSave">—</div>
-              <div class="chip"><span class="dot"></span> finances</div>
-            </div>
-            <div class="glass2 kpi">
-              <div class="label">Training load</div>
-              <div class="value" id="kLoad">—</div>
-              <div class="chip"><span class="dot"></span> workouts</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="glass reveal">
-          <div class="mock">
-            <div class="mock-inner">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <img src="./assets/lifesync-logo.svg" alt="LifeSync logo" style="width:42px;height:42px;border-radius:16px" />
-                  <div>
-                    <div style="font-weight:1000">Mission Control</div>
-                    <div class="small">Real-time overview</div>
-                  </div>
-                </div>
-                <span class="badge" style="font-size:12px"><span class="pulse"></span> LIVE</span>
-              </div>
-              <hr class="sep" />
-              <div class="grid3" style="grid-template-columns:repeat(2,1fr)">
-                <div class="glass2" style="padding:14px">
-                  <div class="small">Balance</div>
-                  <div style="font-size:24px;font-weight:1000;letter-spacing:-.5px">$2,450</div>
-                  <div class="small" style="margin-top:10px">Net this month</div>
-                  <div style="font-weight:950;color:rgba(255,255,255,.85)">+$380</div>
-                </div>
-                <div class="glass2" style="padding:14px">
-                  <div class="small">Habits</div>
-                  <div style="font-size:24px;font-weight:1000;letter-spacing:-.5px">6/8</div>
-                  <div class="small" style="margin-top:10px">Workouts</div>
-                  <div style="font-weight:950;color:rgba(255,255,255,.85)">3 this week</div>
-                </div>
-              </div>
-              <div class="glass2" style="padding:14px;margin-top:12px">
-                <div class="small">Nutrition</div>
-                <div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px">
-                  <div style="font-weight:1000">1480 / 2100 kcal</div>
-                  <div class="badge" style="font-size:12px">Protein 110g</div>
-                </div>
-                <div style="height:10px"></div>
-                <div style="height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.10)">
-                  <div style="height:100%;width:70%;background:linear-gradient(90deg, rgba(110,231,255,.85), rgba(167,139,250,.70), rgba(52,211,153,.70));"></div>
-                </div>
-              </div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-                <span class="badge" style="font-size:12px">Finances</span>
-                <span class="badge" style="font-size:12px">Habits</span>
-                <span class="badge" style="font-size:12px">Workouts</span>
-                <span class="badge" style="font-size:12px">Nutrition</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="features" class="section">
-      <h2 class="reveal">Modules</h2>
-      <div class="grid3">
-        <div class="glass feature reveal">
-          <div class="ico">📊</div>
-          <h3>Dashboard</h3>
-          <p>Unified telemetry: balance, streaks, training load, and macros — in one view.</p>
-        </div>
-        <div class="glass feature reveal">
-          <div class="ico">💳</div>
-          <h3>Finances</h3>
-          <p>Fast transactions, simple categories, and progress tracking with clean clarity.</p>
-        </div>
-        <div class="glass feature reveal">
-          <div class="ico">🔥</div>
-          <h3>Habits</h3>
-          <p>Streak-first habit tracking designed for consistency and momentum.</p>
-        </div>
-      </div>
-      <div style="height:12px"></div>
-      <div class="grid3">
-        <div class="glass feature reveal">
-          <div class="ico">🏋️</div>
-          <h3>Workouts</h3>
-          <p>Log sessions instantly and monitor weekly load.</p>
-        </div>
-        <div class="glass feature reveal">
-          <div class="ico">🥗</div>
-          <h3>Nutrition</h3>
-          <p>Track calories + protein with simple meals and macro targets.</p>
-        </div>
-        <div class="glass feature reveal">
-          <div class="ico">🧠</div>
-          <h3>LifeOS</h3>
-          <p>Design language: glass, neon accents, responsive layout, and zero friction.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="demo" class="section">
-      <h2 class="reveal">Working web app demo</h2>
-      <div class="glass reveal" style="padding:18px">
-        <p class="sub" style="margin:0 0 14px">
-          Runs fully on GitHub Pages. Saves data locally in your browser. No backend required.
-        </p>
-        <a class="btn primary" href="./app/">Launch LifeSync Web App</a>
-      </div>
-    </section>
-
-    <section id="get" class="section">
-      <div class="glass reveal" style="padding:18px">
-        <h2 style="margin:0 0 10px">Get notified</h2>
-        <p class="sub" style="margin:0 0 14px">Email waitlist — works anywhere.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a class="btn primary" href="mailto:hello@lifesync.app?subject=LifeSync%20Waitlist&body=Please%20add%20me%20to%20the%20LifeSync%20waitlist.%0A%0AName:%0AEmail:%0A">
-            Join via email
-          </a>
-          <a class="btn" href="./app/">Try the demo</a>
-        </div>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
-        <div>© <span id="y"></span> LifeSync</div>
-        <div class="small">GitHub Pages • <a href="./app/" style="text-decoration:underline;text-decoration-color:rgba(255,255,255,.25)">Web app</a></div>
-      </div>
-    </footer>
+  <main class="hero">
+    <h1>Your Personal Mission Control</h1>
+    <p>Unify your health, habits, and finances in one intelligent system.</p>
+    <div class="cta">
+      <button class="primary">Get Started</button>
+      <button class="secondary">Join Waitlist</button>
+    </div>
   </main>
 
-  <script>
-    document.getElementById('y').textContent = new Date().getFullYear();
-    // simple animated KPIs (visual flair)
-    function lerp(a,b,t){return a+(b-a)*t}
-    const t0=performance.now();
-    function tick(){
-      const t=(performance.now()-t0)/1200;
-      const s=Math.round(lerp(2, 8, (Math.sin(t)+1)/2));
-      const save=Math.round(lerp(120, 640, (Math.sin(t*0.9+1.2)+1)/2));
-      const load=Math.round(lerp(24, 68, (Math.sin(t*1.1+2.0)+1)/2));
-      document.getElementById('kStreak').textContent=s + " days";
-      document.getElementById('kSave').textContent="$" + save;
-      document.getElementById('kLoad').textContent=load;
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
+  <section class="cards">
+    <div class="card">
+      <h3>Unified Dashboard</h3>
+      <p>Track everything from one futuristic control center.</p>
+    </div>
+    <div class="card">
+      <h3>AI Insights</h3>
+      <p>Understand your life with predictive analytics.</p>
+    </div>
+    <div class="card">
+      <h3>Habits & Goals</h3>
+      <p>Build routines that compound over time.</p>
+    </div>
+  </section>
 
-    // reveal on scroll
-    const els=[...document.querySelectorAll('.reveal')];
-    const io=new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');}})
-    },{threshold:.12});
-    els.forEach(el=>io.observe(el));
-  </script>
+  <footer>
+    <p>© 2026 LifeSync. All rights reserved.</p>
+  </footer>
 </body>
 </html>
