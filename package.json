@@ -22,7 +22,8 @@
     "@expo/vector-icons": "^14.0.4",
     "react-dom": "18.3.1",
     "react-native-web": "~0.19.13",
-    "@expo/metro-runtime": "~4.0.1"
+    "@expo/metro-runtime": "~4.0.1",
+    "@react-navigation/native-stack": "^6.9.26"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
