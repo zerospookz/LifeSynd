@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "LifeOS",
-    "slug": "lifeos",
+    "name": "LifeSync",
+    "slug": "lifesync",
     "scheme": "lifeos",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,14 +12,24 @@
       "resizeMode": "contain",
       "backgroundColor": "#F5F7FB"
     },
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F5F7FB"
       }
     },
-    "web": { "favicon": "./assets/favicon.png" }
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "experiments": {
+      "baseUrl": "/LifeSynd"
+    }
   }
 }
