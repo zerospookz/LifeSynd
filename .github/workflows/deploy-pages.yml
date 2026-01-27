@@ -21,9 +21,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        
+      - run: npx expo export --platform web
+        env:
+          EXPO_NO_IMAGE_OPTIMIZATION: "true"
 
-      - name: Build web (Expo)
-        run: npx expo export --platform web
 
       - name: Disable Jekyll
         run: touch dist/.nojekyll
