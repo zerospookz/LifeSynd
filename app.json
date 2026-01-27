@@ -27,10 +27,7 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "static"
-    },
-    "experiments": {
-      "baseUrl": "/LifeSynd"
+      "output": "single"
     },
     "plugins": [],
     "entryPoint": "./index.js"
