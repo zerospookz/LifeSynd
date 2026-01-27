@@ -133,12 +133,65 @@
               <span class="small">Tailored blocks</span>
             </div>
 
-            <div class="list" id="workoutsList">
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Warm‑up</div>
-                  <div class="sub">Mobility · 8 min</div>
+            
+            <div class="workout-stack" id="workoutsList" aria-label="Workout plan">
+              <div class="workout-card reveal" data-workout>
+                <div class="workout-top">
+                  <div class="workout-title">
+                    <div class="title">Warm‑up</div>
+                    <div class="sub">Mobility · 8 min</div>
+                  </div>
+                  <div class="workout-meta">
+                    <span class="chip">Easy</span>
+                    <span class="chip ghost">Prep</span>
+                  </div>
                 </div>
+                <div class="workout-bottom">
+                  <div class="tiny">Focus: shoulders, hips, T‑spine</div>
+                  <div class="spacer"></div>
+                  <button class="btn ghost" type="button" data-mark-done>Done</button>
+                </div>
+              </div>
+
+              <div class="workout-card reveal" data-workout>
+                <div class="workout-top">
+                  <div class="workout-title">
+                    <div class="title">Strength</div>
+                    <div class="sub">4 exercises · 30 min</div>
+                  </div>
+                  <div class="workout-meta">
+                    <span class="chip">Moderate</span>
+                    <span class="chip">Upper</span>
+                  </div>
+                </div>
+                <div class="progress" style="margin-top:10px;"><span style="--w:58%"></span></div>
+                <div class="workout-bottom">
+                  <div class="tiny">Bench • Row • Press • Curl</div>
+                  <div class="spacer"></div>
+                  <button class="btn ghost" type="button" data-mark-done>Done</button>
+                </div>
+              </div>
+
+              <div class="workout-card reveal" data-workout>
+                <div class="workout-top">
+                  <div class="workout-title">
+                    <div class="title">Finisher</div>
+                    <div class="sub">Intervals · 7 min</div>
+                  </div>
+                  <div class="workout-meta">
+                    <span class="chip warn">Hot</span>
+                    <span class="chip ghost">Cardio</span>
+                  </div>
+                </div>
+                <div class="workout-bottom">
+                  <div class="tiny">20s on / 10s off × 8</div>
+                  <div class="spacer"></div>
+                  <button class="btn ghost" type="button" data-mark-done>Done</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
                 <div class="right">🧘</div>
               </div>
               <div class="item reveal">

@@ -917,3 +917,171 @@ body.pulse .nav{
   from{ filter: drop-shadow(0 0 0 rgba(110,231,183,0)); }
   to{ filter: drop-shadow(0 10px 18px rgba(110,231,183,.25)); }
 }
+
+
+/* =========================
+   Habits modern tracker
+========================= */
+.habit-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.habit-card{
+  position:relative;
+  display:flex;
+  gap: 12px;
+  align-items:flex-start;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  cursor:pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+:root[data-theme="light"] .habit-card{ background: rgba(10,16,30,.04); border-color: rgba(10,16,30,.10); }
+.habit-card::before{
+  content:"";
+  position:absolute; inset:-2px;
+  background: radial-gradient(700px 220px at 20% -10%, rgba(110,231,183,.22), transparent 55%),
+              radial-gradient(600px 260px at 110% 40%, rgba(96,165,250,.20), transparent 60%);
+  opacity:0;
+  transition: opacity .18s ease;
+  pointer-events:none;
+}
+.habit-card:hover{
+  transform: translateY(-2px);
+  border-color: rgba(110,231,183,.28);
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+.habit-card:hover::before{ opacity:1; }
+.habit-card.done{ border-color: rgba(110,231,183,.38); }
+.habit-ico{
+  width: 44px; height: 44px;
+  display:grid; place-items:center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(110,231,183,.22), rgba(96,165,250,.14));
+  border: 1px solid rgba(255,255,255,.12);
+  flex: 0 0 auto;
+  font-size: 20px;
+}
+:root[data-theme="light"] .habit-ico{ border-color: rgba(10,16,30,.10); }
+.habit-body{ flex: 1 1 auto; min-width: 0; }
+.habit-actions{ flex: 0 0 auto; padding-top: 2px; }
+.badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(110,231,183,.14);
+  border: 1px solid rgba(110,231,183,.22);
+  color: rgba(255,255,255,.92);
+}
+:root[data-theme="light"] .badge{ color: rgba(10,16,30,.85); background: rgba(110,231,183,.12); border-color: rgba(110,231,183,.22); }
+.badge.ghost{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+.badge.warn{ background: rgba(251,191,36,.14); border-color: rgba(251,191,36,.22); }
+.mini{ margin-top: 8px; display:flex; align-items:center; gap:8px; opacity: .92; }
+.dot{ width: 8px; height: 8px; border-radius: 99px; background: rgba(255,255,255,.22); }
+.dot.ok{ background: rgba(110,231,183,.9); box-shadow: 0 0 0 4px rgba(110,231,183,.12); }
+.dot.warn{ background: rgba(251,191,36,.9); box-shadow: 0 0 0 4px rgba(251,191,36,.12); }
+
+/* Switch */
+.switch{ position:relative; display:inline-block; width: 44px; height: 26px; }
+.switch input{ opacity:0; width:0; height:0; }
+.slider{
+  position:absolute; inset:0;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  transition: .18s ease;
+}
+:root[data-theme="light"] .slider{ background: rgba(10,16,30,.06); border-color: rgba(10,16,30,.14); }
+.slider::before{
+  content:"";
+  position:absolute; left: 4px; top: 4px;
+  width: 18px; height: 18px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.92);
+  transition: transform .18s ease;
+  box-shadow: 0 10px 20px rgba(0,0,0,.25);
+}
+.switch input:checked + .slider{
+  background: rgba(110,231,183,.20);
+  border-color: rgba(110,231,183,.34);
+  box-shadow: 0 0 0 4px rgba(110,231,183,.10);
+}
+.switch input:checked + .slider::before{ transform: translateX(18px); }
+
+/* Heatmap */
+.heatmap-wrap{
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+}
+:root[data-theme="light"] .heatmap-wrap{ background: rgba(10,16,30,.03); border-color: rgba(10,16,30,.10); }
+.heatmap-head{ display:flex; align-items:center; gap:10px; justify-content:flex-end; }
+.heatmap-head span:first-child{ margin-right:auto; opacity:.9; }
+.heatmap-scale{ display:flex; gap:6px; }
+.heatmap-scale span{ width: 12px; height: 12px; border-radius: 4px; background: rgba(110,231,183,.12); border: 1px solid rgba(255,255,255,.10); }
+.heatmap-scale span:nth-child(2){ background: rgba(110,231,183,.22); }
+.heatmap-scale span:nth-child(3){ background: rgba(110,231,183,.32); }
+.heatmap-scale span:nth-child(4){ background: rgba(110,231,183,.44); }
+.heatmap-scale span:nth-child(5){ background: rgba(110,231,183,.58); }
+.heatmap{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.hm-cell{
+  height: 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(110,231,183, calc(.08 + var(--a,0)*.58));
+}
+:root[data-theme="light"] .hm-cell{ border-color: rgba(10,16,30,.10); }
+.heatmap-legend{
+  margin-top: 10px;
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  opacity: .7;
+  text-align:center;
+}
+
+/* =========================
+   Workouts modern cards
+========================= */
+.workout-stack{ display:flex; flex-direction:column; gap: 12px; }
+.workout-card{
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: var(--shadow);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+:root[data-theme="light"] .workout-card{ background: rgba(10,16,30,.04); border-color: rgba(10,16,30,.10); }
+.workout-card:hover{
+  transform: translateY(-2px);
+  border-color: rgba(96,165,250,.30);
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+.workout-card.done{ border-color: rgba(110,231,183,.38); }
+.workout-top{ display:flex; gap: 12px; align-items:flex-start; justify-content:space-between; }
+.workout-meta{ display:flex; flex-wrap:wrap; gap: 8px; justify-content:flex-end; }
+.chip{
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(96,165,250,.14);
+  border: 1px solid rgba(96,165,250,.24);
+}
+.chip.ghost{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+.chip.warn{ background: rgba(251,191,36,.14); border-color: rgba(251,191,36,.22); }
+.workout-bottom{ margin-top: 12px; display:flex; align-items:center; gap: 12px; }
+.tiny{ font-size: 12px; opacity: .85; }
+

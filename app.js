@@ -305,27 +305,46 @@
     }));
   }
 
+  
   function renderHabits(habits) {
     const list = $('#habitsList');
     if (!list) return;
     list.innerHTML = '';
     habits.forEach((h) => {
       const it = document.createElement('div');
-      it.className = 'item reveal' + (h.done ? ' done' : '');
+      it.className = 'habit-card reveal' + (h.done ? ' done' : '');
       it.setAttribute('data-toggle', '');
       it.innerHTML = `
-        <div class="left">
-          <div class="title">${escapeHtml(h.title)}</div>
+        <div class="habit-ico">${escapeHtml(h.icon || pickHabitIcon(h.title))}</div>
+        <div class="habit-body">
+          <div class="row" style="gap:10px; align-items:center;">
+            <div class="title">${escapeHtml(h.title)}</div>
+            <span class="badge ${h.badgeType || ''}">${escapeHtml(h.badge || (h.done ? '+1 streak' : 'Queued'))}</span>
+          </div>
           <div class="sub">${escapeHtml(h.sub || 'Daily')}</div>
+          <div class="mini">
+            <span class="dot ${h.done ? 'ok' : ''}"></span><span class="small">${h.done ? 'Done' : 'Pending'}</span>
+            <span class="spacer"></span>
+            <span class="small">${h.done ? '✅' : '○'}</span>
+          </div>
         </div>
-        <div class="right">${h.done ? '✅' : '○'}</div>
+        <div class="habit-actions">
+          <label class="switch" aria-label="Toggle habit">
+            <input type="checkbox" ${h.done ? 'checked' : ''}>
+            <span class="slider"></span>
+          </label>
+        </div>
       `;
       list.appendChild(it);
     });
 
     // re-trigger reveal for new items
     if (!reduced) $$('.reveal', list).forEach((el) => el.classList.add('in'));
+
+    // update KPIs + heatmap
+    updateHabitInsights();
   }
+
 
   function loadHabits() {
     const list = $('#habitsList');
@@ -336,16 +355,75 @@
     } else {
       const dom = readHabitsFromDom();
       localStorage.setItem(HABITS_KEY, JSON.stringify(dom));
+      updateHabitInsights();
     }
   }
 
-  function saveHabitsFromDom() {
+  
+
+  function pickHabitIcon(title='') {
+    const t = (title || '').toLowerCase();
+    if (t.includes('walk') || t.includes('run')) return '🚶';
+    if (t.includes('read')) return '📖';
+    if (t.includes('water')) return '💧';
+    if (t.includes('stretch') || t.includes('yoga')) return '🧘';
+    if (t.includes('work') || t.includes('pomodoro')) return '🧠';
+    if (t.includes('medit')) return '🧘';
+    if (t.includes('gym') || t.includes('lift')) return '🏋️';
+    return '✨';
+  }
+
+  function seededRand(seed) {
+    // deterministic pseudo random in [0,1)
+    let h = 2166136261;
+    for (let i=0; i<seed.length; i++) { h ^= seed.charCodeAt(i); h += (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24); }
+    h = h >>> 0;
+    return () => {
+      h = (h * 1664525 + 1013904223) >>> 0;
+      return h / 4294967296;
+    };
+  }
+
+  function updateHabitInsights() {
     const list = $('#habitsList');
     if (!list) return;
-    const habits = $$('.item', list).map((it) => ({
+    const items = $$('.habit-card', list);
+    const total = items.length || 0;
+    const done = items.filter(it => it.classList.contains('done') || $('input[type="checkbox"]', it)?.checked).length;
+    const pct = total ? Math.round((done/total)*100) : 0;
+
+    const el = $('#habitConsistency');
+    if (el) el.textContent = pct ? `${pct}%` : '—';
+
+    // heatmap: 28 days
+    const heat = $('#habitHeatmap');
+    if (!heat) return;
+    heat.innerHTML = '';
+    const today = new Date();
+    const seed = (today.toISOString().slice(0,10)) + '|' + items.map(i => $('.title', i)?.textContent||'').join(',');
+    const rnd = seededRand(seed);
+
+    // generate intensity based on overall pct, with slight variance
+    const base = Math.max(.08, Math.min(.92, pct/100));
+    for (let i=27; i>=0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const variance = (rnd() - .5) * .28;
+      const a = Math.max(0, Math.min(1, base + variance));
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+      cell.style.setProperty('--a', a.toFixed(3));
+      cell.title = `${d.toDateString()} • ${Math.round(a*100)}%`;
+      heat.appendChild(cell);
+    }
+  }
+function saveHabitsFromDom() {
+    const list = $('#habitsList');
+    if (!list) return;
+    const habits = $$('.habit-card, .item', list).map((it) => ({
       title: $('.title', it)?.textContent?.trim() || 'Habit',
       sub: $('.sub', it)?.textContent?.trim() || '',
-      done: it.classList.contains('done') || $('.right', it)?.textContent?.includes('✅'),
+      done: it.classList.contains('done') || $('input[type="checkbox"]', it)?.checked || $('.right', it)?.textContent?.includes('✅'),
     }));
     localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
   }
@@ -353,11 +431,17 @@
   document.addEventListener('click', (e) => {
     const it = e.target.closest('#habitsList [data-toggle]');
     if (!it) return;
-    it.classList.toggle('done');
-    const right = $('.right', it);
-    if (right) right.textContent = it.classList.contains('done') ? '✅' : '○';
+    const input = $('input[type="checkbox"]', it);
+    const was = it.classList.contains('done') || !!(input && input.checked);
+
+    // If the user clicked the checkbox, honor its state. Otherwise toggle.
+    const next = (e.target && e.target.matches('input[type="checkbox"]')) ? input.checked : !was;
+    if (input) input.checked = next;
+    it.classList.toggle('done', next);
+
     saveHabitsFromDom();
-    toast(it.classList.contains('done') ? 'Habit completed 🎉' : 'Habit unchecked');
+    updateHabitInsights();
+    toast(next ? 'Habit completed 🎉' : 'Habit unchecked');
   });
 
   /* =========================
@@ -430,35 +514,72 @@
   }
   function setWorkouts(arr) { localStorage.setItem(WO_KEY, JSON.stringify(arr)); }
 
+  
+  function normalizeWorkout(x, idx=0) {
+    const id = x.id || `wo_${idx}_${hashStr(x.title || '')}`;
+    return {
+      id,
+      title: x.title || 'Workout',
+      sub: x.sub || '',
+      done: !!x.done
+    };
+  }
+
   function renderWorkouts() {
     const list = $('#workoutsList');
     if (!list) return;
-    const w = getWorkouts();
+    const w = getWorkouts().map(normalizeWorkout);
     if (!w.length) return;
 
     list.innerHTML = '';
     w.forEach((x) => {
       const it = document.createElement('div');
-      it.className = 'item reveal';
+      it.className = 'workout-card reveal' + (x.done ? ' done' : '');
+      it.setAttribute('data-id', x.id);
       it.innerHTML = `
-        <div class="left">
-          <div class="title">${escapeHtml(x.title)}</div>
-          <div class="sub">${escapeHtml(x.sub)}</div>
+        <div class="workout-top">
+          <div class="workout-title">
+            <div class="title">${escapeHtml(x.title)}</div>
+            <div class="sub">${escapeHtml(x.sub)}</div>
+          </div>
+          <div class="workout-meta">
+            <span class="chip">${x.done ? 'Completed' : 'Planned'}</span>
+            <span class="chip ghost">Today</span>
+          </div>
         </div>
-        <div class="right">
-          <button class="btn ghost" type="button" data-mark-done>Done</button>
+        <div class="workout-bottom">
+          <div class="tiny">${x.done ? 'Nice work — keep the streak 💪' : 'Tap done when you finish.'}</div>
+          <div class="spacer"></div>
+          <button class="btn ${x.done ? 'primary' : 'ghost'}" type="button" data-mark-done>${x.done ? 'Done ✓' : 'Mark done'}</button>
         </div>
       `;
       list.appendChild(it);
     });
+
+    // persist normalized back (adds ids)
+    setWorkouts(w);
+
     if (!reduced) $$('.reveal', list).forEach((el) => el.classList.add('in'));
   }
+
 
   document.addEventListener('click', (e) => {
     const b = e.target.closest('#workoutsList [data-mark-done]');
     if (!b) return;
-    b.closest('.item')?.classList.add('done');
-    toast('Workout completed 💪');
+    const card = b.closest('[data-id], .workout-card, .item');
+    if (!card) return;
+    const id = card.getAttribute('data-id');
+    const w = getWorkouts().map(normalizeWorkout);
+    const idx = w.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      w[idx].done = !w[idx].done;
+      setWorkouts(w);
+      renderWorkouts();
+      toast(w[idx].done ? 'Workout completed 💪' : 'Workout set back to planned');
+    } else {
+      card.classList.toggle('done');
+      toast('Updated');
+    }
   });
 
   /* =========================
@@ -603,6 +724,13 @@
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
+  }
+
+
+  function hashStr(s='') {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0;
+    return Math.abs(h).toString(36);
   }
 
   // load persisted data for relevant pages

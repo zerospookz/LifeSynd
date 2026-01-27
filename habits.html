@@ -133,12 +133,116 @@
               <span class="small">Tap to complete (demo)</span>
             </div>
 
-            <div class="list" id="habitsList">
-              <div class="item reveal" data-toggle>
-                <div class="left">
-                  <div class="title">Morning Walk</div>
-                  <div class="sub">10 minutes</div>
+            
+            <div class="habit-grid" id="habitsList" aria-label="Today's habits">
+              <div class="habit-card reveal done" data-toggle>
+                <div class="habit-ico">🚶</div>
+                <div class="habit-body">
+                  <div class="row" style="gap:10px; align-items:center;">
+                    <div class="title">Morning Walk</div>
+                    <span class="badge">+1 streak</span>
+                  </div>
+                  <div class="sub">10 minutes • Morning</div>
+                  <div class="mini">
+                    <span class="dot ok"></span><span class="small">On track</span>
+                    <span class="spacer"></span>
+                    <span class="small">Today</span>
+                  </div>
                 </div>
+                <div class="habit-actions">
+                  <label class="switch" aria-label="Toggle habit">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="habit-card reveal done" data-toggle>
+                <div class="habit-ico">📖</div>
+                <div class="habit-body">
+                  <div class="row" style="gap:10px; align-items:center;">
+                    <div class="title">Read 20 Pages</div>
+                    <span class="badge">Focus</span>
+                  </div>
+                  <div class="sub">Due 5:00 PM • Learning</div>
+                  <div class="mini">
+                    <span class="dot ok"></span><span class="small">Done early</span>
+                    <span class="spacer"></span>
+                    <span class="small">20/20</span>
+                  </div>
+                </div>
+                <div class="habit-actions">
+                  <label class="switch" aria-label="Toggle habit">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="habit-card reveal" data-toggle>
+                <div class="habit-ico">💧</div>
+                <div class="habit-body">
+                  <div class="row" style="gap:10px; align-items:center;">
+                    <div class="title">Drink Water</div>
+                    <span class="badge ghost">Health</span>
+                  </div>
+                  <div class="sub">6 / 8 cups • All day</div>
+                  <div class="progress" style="margin-top:10px;"><span style="--w:75%"></span></div>
+                </div>
+                <div class="habit-actions">
+                  <label class="switch" aria-label="Toggle habit">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="habit-card reveal" data-toggle>
+                <div class="habit-ico">🧠</div>
+                <div class="habit-body">
+                  <div class="row" style="gap:10px; align-items:center;">
+                    <div class="title">Workation</div>
+                    <span class="badge warn">Pomodoro</span>
+                  </div>
+                  <div class="sub">25 minutes • Deep work</div>
+                  <div class="mini">
+                    <span class="dot warn"></span><span class="small">Not started</span>
+                    <span class="spacer"></span>
+                    <span class="small">0/1</span>
+                  </div>
+                </div>
+                <div class="habit-actions">
+                  <label class="switch" aria-label="Toggle habit">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="habit-card reveal" data-toggle>
+                <div class="habit-ico">🧘</div>
+                <div class="habit-body">
+                  <div class="row" style="gap:10px; align-items:center;">
+                    <div class="title">Stretch</div>
+                    <span class="badge ghost">Recovery</span>
+                  </div>
+                  <div class="sub">5 minutes • Evening</div>
+                  <div class="mini">
+                    <span class="dot"></span><span class="small">Queued</span>
+                    <span class="spacer"></span>
+                    <span class="small">0/1</span>
+                  </div>
+                </div>
+                <div class="habit-actions">
+                  <label class="switch" aria-label="Toggle habit">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div>
                 <div class="right">✅</div>
               </div>
 
@@ -184,43 +288,55 @@
               <span class="small">Consistency</span>
             </div>
 
-            <div class="list">
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Completion rate</div>
-                  <div class="sub">Mon → Sun</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:84%"></span></div>
-                </div>
-                <div class="right">84%</div>
-              </div>
 
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Streak quality</div>
-                  <div class="sub">Balanced days</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:68%"></span></div>
-                </div>
-                <div class="right">68%</div>
+            <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; margin-top:6px;">
+              <div>
+                <div class="small">Habit consistency</div>
+                <div class="h2" id="habitConsistency">—</div>
+              </div>
+              <div class="pill small" id="habitStreakPill">🔥 7‑day streak</div>
+            </div>
+
+            <div class="heatmap-wrap" style="margin-top:12px;">
+              <div class="heatmap-head">
+                <span class="small">Last 28 days</span>
+                <span class="small">Less</span>
+                <span class="heatmap-scale" aria-hidden="true">
+                  <span></span><span></span><span></span><span></span><span></span>
+                </span>
+                <span class="small">More</span>
+              </div>
+              <div class="heatmap" id="habitHeatmap" aria-label="Habit completion heatmap"></div>
+              <div class="heatmap-legend">
+                <span class="small">Mon</span><span class="small">Tue</span><span class="small">Wed</span><span class="small">Thu</span><span class="small">Fri</span><span class="small">Sat</span><span class="small">Sun</span>
               </div>
             </div>
+
+            <div class="list" style="margin-top:12px;">
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Most consistent</div>
+                  <div class="sub">Morning Walk</div>
+                </div>
+                <div class="right">92%</div>
+              </div>
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Needs love</div>
+                  <div class="sub">Stretch</div>
+                </div>
+                <div class="right">56%</div>
+              </div>
+            </div>
+
           </div>
         </div>
-
-        <script>
-          // tiny interaction: click items to toggle "done" look (demo-only)
-          document.querySelectorAll('[data-toggle]').forEach(el=>{
-            el.addEventListener('click', ()=>{
-              const done = el.getAttribute('data-done') === '1';
-              el.setAttribute('data-done', done ? '0' : '1');
-              el.style.opacity = done ? '1' : '.75';
-              el.style.filter = done ? '' : 'saturate(.9)';
-              const right = el.querySelector('.right');
-              if(right) right.textContent = done ? '⬜' : '✅';
-            });
-          });
-        </script>
-
       </section>
+    </div>
+  </main>
+        </div>
+
+        </section>
     </div>
   </main>
 
