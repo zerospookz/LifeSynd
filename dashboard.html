@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LifeSync — Dashboard</title>
   <link rel="stylesheet" href="style.css"/>
+
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <meta name="theme-color" content="#050716"/>
+  <link rel="icon" href="icon-192.png"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+
 </head>
 <body>
   <div class="bg"></div>
@@ -26,7 +32,14 @@
       <div class="spacer"></div>
 
       <div class="row">
-        <button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
+        
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3a7 7 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+<button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
         <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
       </div>
     </div>
@@ -123,11 +136,8 @@
             </div>
 
             <div class="row" style="justify-content:center; padding:8px 0 2px;">
-              <div class="ring" style="--p:82%;">
-                <div style="text-align:center">
-                  <div class="num">82</div>
-                  <div class="cap">Daily Balance</div>
-                </div>
+              <div class="reveal" data-progress="82" data-label="Daily Balance" data-sub="Live score"></div>
+            </div>
               </div>
             </div>
 
@@ -139,6 +149,39 @@
             </div>
           </div>
         </div>
+        <div class="grid2" style="margin-top:14px">
+          <div class="chart reveal">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <div class="pill"><strong>Weekly Balance</strong> <span class="small">trend</span></div>
+                <div class="small" style="margin-top:8px">A quick snapshot of momentum across the week.</div>
+              </div>
+              <div class="tag">7 days</div>
+            </div>
+            <div class="bar-chart" data-chart="bars">
+              <div class="bar" data-h="62"></div>
+              <div class="bar" data-h="68"></div>
+              <div class="bar" data-h="74"></div>
+              <div class="bar" data-h="71"></div>
+              <div class="bar" data-h="79"></div>
+              <div class="bar" data-h="82"></div>
+              <div class="bar" data-h="77"></div>
+            </div>
+            <div class="chart-legend"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          </div>
+
+          <div class="chart reveal">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <div class="pill"><strong>Focus Score</strong> <span class="small">today</span></div>
+                <div class="small" style="margin-top:8px">Micro‑wins add up. Keep the streak alive.</div>
+              </div>
+              <div class="tag">Live</div>
+            </div>
+            <div style="margin-top:12px" data-progress="64" data-label="Consistency" data-sub="Last 14 days"></div>
+          </div>
+        </div>
+
 
       </section>
     </div>

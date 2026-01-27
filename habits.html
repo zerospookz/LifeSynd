@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LifeSync — Habits</title>
   <link rel="stylesheet" href="style.css"/>
+
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <meta name="theme-color" content="#050716"/>
+  <link rel="icon" href="icon-192.png"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+
 </head>
 <body>
   <div class="bg"></div>
@@ -26,7 +32,14 @@
       <div class="spacer"></div>
 
       <div class="row">
-        <button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
+        
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3a7 7 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+<button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
         <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
       </div>
     </div>
@@ -81,7 +94,41 @@
           </div>
         </div>
 
-        <div class="split">
+        
+        <div class="grid2" style="margin-top:14px">
+          <div class="chart reveal">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <div class="pill"><strong>Completion</strong> <span class="small">last 7 days</span></div>
+                <div class="small" style="margin-top:8px">Keep it light — keep it consistent.</div>
+              </div>
+              <div class="tag">Streak</div>
+            </div>
+            <div class="bar-chart" data-chart="bars">
+              <div class="bar" data-h="70"></div>
+              <div class="bar" data-h="85"></div>
+              <div class="bar" data-h="64"></div>
+              <div class="bar" data-h="92"></div>
+              <div class="bar" data-h="78"></div>
+              <div class="bar" data-h="88"></div>
+              <div class="bar" data-h="80"></div>
+            </div>
+            <div class="chart-legend"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          </div>
+
+          <div class="chart reveal">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <div class="pill"><strong>Streak Score</strong> <span class="small">today</span></div>
+                <div class="small" style="margin-top:8px">Tiny wins, big compounding.</div>
+              </div>
+              <div class="tag">🔥</div>
+            </div>
+            <div style="margin-top:12px" data-progress="76" data-label="Momentum" data-sub="7‑day streak"></div>
+          </div>
+        </div>
+
+<div class="split">
           <div class="panel reveal" style="padding:14px;">
             <div class="row" style="margin-bottom:10px;">
               <div class="pill"><strong>Today’s habits</strong></div>
