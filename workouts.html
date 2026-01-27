@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeSync — Workouts</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="bg"></div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
+        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
+        <span>LifeSync</span>
+      </a>
+
+      <nav class="row" aria-label="Primary">
+        <a data-nav href="dashboard.html">Dashboard</a>
+        <a data-nav href="finances.html">Finances</a>
+        <a data-nav href="habits.html">Habits</a>
+        <a data-nav href="workouts.html">Workouts</a>
+        <a data-nav href="nutrition.html">Nutrition</a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="row">
+        <button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
+        <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container app">
+    <div class="app-grid">
+      <aside class="sidebar reveal">
+        <h4>Modules</h4>
+        <nav class="snav" aria-label="Modules">
+          <a data-nav href="dashboard.html"><span>Dashboard</span><span class="tag">Today</span></a>
+          <a data-nav href="finances.html"><span>Finances</span><span class="tag">$</span></a>
+          <a data-nav href="habits.html"><span>Habits</span><span class="tag">Streak</span></a>
+          <a data-nav href="workouts.html"><span>Workouts</span><span class="tag">Train</span></a>
+          <a data-nav href="nutrition.html"><span>Nutrition</span><span class="tag">Fuel</span></a>
+        </nav>
+
+        <div style="margin-top:14px" class="pill">
+          <span class="small"><strong>Tip:</strong> Hover cards for glow, scroll for reveal.</span>
+        </div>
+      </aside>
+
+      <section class="panel reveal">
+        <div class="panel-header">
+          <div>
+            <h1>Workouts</h1>
+            <p>Plans, progress, and readiness — all in one view.</p>
+          </div>
+          <div class="spacer"></div>
+          <div class="row">
+            <button class="btn" onclick="alert('Demo UI only — hook this to your data.')">Sync</button>
+            <button class="btn primary" onclick="alert('Demo UI only — connect actions here.')">Add</button>
+          </div>
+        </div>
+
+        
+        <div class="kpi-grid">
+          <div class="kpi reveal">
+            <div class="label">Next workout</div>
+            <div class="value">Upper Body</div>
+            <div class="delta">Today · 5:30 PM</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">This week</div>
+            <div class="value">3 / 4</div>
+            <div class="delta">Sessions completed</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">Recovery</div>
+            <div class="value">Good</div>
+            <div class="delta">Sleep + hydration trending up</div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Plan</strong></div>
+              <div class="spacer"></div>
+              <span class="small">Tailored blocks</span>
+            </div>
+
+            <div class="list">
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Warm‑up</div>
+                  <div class="sub">Mobility · 8 min</div>
+                </div>
+                <div class="right">🧘</div>
+              </div>
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Strength</div>
+                  <div class="sub">4 exercises · 30 min</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:58%"></span></div>
+                </div>
+                <div class="right">🏋️</div>
+              </div>
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Finisher</div>
+                  <div class="sub">Intervals · 7 min</div>
+                </div>
+                <div class="right">⚡</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Progress</strong></div>
+              <div class="spacer"></div>
+              <span class="small">PR readiness</span>
+            </div>
+
+            <div class="row" style="justify-content:center; padding:8px 0 2px;">
+              <div class="ring" style="--p:74%;">
+                <div style="text-align:center">
+                  <div class="num">74</div>
+                  <div class="cap">Readiness</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px" class="reveal">
+              <div class="small" style="margin-bottom:8px;">Weekly volume</div>
+              <div class="progress"><span style="--w:62%"></span></div>
+              <div class="small" style="margin-top:8px;">Strength trend</div>
+              <div class="progress"><span style="--w:57%"></span></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

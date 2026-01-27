@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeSync — Finances</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="bg"></div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
+        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
+        <span>LifeSync</span>
+      </a>
+
+      <nav class="row" aria-label="Primary">
+        <a data-nav href="dashboard.html">Dashboard</a>
+        <a data-nav href="finances.html">Finances</a>
+        <a data-nav href="habits.html">Habits</a>
+        <a data-nav href="workouts.html">Workouts</a>
+        <a data-nav href="nutrition.html">Nutrition</a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="row">
+        <button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
+        <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container app">
+    <div class="app-grid">
+      <aside class="sidebar reveal">
+        <h4>Modules</h4>
+        <nav class="snav" aria-label="Modules">
+          <a data-nav href="dashboard.html"><span>Dashboard</span><span class="tag">Today</span></a>
+          <a data-nav href="finances.html"><span>Finances</span><span class="tag">$</span></a>
+          <a data-nav href="habits.html"><span>Habits</span><span class="tag">Streak</span></a>
+          <a data-nav href="workouts.html"><span>Workouts</span><span class="tag">Train</span></a>
+          <a data-nav href="nutrition.html"><span>Nutrition</span><span class="tag">Fuel</span></a>
+        </nav>
+
+        <div style="margin-top:14px" class="pill">
+          <span class="small"><strong>Tip:</strong> Hover cards for glow, scroll for reveal.</span>
+        </div>
+      </aside>
+
+      <section class="panel reveal">
+        <div class="panel-header">
+          <div>
+            <h1>Finances</h1>
+            <p>Budgets, spend, and categories — fast and readable.</p>
+          </div>
+          <div class="spacer"></div>
+          <div class="row">
+            <button class="btn" onclick="alert('Demo UI only — hook this to your data.')">Sync</button>
+            <button class="btn primary" onclick="alert('Demo UI only — connect actions here.')">Add</button>
+          </div>
+        </div>
+
+        
+        <div class="kpi-grid">
+          <div class="kpi reveal">
+            <div class="label">Total Balance</div>
+            <div class="value">$3,250</div>
+            <div class="delta">All accounts · updated now</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">This Month</div>
+            <div class="value">$1,120</div>
+            <div class="delta">Spent · 38% of budget</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">Top Category</div>
+            <div class="value">Food</div>
+            <div class="delta">45% of spend</div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Recent transactions</strong></div>
+              <div class="spacer"></div>
+              <span class="small">Hover rows for lift</span>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Merchant</th>
+                  <th>Category</th>
+                  <th>Date</th>
+                  <th style="text-align:right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="reveal">
+                  <td>Starbucks</td><td><span class="chip">Food</span></td><td>May 5</td><td style="text-align:right;">-$6.25</td>
+                </tr>
+                <tr class="reveal">
+                  <td>Uber</td><td><span class="chip">Transport</span></td><td>May 5</td><td style="text-align:right;">-$12.80</td>
+                </tr>
+                <tr class="reveal">
+                  <td>Groceries</td><td><span class="chip">Food</span></td><td>May 4</td><td style="text-align:right;">-$74.10</td>
+                </tr>
+                <tr class="reveal">
+                  <td>Gym</td><td><span class="chip">Health</span></td><td>May 3</td><td style="text-align:right;">-$29.99</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Budgets</strong></div>
+              <div class="spacer"></div>
+              <span class="small">May</span>
+            </div>
+
+            <div class="list">
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Food</div>
+                  <div class="sub">$450 / $1000</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:45%"></span></div>
+                </div>
+                <div class="right">🙂</div>
+              </div>
+
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Transport</div>
+                  <div class="sub">$120 / $250</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:48%"></span></div>
+                </div>
+                <div class="right">🚗</div>
+              </div>
+
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Subscriptions</div>
+                  <div class="sub">$79 / $120</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:66%"></span></div>
+                </div>
+                <div class="right">📦</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

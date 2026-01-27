@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeSync — Habits</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="bg"></div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
+        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
+        <span>LifeSync</span>
+      </a>
+
+      <nav class="row" aria-label="Primary">
+        <a data-nav href="dashboard.html">Dashboard</a>
+        <a data-nav href="finances.html">Finances</a>
+        <a data-nav href="habits.html">Habits</a>
+        <a data-nav href="workouts.html">Workouts</a>
+        <a data-nav href="nutrition.html">Nutrition</a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="row">
+        <button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
+        <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container app">
+    <div class="app-grid">
+      <aside class="sidebar reveal">
+        <h4>Modules</h4>
+        <nav class="snav" aria-label="Modules">
+          <a data-nav href="dashboard.html"><span>Dashboard</span><span class="tag">Today</span></a>
+          <a data-nav href="finances.html"><span>Finances</span><span class="tag">$</span></a>
+          <a data-nav href="habits.html"><span>Habits</span><span class="tag">Streak</span></a>
+          <a data-nav href="workouts.html"><span>Workouts</span><span class="tag">Train</span></a>
+          <a data-nav href="nutrition.html"><span>Nutrition</span><span class="tag">Fuel</span></a>
+        </nav>
+
+        <div style="margin-top:14px" class="pill">
+          <span class="small"><strong>Tip:</strong> Hover cards for glow, scroll for reveal.</span>
+        </div>
+      </aside>
+
+      <section class="panel reveal">
+        <div class="panel-header">
+          <div>
+            <h1>Habits</h1>
+            <p>Streaks, check‑ins, and gentle accountability.</p>
+          </div>
+          <div class="spacer"></div>
+          <div class="row">
+            <button class="btn" onclick="alert('Demo UI only — hook this to your data.')">Sync</button>
+            <button class="btn primary" onclick="alert('Demo UI only — connect actions here.')">Add</button>
+          </div>
+        </div>
+
+        
+        <div class="kpi-grid">
+          <div class="kpi reveal">
+            <div class="label">Streak</div>
+            <div class="value">7 days</div>
+            <div class="delta">Keep the momentum</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">Today</div>
+            <div class="value">4 / 5</div>
+            <div class="delta">One more habit to go</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">Best time</div>
+            <div class="value">Morning</div>
+            <div class="delta">Highest completion window</div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Today’s habits</strong></div>
+              <div class="spacer"></div>
+              <span class="small">Tap to complete (demo)</span>
+            </div>
+
+            <div class="list" id="habitsList">
+              <div class="item reveal" data-toggle>
+                <div class="left">
+                  <div class="title">Morning Walk</div>
+                  <div class="sub">10 minutes</div>
+                </div>
+                <div class="right">✅</div>
+              </div>
+
+              <div class="item reveal" data-toggle>
+                <div class="left">
+                  <div class="title">Read 20 Pages</div>
+                  <div class="sub">Due 5:00 PM</div>
+                </div>
+                <div class="right">✅</div>
+              </div>
+
+              <div class="item reveal" data-toggle>
+                <div class="left">
+                  <div class="title">Drink Water</div>
+                  <div class="sub">6 / 8 cups</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:75%"></span></div>
+                </div>
+                <div class="right">💧</div>
+              </div>
+
+              <div class="item reveal" data-toggle>
+                <div class="left">
+                  <div class="title">Workation</div>
+                  <div class="sub">25 minutes</div>
+                </div>
+                <div class="right">⚠️</div>
+              </div>
+
+              <div class="item reveal" data-toggle>
+                <div class="left">
+                  <div class="title">Stretch</div>
+                  <div class="sub">5 minutes</div>
+                </div>
+                <div class="right">⬜</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Weekly progress</strong></div>
+              <div class="spacer"></div>
+              <span class="small">Consistency</span>
+            </div>
+
+            <div class="list">
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Completion rate</div>
+                  <div class="sub">Mon → Sun</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:84%"></span></div>
+                </div>
+                <div class="right">84%</div>
+              </div>
+
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Streak quality</div>
+                  <div class="sub">Balanced days</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:68%"></span></div>
+                </div>
+                <div class="right">68%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          // tiny interaction: click items to toggle "done" look (demo-only)
+          document.querySelectorAll('[data-toggle]').forEach(el=>{
+            el.addEventListener('click', ()=>{
+              const done = el.getAttribute('data-done') === '1';
+              el.setAttribute('data-done', done ? '0' : '1');
+              el.style.opacity = done ? '1' : '.75';
+              el.style.filter = done ? '' : 'saturate(.9)';
+              const right = el.querySelector('.right');
+              if(right) right.textContent = done ? '⬜' : '✅';
+            });
+          });
+        </script>
+
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

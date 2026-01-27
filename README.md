@@ -1,16 +1,21 @@
-# LifeSync Landing (Static)
+# LifeSync (Static Demo)
 
-A single-page static site ready for **GitHub Pages**.
+A modernized, multi-page **static** demo ready for **GitHub Pages**.
+
+## Pages
+- `index.html` – landing
+- `dashboard.html` – daily control center
+- `finances.html` – budgets & spend
+- `habits.html` – habits & streaks
+- `workouts.html` – training
+- `nutrition.html` – meals & macros
 
 ## Deploy on GitHub Pages
-1. Create a repo and upload the contents of this folder to the repo root.
-2. In GitHub: **Settings → Pages**
+1. Upload these files to your repo root
+2. GitHub → **Settings → Pages**
 3. Source: **Deploy from a branch**
-4. Branch: **main** (or master) / **root**
-5. Save.
+4. Branch: **main** / **root**
 
-## Files
-- `index.html` – landing page
-- `styles.css` – styles
-- `assets/hero.png`, `assets/lifesync-logo.svg` – images
-- `404.html` – redirect for SPA-friendly navigation on Pages
+## Notes
+- Subtle animations use CSS + an IntersectionObserver reveal (`app.js`).
+- All data is placeholder demo UI — connect your backend later.

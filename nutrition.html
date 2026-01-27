@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LifeSync — Nutrition</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="bg"></div>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
+        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
+        <span>LifeSync</span>
+      </a>
+
+      <nav class="row" aria-label="Primary">
+        <a data-nav href="dashboard.html">Dashboard</a>
+        <a data-nav href="finances.html">Finances</a>
+        <a data-nav href="habits.html">Habits</a>
+        <a data-nav href="workouts.html">Workouts</a>
+        <a data-nav href="nutrition.html">Nutrition</a>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <div class="row">
+        <button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
+        <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container app">
+    <div class="app-grid">
+      <aside class="sidebar reveal">
+        <h4>Modules</h4>
+        <nav class="snav" aria-label="Modules">
+          <a data-nav href="dashboard.html"><span>Dashboard</span><span class="tag">Today</span></a>
+          <a data-nav href="finances.html"><span>Finances</span><span class="tag">$</span></a>
+          <a data-nav href="habits.html"><span>Habits</span><span class="tag">Streak</span></a>
+          <a data-nav href="workouts.html"><span>Workouts</span><span class="tag">Train</span></a>
+          <a data-nav href="nutrition.html"><span>Nutrition</span><span class="tag">Fuel</span></a>
+        </nav>
+
+        <div style="margin-top:14px" class="pill">
+          <span class="small"><strong>Tip:</strong> Hover cards for glow, scroll for reveal.</span>
+        </div>
+      </aside>
+
+      <section class="panel reveal">
+        <div class="panel-header">
+          <div>
+            <h1>Nutrition</h1>
+            <p>Meals, macros, and hydration with frictionless tracking.</p>
+          </div>
+          <div class="spacer"></div>
+          <div class="row">
+            <button class="btn" onclick="alert('Demo UI only — hook this to your data.')">Sync</button>
+            <button class="btn primary" onclick="alert('Demo UI only — connect actions here.')">Add</button>
+          </div>
+        </div>
+
+        
+        <div class="kpi-grid">
+          <div class="kpi reveal">
+            <div class="label">Calories</div>
+            <div class="value">800</div>
+            <div class="delta">of 2000 target</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">Protein</div>
+            <div class="value">62 g</div>
+            <div class="delta">On track</div>
+          </div>
+          <div class="kpi reveal">
+            <div class="label">Hydration</div>
+            <div class="value">6 / 8</div>
+            <div class="delta">Cups</div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Meals</strong></div>
+              <div class="spacer"></div>
+              <span class="small">Today</span>
+            </div>
+
+            <div class="list">
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Breakfast</div>
+                  <div class="sub">Greek yogurt + berries · 320 kcal</div>
+                </div>
+                <div class="right">🍓</div>
+              </div>
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Lunch</div>
+                  <div class="sub">Chicken salad · 520 kcal</div>
+                </div>
+                <div class="right">🥗</div>
+              </div>
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Snack</div>
+                  <div class="sub">Almonds · 160 kcal</div>
+                </div>
+                <div class="right">🥜</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel reveal" style="padding:14px;">
+            <div class="row" style="margin-bottom:10px;">
+              <div class="pill"><strong>Macros</strong></div>
+              <div class="spacer"></div>
+              <span class="small">Balanced</span>
+            </div>
+
+            <div class="list">
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Protein</div>
+                  <div class="sub">62g / 130g</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:48%"></span></div>
+                </div>
+                <div class="right">🥩</div>
+              </div>
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Carbs</div>
+                  <div class="sub">90g / 220g</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:41%"></span></div>
+                </div>
+                <div class="right">🍚</div>
+              </div>
+              <div class="item reveal">
+                <div class="left">
+                  <div class="title">Fats</div>
+                  <div class="sub">32g / 70g</div>
+                  <div class="progress" style="margin-top:8px;"><span style="--w:46%"></span></div>
+                </div>
+                <div class="right">🥑</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
