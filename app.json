@@ -32,8 +32,7 @@
     "experiments": {
       "baseUrl": "/LifeSynd"
     },
-    "plugins": [
-      "expo-router"
-    ]
+    "plugins": [],
+    "entryPoint": "./index.js"
   }
 }

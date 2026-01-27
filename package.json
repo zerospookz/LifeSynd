@@ -1,7 +1,7 @@
 {
   "name": "lifeos",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -23,8 +23,7 @@
     "react-dom": "18.3.1",
     "react-native-web": "~0.19.13",
     "@expo/metro-runtime": "~4.0.1",
-    "@react-navigation/native-stack": "^6.9.26",
-    "expo-router": "~4.0.0"
+    "@react-navigation/native-stack": "^6.9.26"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
