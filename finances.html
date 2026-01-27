@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="icon-192.png"/>
 
 </head>
-<body>
+<body data-page="finances">
   <div class="bg"></div>
   <header class="nav">
     <div class="container nav-inner">
@@ -39,8 +39,8 @@
           </svg>
         </button>
 
-<button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
-        <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
+<button class="btn ghost" data-action="open-demo">Watch demo</button>
+        <a class="btn primary" href="dashboard.html" data-action="go-dashboard">Get started</a>
       </div>
     </div>
   </header>
@@ -69,10 +69,7 @@
             <p>Budgets, spend, and categories — fast and readable.</p>
           </div>
           <div class="spacer"></div>
-          <div class="row">
-            <button class="btn" onclick="alert('Demo UI only — hook this to your data.')">Sync</button>
-            <button class="btn primary" onclick="alert('Demo UI only — connect actions here.')">Add</button>
-          </div>
+          <div class="row"><span class="small" id="lastSync">Not synced yet</span><span class="spacer"></span><button class="btn" data-action="sync">Sync</button><button class="btn primary" data-action="add">Add</button></div>
         </div>
 
         
@@ -145,8 +142,8 @@
                   <th style="text-align:right;">Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr class="reveal">
+              <tbody id="transactionsBody">
+<tr class="reveal">
                   <td>Starbucks</td><td><span class="chip">Food</span></td><td>May 5</td><td style="text-align:right;">-$6.25</td>
                 </tr>
                 <tr class="reveal">

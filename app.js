@@ -1,12 +1,36 @@
 (() => {
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ===== Theme ===== */
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  /* =========================
+     Toast
+  ========================= */
+  function toast(message, { timeout = 2400 } = {}) {
+    // Re-use the same toast styling for both PWA + simple messages
+    const t = document.createElement('div');
+    t.className = 'toast toast--simple';
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-live', 'polite');
+    t.innerHTML = `<div class="toast-text">${message}</div>`;
+    document.body.appendChild(t);
+
+    requestAnimationFrame(() => t.classList.add('show'));
+    window.setTimeout(() => {
+      t.classList.remove('show');
+      window.setTimeout(() => t.remove(), 260);
+    }, timeout);
+  }
+
+  /* =========================
+     Theme
+  ========================= */
   const root = document.documentElement;
   const saved = localStorage.getItem('lifesync-theme');
   if (saved) root.dataset.theme = saved; // 'light' | 'dark'
 
-  const themeBtn = document.getElementById('themeToggle');
+  const themeBtn = $('#themeToggle');
   const setThemeIcon = () => {
     if (!themeBtn) return;
     const isLight = (root.dataset.theme === 'light');
@@ -17,103 +41,76 @@
              stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
          </svg>`
       : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-           <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3a7 7 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+           <path d="M21 13.2A7.5 7.5 0 1 1 10.8 3a6 6 0 1 0 10.2 10.2Z"
+             stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
          </svg>`;
   };
   setThemeIcon();
 
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      const next = (root.dataset.theme === 'light') ? 'dark' : 'light';
-      root.dataset.theme = next;
-      localStorage.setItem('lifesync-theme', next);
-      setThemeIcon();
-    });
-  }
+  themeBtn?.addEventListener('click', () => {
+    const next = (root.dataset.theme === 'light') ? 'dark' : 'light';
+    root.dataset.theme = next;
+    localStorage.setItem('lifesync-theme', next);
+    setThemeIcon();
+  });
 
-  /* ===== Scroll reveal ===== */
-  const els = Array.from(document.querySelectorAll('.reveal'));
-  if (!reduced && 'IntersectionObserver' in window) {
+  /* =========================
+     Scroll reveal
+  ========================= */
+  const revealEls = $$('.reveal');
+  if (!reduced && 'IntersectionObserver' in window && revealEls.length) {
     const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) e.target.classList.add('in');
-    }, { threshold: 0.14 });
-    els.forEach(el => io.observe(el));
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    revealEls.forEach((el) => io.observe(el));
   } else {
-    els.forEach(el => el.classList.add('in'));
+    revealEls.forEach((el) => el.classList.add('in'));
   }
 
-  /* ===== Active nav ===== */
-  const here = location.pathname.split('/').pop() || 'index.html';
-  document.querySelectorAll('a[data-nav]').forEach(a => {
-    const target = (a.getAttribute('href') || '').split('/').pop();
-    if (target === here) a.classList.add('active');
-  });
-
-  /* ===== Micro-interaction: button ripple origin ===== */
-  document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('pointermove', (e) => {
-      const r = btn.getBoundingClientRect();
-      btn.style.setProperty('--mx', `${e.clientX - r.left}px`);
-      btn.style.setProperty('--my', `${e.clientY - r.top}px`);
-    });
-  });
-
-  /* ===== Tiny hover parallax on hero image ===== */
-  const hero = document.querySelector('[data-tilt]');
+  /* =========================
+     Subtle hero parallax
+  ========================= */
+  const hero = $('#heroTilt');
   if (!reduced && hero) {
-    const max = 8;
-    const onMove = (ev) => {
-      const r = hero.getBoundingClientRect();
-      const x = (ev.clientX - r.left) / r.width - 0.5;
-      const y = (ev.clientY - r.top) / r.height - 0.5;
-      hero.style.transform = `translateY(-6px) rotateX(${(-y*max).toFixed(2)}deg) rotateY(${(x*max).toFixed(2)}deg)`;
+    let raf = null;
+    const onMove = (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        const r = hero.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const dx = (e.clientX - cx) / r.width;
+        const dy = (e.clientY - cy) / r.height;
+        hero.style.transform = `translate3d(0,0,0) rotateX(${(-dy * 6).toFixed(2)}deg) rotateY(${(dx * 8).toFixed(2)}deg)`;
+      });
     };
-    const onLeave = () => hero.style.transform = '';
+    const reset = () => hero.style.transform = '';
     hero.addEventListener('mousemove', onMove);
-    hero.addEventListener('mouseleave', onLeave);
+    hero.addEventListener('mouseleave', reset);
   }
 
-  /* ===== Animated progress rings ===== */
-  const initRing = (el) => {
-    const value = Math.max(0, Math.min(100, Number(el.dataset.progress || 0)));
-    const label = el.dataset.label || 'Progress';
-    const sub = el.dataset.sub || 'This week';
-    const radius = 54;
-    const circ = 2 * Math.PI * radius;
-    el.classList.add('progress');
-    el.innerHTML = `
-      <svg class="ring" viewBox="0 0 120 120" aria-label="${label}">
-        <defs>
-          <linearGradient id="ls-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="rgba(79,209,255,1)"/>
-            <stop offset="55%" stop-color="rgba(167,139,250,1)"/>
-            <stop offset="100%" stop-color="rgba(52,211,153,1)"/>
-          </linearGradient>
-        </defs>
-        <circle class="track" cx="60" cy="60" r="${radius}" stroke="currentColor" stroke-width="10" fill="none"/>
-        <circle class="value" cx="60" cy="60" r="${radius}" stroke="url(#ls-grad)" stroke-width="10" fill="none"
-          stroke-dasharray="${circ}" stroke-dashoffset="${circ}"
-        />
-      </svg>
-      <div class="ring-label">
-        <div class="small">${label}</div>
-        <div class="big">${value}<span style="font-size:14px;font-weight:700;opacity:.7">/100</span></div>
-        <div class="small">${sub}</div>
-      </div>
-    `;
-    const valueCircle = el.querySelector('.value');
-    const targetOffset = circ * (1 - value / 100);
-    requestAnimationFrame(() => { valueCircle.style.strokeDashoffset = String(targetOffset); });
+  /* =========================
+     Progress rings + bar charts
+  ========================= */
+  const initRings = () => {
+    $$('.ring[data-progress]').forEach((el) => {
+      const p = Math.max(0, Math.min(100, Number(el.dataset.progress || 0)));
+      el.style.setProperty('--p', String(p));
+      if (el.dataset.label) el.setAttribute('aria-label', `${el.dataset.label}: ${p}%`);
+    });
   };
 
-  document.querySelectorAll('[data-progress]').forEach(initRing);
-
-  /* ===== Simple charts (bars) ===== */
   const initBars = (wrap) => {
-    const bars = Array.from(wrap.querySelectorAll('.bar'));
+    const bars = $$('.bar', wrap);
     bars.forEach((b, i) => {
       const h = Math.max(6, Math.min(100, Number(b.dataset.h || 10)));
-      // delay via transition
       b.style.transitionDelay = `${i * 70}ms`;
       requestAnimationFrame(() => {
         b.classList.add('in');
@@ -122,9 +119,520 @@
     });
   };
 
-  document.querySelectorAll('[data-chart="bars"]').forEach(initBars);
+  initRings();
+  $$('[data-chart="bars"]').forEach(initBars);
 
-  /* ===== PWA: service worker + install prompt ===== */
+  /* =========================
+     Modal (used by Demo + Add)
+  ========================= */
+  function ensureModal() {
+    let m = $('#lsModal');
+    if (m) return m;
+
+    m = document.createElement('div');
+    m.className = 'modal';
+    m.id = 'lsModal';
+    m.setAttribute('aria-hidden', 'true');
+    m.innerHTML = `
+      <div class="modal-overlay" data-modal-close></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-label="LifeSync dialog">
+        <button class="modal-close" type="button" aria-label="Close" data-modal-close>✕</button>
+        <div class="modal-body"></div>
+      </div>
+    `;
+    document.body.appendChild(m);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && m.classList.contains('open')) closeModal();
+    });
+
+    m.addEventListener('click', (e) => {
+      if (e.target.closest('[data-modal-close]')) closeModal();
+    });
+
+    return m;
+  }
+
+  function openModal(html) {
+    const m = ensureModal();
+    $('.modal-body', m).innerHTML = html;
+    m.classList.add('open');
+    m.setAttribute('aria-hidden', 'false');
+
+    // focus first focusable element
+    const focusable = m.querySelector('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    focusable?.focus({ preventScroll: true });
+  }
+
+  function closeModal() {
+    const m = $('#lsModal');
+    if (!m) return;
+    m.classList.remove('open');
+    m.setAttribute('aria-hidden', 'true');
+  }
+
+  /* =========================
+     "Working" buttons (no preview-only)
+  ========================= */
+  function nowTime() {
+    try {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return 'now';
+    }
+  }
+
+  function doSync() {
+    const el = $('#lastSync');
+    if (el) el.textContent = `Synced • ${nowTime()}`;
+    toast('Synced ✓');
+    // tiny haptic-like pulse
+    document.body.classList.add('pulse');
+    setTimeout(() => document.body.classList.remove('pulse'), 220);
+  }
+
+  function demoContent() {
+    return `
+      <div class="modal-title">LifeSync demo</div>
+      <div class="modal-sub">Explore the fully-working UI — everything here is clickable and saved locally.</div>
+
+      <div class="modal-grid">
+        <a class="cardlink" href="dashboard.html">
+          <div class="cardlink-title">Dashboard</div>
+          <div class="cardlink-sub">Your daily overview + quick actions.</div>
+        </a>
+        <a class="cardlink" href="finances.html">
+          <div class="cardlink-title">Finances</div>
+          <div class="cardlink-sub">Add transactions + view activity.</div>
+        </a>
+        <a class="cardlink" href="habits.html">
+          <div class="cardlink-title">Habits</div>
+          <div class="cardlink-sub">Toggle habits + add new ones.</div>
+        </a>
+        <a class="cardlink" href="workouts.html">
+          <div class="cardlink-title">Workouts</div>
+          <div class="cardlink-sub">Plan sessions + mark done.</div>
+        </a>
+        <a class="cardlink" href="nutrition.html">
+          <div class="cardlink-title">Nutrition</div>
+          <div class="cardlink-sub">Log meals + track calories.</div>
+        </a>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" type="button" data-modal-close>Close</button>
+        <a class="btn primary" href="dashboard.html">Open Dashboard</a>
+      </div>
+    `;
+  }
+
+  function openAddForPage(page) {
+    const p = page || document.body.dataset.page || 'dashboard';
+
+    if (p === 'finances') return openModal(addFinanceForm());
+    if (p === 'habits') return openModal(addHabitForm());
+    if (p === 'workouts') return openModal(addWorkoutForm());
+    if (p === 'nutrition') return openModal(addMealForm());
+
+    // dashboard: give quick shortcuts
+    openModal(`
+      <div class="modal-title">Quick add</div>
+      <div class="modal-sub">Pick what you want to add.</div>
+      <div class="modal-grid">
+        <button class="cardlink" type="button" data-quick="finances">
+          <div class="cardlink-title">Expense</div>
+          <div class="cardlink-sub">Add a transaction</div>
+        </button>
+        <button class="cardlink" type="button" data-quick="habits">
+          <div class="cardlink-title">Habit</div>
+          <div class="cardlink-sub">Add a new habit</div>
+        </button>
+        <button class="cardlink" type="button" data-quick="workouts">
+          <div class="cardlink-title">Workout</div>
+          <div class="cardlink-sub">Add a workout block</div>
+        </button>
+        <button class="cardlink" type="button" data-quick="nutrition">
+          <div class="cardlink-title">Meal</div>
+          <div class="cardlink-sub">Log a meal</div>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" type="button" data-modal-close>Cancel</button>
+      </div>
+    `);
+  }
+
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-action]');
+    if (!a) return;
+
+    const action = a.dataset.action;
+    if (action === 'open-demo') {
+      e.preventDefault();
+      openModal(demoContent());
+    }
+    if (action === 'sync') {
+      e.preventDefault();
+      doSync();
+    }
+    if (action === 'add') {
+      e.preventDefault();
+      openAddForPage(document.body.dataset.page);
+    }
+  });
+
+  // quick add on dashboard modal
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-quick]');
+    if (!b) return;
+    const target = b.dataset.quick;
+    closeModal();
+    openAddForPage(target);
+  });
+
+  /* =========================
+     Habits: toggle + persist
+  ========================= */
+  const HABITS_KEY = 'lifesync-habits-v1';
+
+  function readHabitsFromDom() {
+    const list = $('#habitsList');
+    if (!list) return [];
+    return $$('.item', list).map((it) => ({
+      title: $('.title', it)?.textContent?.trim() || 'Habit',
+      sub: $('.sub', it)?.textContent?.trim() || '',
+      done: (it.classList.contains('done') || $('.right', it)?.textContent?.includes('✅'))
+    }));
+  }
+
+  function renderHabits(habits) {
+    const list = $('#habitsList');
+    if (!list) return;
+    list.innerHTML = '';
+    habits.forEach((h) => {
+      const it = document.createElement('div');
+      it.className = 'item reveal' + (h.done ? ' done' : '');
+      it.setAttribute('data-toggle', '');
+      it.innerHTML = `
+        <div class="left">
+          <div class="title">${escapeHtml(h.title)}</div>
+          <div class="sub">${escapeHtml(h.sub || 'Daily')}</div>
+        </div>
+        <div class="right">${h.done ? '✅' : '○'}</div>
+      `;
+      list.appendChild(it);
+    });
+
+    // re-trigger reveal for new items
+    if (!reduced) $$('.reveal', list).forEach((el) => el.classList.add('in'));
+  }
+
+  function loadHabits() {
+    const list = $('#habitsList');
+    if (!list) return;
+    const saved = localStorage.getItem(HABITS_KEY);
+    if (saved) {
+      try { renderHabits(JSON.parse(saved)); } catch {}
+    } else {
+      const dom = readHabitsFromDom();
+      localStorage.setItem(HABITS_KEY, JSON.stringify(dom));
+    }
+  }
+
+  function saveHabitsFromDom() {
+    const list = $('#habitsList');
+    if (!list) return;
+    const habits = $$('.item', list).map((it) => ({
+      title: $('.title', it)?.textContent?.trim() || 'Habit',
+      sub: $('.sub', it)?.textContent?.trim() || '',
+      done: it.classList.contains('done') || $('.right', it)?.textContent?.includes('✅'),
+    }));
+    localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+  }
+
+  document.addEventListener('click', (e) => {
+    const it = e.target.closest('#habitsList [data-toggle]');
+    if (!it) return;
+    it.classList.toggle('done');
+    const right = $('.right', it);
+    if (right) right.textContent = it.classList.contains('done') ? '✅' : '○';
+    saveHabitsFromDom();
+    toast(it.classList.contains('done') ? 'Habit completed 🎉' : 'Habit unchecked');
+  });
+
+  /* =========================
+     Finances: add transactions + persist
+  ========================= */
+  const TX_KEY = 'lifesync-tx-v1';
+
+  function addFinanceForm() {
+    return `
+      <div class="modal-title">Add transaction</div>
+      <form class="form" id="txForm">
+        <label>Merchant<input name="merchant" required placeholder="Starbucks"/></label>
+        <label>Category<input name="category" required placeholder="Food"/></label>
+        <label>Amount<input name="amount" required inputmode="decimal" placeholder="12.50"/></label>
+        <label>Date<input name="date" required type="date"/></label>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" data-modal-close>Cancel</button>
+          <button class="btn primary" type="submit">Add</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function getTx() {
+    try { return JSON.parse(localStorage.getItem(TX_KEY) || '[]'); } catch { return []; }
+  }
+
+  function setTx(arr) {
+    localStorage.setItem(TX_KEY, JSON.stringify(arr));
+  }
+
+  function renderTx() {
+    const body = $('#transactionsBody');
+    if (!body) return;
+    const tx = getTx();
+    // keep existing static rows as "seed" only if no saved data
+    if (!tx.length) return;
+
+    body.innerHTML = tx.map((t) => `
+      <tr>
+        <td>${escapeHtml(t.merchant)}</td>
+        <td><span class="chip">${escapeHtml(t.category)}</span></td>
+        <td>${escapeHtml(t.dateLabel)}</td>
+        <td style="text-align:right;">${escapeHtml(t.amountLabel)}</td>
+      </tr>
+    `).join('');
+  }
+
+  /* =========================
+     Workouts: add blocks + persist
+  ========================= */
+  const WO_KEY = 'lifesync-workouts-v1';
+
+  function addWorkoutForm() {
+    return `
+      <div class="modal-title">Add workout block</div>
+      <form class="form" id="woForm">
+        <label>Title<input name="title" required placeholder="Upper Body"/></label>
+        <label>Details<input name="sub" required placeholder="Strength · 45 min"/></label>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" data-modal-close>Cancel</button>
+          <button class="btn primary" type="submit">Add</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function getWorkouts() {
+    try { return JSON.parse(localStorage.getItem(WO_KEY) || '[]'); } catch { return []; }
+  }
+  function setWorkouts(arr) { localStorage.setItem(WO_KEY, JSON.stringify(arr)); }
+
+  function renderWorkouts() {
+    const list = $('#workoutsList');
+    if (!list) return;
+    const w = getWorkouts();
+    if (!w.length) return;
+
+    list.innerHTML = '';
+    w.forEach((x) => {
+      const it = document.createElement('div');
+      it.className = 'item reveal';
+      it.innerHTML = `
+        <div class="left">
+          <div class="title">${escapeHtml(x.title)}</div>
+          <div class="sub">${escapeHtml(x.sub)}</div>
+        </div>
+        <div class="right">
+          <button class="btn ghost" type="button" data-mark-done>Done</button>
+        </div>
+      `;
+      list.appendChild(it);
+    });
+    if (!reduced) $$('.reveal', list).forEach((el) => el.classList.add('in'));
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('#workoutsList [data-mark-done]');
+    if (!b) return;
+    b.closest('.item')?.classList.add('done');
+    toast('Workout completed 💪');
+  });
+
+  /* =========================
+     Nutrition: add meals + persist
+  ========================= */
+  const MEAL_KEY = 'lifesync-meals-v1';
+
+  function addMealForm() {
+    return `
+      <div class="modal-title">Log meal</div>
+      <form class="form" id="mealForm">
+        <label>Meal<input name="title" required placeholder="Chicken Salad"/></label>
+        <label>Calories<input name="cal" required inputmode="numeric" placeholder="520"/></label>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" data-modal-close>Cancel</button>
+          <button class="btn primary" type="submit">Log</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function getMeals() {
+    try { return JSON.parse(localStorage.getItem(MEAL_KEY) || '[]'); } catch { return []; }
+  }
+  function setMeals(arr) { localStorage.setItem(MEAL_KEY, JSON.stringify(arr)); }
+
+  function renderMeals() {
+    const list = $('#mealsList');
+    if (!list) return;
+    const meals = getMeals();
+    if (!meals.length) return;
+
+    list.innerHTML = '';
+    meals.forEach((m) => {
+      const it = document.createElement('div');
+      it.className = 'item reveal';
+      it.innerHTML = `
+        <div class="left">
+          <div class="title">${escapeHtml(m.title)}</div>
+          <div class="sub">${escapeHtml(m.sub)}</div>
+        </div>
+        <div class="right">${escapeHtml(m.right)}</div>
+      `;
+      list.appendChild(it);
+    });
+    if (!reduced) $$('.reveal', list).forEach((el) => el.classList.add('in'));
+  }
+
+  /* =========================
+     Form submits
+  ========================= */
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+
+    if (form.id === 'txForm') {
+      e.preventDefault();
+      const merchant = form.merchant.value.trim();
+      const category = form.category.value.trim();
+      const amount = form.amount.value.trim();
+      const date = form.date.value;
+      const d = date ? new Date(date) : new Date();
+
+      const amountNum = Number(amount.replace(/[^0-9.\-]/g, ''));
+      const amountLabel = isFinite(amountNum) ? `$${amountNum.toFixed(2)}` : `$${amount}`;
+      const dateLabel = isFinite(d.getTime())
+        ? d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+        : date;
+
+      const tx = getTx();
+      tx.unshift({ merchant, category, amountLabel, dateLabel, ts: Date.now() });
+      setTx(tx);
+      renderTx();
+
+      closeModal();
+      toast('Transaction added');
+      return;
+    }
+
+    if (form.id === 'habitForm') {
+      e.preventDefault();
+      const title = form.title.value.trim();
+      const sub = form.sub.value.trim();
+      const list = $('#habitsList');
+      if (!list) return;
+      const habits = (localStorage.getItem(HABITS_KEY) ? JSON.parse(localStorage.getItem(HABITS_KEY)) : readHabitsFromDom());
+      habits.unshift({ title, sub, done: false });
+      localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+      renderHabits(habits);
+      closeModal();
+      toast('Habit added');
+      return;
+    }
+
+    if (form.id === 'woForm') {
+      e.preventDefault();
+      const title = form.title.value.trim();
+      const sub = form.sub.value.trim();
+      const w = getWorkouts();
+      w.unshift({ title, sub });
+      setWorkouts(w);
+      renderWorkouts();
+      closeModal();
+      toast('Workout block added');
+      return;
+    }
+
+    if (form.id === 'mealForm') {
+      e.preventDefault();
+      const title = form.title.value.trim();
+      const cal = form.cal.value.trim();
+      const c = Number(cal.replace(/[^0-9]/g, ''));
+      const calLabel = isFinite(c) ? `${c} cal` : `${cal} cal`;
+      const meals = getMeals();
+      meals.unshift({ title, sub: 'Logged just now', right: calLabel });
+      setMeals(meals);
+      renderMeals();
+      closeModal();
+      toast('Meal logged 🥗');
+      return;
+    }
+  });
+
+  function addHabitForm() {
+    return `
+      <div class="modal-title">Add habit</div>
+      <form class="form" id="habitForm">
+        <label>Habit<input name="title" required placeholder="Drink water"/></label>
+        <label>Details<input name="sub" required placeholder="8 cups"/></label>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" data-modal-close>Cancel</button>
+          <button class="btn primary" type="submit">Add</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  // load persisted data for relevant pages
+  window.addEventListener('DOMContentLoaded', () => {
+    loadHabits();
+    renderTx();
+    renderWorkouts();
+    renderMeals();
+
+    // seed workout & meals if none stored but lists exist
+    if ($('#workoutsList') && !getWorkouts().length) {
+      const seed = $$('#workoutsList .item').map((it) => ({
+        title: $('.title', it)?.textContent?.trim() || 'Workout',
+        sub: $('.sub', it)?.textContent?.trim() || '',
+      }));
+      if (seed.length) setWorkouts(seed);
+    }
+    if ($('#mealsList') && !getMeals().length) {
+      const seed = $$('#mealsList .item').map((it) => ({
+        title: $('.title', it)?.textContent?.trim() || 'Meal',
+        sub: $('.sub', it)?.textContent?.trim() || '',
+        right: $('.right', it)?.textContent?.trim() || '',
+      }));
+      if (seed.length) setMeals(seed);
+    }
+  });
+
+  /* =========================
+     PWA: service worker + install prompt
+  ========================= */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./service-worker.js').catch(() => {});
@@ -138,33 +646,38 @@
     showInstallToast();
   });
 
-  const showInstallToast = () => {
+  function showInstallToast() {
     if (reduced) return;
-    if (document.getElementById('pwaToast')) return;
+    if ($('#pwaToast')) return;
 
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.id = 'pwaToast';
-    toast.innerHTML = `
+    const toastEl = document.createElement('div');
+    toastEl.className = 'toast';
+    toastEl.id = 'pwaToast';
+    toastEl.innerHTML = `
       <div>
         <div class="toast-title">Install LifeSync</div>
         <div class="toast-text">Add it to your home screen for a fast, app-like experience.</div>
       </div>
       <div class="toast-actions">
-        <button class="btn ghost" id="pwaLater">Not now</button>
-        <button class="btn primary" id="pwaInstall">Install</button>
+        <button class="btn ghost" id="pwaLater" type="button">Not now</button>
+        <button class="btn primary" id="pwaInstall" type="button">Install</button>
       </div>
     `;
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('show'));
+    document.body.appendChild(toastEl);
+    requestAnimationFrame(() => toastEl.classList.add('show'));
 
-    toast.querySelector('#pwaLater').addEventListener('click', () => toast.remove());
-    toast.querySelector('#pwaInstall').addEventListener('click', async () => {
-      if (!deferredPrompt) return toast.remove();
+    $('#pwaLater', toastEl)?.addEventListener('click', () => {
+      toastEl.classList.remove('show');
+      setTimeout(() => toastEl.remove(), 250);
+    });
+
+    $('#pwaInstall', toastEl)?.addEventListener('click', async () => {
+      toastEl.classList.remove('show');
+      setTimeout(() => toastEl.remove(), 250);
+      if (!deferredPrompt) return;
       deferredPrompt.prompt();
       try { await deferredPrompt.userChoice; } catch {}
       deferredPrompt = null;
-      toast.remove();
     });
-  };
+  }
 })();

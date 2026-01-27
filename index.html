@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="icon-192.png"/>
 
 </head>
-<body>
+<body data-page="home">
   <div class="bg"></div>
   <header class="nav">
     <div class="container nav-inner">
@@ -39,8 +39,8 @@
           </svg>
         </button>
 
-<button class="btn ghost" onclick="alert('Demo UI only — connect your backend here.')">Watch demo</button>
-        <button class="btn primary" onclick="alert('Demo UI only — connect your signup here.')">Get started</button>
+<button class="btn ghost" data-action="open-demo">Watch demo</button>
+        <a class="btn primary" href="dashboard.html" data-action="go-dashboard">Get started</a>
       </div>
     </div>
   </header>
