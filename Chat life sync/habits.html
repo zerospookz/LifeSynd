@@ -1,0 +1,99 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Habits</title>
+<link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logoDot"></div>
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
+
+    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <h1 class="pageTitle">Habits</h1>
+        <p class="subtitle">Streaks, consistency and recovery.</p>
+      </div>
+      <div class="actionsRow">
+        <a class="btn secondary" href="dashboard.html">Home</a>
+      </div>
+    </div>
+
+    
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Add & mark</h3><span class="badge">Streaks</span></div>
+  <div class="actionsRow">
+    <input id="habitName" placeholder="New habit">
+    <button onclick="addHabit()">Add habit</button>
+    <span class="pill" style="margin-left:auto">Mark date</span>
+    <input id="markDate" type="date">
+  </div>
+  <p class="small" style="margin:12px 0 0">Pick a date to recover missed days and keep streaks honest.</p>
+</div>
+
+<div class="grid" style="margin-top:14px">
+  <div class="card" id="templatesCard">
+    <div class="cardHeader">
+      <h3 class="cardTitle">Templates</h3>
+      <span class="badge">One‑click add</span>
+    </div>
+    <p class="small" style="margin-top:0">Start fast with a preset pack. You can edit/delete habits later.</p>
+    <div class="templateGrid">
+      <div class="templateItem">
+        <div>
+          <div class="templateTitle">Morning routine</div>
+          <div class="small">Water • meditate • plan • walk</div>
+        </div>
+        <button class="btn secondary" onclick="addTemplate('morning')">Add</button>
+      </div>
+      <div class="templateItem">
+        <div>
+          <div class="templateTitle">Gym</div>
+          <div class="small">Workout • protein • stretch • steps</div>
+        </div>
+        <button class="btn secondary" onclick="addTemplate('gym')">Add</button>
+      </div>
+      <div class="templateItem">
+        <div>
+          <div class="templateTitle">Study</div>
+          <div class="small">Deep work • review • read</div>
+        </div>
+        <button class="btn secondary" onclick="addTemplate('study')">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="habitAnalytics"></div>
+</div>
+
+<div class="grid">
+  <div class="card" id="insights"></div>
+  <div class="card" id="streakSummary"></div>
+</div>
+
+<div style="margin-top:18px" id="habitList" class="grid"></div>
+
+  </main>
+</div>
+<script src="app.js"></script>
+<script src="ui.js"></script><script src="habits.js"></script>
+</body></html>

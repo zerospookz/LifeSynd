@@ -1,0 +1,56 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nutrition</title>
+<link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logoDot"></div>
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
+
+    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <h1 class="pageTitle">Nutrition</h1>
+        <p class="subtitle">Simple logging that stays out of your way.</p>
+      </div>
+      <div class="actionsRow">
+        <a class="btn secondary" href="dashboard.html">Home</a>
+      </div>
+    </div>
+
+    
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Add meal</h3><span class="badge">Calories</span></div>
+  <div class="actionsRow">
+    <input id="meal" placeholder="Meal">
+    <input id="cal" type="number" placeholder="Calories">
+    <button onclick="addMeal()">Add</button>
+  </div>
+</div>
+<div id="mealList"></div>
+
+  </main>
+</div>
+<script src="app.js"></script>
+<script src="ui.js"></script><script src="nutrition.js"></script>
+</body></html>
