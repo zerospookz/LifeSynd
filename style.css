@@ -396,40 +396,6 @@ input:focus,select:focus{
 }
 .matrixCell:active{transform:translateY(-1px) scale(.98)}
 
-.matrixRow:hover .matrixDate{
-  border-color: rgba(255,255,255,.14);
-  background: rgba(255,255,255,.04);
-}
-.matrixRow:hover .matrixCell{
-  filter: brightness(1.06);
-}
-
-.matrixCell.done::after{
-  content:"";
-  width: 9px;
-  height: 16px;
-  border-right: 2px solid rgba(255,255,255,.92);
-  border-bottom: 2px solid rgba(255,255,255,.92);
-  display:block;
-  transform: rotate(40deg);
-  margin: 6px auto 0;
-  opacity: .9;
-}
-
-.matrixCell.missed::after{ content:""; display:none; }
-
-.habitTitleRow{display:flex;gap:10px;align-items:flex-start}
-.habitDot{
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  margin-top: 5px;
-  background: var(--habit-accent, var(--accent));
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--habit-accent, var(--accent)) 18%, transparent);
-}
-.habitStatusPills{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-
-
 @media (max-width: 520px){
   .matrixCell{width:32px;border-radius:10px}
 }
