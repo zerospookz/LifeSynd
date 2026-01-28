@@ -1,0 +1,48 @@
+
+/* Smooth Section Transitions */
+body {
+  transition:
+    background 1.2s ease,
+    color .6s ease;
+}
+
+/* Base background variables */
+:root {
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-accent: 99,102,241;
+}
+
+/* Focus */
+[data-section="focus"] {
+  --bg-accent: 99,102,241;
+  background:
+    radial-gradient(1200px at 15% 10%, rgba(99,102,241,.18), transparent 45%),
+    linear-gradient(135deg, #0b1026, #020617);
+}
+
+/* Finance */
+[data-section="finance"] {
+  --bg-accent: 34,197,94;
+  background:
+    radial-gradient(1200px at 15% 10%, rgba(34,197,94,.18), transparent 45%),
+    linear-gradient(135deg, #03140b, #020617);
+}
+
+/* Health */
+[data-section="health"] {
+  --bg-accent: 236,72,153;
+  background:
+    radial-gradient(1200px at 15% 10%, rgba(236,72,153,.18), transparent 45%),
+    linear-gradient(135deg, #1a0b14, #020617);
+}
+
+/* Glass container reacts subtly */
+.app-container {
+  transition:
+    background .8s ease,
+    box-shadow .8s ease;
+  box-shadow:
+    0 20px 40px rgba(0,0,0,.6),
+    0 0 60px rgba(var(--bg-accent), .08);
+}
