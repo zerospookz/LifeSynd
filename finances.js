@@ -1,6 +1,5 @@
 
 let tx=JSON.parse(localStorage.getItem("financeTx")||"[]");
-
 function save(){ localStorage.setItem("financeTx", JSON.stringify(tx)); }
 function todayIso(){ return isoToday(); }
 
@@ -10,18 +9,14 @@ function addTx(){
   const category=(txCategory.value||"Other").trim();
   const note=(txNote.value||"").trim();
   const date=txDate.value || todayIso();
-
   if(!amount || amount<=0) return;
 
   tx.unshift({id:crypto.randomUUID(), type, amount, category, note, date});
-  save();
-  render();
-  showToast("Transaction added");
+  save(); render(); showToast("Transaction added");
   txAmount.value=""; txCategory.value=""; txNote.value=""; txDate.value="";
 }
 
 function sum(arr, pred){ return arr.filter(pred).reduce((s,t)=>s+t.amount,0); }
-
 function startOfWeek(){
   const d=new Date();
   const day=(d.getDay()+6)%7;
@@ -33,7 +28,6 @@ function startOfWeek(){
 function render(){
   if(!txDate.value) txDate.value=todayIso();
 
-  // summary: week + month
   const ws=startOfWeek();
   const now=new Date();
   const monthStart=new Date(now.getFullYear(), now.getMonth(), 1);
@@ -49,25 +43,50 @@ function render(){
   const netWeek=weekIncome-weekExpense;
   const netMonth=monthIncome-monthExpense;
 
-  fSummary.innerHTML=`<h3>Summary</h3>
-    <p><span class="badge ok">Week income: ${weekIncome.toFixed(0)}</span> <span class="badge danger">Week spend: ${weekExpense.toFixed(0)}</span></p>
-    <p><span class="badge ok">Month income: ${monthIncome.toFixed(0)}</span> <span class="badge danger">Month spend: ${monthExpense.toFixed(0)}</span></p>
-    <p><strong>Net week:</strong> ${netWeek.toFixed(0)} • <strong>Net month:</strong> ${netMonth.toFixed(0)}</p>`;
+  fSummary.innerHTML=`
+    <div class="cardHeader"><h3 class="cardTitle">Summary</h3><span class="badge ${netWeek>=0?'ok':'danger'}">Net week ${netWeek.toFixed(0)}</span></div>
+    <div class="grid">
+      <div class="card soft">
+        <div class="cardHeader"><h3 class="cardTitle">Week spend</h3><span class="badge danger">Expense</span></div>
+        <div class="metric">${weekExpense.toFixed(0)}</div>
+        <div class="small">Total outgoing this week.</div>
+      </div>
+      <div class="card soft">
+        <div class="cardHeader"><h3 class="cardTitle">Week income</h3><span class="badge ok">Income</span></div>
+        <div class="metric">${weekIncome.toFixed(0)}</div>
+        <div class="small">Total incoming this week.</div>
+      </div>
+      <div class="card soft">
+        <div class="cardHeader"><h3 class="cardTitle">Month spend</h3><span class="badge danger">Expense</span></div>
+        <div class="metric">${monthExpense.toFixed(0)}</div>
+        <div class="small">Total outgoing this month.</div>
+      </div>
+      <div class="card soft">
+        <div class="cardHeader"><h3 class="cardTitle">Month income</h3><span class="badge ok">Income</span></div>
+        <div class="metric">${monthIncome.toFixed(0)}</div>
+        <div class="small">Total incoming this month.</div>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge ${netMonth>=0?'ok':'danger'}">Net month: ${netMonth.toFixed(0)}</span>
+      <span class="badge">Transactions: ${tx.length}</span>
+    </div>
+  `;
 
   // categories (month expense)
   const cat={};
   inMonth.filter(t=>t.type==="expense").forEach(t=>{ cat[t.category]=(cat[t.category]||0)+t.amount; });
-  const entries=Object.entries(cat).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const entries=Object.entries(cat).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const top=entries[0]?.[1] || 0;
-  fCategories.innerHTML=`<h3>Top categories (month)</h3>` + (entries.length? entries.map(([k,v])=>`
-    <div style="margin:10px 0 0">
-      <div class="row" style="justify-content:space-between">
-        <span>${k}</span><strong>${v.toFixed(0)}</strong>
-      </div>
-      <div class="miniBar"><div style="width:${top? (v/top*100).toFixed(0):0}%"></div></div>
-    </div>`).join("") : `<p class="empty">No expenses yet.</p>`);
+  fCategories.innerHTML=`<div class="cardHeader"><h3 class="cardTitle">Top categories</h3><span class="badge">This month</span></div>` +
+    (entries.length ? entries.map(([k,v])=>`
+      <div style="margin:10px 0 0">
+        <div class="actionsRow" style="justify-content:space-between">
+          <span>${k}</span><strong>${v.toFixed(0)}</strong>
+        </div>
+        <div class="miniBar"><div style="width:${top? (v/top*100).toFixed(0):0}%"></div></div>
+      </div>`).join("") : `<p class="small">No expenses yet.</p>`);
 
-  // table
   txBody.innerHTML = tx.slice(0,12).map(t=>`
     <tr>
       <td>${t.date}</td>
@@ -78,5 +97,4 @@ function render(){
     </tr>
   `).join("");
 }
-
 render();

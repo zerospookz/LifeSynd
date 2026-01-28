@@ -1,22 +1,46 @@
-<!DOCTYPE html><html><head><meta charset=utf-8>
-<title>Finances</title><link rel="stylesheet" href="style.css"></head>
-<body><div class="layout">
-<aside class="sidebar">
-  <a href="dashboard.html">🏠 Dashboard</a>
-  <a href="habits.html">🔥 Habits</a>
-  <a href="workouts.html">🏋️ Workouts</a>
-  <a href="planner.html">📅 Planner</a>
-  <a href="nutrition.html">🍎 Nutrition</a>
-  <a href="finances.html">💰 Finances</a>
-  <a href="settings.html">⚙️ Settings</a>
-</aside>
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finances</title>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logoDot"></div>
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
+      </div>
+    </div>
 
-<main class="content">
-<h1>Finances</h1>
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="planner.html"><span class="left">📅 <span>Planner</span></span><span class="pill">Week</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
 
-<div class="card">
-  <h3>Add transaction</h3>
-  <div class="row">
+    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <h1 class="pageTitle">Finances</h1>
+        <p class="subtitle">Track spending without friction.</p>
+      </div>
+      <div class="actionsRow">
+        <a class="btn secondary" href="dashboard.html">Home</a>
+      </div>
+    </div>
+
+    
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Add transaction</h3><span class="badge">Local-first</span></div>
+  <div class="actionsRow">
     <select id="txType">
       <option value="expense">Expense</option>
       <option value="income">Income</option>
@@ -27,7 +51,7 @@
     <input id="txDate" type="date">
     <button onclick="addTx()">Add</button>
   </div>
-  <p class="small" style="margin:12px 0 0">Tip: keep categories consistent to get cleaner insights.</p>
+  <div class="small" style="margin-top:10px">Keep categories consistent for cleaner insights.</div>
 </div>
 
 <div class="grid">
@@ -35,18 +59,19 @@
   <div class="card" id="fCategories"></div>
 </div>
 
-<div class="card">
-  <h3>Recent transactions</h3>
-  <table class="table" id="txTable">
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Recent transactions</h3><span class="badge">Last 12</span></div>
+  <table class="table">
     <thead>
       <tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th></tr>
     </thead>
     <tbody id="txBody"></tbody>
   </table>
-  <p class="small">Stored locally in your browser.</p>
+  <div class="small">Stored locally in your browser.</div>
 </div>
 
-</main></div>
-<script src="ui.js"></script>
-<script src="finances.js"></script>
+  </main>
+</div>
+<script src="app.js"></script>
+<script src="ui.js"></script><script src="finances.js"></script>
 </body></html>

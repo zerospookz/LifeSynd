@@ -1,35 +1,46 @@
 
 const today=isoToday();
 
-// Habits (streak model)
 const habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 const habitsDue=habits.length;
 const habitsDone=habits.filter(h=>h.datesDone?.includes(today)).length;
-dHabits.innerHTML=`<h3>Habits today</h3><p>${habitsDone}/${habitsDue} done</p>`;
 
-// Workouts
+dHabits.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Habits today</h3><span class="badge ${habitsDue? (habitsDone===habitsDue?'ok':'warn'):'warn'}">${habitsDone}/${habitsDue}</span></div>
+  <div class="metric">${habitsDue? Math.round((habitsDone/Math.max(1,habitsDue))*100):0}%</div>
+  <div class="small">${habitsDue? 'Completion rate for today.':'Add your first habit to start streaks.'}</div>
+`;
+
 const sets=JSON.parse(localStorage.getItem("workoutData")||"[]");
-dWorkouts.innerHTML=`<h3>Workout sets</h3><p>${sets.length} total sets logged</p>`;
+dWorkouts.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Workout sets</h3><span class="badge">${sets.length}</span></div>
+  <div class="metric">${sets.length}</div>
+  <div class="small">Total sets logged.</div>
+`;
 
-// Nutrition
 const meals=JSON.parse(localStorage.getItem("meals")||"[]");
-dCalories.innerHTML=`<h3>Calories</h3><p>${meals.reduce((s,m)=>s+m.cal,0)} kcal today</p>`;
+const kcal = meals.reduce((s,m)=>s+m.cal,0);
+dCalories.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Calories</h3><span class="badge">${kcal} kcal</span></div>
+  <div class="metric">${kcal}</div>
+  <div class="small">Logged today.</div>
+`;
 
-// Planner
 const plan=JSON.parse(localStorage.getItem("plannedWorkouts")||"{}");
 const todayPlan=plan[today];
-if(todayPlan){
-  const status=todayPlan.done ? '<span class="badge ok">Done</span>' : '<span class="badge warn">Planned</span>';
-  dPlanner.innerHTML=`<h3>Today’s workout</h3><p><strong>${todayPlan.template}</strong> ${status}</p>`;
-} else {
-  dPlanner.innerHTML=`<h3>Today’s workout</h3><p class="empty">Nothing planned.</p>`;
-}
+dPlanner.innerHTML = todayPlan ? `
+  <div class="cardHeader"><h3 class="cardTitle">Today’s workout</h3>${todayPlan.done?'<span class="badge ok">Done</span>':'<span class="badge warn">Planned</span>'}</div>
+  <div class="metric">${todayPlan.template}</div>
+  <div class="small">Open Planner to adjust.</div>
+` : `
+  <div class="cardHeader"><h3 class="cardTitle">Today’s workout</h3><span class="badge">—</span></div>
+  <div class="metric">None</div>
+  <div class="small">Pick Push / Pull / Legs in Planner.</div>
+`;
 
-// streak helpers
 function streakForDates(dates){
   if(!dates || dates.length===0) return {current:0,best:0};
   const set=new Set(dates);
-  // best
   let best=0, cur=0;
   const now=new Date();
   for(let i=365;i>=0;i--){
@@ -37,7 +48,6 @@ function streakForDates(dates){
     const iso=d.toISOString().slice(0,10);
     if(set.has(iso)){ cur++; best=Math.max(best,cur);} else cur=0;
   }
-  // current ending today
   let current=0;
   let d=new Date();
   while(true){
@@ -52,25 +62,44 @@ habits.forEach(h=>{
   bestCurrent=Math.max(bestCurrent,s.current);
   bestBest=Math.max(bestBest,s.best);
 });
-dStreak.innerHTML=`<h3>Streaks</h3><p><strong>Current best:</strong> ${bestCurrent} days</p><p><strong>All-time best:</strong> ${bestBest} days</p>`;
+dStreak.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Streaks</h3><span class="badge ok">${bestCurrent} current</span></div>
+  <div class="metric">${bestBest}</div>
+  <div class="small">All-time best streak (days).</div>
+`;
 
-// Embedded analytics cards (used to be analytics page)
+// Embedded analytics cards
 const prs={};
 sets.forEach(d=>{ prs[d.ex]=Math.max(prs[d.ex]||0,d.weight||0); });
-aWorkouts.innerHTML=`<h3>Workouts</h3><p><strong>${sets.length}</strong> sets logged</p><p><strong>${Object.keys(prs).length}</strong> PR categories</p>`;
+aWorkouts.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Workouts</h3><span class="badge">${Object.keys(prs).length} PRs</span></div>
+  <div class="metric">${sets.length}</div>
+  <div class="small">Sets logged total.</div>
+`;
 
 const keys=Object.keys(plan);
 const planned=keys.length;
 const done=keys.filter(k=>plan[k].done).length;
-aPlanner.innerHTML=`<h3>Planner</h3><p><strong>${planned}</strong> planned days</p><p><strong>${done}</strong> done days</p>`;
+aPlanner.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Planner</h3><span class="badge ${planned && done===planned?'ok':'warn'}">${done}/${planned}</span></div>
+  <div class="metric">${planned}</div>
+  <div class="small">Days planned this cycle.</div>
+`;
 
-aHabits.innerHTML=`<h3>Habits</h3><p>${habitsDone}/${habitsDue} done today</p><p class="small">Streaks live in Habits.</p>`;
+aHabits.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Habits</h3><span class="badge">${habitsDone}/${habitsDue}</span></div>
+  <div class="metric">${habitsDone}</div>
+  <div class="small">Completed today.</div>
+`;
 
-// Finance mini summary
 const tx=JSON.parse(localStorage.getItem("financeTx")||"[]");
 const weekStart=new Date(); weekStart.setDate(weekStart.getDate()-((weekStart.getDay()+6)%7));
 weekStart.setHours(0,0,0,0);
 const inWeek=tx.filter(t=> new Date(t.date) >= weekStart);
 const income=inWeek.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
 const expense=inWeek.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
-aFinances.innerHTML=`<h3>Finances</h3><p><strong>${Math.round(expense)}</strong> spent this week</p><p><strong>${Math.round(income)}</strong> income this week</p>`;
+aFinances.innerHTML=`
+  <div class="cardHeader"><h3 class="cardTitle">Finances</h3><span class="badge danger">${Math.round(expense)} spent</span></div>
+  <div class="metric">${Math.round(income-expense)}</div>
+  <div class="small">Net this week (income − spend).</div>
+`;
