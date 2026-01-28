@@ -653,3 +653,44 @@ input:focus,select:focus{
 }
 .btn.ghost:hover{ filter: brightness(1.1); }
 
+
+
+/* --- Habits Analytics upgrades --- */
+.analyticsCard{ margin-top: 18px; }
+.analyticsControls{ display:flex; gap:10px; align-items:center; justify-content:flex-end; }
+.seg{
+  display:inline-flex;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+.segBtn{
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: 650;
+  font-size: .78rem;
+  cursor: pointer;
+}
+.segBtn.active{
+  color: var(--text);
+  background: rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 10px 26px rgba(0,0,0,.18);
+}
+.matrixWrap{ padding: 14px; }
+.matrixGrid{ gap: 10px; }
+.matrixHeaderRow, .matrixRow{ gap: 10px; }
+.matrixCell{ width: 44px; border-radius: 14px; }
+.matrixCorner, .matrixHabit, .matrixDate{ border-radius: 14px; }
+.matrixHabit{ text-align:center; }
+.matrixDate{ min-width: 170px; }
+.matrixWrap{ max-height: 520px; }
+.matrixHelp{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:10px; }
+.matrixHint{ color: var(--muted); font-size:.8rem; }
+.matrixLegend{ display:flex; gap:10px; align-items:center; }
+.legendDot{ width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.18); }
+.legendDot.done{ background: color-mix(in oklab, var(--accent) 70%, transparent); border-color: rgba(255,255,255,.12); }

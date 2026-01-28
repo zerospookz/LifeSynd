@@ -2,6 +2,8 @@
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 
+let analyticsView = localStorage.getItem("habitsAnalyticsView") || "month";
+
 // ---------- helpers ----------
 function escapeHtml(str){
   return String(str ?? "")
@@ -168,28 +170,58 @@ function miniHeatHtml(h){
 }
 
 // ---------- Analytics (Matrix) ----------
+
 function renderAnalytics(){
   const card = document.getElementById("habitAnalytics");
   if(!card) return;
 
+  const viewLabel = analyticsView === "week" ? "7 days" : "30 days";
   card.innerHTML = `
-    <div class="cardHeader">
-      <h3 class="cardTitle">Analytics</h3>
-      <span class="badge">Click to mark</span>
+    <div class="cardHeader" style="align-items:flex-start">
+      <div>
+        <h3 class="cardTitle">Analytics</h3>
+        <p class="small" style="margin:6px 0 0">Drag to mark · Tap to toggle · View: <span class="badge">${viewLabel}</span></p>
+      </div>
+      <div class="analyticsControls">
+        <div class="seg" role="tablist" aria-label="Analytics range">
+          <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
+          <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
+        </div>
+      </div>
     </div>
-    <p class="small" style="margin-top:0">Tap a square to toggle done/missed for that habit & date.</p>
+
     <div class="matrixWrap"><div class="matrixGrid" id="matrixGrid"></div></div>
+
+    <div class="matrixHelp">
+      <div class="matrixHint">Tip: press and drag across squares to mark multiple days quickly.</div>
+      <div class="matrixLegend">
+        <span class="legendDot done"></span><span class="matrixHint">done</span>
+      </div>
+    </div>
   `;
 
   const grid = card.querySelector("#matrixGrid");
+
+  // view toggle
+  card.querySelectorAll(".segBtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const v = btn.dataset.view;
+      if(!v || v===analyticsView) return;
+      analyticsView = v;
+      localStorage.setItem("habitsAnalyticsView", analyticsView);
+      renderAnalytics();
+    });
+  });
+
   if(!habits || habits.length===0){
     grid.innerHTML = '<p class="empty">Add a habit to see analytics.</p>';
     return;
   }
 
-  const dates = lastNDates(21);
-  const cols = 1 + habits.length;
-  const colTemplate = `160px repeat(${habits.length}, 36px)`;
+  const range = analyticsView==="week" ? 7 : 30;
+  const dates = lastNDates(range);
+
+  const colTemplate = `170px repeat(${habits.length}, 44px)`;
 
   // header row
   const header = document.createElement("div");
@@ -243,13 +275,83 @@ function renderAnalytics(){
     grid.appendChild(row);
   });
 
-  // click delegation
+  // ----- drag-to-mark (pointer events) -----
+  let dragging = false;
+  let targetDone = true;
+  let touched = new Set();
+  let dirty = false;
+
+  function applyCell(cell){
+    const hid = cell.dataset.hid;
+    const iso = cell.dataset.iso;
+    const key = hid + "|" + iso;
+    if(touched.has(key)) return;
+    touched.add(key);
+
+    const h = habits.find(x=>x.id===hid);
+    if(!h) return;
+
+    const set = new Set(h.datesDone||[]);
+    const already = set.has(iso);
+
+    if(targetDone){
+      if(!already){
+        set.add(iso);
+        h.datesDone = Array.from(set).sort();
+        dirty = true;
+      }
+      cell.classList.add("done");
+      cell.classList.remove("missed");
+    }else{
+      if(already){
+        set.delete(iso);
+        h.datesDone = Array.from(set).sort();
+        dirty = true;
+      }
+      cell.classList.remove("done");
+      if(iso < todayIso) cell.classList.add("missed");
+    }
+  }
+
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    touched = new Set();
+    if(dirty) save();
+    dirty = false;
+  }
+
+  grid.addEventListener("pointerdown", (e)=>{
+    const cell = e.target.closest(".matrixCell");
+    if(!cell) return;
+    // prevent scroll-jank on drag
+    e.preventDefault();
+    dragging = true;
+    touched = new Set();
+    targetDone = !cell.classList.contains("done");
+    applyCell(cell);
+    cell.setPointerCapture?.(e.pointerId);
+  });
+
+  grid.addEventListener("pointerover", (e)=>{
+    if(!dragging) return;
+    const cell = e.target.closest(".matrixCell");
+    if(!cell) return;
+    applyCell(cell);
+  });
+
+  window.addEventListener("pointerup", endDrag, { once:false });
+  window.addEventListener("pointercancel", endDrag, { once:false });
+
+  // tap-to-toggle fallback
   grid.addEventListener("click", (e)=>{
+    if(dragging) return;
     const cell=e.target.closest(".matrixCell");
     if(!cell) return;
     toggleHabitAt(cell.dataset.hid, cell.dataset.iso, {preserveScroll:true});
   });
 }
+
 
 function renderInsights(){
   const el=document.getElementById("insights");
