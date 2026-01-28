@@ -315,7 +315,6 @@ function renderAnalytics(){
 
   function endDrag(){
     if(!dragging) return;
-    dragging = false;
     touched = new Set();
     if(dirty) save();
     dirty = false;
