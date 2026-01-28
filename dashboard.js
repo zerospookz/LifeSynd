@@ -249,36 +249,83 @@ function drawBudgetGoalChart({ totalBudget, totalSpent, pct }){
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0,0,w,h);
 
-  const left=18, top=56, barH=26, barW=w-36;
+  // Helper: rounded rect (fallback for older browsers)
+  function rr(x,y,width,height,r){
+    const rad = Math.min(r, width/2, height/2);
+    if(ctx.roundRect){
+      ctx.beginPath();
+      ctx.roundRect(x,y,width,height,rad);
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x+rad,y);
+    ctx.arcTo(x+width,y,x+width,y+height,rad);
+    ctx.arcTo(x+width,y+height,x,y+height,rad);
+    ctx.arcTo(x,y+height,x,y,rad);
+    ctx.arcTo(x,y,x+width,y,rad);
+    ctx.closePath();
+  }
+
+  const left=18, top=60, barH=28, barW=w-36;
+  const radius = 14;
 
   // Track
-  ctx.globalAlpha=0.22;
-  ctx.fillStyle="#ffffff";
-  ctx.fillRect(left, top, barW, barH);
+  ctx.save();
+  ctx.globalAlpha=1;
+  rr(left, top, barW, barH, radius);
+  ctx.fillStyle="rgba(255,255,255,.10)";
+  ctx.fill();
+  // subtle inner stroke
+  ctx.strokeStyle="rgba(255,255,255,.08)";
+  ctx.lineWidth=1;
+  ctx.stroke();
+  ctx.restore();
 
   // Fill
   const used=Math.min(1, totalSpent/totalBudget);
-  ctx.globalAlpha=0.58;
-  ctx.fillRect(left, top, barW*used, barH);
+  ctx.save();
+  const fillW = Math.max(0, barW*used);
+  if(fillW>0){
+    rr(left, top, fillW, barH, radius);
+    const g = ctx.createLinearGradient(left, top, left+barW, top);
+    g.addColorStop(0, "rgba(99,102,241,.95)");
+    g.addColorStop(1, "rgba(129,140,248,.80)");
+    ctx.fillStyle=g;
+    ctx.shadowColor="rgba(99,102,241,.35)";
+    ctx.shadowBlur=18;
+    ctx.fill();
+    // gloss
+    ctx.shadowBlur=0;
+    rr(left+1, top+1, Math.max(0, fillW-2), Math.max(0, barH*0.55), radius);
+    ctx.fillStyle="rgba(255,255,255,.10)";
+    ctx.fill();
+  }
+  ctx.restore();
 
   // Labels
-  ctx.globalAlpha=0.92;
-  ctx.font="24px Inter, system-ui";
-  ctx.fillText(`${Math.round(totalSpent)} / ${Math.round(totalBudget)}`, left, 38);
-  ctx.globalAlpha=0.7;
-  ctx.font="16px Inter, system-ui";
-  ctx.fillText(`Spent this month`, left, 108);
+  ctx.globalAlpha=0.95;
+  ctx.fillStyle="rgba(255,255,255,.92)";
+  ctx.font="700 22px Inter, system-ui";
+  ctx.fillText(`${Math.round(totalSpent)} / ${Math.round(totalBudget)}`, left, 40);
+  ctx.globalAlpha=0.72;
+  ctx.font="500 15px Inter, system-ui";
+  ctx.fillText(`Spent this month`, left, 118);
 
   // 80% tick
   const t=0.8;
-  ctx.globalAlpha=0.32;
-  ctx.fillRect(left+barW*t, top-10, 2, barH+20);
+  ctx.save();
+  ctx.globalAlpha=0.55;
+  ctx.fillStyle="rgba(255,255,255,.20)";
+  rr(left+barW*t-1, top-10, 2, barH+20, 2);
+  ctx.fill();
+  ctx.restore();
 
   // Percent
-  ctx.globalAlpha=0.92;
+  ctx.globalAlpha=0.95;
   ctx.textAlign="right";
-  ctx.font="20px Inter, system-ui";
-  ctx.fillText(`${pct}%`, left+barW, 38);
+  ctx.font="800 20px Inter, system-ui";
+  ctx.fillStyle="rgba(255,255,255,.92)";
+  ctx.fillText(`${pct}%`, left+barW, 40);
   ctx.textAlign="left";
   ctx.globalAlpha=1;
 }
