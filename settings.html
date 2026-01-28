@@ -1,44 +1,24 @@
 
-<!DOCTYPE html><html><head>
-<meta charset=utf-8>
-<title>Settings</title>
-<link rel=stylesheet href=style.css>
-<script defer src=profile.js></script>
-</head><body>
-<h1>User Profile & Goals</h1>
-<div class=card>
-<input id=pname placeholder="Name"/>
-<input id=pcal type=number placeholder="Calories goal"/>
-<input id=pprot type=number placeholder="Protein goal"/>
-<input id=pcarb type=number placeholder="Carbs goal"/>
-<input id=pfat type=number placeholder="Fat goal"/>
-<button onclick=saveUserProfile()>Save</button>
-</div>
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Settings</title>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="layout">
 
-<h2>Data Export / Import</h2>
-<div class=card>
-<button onclick=exportData()>Export Data</button>
-<input type=file onchange=importData(this.files[0])>
-</div>
+<aside class="sidebar">
+  <h2>LifeSync</h2>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="habits.html">Habits</a>
+  <a href="workouts.html">Workouts</a>
+  <a href="nutrition.html">Nutrition</a>
+  <a href="settings.html">Settings</a>
+</aside>
 
-<script>
-function exportData(){
-  const data={};
-  Object.keys(localStorage).forEach(k=>data[k]=JSON.parse(localStorage[k]));
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="lifesync-data.json";
-  a.click();
-}
-function importData(file){
-  const r=new FileReader();
-  r.onload=()=>{
-    const d=JSON.parse(r.result);
-    Object.keys(d).forEach(k=>localStorage.setItem(k,JSON.stringify(d[k])));
-    location.reload();
-  };
-  r.readAsText(file);
-}
-</script>
-</body></html>
+<main class="content">
+<h1>Settings</h1>
+<p class="empty">All data is stored locally in your browser.</p>
+</main>
+</div>
+</body>
+</html>

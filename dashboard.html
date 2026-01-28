@@ -1,13 +1,32 @@
+
 <!DOCTYPE html>
-<html><head><meta charset="utf-8">
+<html>
+<head>
+<meta charset="utf-8">
 <title>Dashboard</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<script src="sidebar.js"></script>
-<div class="app-shell">
-<h1>Dashboard</h1>
-<div id="summary"></div>
+<div class="layout">
+
+<aside class="sidebar">
+  <h2>LifeSync</h2>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="habits.html">Habits</a>
+  <a href="workouts.html">Workouts</a>
+  <a href="nutrition.html">Nutrition</a>
+  <a href="settings.html">Settings</a>
+</aside>
+
+<main class="content">
+  <h1>Dashboard</h1>
+  <div class="grid">
+    <div class="card" id="habitStat"></div>
+    <div class="card" id="workoutStat"></div>
+    <div class="card" id="calStat"></div>
+  </div>
+</main>
 </div>
 <script src="dashboard.js"></script>
-</body></html>
+</body>
+</html>

@@ -1,14 +1,34 @@
+
 <!DOCTYPE html>
-<html><head><meta charset="utf-8">
+<html>
+<head>
+<meta charset="utf-8">
 <title>Workouts</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<script src="sidebar.js"></script>
-<div class="app-shell">
-<h1>Workouts</h1>
-<input id="workoutName"><button onclick="addWorkout()">Add</button>
-<div id="workoutList"></div>
+<div class="layout">
+
+<aside class="sidebar">
+  <h2>LifeSync</h2>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="habits.html">Habits</a>
+  <a href="workouts.html">Workouts</a>
+  <a href="nutrition.html">Nutrition</a>
+  <a href="settings.html">Settings</a>
+</aside>
+
+<main class="content">
+  <h1>Workouts</h1>
+
+  <div class="card">
+    <input id="workoutName" placeholder="Workout name">
+    <button onclick="addWorkout()">Add Workout</button>
+  </div>
+
+  <div id="workoutList" class="grid"></div>
+</main>
 </div>
 <script src="workouts.js"></script>
-</body></html>
+</body>
+</html>

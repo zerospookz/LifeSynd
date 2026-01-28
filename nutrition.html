@@ -1,15 +1,30 @@
+
 <!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<title>Nutrition</title>
-<link rel="stylesheet" href="style.css">
-</head>
+<html>
+<head><meta charset="utf-8"><title>Nutrition</title>
+<link rel="stylesheet" href="style.css"></head>
 <body>
-<script src="sidebar.js"></script>
-<div class="app-shell">
+<div class="layout">
+
+<aside class="sidebar">
+  <h2>LifeSync</h2>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="habits.html">Habits</a>
+  <a href="workouts.html">Workouts</a>
+  <a href="nutrition.html">Nutrition</a>
+  <a href="settings.html">Settings</a>
+</aside>
+
+<main class="content">
 <h1>Nutrition</h1>
-<input id="mealName"><input id="cal" type="number">
+<div class="card">
+<input id="mealName" placeholder="Meal">
+<input id="cal" type="number" placeholder="Calories">
 <button onclick="addMeal()">Add</button>
-<div id="mealList"></div>
+</div>
+<div id="mealList" class="grid"></div>
+</main>
 </div>
 <script src="nutrition.js"></script>
-</body></html>
+</body>
+</html>
