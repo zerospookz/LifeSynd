@@ -1,13 +1,14 @@
-
-<!DOCTYPE html><html><head><meta charset=utf-8><title>Workouts</title><link rel=stylesheet href=style.css><script defer src=app.js></script></head><body>
-<h1>Workout Planner</h1>
-<section class=card><h2>Workout Builder</h2>
-<input id=templateName placeholder="Template name"/>
-<div id=exerciseList></div>
-<button onclick="addExerciseRow(document.getElementById('exerciseList'))">Add Exercise</button>
-<button onclick=saveTemplate()>Save Template</button></section>
-<section class=card><h2>Templates</h2><div id=templates></div></section>
-<section class=card><h2>Workout Timer</h2><div id=timer>00:00:00</div>
-<button onclick=startTimer()>Start</button><button onclick=stopTimer()>Stop</button></section>
-<section class=card><h2>This Week</h2><div id=week class=week></div></section>
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>Workouts</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="sidebar.js"></script>
+<div class="app-shell">
+<h1>Workouts</h1>
+<input id="workoutName"><button onclick="addWorkout()">Add</button>
+<div id="workoutList"></div>
+</div>
+<script src="workouts.js"></script>
 </body></html>
