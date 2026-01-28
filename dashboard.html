@@ -1,8 +1,29 @@
 
-<!DOCTYPE html><html><head><meta charset=utf-8><title>Dashboard</title><link rel=stylesheet href=style.css><script defer src=app.js></script></head><body>
-<h1>Dashboard</h1>
+<!DOCTYPE html><html><head>
+<meta charset=utf-8>
+<title>Dashboard</title>
+<link rel=stylesheet href=style.css>
+<script defer src=dashboard-adaptive.js></script>
+</head><body>
+<h1 id=dashMode></h1>
+<p id=dashHint></p>
+
 <section class=grid>
-<div class=card><h3>Today</h3><p>Habits due today</p><p>Workout planned</p><p>Calories remaining</p></div>
-<div class=card><h3>Quick Actions</h3><a href=habits.html>Add Habit</a><a href=workouts.html>Plan Workout</a><a href=nutrition.html>Log Meal</a></div>
-<div class=card><h3>Stats</h3><p>Habit streak 🔥</p><p>Workouts this week</p><p>Spending this week</p></div>
-</section></body></html>
+  <div class=card>
+    <h3>Today</h3>
+    <p>Habits due today</p>
+    <p>Workout planned</p>
+    <p>Calories remaining</p>
+  </div>
+  <div class=card>
+    <h3>Quick Actions</h3>
+    <a href=habits.html>Add Habit</a>
+    <a href=workouts.html>Plan Workout</a>
+    <a href=nutrition.html>Log Meal</a>
+  </div>
+  <div class=card>
+    <h3>Insights</h3>
+    <a href=workout-analytics.html>Workout Analytics</a>
+  </div>
+</section>
+</body></html>
