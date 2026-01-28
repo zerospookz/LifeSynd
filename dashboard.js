@@ -58,6 +58,7 @@ function render(){
   const habitsDue = habits.length;
   const habitsDone = habits.filter(h=>h.datesDone?.includes(today)).length;
   const habitsPct = habitsDue ? Math.round((habitsDone/Math.max(1,habitsDue))*100) : 0;
+  
   const hCard = $("dHabits");
   if(hCard){
     hCard.innerHTML = `
@@ -178,20 +179,97 @@ function render(){
   const remaining=Math.max(0, totalBudget-totalSpent);
   const pct = totalBudget>0 ? Math.round((totalSpent/totalBudget)*100) : 0;
 
+  // Today focus (what matters right now)
+  const habitsDueToday = Math.max(0, habitsDue - habitsDone);
+
+  // Workout plan status
+  const planToday = plan?.[today] || null;
+  const didWorkoutToday = sets.some(s => s.date === today);
+  const workoutDone = (planToday && planToday.done) || didWorkoutToday;
+  const workoutPlanned = !!planToday;
+  const missedWorkouts = Object.keys(plan||{}).filter(k => k < today && plan[k] && !plan[k].done).length;
+
+  const tf = $("dTodayFocus");
+  if(tf){
+    const budgetStatus = totalBudget>0 ? (pct < 80 ? "Safe" : "Warning") : "Not set";
+    const budgetClass = totalBudget>0 ? (pct < 80 ? "ok" : "warn") : "";
+    const habitLine = habitsDue ? `${habitsDueToday} due · ${habitsDone} done` : "Add your first habit";
+    let workoutLine = "No workout planned";
+    let workoutBadge = "badge";
+    if(workoutPlanned && workoutDone){ workoutLine = `Completed · ${planToday.template || "Workout"}`; workoutBadge = "badge ok"; }
+    else if(workoutPlanned && !workoutDone){ workoutLine = `Planned · ${planToday.template || "Workout"}`; workoutBadge = "badge"; }
+    else if(!workoutPlanned && didWorkoutToday){ workoutLine = "Logged workout today"; workoutBadge = "badge ok"; }
+
+    tf.innerHTML = `
+      <div class="cardHeader">
+        <h3 class="cardTitle">Today focus</h3>
+        ${missedWorkouts ? `<span class="badge warn">${missedWorkouts} missed</span>` : `<span class="badge ok">On track</span>`}
+      </div>
+      <div class="grid" style="margin-top:14px">
+        <div class="card soft" style="padding:14px">
+          <div class="small">Habits</div>
+          <div style="margin-top:6px;font-weight:800;letter-spacing:-.02em">${habitLine}</div>
+          <div class="small" style="margin-top:6px">${habitsDueToday ? "Knock these out early for an easy win." : "All done — nice."}</div>
+        </div>
+
+        <div class="card soft" style="padding:14px">
+          <div class="small">Budget</div>
+          <div style="margin-top:6px;font-weight:800;letter-spacing:-.02em">
+            <span class="badge ${budgetClass}" style="vertical-align:middle">${budgetStatus}</span>
+            ${totalBudget>0 ? `<span class="small" style="margin-left:8px">${pct}% used</span>` : ``}
+          </div>
+          <div class="small" style="margin-top:6px">${totalBudget>0 ? `Remaining: <b>${Math.round(remaining)}</b>` : "Add budgets to enable alerts."}</div>
+        </div>
+
+        <div class="card soft" style="padding:14px">
+          <div class="small">Workout</div>
+          <div style="margin-top:6px;font-weight:800;letter-spacing:-.02em">${workoutLine}</div>
+          <div class="small" style="margin-top:6px">${missedWorkouts ? "Review missed days in Planner." : "Keep the streak going."}</div>
+        </div>
+      </div>
+    `;
+  }
+
+
   const bCard = $("dBudget");
   if(bCard){
-    bCard.innerHTML = totalBudget>0 ? `
-      <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge ${pct<80?'ok':'warn'}">${pct}% used</span></div>
-      <div class="metric">${Math.round(remaining)}</div>
-      <div style="margin:10px 0 6px">
-        <canvas id="budgetGoalChart" width="900" height="150" style="width:100%;height:150px"></canvas>
-      </div>
-      <div class="small">Monthly goal progress (spent vs budget).</div>
-    ` : `
-      <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge">Not set</span></div>
-      <div class="metric">—</div>
-      <div class="small">Set category budgets in Finances.</div>
-    `;
+    if(totalBudget>0){
+      const statusClass = pct < 80 ? "ok" : "warn";
+      const statusLabel = pct < 80 ? "Safe" : "Warning";
+      bCard.innerHTML = `
+        <div class="cardHeader">
+          <h3 class="cardTitle">Budget</h3>
+          <span class="badge ${statusClass}">${statusLabel} · ${pct}%</span>
+        </div>
+
+        <div class="row" style="gap:16px;align-items:center;margin-top:12px">
+          <div class="ringChart" style="--p:${Math.max(0,Math.min(100,totalBudget>0?(totalSpent/totalBudget)*100:0)).toFixed(2)};--size:160px;--thickness:18px">
+            <div class="ringInner">
+              <div class="ringBig">${pct}%</div>
+              <div class="ringSmall">Spent <b>${Math.round(totalSpent)}</b> · Remaining <b>${Math.round(remaining)}</b></div>
+            </div>
+          </div>
+
+          <div style="flex:1;min-width:180px">
+            <div class="metric" style="font-size:28px">${Math.round(remaining)}</div>
+            <div class="small">Remaining this month</div>
+
+            <div class="ringLegend">
+              <div class="legendItem"><span class="legendDot"></span> <span>Spent <b>${Math.round(totalSpent)}</b></span></div>
+              <div class="legendItem"><span class="legendDot muted"></span> <span>Budget <b>${Math.round(totalBudget)}</b></span></div>
+            </div>
+
+            <div class="small" style="margin-top:10px">Tip: Keep usage under <b>80%</b> to avoid alerts.</div>
+          </div>
+        </div>
+      `;
+    }else{
+      bCard.innerHTML = `
+        <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge">Not set</span></div>
+        <div class="small">Set category budgets in Finances to unlock budget insights.</div>
+        <div style="margin-top:12px"><a class="btn secondary" href="finances.html">Set budgets</a></div>
+      `;
+    }
   }
 
   // Recent transactions preview
@@ -225,8 +303,6 @@ function render(){
   if(hh) hh.textContent = `${habitsDone}/${habitsDue}`;
   if(hc) hc.textContent = `${kcal} kcal`;
   if(hb) hb.textContent = totalBudget>0 ? `${pct}% used` : "Not set";
-
-  drawBudgetGoalChart({ totalBudget, totalSpent, pct });
 
   // Budget alert (80%+) - once per month
   try{
