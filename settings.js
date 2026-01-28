@@ -28,6 +28,7 @@ function importData(){
    if(obj.workoutTemplates) localStorage.setItem("workoutTemplates", JSON.stringify(obj.workoutTemplates));
    if(obj.plannedWorkouts) localStorage.setItem("plannedWorkouts", JSON.stringify(obj.plannedWorkouts));
    if(obj.financeTx) localStorage.setItem("financeTx", JSON.stringify(obj.financeTx));
+   if(obj.financeBudgets) localStorage.setItem("financeBudgets", JSON.stringify(obj.financeBudgets));
    showToast("Imported — refresh pages");
   }catch(e){ alert("Invalid JSON"); }
  };

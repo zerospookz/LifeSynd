@@ -17,7 +17,6 @@
       <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
       <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
       <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
-      <a href="planner.html"><span class="left">📅 <span>Planner</span></span><span class="pill">Week</span></a>
       <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
       <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
       <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
@@ -47,6 +46,7 @@
 <div class="grid" style="margin-top:18px">
   <div class="card" id="dPlanner"></div>
   <div class="card" id="dStreak"></div>
+  <div class="card" id="dBudget"></div>
 </div>
 
 <div class="card soft" style="margin-top:18px">
@@ -58,7 +58,7 @@
     <a class="btn" href="habits.html">Mark habits</a>
     <a class="btn" href="workouts.html">Log set</a>
     <a class="btn" href="nutrition.html">Add meal</a>
-    <a class="btn secondary" href="finances.html">Add transaction</a>
+    <button class="btn secondary" onclick="openTxModal()">Add transaction</button>
   </div>
 </div>
 
@@ -75,7 +75,33 @@
   </div>
 </div>
 
-  </main>
+  
+<div class="modalBackdrop" id="txModal" aria-hidden="true">
+  <div class="modal">
+    <div class="modalHeader">
+      <h3 class="modalTitle">Add transaction</h3>
+      <button class="iconBtn" onclick="closeTxModal()">✕</button>
+    </div>
+    <div class="small">Adds directly to your local finance log. You can review everything in Finances.</div>
+    <div class="hr"></div>
+    <div class="actionsRow">
+      <select id="mTxType">
+        <option value="expense">Expense</option>
+        <option value="income">Income</option>
+      </select>
+      <input id="mTxAmount" type="number" placeholder="Amount">
+      <input id="mTxCategory" placeholder="Category (Food, Rent...)">
+      <input id="mTxNote" placeholder="Note (optional)">
+      <input id="mTxDate" type="date">
+    </div>
+    <div class="actionsRow" style="margin-top:12px;justify-content:flex-end">
+      <button class="btn secondary" onclick="closeTxModal()">Cancel</button>
+      <button onclick="addTxFromDashboard()">Add</button>
+    </div>
+  </div>
+</div>
+
+</main>
 </div>
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="dashboard.js"></script>

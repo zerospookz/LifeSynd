@@ -103,3 +103,84 @@ aFinances.innerHTML=`
   <div class="metric">${Math.round(income-expense)}</div>
   <div class="small">Net this week (income − spend).</div>
 `;
+
+
+// Remaining budget widget
+const budgets=JSON.parse(localStorage.getItem("financeBudgets")||"{}"); // {category: amount}
+const nowB=new Date();
+const monthStartB=new Date(nowB.getFullYear(), nowB.getMonth(), 1);
+const monthTx=tx.filter(t=> new Date(t.date) >= monthStartB && t.type==="expense");
+const spentByCat={};
+monthTx.forEach(t=>{ spentByCat[t.category]=(spentByCat[t.category]||0)+t.amount; });
+const totalBudget=Object.values(budgets).reduce((s,v)=>s+Number(v||0),0);
+const totalSpent=Object.values(spentByCat).reduce((s,v)=>s+v,0);
+const remaining=Math.max(0, totalBudget-totalSpent);
+const pct = totalBudget>0 ? Math.round((totalSpent/totalBudget)*100) : 0;
+
+dBudget.innerHTML = totalBudget>0 ? `
+  <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge ${pct<80?'ok':'warn'}">${pct}% used</span></div>
+  <div class="metric">${Math.round(remaining)}</div>
+  <div class="small">Remaining this month (sum of category budgets).</div>
+` : `
+  <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge">Not set</span></div>
+  <div class="metric">—</div>
+  <div class="small">Set category budgets in Finances.</div>
+`;
+
+// Dashboard transaction modal
+function openTxModal(){
+  const m=document.getElementById("txModal");
+  if(!m) return;
+  m.classList.add("show");
+  m.setAttribute("aria-hidden","false");
+  const dateInput=document.getElementById("mTxDate");
+  if(dateInput && !dateInput.value) dateInput.value=isoToday();
+}
+function closeTxModal(){
+  const m=document.getElementById("txModal");
+  if(!m) return;
+  m.classList.remove("show");
+  m.setAttribute("aria-hidden","true");
+}
+function addTxFromDashboard(){
+  const type=document.getElementById("mTxType").value;
+  const amount=Number(document.getElementById("mTxAmount").value);
+  const category=(document.getElementById("mTxCategory").value||"Other").trim();
+  const note=(document.getElementById("mTxNote").value||"").trim();
+  const date=document.getElementById("mTxDate").value || isoToday();
+  if(!amount || amount<=0) return;
+
+  const tx=JSON.parse(localStorage.getItem("financeTx")||"[]");
+  tx.unshift({id:crypto.randomUUID(), type, amount, category, note, date});
+  localStorage.setItem("financeTx", JSON.stringify(tx));
+  showToast("Transaction added");
+  closeTxModal();
+  // reset inputs
+  document.getElementById("mTxAmount").value="";
+  document.getElementById("mTxCategory").value="";
+  document.getElementById("mTxNote").value="";
+  // refresh dashboard numbers without reload
+  location.reload();
+}
+// Close modal on backdrop click + ESC
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape") closeTxModal();
+});
+document.addEventListener("click",(e)=>{
+  const m=document.getElementById("txModal");
+  if(!m) return;
+  if(m.classList.contains("show") && e.target===m) closeTxModal();
+});
+
+// Budget alert (80%+)
+try{
+  const budgetAlertKey = "budgetAlertShown-" + (new Date().getFullYear()) + "-" + String(new Date().getMonth()+1).padStart(2,"0");
+  if(totalBudget>0){
+    const usedPct = (totalSpent/totalBudget)*100;
+    const already = localStorage.getItem(budgetAlertKey)==="1";
+    if(usedPct>=80 && !already){
+      showToast("Budget warning: 80%+ used");
+      localStorage.setItem(budgetAlertKey,"1");
+    }
+  }
+}catch(e){}

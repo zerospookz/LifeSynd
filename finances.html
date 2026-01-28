@@ -17,7 +17,6 @@
       <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
       <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
       <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
-      <a href="planner.html"><span class="left">📅 <span>Planner</span></span><span class="pill">Week</span></a>
       <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
       <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
       <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
@@ -52,6 +51,25 @@
     <button onclick="addTx()">Add</button>
   </div>
   <div class="small" style="margin-top:10px">Keep categories consistent for cleaner insights.</div>
+</div>
+
+
+<div class="grid" style="margin-top:18px">
+  <div class="card">
+    <div class="cardHeader"><h3 class="cardTitle">Monthly trends</h3><span class="badge">Last 6 months</span></div>
+    <canvas id="financeTrend" width="900" height="260" style="width:100%;height:260px"></canvas>
+    <div class="small">Expenses (and income) by month.</div>
+  </div>
+  <div class="card">
+    <div class="cardHeader"><h3 class="cardTitle">Budgets</h3><span class="badge">Per category</span></div>
+    <div class="actionsRow">
+      <input id="bCat" placeholder="Category (Food)">
+      <input id="bAmt" type="number" placeholder="Monthly budget">
+      <button onclick="saveBudget()">Save</button>
+    </div>
+    <div id="budgetList" style="margin-top:12px"></div>
+    <div class="small" style="margin-top:10px">Budgets power the “Remaining budget” widget on Dashboard.</div>
+  </div>
 </div>
 
 <div class="grid">

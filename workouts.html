@@ -17,7 +17,6 @@
       <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
       <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
       <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
-      <a href="planner.html"><span class="left">📅 <span>Planner</span></span><span class="pill">Week</span></a>
       <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
       <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
       <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
@@ -50,6 +49,28 @@
   <p class="small" style="margin:12px 0 0">Use Planner to schedule Push / Pull / Legs for the week.</p>
 </div>
 
+
+<div class="card soft" style="margin-top:18px">
+  <div class="cardHeader"><h3 class="cardTitle">Weekly Planner</h3><span class="badge">Push / Pull / Legs</span></div>
+  <div class="small">Assign a template to each day. Mark it done when completed.</div>
+  <div class="grid" style="margin-top:14px">
+    <div class="card soft">
+      <div class="cardHeader"><h3 class="cardTitle">Templates</h3><span class="badge">Defaults included</span></div>
+      <div class="actionsRow">
+        <input id="tplName" placeholder="Template name (e.g., Push)">
+        <button onclick="saveTemplate()">Save</button>
+      </div>
+      <div id="tplList" style="margin-top:12px"></div>
+    </div>
+    <div class="card soft">
+      <div class="cardHeader"><h3 class="cardTitle">This week</h3><span class="badge">Planned vs done</span></div>
+      <div id="weekList"></div>
+      <div class="hr"></div>
+      <div id="weekSummary"></div>
+    </div>
+  </div>
+</div>
+
 <div id="prBox" class="card"></div>
 <div id="workoutList" class="grid"></div>
 
@@ -57,4 +78,5 @@
 </div>
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="workouts.js"></script>
+<script src="planner.js"></script>
 </body></html>

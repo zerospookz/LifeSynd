@@ -262,3 +262,36 @@ input:focus,select:focus{
   .sidebar{position:relative;height:auto}
   .content{padding:22px 18px 44px}
 }
+
+/* Modal */
+.modalBackdrop{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index: 50;
+  padding: 18px;
+}
+.modalBackdrop.show{display:flex; animation: fadeInModal .18s ease}
+@keyframes fadeInModal{from{opacity:0}to{opacity:1}}
+.modal{
+  width: min(720px, 100%);
+  border-radius: 22px;
+  border: 1px solid rgba(30,41,59,.9);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  box-shadow: 0 30px 80px rgba(0,0,0,.65);
+  padding: 18px;
+}
+.modalHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.modalTitle{margin:0;font-size:1.05rem;font-weight:800;letter-spacing:-.03em}
+.iconBtn{
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 14px;
+  cursor:pointer;
+}
+.iconBtn:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
