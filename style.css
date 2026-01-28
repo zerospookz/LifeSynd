@@ -689,8 +689,8 @@ input:focus,select:focus{
 .matrixHabit{ text-align:center; }
 .matrixDate{ min-width: 170px; }
 .matrixWrap{ max-height: 520px; }
-.matrixHelp{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:10px; }
-.matrixHint{ color: var(--muted); font-size:.8rem; }
+.matrixHelp{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,.06); }
+.matrixHint{ color: color-mix(in oklab, var(--muted) 85%, rgba(255,255,255,.2)); font-size:.78rem; }
 .matrixLegend{ display:flex; gap:10px; align-items:center; }
 .legendDot{ width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.18); }
 .legendDot.done{ background: color-mix(in oklab, var(--accent) 70%, transparent); border-color: rgba(255,255,255,.12); }
@@ -717,3 +717,16 @@ input:focus,select:focus{
 *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.25));
 }
+
+.matrixHabit{ position: relative; }
+.matrixDelete{
+  position:absolute;
+  top:4px;
+  right:6px;
+  background:none;
+  border:none;
+  color:rgba(255,255,255,.45);
+  font-size:12px;
+  cursor:pointer;
+}
+.matrixDelete:hover{ color:#fff; }

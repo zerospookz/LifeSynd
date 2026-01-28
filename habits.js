@@ -180,7 +180,7 @@ function renderAnalytics(){
     <div class="cardHeader" style="align-items:flex-start">
       <div>
         <h3 class="cardTitle">Analytics</h3>
-        <p class="small" style="margin:6px 0 0">Drag to mark · Tap to toggle · View: <span class="badge">${viewLabel}</span></p>
+        <p class="small" style="margin:6px 0 0">Drag · Tap · <span class="badge">${viewLabel}</span></p>
       </div>
       <div class="analyticsControls">
         <div class="seg" role="tablist" aria-label="Analytics range">
@@ -238,7 +238,15 @@ function renderAnalytics(){
     el.className="matrixHabit";
     el.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
     el.title=h.name;
-    el.textContent=h.name;
+    el.innerHTML = `<span>${h.name}</span><button class="matrixDelete" title="Remove habit">✕</button>`;
+    el.querySelector(".matrixDelete").onclick = (ev)=>{
+      ev.stopPropagation();
+      if(confirm("Remove habit?")){
+        habits = habits.filter(x=>x.id!==h.id);
+        save();
+        render();
+      }
+    };
     header.appendChild(el);
   });
 
@@ -277,6 +285,9 @@ function renderAnalytics(){
 
   // ----- drag-to-mark (pointer events) -----
   let dragging = false;
+  let dragStarted = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
   let targetDone = true;
   let touched = new Set();
   let dirty = false;
@@ -314,7 +325,7 @@ function renderAnalytics(){
   }
 
   function endDrag(){
-    if(!dragging) return;
+    if(!dragging && !dragStarted) return;
     touched = new Set();
     if(dirty) save();
     dirty = false;
@@ -323,20 +334,29 @@ function renderAnalytics(){
   grid.addEventListener("pointerdown", (e)=>{
     const cell = e.target.closest(".matrixCell");
     if(!cell) return;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragStarted = false;
+    targetDone = (analyticsPaintMode==="erase" ? false : !cell.classList.contains("done"));
+    if(e.shiftKey) targetDone = false;
+
+    const cell = e.target.closest(".matrixCell");
+    if(!cell) return;
     // prevent scroll-jank on drag
     e.preventDefault();
-    dragging = true;
+    
     touched = new Set();
-    targetDone = !cell.classList.contains("done");
-    applyCell(cell);
+    targetDone = (analyticsPaintMode==="erase" ? false : !cell.classList.contains("done"));
+    if(e.shiftKey) targetDone = false;
+    
     cell.setPointerCapture?.(e.pointerId);
   });
 
   grid.addEventListener("pointerover", (e)=>{
-    if(!dragging) return;
+    if(!dragging && !dragStarted) return;
     const cell = e.target.closest(".matrixCell");
     if(!cell) return;
-    applyCell(cell);
+    
   });
 
   window.addEventListener("pointerup", endDrag, { once:false });
@@ -344,6 +364,8 @@ function renderAnalytics(){
 
   // tap-to-toggle fallback
   grid.addEventListener("click", (e)=>{
+    if(dragStarted) return;
+
     if(dragging) return;
     const cell=e.target.closest(".matrixCell");
     if(!cell) return;
