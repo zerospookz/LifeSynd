@@ -361,3 +361,20 @@ input:focus,select:focus{
   cursor:pointer;
 }
 .iconBtn:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+
+
+/* Habits: per-habit analytics controls + mini heat preview */
+.analyticsControls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.select{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:14px;
+  padding:8px 10px;
+  outline:none;
+}
+.select:focus{box-shadow:0 0 0 4px rgba(124,92,255,.18)}
+.analyticsContext{display:flex;justify-content:space-between;gap:10px;margin-top:8px;margin-bottom:10px}
+.miniHeat{display:grid;grid-template-columns:repeat(7, 1fr);gap:6px;margin-top:12px}
+.miniCell{height:10px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.04);transition:transform .12s ease, filter .12s ease}
+.miniCell:hover{transform:translateY(-1px);filter:brightness(1.15)}

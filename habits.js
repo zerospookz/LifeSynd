@@ -1,6 +1,30 @@
 
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
+
+
+let analyticsHabitId = localStorage.getItem("habitAnalyticsSelected") || "all";
+function setAnalyticsHabitId(id){
+  analyticsHabitId = id || "all";
+  localStorage.setItem("habitAnalyticsSelected", analyticsHabitId);
+}
+function habitById(id){ return habits.find(h=>h.id===id); }
+function completionForDateHabit(h, iso){
+  if(!h) return 0;
+  const set = new Set(h.datesDone||[]);
+  return set.has(iso) ? 1 : 0;
+}
+
+
+function escapeHtml(str){
+  return String(str ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
+
 function today(){return isoToday();}
 function getMarkDate(){ return markDate.value ? markDate.value : today(); }
 
@@ -116,12 +140,19 @@ function heatColor(p){
 function renderAnalytics(){
   if(!habitAnalytics) return;
 
+  // Ensure selection is valid
+  if(analyticsHabitId!=="all" && !habitById(analyticsHabitId)){
+    setAnalyticsHabitId("all");
+  }
+
   const endIso=getMarkDate();
   const end=new Date(endIso);
   const endWeekStart=normalizeToMonday(end);
   const weeks=12;
   const start=new Date(endWeekStart);
   start.setDate(start.getDate()-(weeks-1)*7);
+
+  const selectedHabit = analyticsHabitId==="all" ? null : habitById(analyticsHabitId);
 
   // Gather values
   const rows=[];
@@ -136,8 +167,10 @@ function renderAnalytics(){
       const dd=new Date(rowStart);
       dd.setDate(dd.getDate()+d);
       const iso=dd.toISOString().slice(0,10);
-      const p=completionForDate(iso);
+
+      const p = selectedHabit ? completionForDateHabit(selectedHabit, iso) : completionForDate(iso); // 0..1
       cells.push({iso,p});
+
       dowStats[d].sum += p;
       dowStats[d].count += 1;
       totalSum += p;
@@ -148,10 +181,11 @@ function renderAnalytics(){
 
   const best = dowStats
     .map((s,i)=>({i,avg: s.count? (s.sum/s.count):0}))
-    .sort((a,b)=>b.avg-a.avg)[0];
+    .sort((a,b)=>b.avg-a.avg)[0] || {i:0,avg:0};
 
   const overallAvg = totalCount? (totalSum/totalCount):0;
 
+  const contextLabel = selectedHabit ? selectedHabit.name : "All habits";
   const bestText = habits.length
     ? `${weekdayLabel(best.i)} (${Math.round(best.avg*100)}%)`
     : "Add habits to unlock";
@@ -159,8 +193,20 @@ function renderAnalytics(){
   habitAnalytics.innerHTML=`
     <div class="cardHeader">
       <h3 class="cardTitle">Habit analytics</h3>
-      <span class="badge">Last ${weeks} weeks</span>
+      <div class="analyticsControls">
+        <span class="badge">Last ${weeks} weeks</span>
+        <select id="habitAnalyticsSelect" class="select">
+          <option value="all">All habits</option>
+          ${habits.map(h=>`<option value="${h.id}">${escapeHtml(h.name)}</option>`).join("")}
+        </select>
+      </div>
     </div>
+
+    <div class="analyticsContext">
+      <div class="small">Viewing: <strong>${escapeHtml(contextLabel)}</strong></div>
+      <div class="small">Tip: click a square to see its date.</div>
+    </div>
+
     <div class="analyticsTop">
       <div>
         <div class="small" style="margin-bottom:6px">Weekly completion heatmap</div>
@@ -187,24 +233,34 @@ function renderAnalytics(){
           </div>
         </div>
       </div>
+
       <div class="analyticsSide">
         <div class="statCard">
           <div class="statLabel">Best day</div>
           <div class="statValue">${bestText}</div>
-          <div class="statHint">Based on avg completion</div>
+          <div class="statHint">Avg completion for this view</div>
         </div>
         <div class="statCard">
           <div class="statLabel">Overall</div>
           <div class="statValue">${Math.round(overallAvg*100)}%</div>
-          <div class="statHint">Across all habits & days</div>
+          <div class="statHint">${selectedHabit?"For this habit":"Across all habits"}</div>
         </div>
         <div class="statCard">
-          <div class="statLabel">Tip</div>
-          <div class="statHint">Click a square to see its date & completion.</div>
+          <div class="statLabel">Focus</div>
+          <div class="statHint">${selectedHabit?"This shows your actual consistency for the habit.":"Pick a habit to see what’s really slipping."}</div>
         </div>
       </div>
     </div>
   `;
+
+  const sel = document.getElementById("habitAnalyticsSelect");
+  if(sel){
+    sel.value = analyticsHabitId;
+    sel.onchange = (e)=>{
+      setAnalyticsHabitId(e.target.value);
+      renderAnalytics();
+    };
+  }
 }
 
 function renderInsights(){
@@ -227,6 +283,22 @@ function renderStreakSummary(){
  <p><strong>Current best:</strong> ${bestCurrent} days</p>
  <p><strong>All-time best:</strong> ${bestBest} days</p>
  <p class="small">Current streak is counted up to the selected date.</p>`;
+}
+
+
+function miniHeatHtml(h, days=7){
+  const endIso=getMarkDate();
+  const end=new Date(endIso);
+  const cells=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(end);
+    d.setDate(d.getDate()-i);
+    const iso=d.toISOString().slice(0,10);
+    const p=completionForDateHabit(h, iso);
+    const title=`${iso}: ${p? "Done":"Missed"}`;
+    cells.push(`<div class="miniCell" title="${title}" style="background:${heatColor(p)}"></div>`);
+  }
+  return `<div class="miniHeat">${cells.join("")}</div>`;
 }
 
 function render(){
@@ -258,6 +330,7 @@ function render(){
        ${done?'<span class="badge ok">Completed</span>':'<span class="badge warn">Due</span>'}
        <span class="badge">Date: ${date}</span>
      </div>
+     ${miniHeatHtml(h)}
    </div>`;
  });
 }
