@@ -1,0 +1,30 @@
+
+/* ===== NUCLEAR VISUAL RESET ===== */
+
+/* 1. Kill ALL gradients & images everywhere */
+* {
+  background-image: none !important;
+}
+
+/* 2. Kill pseudo-elements completely */
+*::before,
+*::after {
+  content: none !important;
+}
+
+/* 3. Explicit card surfaces */
+.card,
+[class*="card"],
+[class*="panel"],
+[class*="tile"],
+[class*="widget"] {
+  background-color: rgba(2,6,23,.85) !important;
+  box-shadow:
+    0 20px 40px rgba(0,0,0,.6),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+/* 4. Body background only */
+html, body {
+  background-color: #020617 !important;
+}
