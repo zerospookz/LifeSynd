@@ -436,3 +436,11 @@ if(typeof markDate!=="undefined"){
 }
 
 render();
+
+
+function deleteHabit(id){
+  if(!confirm("Delete this habit?")) return;
+  habits = habits.filter(h=>h.id!==id);
+  save();
+  render();
+}

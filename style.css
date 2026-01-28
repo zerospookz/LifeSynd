@@ -694,3 +694,26 @@ input:focus,select:focus{
 .matrixLegend{ display:flex; gap:10px; align-items:center; }
 .legendDot{ width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.18); }
 .legendDot.done{ background: color-mix(in oklab, var(--accent) 70%, transparent); border-color: rgba(255,255,255,.12); }
+
+
+/* Pretty scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.25) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.15));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.25));
+}
