@@ -1,189 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LifeSync — Dashboard</title>
-  <link rel="stylesheet" href="style.css"/>
 
-  <link rel="manifest" href="manifest.webmanifest"/>
-  <meta name="theme-color" content="#050716"/>
-  <link rel="icon" href="icon-192.png"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
+<!DOCTYPE html><html><head>
+<meta charset=utf-8>
+<title>Dashboard</title>
+<link rel=stylesheet href=style.css>
+<script defer src=dashboard-adaptive.js></script>
+</head><body>
+<h1 id=dashMode></h1>
+<p id=dashHint></p>
 
-</head>
-<body data-page="dashboard">
-  <div class="bg"></div>
-  <header class="nav">
-    <div class="container nav-inner">
-      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
-        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
-        <span>LifeSync</span>
-      </a>
-
-      <nav class="row" aria-label="Primary">
-        <a data-nav href="dashboard.html">Dashboard</a>
-        <a data-nav href="finances.html">Finances</a>
-        <a data-nav href="habits.html">Habits</a>
-        <a data-nav href="workouts.html">Workouts</a>
-        <a data-nav href="nutrition.html">Nutrition</a>
-      </nav>
-
-      <div class="spacer"></div>
-
-      <div class="row">
-        
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3a7 7 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
-<button class="btn ghost" data-action="open-demo">Watch demo</button>
-        <a class="btn primary" href="dashboard.html" data-action="go-dashboard">Get started</a>
-      </div>
-    </div>
-  </header>
-
-  <main class="container app">
-    <div class="app-grid">
-      <aside class="sidebar reveal">
-        <h4>Modules</h4>
-        <nav class="snav" aria-label="Modules">
-          <a data-nav href="dashboard.html"><span>Dashboard</span><span class="tag">Today</span></a>
-          <a data-nav href="finances.html"><span>Finances</span><span class="tag">$</span></a>
-          <a data-nav href="habits.html"><span>Habits</span><span class="tag">Streak</span></a>
-          <a data-nav href="workouts.html"><span>Workouts</span><span class="tag">Train</span></a>
-          <a data-nav href="nutrition.html"><span>Nutrition</span><span class="tag">Fuel</span></a>
-        </nav>
-
-        <div style="margin-top:14px" class="pill">
-          <span class="small"><strong>Tip:</strong> Hover cards for glow, scroll for reveal.</span>
-        </div>
-      </aside>
-
-      <section class="panel reveal">
-        <div class="panel-header">
-          <div>
-            <h1>Dashboard</h1>
-            <p>A clean daily control center with real‑time modules.</p>
-          </div>
-          <div class="spacer"></div>
-          <div class="row"><span class="small" id="lastSync">Not synced yet</span><span class="spacer"></span><button class="btn" data-action="sync">Sync</button><button class="btn primary" data-action="add">Add</button></div>
-        </div>
-
-        
-        <div class="kpi-grid">
-          <div class="kpi reveal">
-            <div class="label">Daily Balance</div>
-            <div class="value"><span class="grad">82</span> / 100</div>
-            <div class="delta">Up 6 points from yesterday</div>
-          </div>
-          <div class="kpi reveal">
-            <div class="label">Today’s Spend</div>
-            <div class="value">$45</div>
-            <div class="delta">$55 left in your daily limit</div>
-          </div>
-          <div class="kpi reveal">
-            <div class="label">Habits</div>
-            <div class="value">4 / 5</div>
-            <div class="delta">1 habit left to complete</div>
-          </div>
-        </div>
-
-        <div class="split">
-          <div class="panel reveal" style="padding:14px;">
-            <div class="row" style="margin-bottom:10px;">
-              <div class="pill"><strong>Upcoming</strong> <span class="small">today</span></div>
-              <div class="spacer"></div>
-              <span class="small">Tap “Add” to customize</span>
-            </div>
-
-            <div class="list">
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Workout — Upper Body</div>
-                  <div class="sub">5:30 PM · 45 min</div>
-                </div>
-                <div class="right">🔥</div>
-              </div>
-
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Lunch — Chicken Salad</div>
-                  <div class="sub">12:00 PM · 520 kcal</div>
-                </div>
-                <div class="right">🥗</div>
-              </div>
-
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Focus Block</div>
-                  <div class="sub">3:00 PM · 30 min</div>
-                </div>
-                <div class="right">⏱️</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel reveal" style="padding:14px;">
-            <div class="row" style="justify-content:space-between; margin-bottom:10px;">
-              <div class="pill"><strong>Score</strong> <span class="small">live</span></div>
-              <span class="small">Real‑time</span>
-            </div>
-
-            <div class="row" style="justify-content:center; padding:8px 0 2px;">
-              <div class="reveal" data-progress="82" data-label="Daily Balance" data-sub="Live score"></div>
-            </div>
-              </div>
-            </div>
-
-            <div style="margin-top:12px" class="reveal">
-              <div class="small" style="margin-bottom:8px;">Momentum</div>
-              <div class="progress"><span style="--w:72%"></span></div>
-              <div class="small" style="margin-top:8px;">Consistency</div>
-              <div class="progress"><span style="--w:64%"></span></div>
-            </div>
-          </div>
-        </div>
-        <div class="grid2" style="margin-top:14px">
-          <div class="chart reveal">
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="pill"><strong>Weekly Balance</strong> <span class="small">trend</span></div>
-                <div class="small" style="margin-top:8px">A quick snapshot of momentum across the week.</div>
-              </div>
-              <div class="tag">7 days</div>
-            </div>
-            <div class="bar-chart" data-chart="bars">
-              <div class="bar" data-h="62"></div>
-              <div class="bar" data-h="68"></div>
-              <div class="bar" data-h="74"></div>
-              <div class="bar" data-h="71"></div>
-              <div class="bar" data-h="79"></div>
-              <div class="bar" data-h="82"></div>
-              <div class="bar" data-h="77"></div>
-            </div>
-            <div class="chart-legend"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-          </div>
-
-          <div class="chart reveal">
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="pill"><strong>Focus Score</strong> <span class="small">today</span></div>
-                <div class="small" style="margin-top:8px">Micro‑wins add up. Keep the streak alive.</div>
-              </div>
-              <div class="tag">Live</div>
-            </div>
-            <div style="margin-top:12px" data-progress="64" data-label="Consistency" data-sub="Last 14 days"></div>
-          </div>
-        </div>
-
-
-      </section>
-    </div>
-  </main>
-
-  <script src="app.js"></script>
-</body>
-</html>
+<section class=grid>
+  <div class=card>
+    <h3>Today</h3>
+    <p>Habits due today</p>
+    <p>Workout planned</p>
+    <p>Calories remaining</p>
+  </div>
+  <div class=card>
+    <h3>Quick Actions</h3>
+    <a href=habits.html>Add Habit</a>
+    <a href=workouts.html>Plan Workout</a>
+    <a href=nutrition.html>Log Meal</a>
+  </div>
+  <div class=card>
+    <h3>Insights</h3>
+    <a href=workout-analytics.html>Workout Analytics</a>
+  </div>
+</section>
+</body></html>

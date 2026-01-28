@@ -3,112 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LifeSync — One App. Total Life Control.</title>
+  <title>LifeSync — Personal Mission Control</title>
   <link rel="stylesheet" href="style.css"/>
-
-  <link rel="manifest" href="manifest.webmanifest"/>
-  <meta name="theme-color" content="#050716"/>
-  <link rel="icon" href="icon-192.png"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
-
 </head>
-<body data-page="home">
+<body>
   <div class="bg"></div>
+
   <header class="nav">
-    <div class="container nav-inner">
-      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
-        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
-        <span>LifeSync</span>
-      </a>
-
-      <nav class="row" aria-label="Primary">
-        <a data-nav href="dashboard.html">Dashboard</a>
-        <a data-nav href="finances.html">Finances</a>
-        <a data-nav href="habits.html">Habits</a>
-        <a data-nav href="workouts.html">Workouts</a>
-        <a data-nav href="nutrition.html">Nutrition</a>
-      </nav>
-
-      <div class="spacer"></div>
-
-      <div class="row">
-        
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3a7 7 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
-<button class="btn ghost" data-action="open-demo">Watch demo</button>
-        <a class="btn primary" href="dashboard.html" data-action="go-dashboard">Get started</a>
-      </div>
-    </div>
+    <div class="logo">LifeSync</div>
+    <nav>
+      <a href="#">Product</a>
+      <a href="#">Features</a>
+      <a href="#">Roadmap</a>
+      <a href="#">Login</a>
+    </nav>
   </header>
 
-  <main class="container">
-    <section class="hero hero-grid">
-      <div class="reveal">
-        <div class="kicker">
-          <span class="dot"></span>
-          <span class="pill"><strong>New</strong> <span class="small">One dashboard. Endless insights.</span></span>
-        </div>
-
-        <h1>One App. <span class="grad">Total Life Control.</span></h1>
-        <p>Finance, habits, workouts, and nutrition — all in one smart daily app. Designed like a modern control center and built for momentum.</p>
-
-        <div class="hero-cta">
-          <a class="btn primary" href="dashboard.html" style="text-decoration:none;display:inline-flex;align-items:center;gap:10px;">Get started</a>
-          <a class="btn" href="finances.html" style="text-decoration:none;display:inline-flex;align-items:center;gap:10px;">Explore features</a>
-        </div>
-
-        <div class="hero-meta">Start free — sync your life. No credit card for the demo UI.</div>
-      </div>
-
-      <div class="hero-visual reveal">
-        <div class="glow"></div>
-        <img class="float" data-tilt src="hero.png" alt="LifeSync app preview"/>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2 class="reveal">One dashboard. Endless insights.</h2>
-      <p class="lead reveal">Keep your day on track with an at‑a‑glance score, quick actions, and modular cards that adapt to your priorities.</p>
-
-      <div class="cards">
-        <div class="card reveal">
-          <div class="badge"><i></i> Financial tracking</div>
-          <h3>Budgets that feel effortless</h3>
-          <p>Track spending, spot patterns, and get a clean overview without spreadsheets.</p>
-        </div>
-
-        <div class="card reveal">
-          <div class="badge"><i></i> Habit building</div>
-          <h3>Routines that actually stick</h3>
-          <p>Daily check‑ins, gentle streaks, and progress that’s motivating — not noisy.</p>
-        </div>
-
-        <div class="card reveal">
-          <div class="badge"><i></i> Workouts + nutrition</div>
-          <h3>Health, unified</h3>
-          <p>Plan sessions, log meals, and see how training and nutrition reinforce each other.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2 class="reveal">Ready to sync your life?</h2>
-      <p class="lead reveal">Jump into the fully modernized demo pages: Dashboard, Finances, Habits, Workouts, and Nutrition.</p>
-      <div class="row" style="justify-content:center; gap:12px; padding:18px 0 6px;">
-        <a class="btn primary" href="dashboard.html" style="text-decoration:none;">Open Dashboard</a>
-        <a class="btn ghost" href="finances.html" style="text-decoration:none;">See Finances</a>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div>© 2026 LifeSync — demo UI for GitHub Pages.</div>
-    </footer>
+  <main class="hero">
+    <h1>Your Personal Mission Control</h1>
+    <p>Unify your health, habits, and finances in one intelligent system.</p>
+    <div class="cta">
+      <button class="primary">Get Started</button>
+      <button class="secondary">Join Waitlist</button>
+    </div>
   </main>
 
-  <script src="app.js"></script>
+  <section class="cards">
+    <div class="card">
+      <h3>Unified Dashboard</h3>
+      <p>Track everything from one futuristic control center.</p>
+    </div>
+    <div class="card">
+      <h3>AI Insights</h3>
+      <p>Understand your life with predictive analytics.</p>
+    </div>
+    <div class="card">
+      <h3>Habits & Goals</h3>
+      <p>Build routines that compound over time.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 LifeSync. All rights reserved.</p>
+  </footer>
 </body>
 </html>

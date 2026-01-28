@@ -1,201 +1,44 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LifeSync — Nutrition</title>
-  <link rel="stylesheet" href="style.css"/>
-
-  <link rel="manifest" href="manifest.webmanifest"/>
-  <meta name="theme-color" content="#050716"/>
-  <link rel="icon" href="icon-192.png"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
-
+<meta charset="utf-8"/>
+<title>Nutrition</title>
+<link rel="stylesheet" href="style.css"/>
+<script defer src="nutrition.js"></script>
 </head>
-<body data-page="nutrition">
-  <div class="bg"></div>
-  <header class="nav">
-    <div class="container nav-inner">
-      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
-        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
-        <span>LifeSync</span>
-      </a>
+<body>
+<h1>Nutrition</h1>
 
-      <nav class="row" aria-label="Primary">
-        <a data-nav href="dashboard.html">Dashboard</a>
-        <a data-nav href="finances.html">Finances</a>
-        <a data-nav href="habits.html">Habits</a>
-        <a data-nav href="workouts.html">Workouts</a>
-        <a data-nav href="nutrition.html">Nutrition</a>
-      </nav>
-
-      <div class="spacer"></div>
-
-      <div class="row">
-        
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3a7 7 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
-<button class="btn ghost" data-action="open-demo">Watch demo</button>
-        <a class="btn primary" href="dashboard.html" data-action="go-dashboard">Get started</a>
-      </div>
+<section class="grid">
+  <div class="card">
+    <h3>Remaining Today</h3>
+    <div class="rings">
+      <div class="ring" data-macro="protein">Protein <span></span></div>
+      <div class="ring" data-macro="carbs">Carbs <span></span></div>
+      <div class="ring" data-macro="fat">Fats <span></span></div>
     </div>
-  </header>
+    <p id="caloriesLeft"></p>
+  </div>
 
-  <main class="container app">
-    <div class="app-grid">
-      <aside class="sidebar reveal">
-        <h4>Modules</h4>
-        <nav class="snav" aria-label="Modules">
-          <a data-nav href="dashboard.html"><span>Dashboard</span><span class="tag">Today</span></a>
-          <a data-nav href="finances.html"><span>Finances</span><span class="tag">$</span></a>
-          <a data-nav href="habits.html"><span>Habits</span><span class="tag">Streak</span></a>
-          <a data-nav href="workouts.html"><span>Workouts</span><span class="tag">Train</span></a>
-          <a data-nav href="nutrition.html"><span>Nutrition</span><span class="tag">Fuel</span></a>
-        </nav>
+  <div class="card">
+    <h3>Add Meal</h3>
+    <input id="mealName" placeholder="Meal name"/>
+    <input id="protein" type="number" placeholder="Protein (g)"/>
+    <input id="carbs" type="number" placeholder="Carbs (g)"/>
+    <input id="fat" type="number" placeholder="Fat (g)"/>
+    <button onclick="addMeal()">Add Meal</button>
+  </div>
 
-        <div style="margin-top:14px" class="pill">
-          <span class="small"><strong>Tip:</strong> Hover cards for glow, scroll for reveal.</span>
-        </div>
-      </aside>
+  <div class="card">
+    <h3>Meal Templates</h3>
+    <div id="templates"></div>
+  </div>
 
-      <section class="panel reveal">
-        <div class="panel-header">
-          <div>
-            <h1>Nutrition</h1>
-            <p>Meals, macros, and hydration with frictionless tracking.</p>
-          </div>
-          <div class="spacer"></div>
-          <div class="row"><span class="small" id="lastSync">Not synced yet</span><span class="spacer"></span><button class="btn" data-action="sync">Sync</button><button class="btn primary" data-action="add">Add</button></div>
-        </div>
-
-        
-        <div class="kpi-grid">
-          <div class="kpi reveal">
-            <div class="label">Calories</div>
-            <div class="value">800</div>
-            <div class="delta">of 2000 target</div>
-          </div>
-          <div class="kpi reveal">
-            <div class="label">Protein</div>
-            <div class="value">62 g</div>
-            <div class="delta">On track</div>
-          </div>
-          <div class="kpi reveal">
-            <div class="label">Hydration</div>
-            <div class="value">6 / 8</div>
-            <div class="delta">Cups</div>
-          </div>
-        </div>
-
-        
-        <div class="grid2" style="margin-top:14px">
-          <div class="chart reveal">
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="pill"><strong>Macro Split</strong> <span class="small">today</span></div>
-                <div class="small" style="margin-top:8px">Balanced fuel keeps you consistent.</div>
-              </div>
-              <div class="tag">g</div>
-            </div>
-            <div class="bar-chart" data-chart="bars">
-              <div class="bar" data-h="55" title="Protein"></div>
-              <div class="bar" data-h="72" title="Carbs"></div>
-              <div class="bar" data-h="38" title="Fat"></div>
-              <div class="bar" data-h="60" title="Fiber"></div>
-              <div class="bar" data-h="44" title="Sugar"></div>
-            </div>
-            <div class="chart-legend"><span>P</span><span>C</span><span>F</span><span>Fi</span><span>S</span></div>
-          </div>
-
-          <div class="chart reveal">
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="pill"><strong>Calorie Target</strong> <span class="small">today</span></div>
-                <div class="small" style="margin-top:8px">Stay on target without overthinking.</div>
-              </div>
-              <div class="tag">kcal</div>
-            </div>
-            <div style="margin-top:12px" data-progress="74" data-label="Consumed" data-sub="1,480 / 2,000"></div>
-          </div>
-        </div>
-
-<div class="split">
-          <div class="panel reveal" style="padding:14px;">
-            <div class="row" style="margin-bottom:10px;">
-              <div class="pill"><strong>Meals</strong></div>
-              <div class="spacer"></div>
-              <span class="small">Today</span>
-            </div>
-
-            <div class="list" id="mealsList">
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Breakfast</div>
-                  <div class="sub">Greek yogurt + berries · 320 kcal</div>
-                </div>
-                <div class="right">🍓</div>
-              </div>
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Lunch</div>
-                  <div class="sub">Chicken salad · 520 kcal</div>
-                </div>
-                <div class="right">🥗</div>
-              </div>
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Snack</div>
-                  <div class="sub">Almonds · 160 kcal</div>
-                </div>
-                <div class="right">🥜</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel reveal" style="padding:14px;">
-            <div class="row" style="margin-bottom:10px;">
-              <div class="pill"><strong>Macros</strong></div>
-              <div class="spacer"></div>
-              <span class="small">Balanced</span>
-            </div>
-
-            <div class="list">
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Protein</div>
-                  <div class="sub">62g / 130g</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:48%"></span></div>
-                </div>
-                <div class="right">🥩</div>
-              </div>
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Carbs</div>
-                  <div class="sub">90g / 220g</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:41%"></span></div>
-                </div>
-                <div class="right">🍚</div>
-              </div>
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Fats</div>
-                  <div class="sub">32g / 70g</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:46%"></span></div>
-                </div>
-                <div class="right">🥑</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </section>
-    </div>
-  </main>
-
-  <script src="app.js"></script>
+  <div class="card">
+    <h3>Calories Trend (7 days)</h3>
+    <div id="trend" class="bars"></div>
+  </div>
+</section>
 </body>
 </html>

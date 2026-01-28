@@ -1,0 +1,5 @@
+
+.rings{display:flex;gap:12px}
+.ring{background:#1f2933;border-radius:14px;padding:12px;flex:1}
+.bars{display:flex;align-items:flex-end;gap:6px;height:120px}
+.bars div{flex:1;background:#22c55e;border-radius:6px}
