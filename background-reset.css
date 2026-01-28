@@ -1,0 +1,31 @@
+
+/* ===== HARD BACKGROUND RESET ===== */
+
+/* Disable ALL pseudo-element glows globally */
+*::before,
+*::after {
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Neutralize cards */
+.card,
+[class*="card"],
+[class*="panel"],
+[class*="tile"] {
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.85), rgba(2,6,23,.85)) !important;
+}
+
+/* Force clean body background */
+body {
+  background:
+    linear-gradient(180deg, #020617, #030712 45%, #020617) !important;
+}
+
+/* Disable legacy noise / glow layers */
+body::before,
+body::after {
+  content: none !important;
+}
