@@ -275,8 +275,8 @@ function renderAnalytics(){
       if(done) cell.classList.add("done");
       else if(iso < todayIso) cell.classList.add("missed");
 
-      cell.dataset.hid=h.id;
-      cell.dataset.iso=iso;
+      hitCell.dataset.hid=h.id;
+      hitCell.dataset.iso=iso;
       row.appendChild(cell);
     });
 
@@ -293,8 +293,8 @@ function renderAnalytics(){
   let dirty = false;
 
   function applyCell(cell){
-    const hid = cell.dataset.hid;
-    const iso = cell.dataset.iso;
+    const hid = hitCell.dataset.hid;
+    const iso = hitCell.dataset.iso;
     const key = hid + "|" + iso;
     if(touched.has(key)) return;
     touched.add(key);
@@ -332,21 +332,21 @@ function renderAnalytics(){
   }
 
   grid.addEventListener("pointerdown", (e)=>{
-    const cell = e.target.closest(".matrixCell");
-    if(!cell) return;
+    const hitCell = e.target.closest(".matrixCell");
+    if(!hitCell) return;
     dragStartX = e.clientX;
     dragStartY = e.clientY;
     dragStarted = false;
-    targetDone = (analyticsPaintMode==="erase" ? false : !cell.classList.contains("done"));
+    targetDone = (analyticsPaintMode==="erase" ? false : !hitCell.classList.contains("done"));
     if(e.shiftKey) targetDone = false;
 
-    const cell = e.target.closest(".matrixCell");
-    if(!cell) return;
+    const hitCell = e.target.closest(".matrixCell");
+    if(!hitCell) return;
     // prevent scroll-jank on drag
     e.preventDefault();
     
     touched = new Set();
-    targetDone = (analyticsPaintMode==="erase" ? false : !cell.classList.contains("done"));
+    targetDone = (analyticsPaintMode==="erase" ? false : !hitCell.classList.contains("done"));
     if(e.shiftKey) targetDone = false;
     
     cell.setPointerCapture?.(e.pointerId);
@@ -354,8 +354,8 @@ function renderAnalytics(){
 
   grid.addEventListener("pointerover", (e)=>{
     if(!dragging && !dragStarted) return;
-    const cell = e.target.closest(".matrixCell");
-    if(!cell) return;
+    const hitCell = e.target.closest(".matrixCell");
+    if(!hitCell) return;
     
   });
 
@@ -368,8 +368,8 @@ function renderAnalytics(){
 
     if(dragging) return;
     const cell=e.target.closest(".matrixCell");
-    if(!cell) return;
-    toggleHabitAt(cell.dataset.hid, cell.dataset.iso, {preserveScroll:true});
+    if(!hitCell) return;
+    toggleHabitAt(hitCell.dataset.hid, hitCell.dataset.iso, {preserveScroll:true});
   });
 }
 
