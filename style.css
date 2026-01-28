@@ -6,7 +6,7 @@
   --panel:#0b1220;
   --card:#0f172a;
   --accent:#6366f1;
-  --accent-soft:#818cf8;
+  --accent2:#818cf8;
   --text:#e5e7eb;
   --muted:#94a3b8;
   --border:#1e293b;
@@ -17,8 +17,7 @@
 body{
   margin:0;
   font-family:'Inter',system-ui;
-  background:
-    radial-gradient(1200px 800px at 10% 10%,#0f172a,#020617);
+  background:radial-gradient(1200px 800px at 10% 10%,#0f172a,#020617);
   color:var(--text);
 }
 
@@ -30,30 +29,20 @@ body{
 
 /* Sidebar */
 .sidebar{
-  background:rgba(2,6,23,.85);
+  background:rgba(2,6,23,.9);
   backdrop-filter:blur(14px);
   padding:28px 22px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
   border-right:1px solid var(--border);
 }
 
-.sidebar h2{
-  margin:0 0 10px;
-  font-size:1.25rem;
-  font-weight:700;
-}
-
 .sidebar a{
-  display:flex;
-  align-items:center;
-  gap:10px;
+  display:block;
   color:var(--muted);
   text-decoration:none;
-  padding:10px 14px;
-  border-radius:12px;
-  transition:background .2s,color .2s,transform .15s;
+  padding:12px 14px;
+  border-radius:14px;
+  margin-bottom:6px;
+  transition:all .2s;
 }
 
 .sidebar a:hover{
@@ -65,7 +54,7 @@ body{
 /* Content */
 .content{
   padding:40px;
-  max-width:1280px;
+  max-width:1200px;
 }
 
 h1{
@@ -81,24 +70,24 @@ h3{
 
 /* Cards */
 .card{
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
   border:1px solid var(--border);
   border-radius:20px;
   padding:22px;
+  margin-bottom:18px;
   box-shadow:0 20px 40px rgba(0,0,0,.45);
   transition:transform .2s, box-shadow .2s;
 }
 
 .card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 30px 60px rgba(0,0,0,.55);
+  transform:translateY(-3px);
+  box-shadow:0 30px 60px rgba(0,0,0,.6);
 }
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:24px;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:22px;
 }
 
 /* Inputs & buttons */
@@ -107,22 +96,22 @@ input{
   border:1px solid var(--border);
   color:white;
   padding:12px 14px;
-  border-radius:12px;
-  font-size:.95rem;
+  border-radius:14px;
+  margin-right:6px;
 }
 
-button,.btn{
-  background:linear-gradient(180deg,var(--accent),var(--accent-soft));
-  border:none;
+button{
+  background:linear-gradient(180deg,var(--accent),var(--accent2));
   color:white;
+  border:none;
   padding:12px 18px;
-  border-radius:14px;
+  border-radius:16px;
   cursor:pointer;
   font-weight:600;
-  transition:transform .15s, box-shadow .15s, opacity .15s;
+  transition:transform .15s, box-shadow .15s;
 }
 
-button:hover,.btn:hover{
+button:hover{
   transform:translateY(-2px);
   box-shadow:0 10px 30px rgba(99,102,241,.45);
 }
@@ -131,5 +120,3 @@ button:hover,.btn:hover{
   color:var(--muted);
   font-size:.95rem;
 }
-
-canvas{width:100%;height:180px}
