@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Nutrition</title>
+<link rel="stylesheet" href="style.css"/>
+<script defer src="nutrition.js"></script>
+</head>
+<body>
+<h1>Nutrition</h1>
+
+<section class="grid">
+  <div class="card">
+    <h3>Remaining Today</h3>
+    <div class="rings">
+      <div class="ring" data-macro="protein">Protein <span></span></div>
+      <div class="ring" data-macro="carbs">Carbs <span></span></div>
+      <div class="ring" data-macro="fat">Fats <span></span></div>
+    </div>
+    <p id="caloriesLeft"></p>
+  </div>
+
+  <div class="card">
+    <h3>Add Meal</h3>
+    <input id="mealName" placeholder="Meal name"/>
+    <input id="protein" type="number" placeholder="Protein (g)"/>
+    <input id="carbs" type="number" placeholder="Carbs (g)"/>
+    <input id="fat" type="number" placeholder="Fat (g)"/>
+    <button onclick="addMeal()">Add Meal</button>
+  </div>
+
+  <div class="card">
+    <h3>Meal Templates</h3>
+    <div id="templates"></div>
+  </div>
+
+  <div class="card">
+    <h3>Calories Trend (7 days)</h3>
+    <div id="trend" class="bars"></div>
+  </div>
+</section>
+</body>
+</html>
