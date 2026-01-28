@@ -1,3 +1,3 @@
 
-const workouts=JSON.parse(localStorage.getItem("workouts")||"[]");
-stats.innerHTML=`Total workouts logged: ${workouts.length}`;
+const data=JSON.parse(localStorage.getItem("workoutData")||"[]");
+stats.innerHTML=`Total sets logged: ${data.length}`;

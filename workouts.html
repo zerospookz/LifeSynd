@@ -14,12 +14,20 @@
 
 <main class="content">
 <h1>Workouts</h1>
+
 <div class="card">
-<input id="wName" placeholder="Workout">
-<button onclick="addWorkout()">Log</button>
+  <input id="ex" placeholder="Exercise">
+  <input id="sets" type="number" placeholder="Sets">
+  <input id="reps" type="number" placeholder="Reps">
+  <input id="weight" type="number" placeholder="Weight">
+  <button onclick="logSet()">Log Set</button>
 </div>
-<div id="workoutList"></div>
+
+<div id="prBox" class="card"></div>
+<div id="workoutList" class="grid"></div>
+
 </main>
 </div>
+<script src="ui.js"></script>
 <script src="workouts.js"></script>
 </body></html>
