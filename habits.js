@@ -4,6 +4,30 @@ function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 function today(){return isoToday();}
 function getMarkDate(){ return markDate.value ? markDate.value : today(); }
 
+// --- Templates ---
+const HABIT_TEMPLATES={
+  morning:["Drink water","Meditate 5 min","Plan the day","Walk 10 min"],
+  gym:["Workout","Protein target","Stretch","Steps 8k"],
+  study:["Deep work 45 min","Review notes","Read 20 pages"],
+};
+
+function addTemplate(key){
+  const list=HABIT_TEMPLATES[key];
+  if(!list){ showToast("Template not found"); return; }
+  const existing=new Set(habits.map(h=>String(h.name||"").trim().toLowerCase()));
+  let added=0;
+  list.forEach(name=>{
+    const k=name.trim().toLowerCase();
+    if(existing.has(k)) return;
+    habits.push({id:crypto.randomUUID(), name, created:today(), datesDone:[]});
+    existing.add(k);
+    added++;
+  });
+  save();
+  render();
+  showToast(added?`Added ${added} habits`:"All template habits already exist");
+}
+
 function addHabit(){
  if(!habitName.value) return;
  habits.push({id:crypto.randomUUID(), name:habitName.value, created:today(), datesDone:[]});
@@ -60,6 +84,129 @@ function completionRate(days){
  return Math.round((done/total)*100);
 }
 
+// --- Analytics: weekly heatmap + best days (overall completion across habits) ---
+function weekdayLabel(i){
+  return ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i] || "";
+}
+
+function normalizeToMonday(d){
+  const x=new Date(d);
+  // JS: 0=Sun..6=Sat. Convert so Monday is start of week.
+  const day=(x.getDay()+6)%7; // Mon=0
+  x.setDate(x.getDate()-day);
+  return x;
+}
+
+function completionForDate(iso){
+  if(habits.length===0) return 0;
+  let done=0;
+  habits.forEach(h=>{
+    const set=new Set(h.datesDone||[]);
+    if(set.has(iso)) done++;
+  });
+  return done/habits.length; // 0..1
+}
+
+function heatColor(p){
+  // Use alpha only so it fits the theme without hard-coded colors.
+  const a = Math.max(0.08, Math.min(0.95, 0.08 + p*0.85));
+  return `rgba(99,102,241,${a.toFixed(3)})`;
+}
+
+function renderAnalytics(){
+  if(!habitAnalytics) return;
+
+  const endIso=getMarkDate();
+  const end=new Date(endIso);
+  const endWeekStart=normalizeToMonday(end);
+  const weeks=12;
+  const start=new Date(endWeekStart);
+  start.setDate(start.getDate()-(weeks-1)*7);
+
+  // Gather values
+  const rows=[];
+  const dowStats=Array.from({length:7},()=>({sum:0,count:0}));
+  let totalSum=0, totalCount=0;
+
+  for(let w=0; w<weeks; w++){
+    const rowStart=new Date(start);
+    rowStart.setDate(rowStart.getDate()+w*7);
+    const cells=[];
+    for(let d=0; d<7; d++){
+      const dd=new Date(rowStart);
+      dd.setDate(dd.getDate()+d);
+      const iso=dd.toISOString().slice(0,10);
+      const p=completionForDate(iso);
+      cells.push({iso,p});
+      dowStats[d].sum += p;
+      dowStats[d].count += 1;
+      totalSum += p;
+      totalCount += 1;
+    }
+    rows.push({rowStart: rowStart.toISOString().slice(0,10), cells});
+  }
+
+  const best = dowStats
+    .map((s,i)=>({i,avg: s.count? (s.sum/s.count):0}))
+    .sort((a,b)=>b.avg-a.avg)[0];
+
+  const overallAvg = totalCount? (totalSum/totalCount):0;
+
+  const bestText = habits.length
+    ? `${weekdayLabel(best.i)} (${Math.round(best.avg*100)}%)`
+    : "Add habits to unlock";
+
+  habitAnalytics.innerHTML=`
+    <div class="cardHeader">
+      <h3 class="cardTitle">Habit analytics</h3>
+      <span class="badge">Last ${weeks} weeks</span>
+    </div>
+    <div class="analyticsTop">
+      <div>
+        <div class="small" style="margin-bottom:6px">Weekly completion heatmap</div>
+        <div class="heatmap">
+          <div class="heatmapHeader">
+            ${Array.from({length:7}).map((_,i)=>`<div class="heatLabel">${weekdayLabel(i)}</div>`).join("")}
+          </div>
+          <div class="heatmapBody">
+            ${rows.map(r=>{
+              const wk=new Date(r.rowStart);
+              const label = wk.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+              return `
+                <div class="heatRow">
+                  <div class="heatWeek">${label}</div>
+                  <div class="heatCells">
+                    ${r.cells.map(c=>{
+                      const pct=Math.round(c.p*100);
+                      const title=`${c.iso}: ${pct}%`;
+                      return `<div class="heatCell" title="${title}" style="background:${heatColor(c.p)}"></div>`;
+                    }).join("")}
+                  </div>
+                </div>`;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+      <div class="analyticsSide">
+        <div class="statCard">
+          <div class="statLabel">Best day</div>
+          <div class="statValue">${bestText}</div>
+          <div class="statHint">Based on avg completion</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">Overall</div>
+          <div class="statValue">${Math.round(overallAvg*100)}%</div>
+          <div class="statHint">Across all habits & days</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">Tip</div>
+          <div class="statHint">Click a square to see its date & completion.</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderInsights(){
  const rate7=completionRate(7);
  const rate30=completionRate(30);
@@ -84,6 +231,7 @@ function renderStreakSummary(){
 
 function render(){
  if(!markDate.value) markDate.value=today();
+ renderAnalytics();
  renderInsights();
  renderStreakSummary();
 
@@ -113,4 +261,9 @@ function render(){
    </div>`;
  });
 }
+// Re-render when the selected mark date changes (affects streaks + analytics)
+if(typeof markDate!=="undefined"){
+  markDate.addEventListener("change", ()=>render());
+}
+
 render();

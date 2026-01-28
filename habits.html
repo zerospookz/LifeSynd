@@ -48,6 +48,41 @@
   <p class="small" style="margin:12px 0 0">Pick a date to recover missed days and keep streaks honest.</p>
 </div>
 
+<div class="grid" style="margin-top:14px">
+  <div class="card" id="templatesCard">
+    <div class="cardHeader">
+      <h3 class="cardTitle">Templates</h3>
+      <span class="badge">One‑click add</span>
+    </div>
+    <p class="small" style="margin-top:0">Start fast with a preset pack. You can edit/delete habits later.</p>
+    <div class="templateGrid">
+      <div class="templateItem">
+        <div>
+          <div class="templateTitle">Morning routine</div>
+          <div class="small">Water • meditate • plan • walk</div>
+        </div>
+        <button class="btn secondary" onclick="addTemplate('morning')">Add</button>
+      </div>
+      <div class="templateItem">
+        <div>
+          <div class="templateTitle">Gym</div>
+          <div class="small">Workout • protein • stretch • steps</div>
+        </div>
+        <button class="btn secondary" onclick="addTemplate('gym')">Add</button>
+      </div>
+      <div class="templateItem">
+        <div>
+          <div class="templateTitle">Study</div>
+          <div class="small">Deep work • review • read</div>
+        </div>
+        <button class="btn secondary" onclick="addTemplate('study')">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="habitAnalytics"></div>
+</div>
+
 <div class="grid">
   <div class="card" id="insights"></div>
   <div class="card" id="streakSummary"></div>

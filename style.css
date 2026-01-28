@@ -221,6 +221,32 @@ input:focus,select:focus{
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 18px;
 }
+
+/* Habits: templates + analytics */
+.templateGrid{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.templateItem{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px;border-radius:18px;border:1px solid var(--border);background:rgba(255,255,255,.02)}
+.templateTitle{font-weight:750;letter-spacing:-.02em}
+
+.analyticsTop{display:grid;grid-template-columns: 1fr .9fr;gap:14px;align-items:start}
+.analyticsSide{display:flex;flex-direction:column;gap:10px}
+.statCard{padding:12px 12px;border-radius:18px;border:1px solid var(--border);background:rgba(255,255,255,.02)}
+.statLabel{color:var(--muted);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase}
+.statValue{font-size:1.25rem;font-weight:850;letter-spacing:-.03em;margin-top:4px}
+.statHint{color:var(--muted);font-size:.85rem;margin-top:6px;line-height:1.2}
+
+.heatmap{border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.02);padding:12px;overflow:hidden}
+.heatmapHeader{display:grid;grid-template-columns: 56px repeat(7, 1fr);gap:8px;align-items:center;margin-bottom:10px}
+.heatLabel{font-size:.75rem;color:var(--muted);text-align:center;letter-spacing:.06em}
+.heatmapBody{display:flex;flex-direction:column;gap:8px}
+.heatRow{display:grid;grid-template-columns: 56px 1fr;gap:8px;align-items:center}
+.heatWeek{font-size:.72rem;color:var(--muted)}
+.heatCells{display:grid;grid-template-columns: repeat(7, 1fr);gap:8px}
+.heatCell{aspect-ratio:1/1;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.04);transition:transform .12s ease, filter .12s ease}
+.heatCell:hover{transform:translateY(-2px);filter:brightness(1.08)}
+
+@media (max-width: 1040px){
+  .analyticsTop{grid-template-columns: 1fr}
+}
 .card{
   background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
   border: 1px solid rgba(30,41,59,.9);
