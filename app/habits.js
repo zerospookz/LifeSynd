@@ -46,22 +46,6 @@ const HABIT_TEMPLATES={
   study:["Deep work 45 min","Review notes","Read 20 pages"],
 };
 
-function addTemplate(key){
-  const list=HABIT_TEMPLATES[key];
-  if(!list){ showToast("Template not found"); return; }
-  const existing=new Set(habits.map(h=>String(h.name||"").trim().toLowerCase()));
-  let added=0;
-  list.forEach(name=>{
-    const k=name.trim().toLowerCase();
-    if(existing.has(k)) return;
-    habits.push({id:crypto.randomUUID(), name, created:today(), datesDone:[]});
-    existing.add(k);
-    added++;
-  });
-  save();
-  render();
-  showToast(added?`Added ${added} habits`:"All template habits already exist");
-}
 
 function addHabit(){
   if(!habitName.value) return;
@@ -171,39 +155,49 @@ function miniHeatHtml(h){
 
 // ---------- Analytics (Matrix) ----------
 
+
 function renderAnalytics(){
   const card = document.getElementById("habitAnalytics");
   if(!card) return;
 
-  const viewLabel = analyticsView === "week" ? "7 days" : "30 days";
+  const range = analyticsView==="week" ? 14 : 60; // bigger heatmap
+  const step  = analyticsView==="week" ? 14 : 30;
+
+  const viewLabel = analyticsView==="week" ? "2W" : "60D";
+  const offsetLabel = analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`);
+
   card.innerHTML = `
     <div class="cardHeader" style="align-items:flex-start">
       <div>
         <h3 class="cardTitle">Analytics</h3>
-        <p class="small" style="margin:6px 0 0">Drag · Tap · <span class="badge">${viewLabel}</span></p>
+        <p class="small" style="margin:6px 0 0">Tap to toggle · Drag to paint · <span class="badge">${viewLabel}</span> · <span class="badge">${offsetLabel}</span></p>
       </div>
       <div class="analyticsControls">
         <div class="seg" role="tablist" aria-label="Analytics range">
-          <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
-          <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
+          <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">2W</button>
+          <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">60D</button>
         </div>
+        <div class="seg" role="tablist" aria-label="Paint mode">
+          <button class="segBtn ${analyticsPaintMode==="mark"?"active":""}" data-paint="mark" type="button">Mark</button>
+          <button class="segBtn ${analyticsPaintMode==="erase"?"active":""}" data-paint="erase" type="button">Erase</button>
+        </div>
+        <button class="btn ghost" id="calPrev" type="button">←</button>
+        <button class="btn ghost" id="calToday" type="button">Today</button>
+        <button class="btn ghost" id="calNext" type="button">→</button>
       </div>
     </div>
 
     <div class="matrixWrap"><div class="matrixGrid" id="matrixGrid"></div></div>
 
     <div class="matrixHelp">
-      <div class="matrixHint">Tip: press and drag across squares to mark multiple days quickly.</div>
-      <div class="matrixLegend">
-        <span class="legendDot done"></span><span class="matrixHint">done</span>
-      </div>
+      <div class="matrixHint">Tip: drag to paint. Hold Shift to erase temporarily. Use ✕ to remove a habit.</div>
     </div>
   `;
 
   const grid = card.querySelector("#matrixGrid");
 
   // view toggle
-  card.querySelectorAll(".segBtn").forEach(btn=>{
+  card.querySelectorAll("[data-view]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const v = btn.dataset.view;
       if(!v || v===analyticsView) return;
@@ -213,15 +207,41 @@ function renderAnalytics(){
     });
   });
 
+  // paint mode toggle
+  card.querySelectorAll("[data-paint]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const p = btn.dataset.paint;
+      if(!p || p===analyticsPaintMode) return;
+      analyticsPaintMode = p;
+      localStorage.setItem("habitsAnalyticsPaintMode", analyticsPaintMode);
+      renderAnalytics();
+    });
+  });
+
+  // calendar navigation
+  card.querySelector("#calPrev").addEventListener("click", ()=>{
+    analyticsOffsetDays -= step;
+    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    renderAnalytics();
+  });
+  card.querySelector("#calNext").addEventListener("click", ()=>{
+    analyticsOffsetDays += step;
+    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    renderAnalytics();
+  });
+  card.querySelector("#calToday").addEventListener("click", ()=>{
+    analyticsOffsetDays = 0;
+    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    renderAnalytics();
+  });
+
   if(!habits || habits.length===0){
     grid.innerHTML = '<p class="empty">Add a habit to see analytics.</p>';
     return;
   }
 
-  const range = analyticsView==="week" ? 7 : 30;
-  const dates = lastNDates(range);
-
-  const colTemplate = `170px repeat(${habits.length}, 44px)`;
+  const dates = rangeDates(range, analyticsOffsetDays);
+  const colTemplate = `190px repeat(${habits.length}, 54px)`;
 
   // header row
   const header = document.createElement("div");
@@ -234,11 +254,11 @@ function renderAnalytics(){
   header.appendChild(corner);
 
   habits.forEach(h=>{
-    const el=document.createElement("div");
-    el.className="matrixHabit";
+    const el = document.createElement("div");
+    el.className = "matrixHabit";
     el.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
-    el.title=h.name;
-    el.innerHTML = `<span>${h.name}</span><button class="matrixDelete" title="Remove habit">✕</button>`;
+    el.title = h.name;
+    el.innerHTML = `<span>${escapeHtml(h.name)}</span><button class="matrixDelete" title="Remove habit" type="button">✕</button>`;
     el.querySelector(".matrixDelete").onclick = (ev)=>{
       ev.stopPropagation();
       if(confirm("Remove habit?")){
@@ -257,33 +277,33 @@ function renderAnalytics(){
   // rows
   dates.forEach(iso=>{
     const row = document.createElement("div");
-    row.className="matrixRow";
+    row.className = "matrixRow";
     row.style.gridTemplateColumns = colTemplate;
 
-    const dateEl=document.createElement("div");
-    dateEl.className="matrixDate";
+    const dateEl = document.createElement("div");
+    dateEl.className = "matrixDate";
     dateEl.innerHTML = `<div class="d1">${iso.slice(5)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
     row.appendChild(dateEl);
 
     habits.forEach(h=>{
-      const cell=document.createElement("div");
-      cell.className="matrixCell";
+      const cell = document.createElement("div");
+      cell.className = "matrixCell";
       cell.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
 
-      const set=new Set(h.datesDone||[]);
-      const done=set.has(iso);
+      const set = new Set(h.datesDone||[]);
+      const done = set.has(iso);
       if(done) cell.classList.add("done");
       else if(iso < todayIso) cell.classList.add("missed");
 
-      hitCell.dataset.hid=h.id;
-      hitCell.dataset.iso=iso;
+      cell.dataset.hid = h.id;
+      cell.dataset.iso = iso;
       row.appendChild(cell);
     });
 
     grid.appendChild(row);
   });
 
-  // ----- drag-to-mark (pointer events) -----
+  // interactions: click vs drag threshold
   let dragging = false;
   let dragStarted = false;
   let dragStartX = 0;
@@ -293,8 +313,9 @@ function renderAnalytics(){
   let dirty = false;
 
   function applyCell(cell){
-    const hid = hitCell.dataset.hid;
-    const iso = hitCell.dataset.iso;
+    if(!cell) return;
+    const hid = cell.dataset.hid;
+    const iso = cell.dataset.iso;
     const key = hid + "|" + iso;
     if(touched.has(key)) return;
     touched.add(key);
@@ -326,52 +347,59 @@ function renderAnalytics(){
 
   function endDrag(){
     if(!dragging && !dragStarted) return;
-    touched = new Set();
     if(dirty) save();
     dirty = false;
+    touched = new Set();
+    dragging = false;
+    setTimeout(()=>{ dragStarted = false; }, 0);
   }
 
   grid.addEventListener("pointerdown", (e)=>{
-    const hitCell = e.target.closest(".matrixCell");
-    if(!hitCell) return;
+    const cell = e.target.closest(".matrixCell");
+    if(!cell) return;
+
     dragStartX = e.clientX;
     dragStartY = e.clientY;
     dragStarted = false;
-    targetDone = (analyticsPaintMode==="erase" ? false : !hitCell.classList.contains("done"));
-    if(e.shiftKey) targetDone = false;
-
-    const hitCell = e.target.closest(".matrixCell");
-    if(!hitCell) return;
-    // prevent scroll-jank on drag
-    e.preventDefault();
-    
+    dragging = false;
     touched = new Set();
-    targetDone = (analyticsPaintMode==="erase" ? false : !hitCell.classList.contains("done"));
+    dirty = false;
+
+    targetDone = (analyticsPaintMode==="erase" ? false : !cell.classList.contains("done"));
     if(e.shiftKey) targetDone = false;
-    
-    cell.setPointerCapture?.(e.pointerId);
+
+    grid.setPointerCapture?.(e.pointerId);
   });
 
-  grid.addEventListener("pointerover", (e)=>{
-    if(!dragging && !dragStarted) return;
-    const hitCell = e.target.closest(".matrixCell");
-    if(!hitCell) return;
-    
+  grid.addEventListener("pointermove", (e)=>{
+    const dx = Math.abs(e.clientX - dragStartX);
+    const dy = Math.abs(e.clientY - dragStartY);
+
+    if(!dragStarted && (dx > 6 || dy > 6)){
+      dragStarted = true;
+      dragging = true;
+      e.preventDefault();
+    }
+    if(!dragging) return;
+
+    if(e.shiftKey) targetDone = false;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el ? el.closest(".matrixCell") : null;
+    applyCell(cell);
   });
 
-  window.addEventListener("pointerup", endDrag, { once:false });
-  window.addEventListener("pointercancel", endDrag, { once:false });
+  grid.addEventListener("pointerup", endDrag);
+  grid.addEventListener("pointercancel", endDrag);
+  grid.addEventListener("lostpointercapture", endDrag);
 
-  // tap-to-toggle fallback
   grid.addEventListener("click", (e)=>{
     if(dragStarted) return;
-
-    if(dragging) return;
-    const cell=e.target.closest(".matrixCell");
-    if(!hitCell) return;
-    toggleHabitAt(hitCell.dataset.hid, hitCell.dataset.iso, {preserveScroll:true});
+    const cell = e.target.closest(".matrixCell");
+    if(!cell) return;
+    toggleHabitAt(cell.dataset.hid, cell.dataset.iso, {preserveScroll:true});
   });
 }
+
 
 
 function renderInsights(){
