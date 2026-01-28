@@ -1,0 +1,1 @@
+export const isPage=id=>document.body.id===id;
