@@ -1,0 +1,138 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard</title>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logoDot"></div>
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
+
+    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <h1 class="pageTitle">Dashboard</h1>
+        <p class="subtitle"><span id="dashGreeting">Welcome back</span> · <span id="dashDate">—</span></p>
+      </div>
+      <div class="actionsRow">
+        <button class="btn secondary" onclick="openTxModal()">＋ Transaction</button>
+        <a class="btn secondary" href="finances.html">Open Finances</a>
+      </div>
+    </div>
+
+    <div class="card dashHero" style="margin-top:10px">
+      <div class="dashHeroTop">
+        <div>
+          <div class="dashHeroTitle">Today at a glance</div>
+          <div class="small">Stay on top of habits, training, nutrition, and budget — in one place.</div>
+        </div>
+        <div class="dashHeroPills">
+          <span class="pill">Habits: <b id="heroHabits">—</b></span>
+          <span class="pill">Calories: <b id="heroCalories">—</b></span>
+          <span class="pill">Budget: <b id="heroBudget">—</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashSplit" style="margin-top:18px">
+      <section class="dashCol">
+        <div class="dashSectionTitle">Today</div>
+
+
+        <div class="card soft" id="dTodayFocus"></div>
+        <div class="dashKpis">
+          <div class="card kpi" id="dHabits"></div>
+          <div class="card kpi" id="dCalories"></div>
+          <div class="card kpi" id="dWorkouts"></div>
+        </div>
+
+        <div class="dashStack" style="margin-top:18px">
+          <div class="card" id="dPlanner"></div>
+
+          <div class="card soft" id="dQuickActions">
+            <div class="cardHeader">
+              <h3 class="cardTitle">Quick actions</h3>
+              <span class="badge">Fast</span>
+            </div>
+            <div class="actionsRow">
+              <a class="btn" href="habits.html">Mark habits</a>
+              <a class="btn" href="workouts.html">Log set</a>
+              <a class="btn" href="nutrition.html">Add meal</a>
+              <button class="btn secondary" onclick="openTxModal()">Add transaction</button>
+            </div>
+          </div>
+
+          <div class="card" id="dRecentTx"></div>
+        </div>
+      </section>
+
+      <aside class="dashCol">
+        <div class="dashSectionTitle">Insights</div>
+        <div class="dashStack">
+          <div class="card" id="dBudget"></div>
+          <div class="card" id="dStreak"></div>
+
+          <div class="card soft" id="dAnalytics">
+            <div class="cardHeader">
+              <h3 class="cardTitle">Analytics</h3>
+              <span class="badge">Live</span>
+            </div>
+            <div class="grid" style="margin-top:14px">
+              <div class="card soft" id="aWorkouts"></div>
+              <div class="card soft" id="aPlanner"></div>
+              <div class="card soft" id="aHabits"></div>
+              <div class="card soft" id="aFinances"></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+  
+<div class="modalBackdrop" id="txModal" aria-hidden="true">
+  <div class="modal">
+    <div class="modalHeader">
+      <h3 class="modalTitle">Add transaction</h3>
+      <button class="iconBtn" onclick="closeTxModal()">✕</button>
+    </div>
+    <div class="small">Adds directly to your local finance log. You can review everything in Finances.</div>
+    <div class="hr"></div>
+    <div class="actionsRow">
+      <select id="mTxType">
+        <option value="expense">Expense</option>
+        <option value="income">Income</option>
+      </select>
+      <input id="mTxAmount" type="number" placeholder="Amount">
+      <input id="mTxCategory" placeholder="Category (Food, Rent...)">
+      <input id="mTxNote" placeholder="Note (optional)">
+      <input id="mTxDate" type="date">
+    </div>
+    <div class="actionsRow" style="margin-top:12px;justify-content:flex-end">
+      <button class="btn secondary" onclick="closeTxModal()">Cancel</button>
+      <button onclick="addTxFromDashboard()">Add</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<script src="app.js"></script>
+<script src="ui.js"></script><script src="dashboard.js"></script>
+</body></html>
