@@ -34,6 +34,20 @@ function lastNDates(n=21){
   return res;
 }
 
+
+function rangeDates(rangeDays, offsetDays){
+  const base = new Date();
+  base.setDate(base.getDate() + (offsetDays||0));
+  const res=[];
+  for(let i=rangeDays-1;i>=0;i--){
+    const x=new Date(base);
+    x.setDate(base.getDate()-i);
+    res.push(x.toISOString().slice(0,10));
+  }
+  return res;
+}
+
+
 function fmtWeekday(iso){
   const d=new Date(iso+"T00:00:00");
   return d.toLocaleDateString(undefined,{weekday:"short"});
