@@ -137,97 +137,101 @@ function heatColor(p){
   return `rgba(99,102,241,${a.toFixed(3)})`;
 }
 
+// Stable per-habit hue (used by the matrix so each habit column has its own accent)
+function habitHue(habitId){
+  const s = String(habitId ?? "");
+  let hash = 0;
+  for(let i=0;i<s.length;i++){
+    hash = s.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 360;
+}
+
 function renderAnalytics(){
   if(!habitAnalytics) return;
 
-  // Ensure selection is valid
-  if(analyticsHabitId!=="all" && !habitById(analyticsHabitId)){
-    setAnalyticsHabitId("all");
+  // --- Matrix analytics: X = habit name, Y = date (no dropdown) ---
+  const endIso = getMarkDate();
+  const end = new Date(endIso);
+  const days = 21;
+
+  const list = habits.slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+  const dates = [];
+  for(let i=0;i<days;i++){
+    const d = new Date(end);
+    d.setDate(d.getDate()-i);
+    dates.push(d);
   }
 
-  const endIso=getMarkDate();
-  const end=new Date(endIso);
-  const endWeekStart=normalizeToMonday(end);
-  const weeks=12;
-  const start=new Date(endWeekStart);
-  start.setDate(start.getDate()-(weeks-1)*7);
+  // Stats
+  const totalCells = Math.max(1, dates.length * Math.max(1, list.length));
+  let doneCells = 0;
+  const dowStats = Array.from({length:7}, ()=>({sum:0,count:0}));
 
-  const selectedHabit = analyticsHabitId==="all" ? null : habitById(analyticsHabitId);
+  const rows = dates.map(d=>{
+    const iso = d.toISOString().slice(0,10);
+    const dayIndex = (d.getDay()+6)%7; // Mon=0
+    const cells = list.map(h=>{
+      const done = completionForDateHabit(h, iso) ? 1 : 0;
+      doneCells += done;
+      dowStats[dayIndex].sum += done;
+      dowStats[dayIndex].count += 1;
+      return {hid:h.id, name:h.name, iso, done};
+    });
+    return {iso, d, dayIndex, cells};
+  });
 
-  // Gather values
-  const rows=[];
-  const dowStats=Array.from({length:7},()=>({sum:0,count:0}));
-  let totalSum=0, totalCount=0;
-
-  for(let w=0; w<weeks; w++){
-    const rowStart=new Date(start);
-    rowStart.setDate(rowStart.getDate()+w*7);
-    const cells=[];
-    for(let d=0; d<7; d++){
-      const dd=new Date(rowStart);
-      dd.setDate(dd.getDate()+d);
-      const iso=dd.toISOString().slice(0,10);
-
-      const p = selectedHabit ? completionForDateHabit(selectedHabit, iso) : completionForDate(iso); // 0..1
-      cells.push({iso,p});
-
-      dowStats[d].sum += p;
-      dowStats[d].count += 1;
-      totalSum += p;
-      totalCount += 1;
-    }
-    rows.push({rowStart: rowStart.toISOString().slice(0,10), cells});
-  }
-
+  const overall = list.length ? Math.round((doneCells/totalCells)*100) : 0;
   const best = dowStats
-    .map((s,i)=>({i,avg: s.count? (s.sum/s.count):0}))
+    .map((s,i)=>({i,avg: s.count ? (s.sum/s.count) : 0}))
     .sort((a,b)=>b.avg-a.avg)[0] || {i:0,avg:0};
+  const bestText = list.length ? `${weekdayLabel(best.i)} (${Math.round(best.avg*100)}%)` : "Add habits to unlock";
 
-  const overallAvg = totalCount? (totalSum/totalCount):0;
+  // Grid template: sticky date column + one column per habit
+  const colDate = "120px";
+  const colHabit = "96px";
+  const gridCols = `${colDate} ${list.map(()=>colHabit).join(" ")}`;
 
-  const contextLabel = selectedHabit ? selectedHabit.name : "All habits";
-  const bestText = habits.length
-    ? `${weekdayLabel(best.i)} (${Math.round(best.avg*100)}%)`
-    : "Add habits to unlock";
-
-  habitAnalytics.innerHTML=`
+  habitAnalytics.innerHTML = `
     <div class="cardHeader">
       <h3 class="cardTitle">Habit analytics</h3>
       <div class="analyticsControls">
-        <span class="badge">Last ${weeks} weeks</span>
-        <select id="habitAnalyticsSelect" class="select">
-          <option value="all">All habits</option>
-          ${habits.map(h=>`<option value="${h.id}">${escapeHtml(h.name)}</option>`).join("")}
-        </select>
+        <span class="badge">Last ${days} days</span>
+        <span class="badge">${list.length} habits</span>
       </div>
     </div>
 
     <div class="analyticsContext">
-      <div class="small">Viewing: <strong>${escapeHtml(contextLabel)}</strong></div>
-      <div class="small">Tip: click a square to see its date.</div>
+      <div class="small">X-axis: <strong>habits</strong> · Y-axis: <strong>dates</strong></div>
+      <div class="small">Tip: click a square for details.</div>
     </div>
 
     <div class="analyticsTop">
       <div>
-        <div class="small" style="margin-bottom:6px">Weekly completion heatmap</div>
-        <div class="heatmap">
-          <div class="heatmapHeader">
-            ${Array.from({length:7}).map((_,i)=>`<div class="heatLabel">${weekdayLabel(i)}</div>`).join("")}
-          </div>
-          <div class="heatmapBody">
+        <div class="small" style="margin-bottom:6px">Matrix consistency</div>
+        <div class="matrixWrap" aria-label="Habit matrix analytics">
+          <div class="matrixGrid">
+            <div class="matrixHeaderRow" style="grid-template-columns:${gridCols}">
+              <div class="matrixCorner">Date</div>
+              ${list.map(h=>{
+                const hue = habitHue(h.id);
+                const accent = `hsl(${hue} 70% 55%)`;
+                return `<div class="matrixHabit" title="${escapeHtml(h.name)}" style="--habit-accent:${accent}">${escapeHtml(h.name)}</div>`;
+              }).join("")}
+            </div>
+
             ${rows.map(r=>{
-              const wk=new Date(r.rowStart);
-              const label = wk.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+              const dateLabel = r.d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+              const dow = weekdayLabel(r.dayIndex);
               return `
-                <div class="heatRow">
-                  <div class="heatWeek">${label}</div>
-                  <div class="heatCells">
-                    ${r.cells.map(c=>{
-                      const pct=Math.round(c.p*100);
-                      const title=`${c.iso}: ${pct}%`;
-                      return `<div class="heatCell" title="${title}" style="background:${heatColor(c.p)}"></div>`;
-                    }).join("")}
-                  </div>
+                <div class="matrixRow" style="grid-template-columns:${gridCols}">
+                  <div class="matrixDate"><div class="d1">${dateLabel}</div><div class="d2">${dow}</div></div>
+                  ${r.cells.map(c=>{
+                    const title = `${c.iso} · ${c.name}: ${c.done?"Done":"Missed"}`;
+                    const hue = habitHue(c.hid);
+                    const accent = `hsl(${hue} 70% 55%)`;
+                    return `<div class="matrixCell ${c.done?"done":"missed"}" data-iso="${c.iso}" data-habit="${escapeHtml(c.name)}" data-done="${c.done}" title="${escapeHtml(title)}" style="--habit-accent:${accent}"></div>`;
+                  }).join("")}
                 </div>`;
             }).join("")}
           </div>
@@ -238,29 +242,30 @@ function renderAnalytics(){
         <div class="statCard">
           <div class="statLabel">Best day</div>
           <div class="statValue">${bestText}</div>
-          <div class="statHint">Avg completion for this view</div>
+          <div class="statHint">Avg done rate by weekday</div>
         </div>
         <div class="statCard">
           <div class="statLabel">Overall</div>
-          <div class="statValue">${Math.round(overallAvg*100)}%</div>
-          <div class="statHint">${selectedHabit?"For this habit":"Across all habits"}</div>
+          <div class="statValue">${overall}%</div>
+          <div class="statHint">Across all habits × days</div>
         </div>
         <div class="statCard">
-          <div class="statLabel">Focus</div>
-          <div class="statHint">${selectedHabit?"This shows your actual consistency for the habit.":"Pick a habit to see what’s really slipping."}</div>
+          <div class="statLabel">Legend</div>
+          <div class="statHint"><span class="badge" style="border-color:rgba(255,255,255,.18);color:var(--text)">Done</span> <span class="badge">Missed</span></div>
         </div>
       </div>
     </div>
   `;
 
-  const sel = document.getElementById("habitAnalyticsSelect");
-  if(sel){
-    sel.value = analyticsHabitId;
-    sel.onchange = (e)=>{
-      setAnalyticsHabitId(e.target.value);
-      renderAnalytics();
-    };
-  }
+  // Click → toast details
+  habitAnalytics.querySelectorAll('.matrixCell').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const iso = el.getAttribute('data-iso');
+      const habit = el.getAttribute('data-habit');
+      const done = el.getAttribute('data-done') === '1';
+      showToast(`${habit} · ${iso} → ${done?"Done":"Missed"}`);
+    });
+  });
 }
 
 function renderInsights(){
