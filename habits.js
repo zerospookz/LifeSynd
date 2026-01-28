@@ -9,9 +9,7 @@ function addHabit(){
 function toggle(i){habits[i].done=!habits[i].done; save(); render();}
 function render(){
  habitList.innerHTML="";
- if(habits.length===0){
-  habitList.innerHTML='<p class="empty">No habits yet.</p>'; return;
- }
+ if(!habits.length){habitList.innerHTML='<p class="empty">No habits yet.</p>';return;}
  habits.forEach((h,i)=>{
   habitList.innerHTML+=`
    <div class="card">
