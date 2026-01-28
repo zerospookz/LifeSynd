@@ -1,27 +1,32 @@
 
-let workouts=JSON.parse(localStorage.getItem("workouts")||"[]");
+let data=JSON.parse(localStorage.getItem("workoutData")||"[]");
 
-function save(){localStorage.setItem("workouts",JSON.stringify(workouts));}
+function save(){localStorage.setItem("workoutData",JSON.stringify(data));}
 
 function addWorkout(){
-  if(!workoutName.value) return;
-  workouts.unshift({name:workoutName.value,date:new Date().toLocaleDateString()});
-  workoutName.value="";
-  save(); render();
+ if(!wName.value) return;
+ const entry={
+  name:wName.value,
+  sets:+sets.value||1,
+  reps:+reps.value||1,
+  weight:+weight.value||0,
+  date:new Date().toISOString().slice(0,10)
+ };
+ data.push(entry);
+ save(); render();
+ wName.value=sets.value=reps.value=weight.value="";
 }
 
 function render(){
-  workoutList.innerHTML="";
-  if(workouts.length===0){
-    workoutList.innerHTML='<p class="empty">No workouts yet. Add your first one.</p>';
-    return;
-  }
-  workouts.forEach(w=>{
-    workoutList.innerHTML+=`
-      <div class="card">
-        <strong>${w.name}</strong>
-        <div class="empty">${w.date}</div>
-      </div>`;
-  });
+ workoutList.innerHTML="";
+ if(!data.length){workoutList.innerHTML='<p class=empty>No workouts logged.</p>';return;}
+ data.slice().reverse().forEach(w=>{
+  workoutList.innerHTML+=`
+   <div class="card">
+    <strong>${w.name}</strong><br>
+    ${w.sets}×${w.reps} @ ${w.weight}kg<br>
+    <span class=empty>${w.date}</span>
+   </div>`;
+ });
 }
 render();
