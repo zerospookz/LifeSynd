@@ -1,0 +1,52 @@
+:root{
+  /* ====== Semantic color tokens (mapped to LifeSync dark theme) ====== */
+  --neutral-0: var(--card);
+  --neutral-50: var(--panel);
+  --neutral-100: var(--glass2);
+  --neutral-300: rgba(203,213,225,.35);
+  --neutral-500: var(--muted);
+  --neutral-700: rgba(229,231,235,.82);
+  --neutral-900: var(--text);
+
+  --primary-400: var(--accent2);
+  --primary-500: var(--accent);
+  --primary-600: #4f46e5; /* deeper indigo for hover */
+
+  --success-400: #4ade80;
+  --success-500: var(--success);
+
+  --warning-400: #fbbf24;
+  --warning-500: var(--warn);
+
+  --danger-400: #f87171;
+  --danger-500: var(--danger);
+
+  --accent-400: #c084fc;
+  --accent-500: var(--violet);
+
+  /* ====== Radius ====== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* ====== Shadows ====== */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.22);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.35);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,.45);
+
+  /* ====== Motion ====== */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ====== Spacing (8pt system) ====== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+}
