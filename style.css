@@ -367,7 +367,7 @@ input:focus,select:focus{
 .matrixCell{touch-action:none;
   --habit-accent: var(--accent);
   aspect-ratio: 1/1;
-  width: 36px;
+  width: 54px;
   justify-self: center;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.07);
@@ -431,7 +431,7 @@ input:focus,select:focus{
 
 
 @media (max-width: 520px){
-  .matrixCell{touch-action:none;width:32px;border-radius:10px}
+  .matrixCell{touch-action:none;width: 54px;border-radius:10px}
 }
 
 @media (max-width: 1040px){
@@ -684,11 +684,11 @@ input:focus,select:focus{
 .matrixWrap{ padding: 14px; }
 .matrixGrid{ gap: 10px; }
 .matrixHeaderRow, .matrixRow{ gap: 10px; }
-.matrixCell{touch-action:none; width: 44px; border-radius: 14px; }
+.matrixCell{touch-action:none; width: 54px; border-radius: 14px; }
 .matrixCorner, .matrixHabit, .matrixDate{ border-radius: 14px; }
 .matrixHabit{ text-align:center; }
 .matrixDate{ min-width: 170px; }
-.matrixWrap{ max-height: 520px; }
+.matrixWrap{ max-height: 720px; }
 .matrixHelp{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,.06); }
 .matrixHint{ color: color-mix(in oklab, var(--muted) 85%, rgba(255,255,255,.2)); font-size:.78rem; }
 .matrixLegend{ display:flex; gap:10px; align-items:center; }
@@ -730,3 +730,23 @@ input:focus,select:focus{
   cursor:pointer;
 }
 .matrixDelete:hover{ color:#fff; }
+
+/* --- Bigger Heatmap --- */
+.matrixWrap{
+  max-height: 70vh;
+  padding: 20px;
+}
+.matrixGrid{
+  gap: 14px;
+}
+.matrixCell{
+  width: 54px;
+  height: 52px;
+  border-radius: 16px;
+}
+.matrixDate{
+  min-width: 200px;
+}
+.matrixHabit{
+  font-size: .85rem;
+}
