@@ -1,206 +1,45 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LifeSync — Finances</title>
-  <link rel="stylesheet" href="style.css"/>
-
-  <link rel="manifest" href="manifest.webmanifest"/>
-  <meta name="theme-color" content="#050716"/>
-  <link rel="icon" href="icon-192.png"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
-
+<meta charset="utf-8"/>
+<title>Finances</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="ui-fix.css"/>
+<script defer src="finance.js"></script>
 </head>
-<body data-page="finances">
-  <div class="bg"></div>
-  <header class="nav">
-    <div class="container nav-inner">
-      <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
-        <img src="lifesync-logo.svg" alt="LifeSync logo"/>
-        <span>LifeSync</span>
-      </a>
+<body>
+<div class="app-shell">
+<h1>Finances</h1>
 
-      <nav class="row" aria-label="Primary">
-        <a data-nav href="dashboard.html">Dashboard</a>
-        <a data-nav href="finances.html">Finances</a>
-        <a data-nav href="habits.html">Habits</a>
-        <a data-nav href="workouts.html">Workouts</a>
-        <a data-nav href="nutrition.html">Nutrition</a>
-      </nav>
+<section class="grid">
+  <div class="card">
+    <h3>Monthly Spend</h3>
+    <canvas id="spendChart" height="160"></canvas>
+  </div>
 
-      <div class="spacer"></div>
+  <div class="card">
+    <h3>Category Breakdown</h3>
+    <canvas id="categoryChart" height="160"></canvas>
+  </div>
 
-      <div class="row">
-        
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3a7 7 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+  <div class="card">
+    <h3>Budget Health</h3>
+    <div id="budgetHealth" class="big"></div>
+  </div>
+</section>
 
-<button class="btn ghost" data-action="open-demo">Watch demo</button>
-        <a class="btn primary" href="dashboard.html" data-action="go-dashboard">Get started</a>
-      </div>
-    </div>
-  </header>
+<section class="card">
+  <h3>Add Transaction</h3>
+  <input id="tName" placeholder="Description"/>
+  <input id="tAmount" type="number" placeholder="Amount"/>
+  <select id="tCat">
+    <option>Food</option><option>Transport</option>
+    <option>Health</option><option>Other</option>
+  </select>
+  <button onclick="addTransaction()">Add</button>
+</section>
 
-  <main class="container app">
-    <div class="app-grid">
-      <aside class="sidebar reveal">
-        <h4>Modules</h4>
-        <nav class="snav" aria-label="Modules">
-          <a data-nav href="dashboard.html"><span>Dashboard</span><span class="tag">Today</span></a>
-          <a data-nav href="finances.html"><span>Finances</span><span class="tag">$</span></a>
-          <a data-nav href="habits.html"><span>Habits</span><span class="tag">Streak</span></a>
-          <a data-nav href="workouts.html"><span>Workouts</span><span class="tag">Train</span></a>
-          <a data-nav href="nutrition.html"><span>Nutrition</span><span class="tag">Fuel</span></a>
-        </nav>
-
-        <div style="margin-top:14px" class="pill">
-          <span class="small"><strong>Tip:</strong> Hover cards for glow, scroll for reveal.</span>
-        </div>
-      </aside>
-
-      <section class="panel reveal">
-        <div class="panel-header">
-          <div>
-            <h1>Finances</h1>
-            <p>Budgets, spend, and categories — fast and readable.</p>
-          </div>
-          <div class="spacer"></div>
-          <div class="row"><span class="small" id="lastSync">Not synced yet</span><span class="spacer"></span><button class="btn" data-action="sync">Sync</button><button class="btn primary" data-action="add">Add</button></div>
-        </div>
-
-        
-        <div class="kpi-grid">
-          <div class="kpi reveal">
-            <div class="label">Total Balance</div>
-            <div class="value">$3,250</div>
-            <div class="delta">All accounts · updated now</div>
-          </div>
-          <div class="kpi reveal">
-            <div class="label">This Month</div>
-            <div class="value">$1,120</div>
-            <div class="delta">Spent · 38% of budget</div>
-          </div>
-          <div class="kpi reveal">
-            <div class="label">Top Category</div>
-            <div class="value">Food</div>
-            <div class="delta">45% of spend</div>
-          </div>
-        </div>
-
-        
-        <div class="grid2" style="margin-top:14px">
-          <div class="chart reveal">
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="pill"><strong>Spending Trend</strong> <span class="small">this week</span></div>
-                <div class="small" style="margin-top:8px">Smooth bars, instant readability.</div>
-              </div>
-              <div class="tag">$</div>
-            </div>
-            <div class="bar-chart" data-chart="bars">
-              <div class="bar" data-h="28"></div>
-              <div class="bar" data-h="46"></div>
-              <div class="bar" data-h="34"></div>
-              <div class="bar" data-h="58"></div>
-              <div class="bar" data-h="41"></div>
-              <div class="bar" data-h="62"></div>
-              <div class="bar" data-h="37"></div>
-            </div>
-            <div class="chart-legend"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-          </div>
-
-          <div class="chart reveal">
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="pill"><strong>Budget Health</strong> <span class="small">month</span></div>
-                <div class="small" style="margin-top:8px">How close you are to your target.</div>
-              </div>
-              <div class="tag">Live</div>
-            </div>
-            <div style="margin-top:12px" data-progress="62" data-label="Remaining" data-sub="$1,880 left"></div>
-          </div>
-        </div>
-
-<div class="split">
-          <div class="panel reveal" style="padding:14px;">
-            <div class="row" style="margin-bottom:10px;">
-              <div class="pill"><strong>Recent transactions</strong></div>
-              <div class="spacer"></div>
-              <span class="small">Hover rows for lift</span>
-            </div>
-
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Merchant</th>
-                  <th>Category</th>
-                  <th>Date</th>
-                  <th style="text-align:right;">Amount</th>
-                </tr>
-              </thead>
-              <tbody id="transactionsBody">
-<tr class="reveal">
-                  <td>Starbucks</td><td><span class="chip">Food</span></td><td>May 5</td><td style="text-align:right;">-$6.25</td>
-                </tr>
-                <tr class="reveal">
-                  <td>Uber</td><td><span class="chip">Transport</span></td><td>May 5</td><td style="text-align:right;">-$12.80</td>
-                </tr>
-                <tr class="reveal">
-                  <td>Groceries</td><td><span class="chip">Food</span></td><td>May 4</td><td style="text-align:right;">-$74.10</td>
-                </tr>
-                <tr class="reveal">
-                  <td>Gym</td><td><span class="chip">Health</span></td><td>May 3</td><td style="text-align:right;">-$29.99</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="panel reveal" style="padding:14px;">
-            <div class="row" style="margin-bottom:10px;">
-              <div class="pill"><strong>Budgets</strong></div>
-              <div class="spacer"></div>
-              <span class="small">May</span>
-            </div>
-
-            <div class="list">
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Food</div>
-                  <div class="sub">$450 / $1000</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:45%"></span></div>
-                </div>
-                <div class="right">🙂</div>
-              </div>
-
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Transport</div>
-                  <div class="sub">$120 / $250</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:48%"></span></div>
-                </div>
-                <div class="right">🚗</div>
-              </div>
-
-              <div class="item reveal">
-                <div class="left">
-                  <div class="title">Subscriptions</div>
-                  <div class="sub">$79 / $120</div>
-                  <div class="progress" style="margin-top:8px;"><span style="--w:66%"></span></div>
-                </div>
-                <div class="right">📦</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </section>
-    </div>
-  </main>
-
-  <script src="app.js"></script>
+</div>
 </body>
 </html>
