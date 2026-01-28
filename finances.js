@@ -2,6 +2,9 @@
 let tx=JSON.parse(localStorage.getItem("financeTx")||"[]");
 let budgets=JSON.parse(localStorage.getItem("financeBudgets")||"{}"); // {category: amount}
 
+// --- Transaction editing/deleting (local-first) ---
+let editingId = null;
+
 function saveTx(){ localStorage.setItem("financeTx", JSON.stringify(tx)); }
 function saveBudgets(){ localStorage.setItem("financeBudgets", JSON.stringify(budgets)); }
 function todayIso(){ return isoToday(); }
@@ -17,6 +20,67 @@ function addTx(){
   tx.unshift({id:crypto.randomUUID(), type, amount, category, note, date});
   saveTx(); render(); showToast("Transaction added");
   txAmount.value=""; txCategory.value=""; txNote.value=""; // keep date
+}
+
+function openEditTxModal(id){
+  const m=document.getElementById("editTxModal");
+  if(!m) return;
+  const item = tx.find(t=>t.id===id);
+  if(!item) return;
+  editingId=id;
+  document.getElementById("eTxId").value=id;
+  document.getElementById("eTxType").value=item.type;
+  document.getElementById("eTxAmount").value=item.amount;
+  document.getElementById("eTxCategory").value=item.category||"";
+  document.getElementById("eTxNote").value=item.note||"";
+  document.getElementById("eTxDate").value=item.date || todayIso();
+  m.classList.add("show");
+  m.setAttribute("aria-hidden","false");
+}
+
+function closeEditTxModal(){
+  const m=document.getElementById("editTxModal");
+  if(!m) return;
+  m.classList.remove("show");
+  m.setAttribute("aria-hidden","true");
+  editingId=null;
+}
+
+function saveEditedTx(){
+  const id = editingId || document.getElementById("eTxId").value;
+  if(!id) return;
+  const idx = tx.findIndex(t=>t.id===id);
+  if(idx===-1) return;
+
+  const type=document.getElementById("eTxType").value;
+  const amount=Number(document.getElementById("eTxAmount").value);
+  const category=(document.getElementById("eTxCategory").value||"Other").trim();
+  const note=(document.getElementById("eTxNote").value||"").trim();
+  const date=document.getElementById("eTxDate").value || todayIso();
+  if(!amount || amount<=0) return;
+
+  tx[idx] = {...tx[idx], type, amount, category, note, date};
+  saveTx();
+  closeEditTxModal();
+  render();
+  showToast("Transaction updated");
+}
+
+function deleteTx(id){
+  const idx = tx.findIndex(t=>t.id===id);
+  if(idx===-1) return;
+  tx.splice(idx,1);
+  saveTx();
+  render();
+  showToast("Transaction deleted");
+}
+
+function deleteTxFromModal(){
+  const id = editingId || document.getElementById("eTxId").value;
+  if(!id) return;
+  if(!confirm("Delete this transaction?")) return;
+  closeEditTxModal();
+  deleteTx(id);
 }
 
 function saveBudget(){
@@ -243,6 +307,12 @@ function render(){
         <td>${t.category}</td>
         <td>${t.type==='income'?'+':'-'}${t.amount.toFixed(0)}</td>
         <td>${t.note||''}</td>
+        <td>
+          <div class="actionsRow" style="gap:8px;justify-content:flex-end">
+            <button class="btn secondary" onclick="openEditTxModal('${t.id}')">Edit</button>
+            <button class="btn secondary" onclick="deleteTxConfirm('${t.id}')">Delete</button>
+          </div>
+        </td>
       </tr>
     `).join("");
   }
@@ -252,3 +322,24 @@ function render(){
 render();
 window.saveBudget=saveBudget;
 window.deleteBudget=deleteBudget;
+
+function deleteTxConfirm(id){
+  if(confirm("Delete this transaction?")) deleteTx(id);
+}
+
+// expose modal + actions for inline onclick
+window.openEditTxModal=openEditTxModal;
+window.closeEditTxModal=closeEditTxModal;
+window.saveEditedTx=saveEditedTx;
+window.deleteTxFromModal=deleteTxFromModal;
+window.deleteTxConfirm=deleteTxConfirm;
+
+// Close edit modal on backdrop click + ESC
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape") closeEditTxModal();
+});
+document.addEventListener("click",(e)=>{
+  const m=document.getElementById("editTxModal");
+  if(!m) return;
+  if(m.classList.contains("show") && e.target===m) closeEditTxModal();
+});

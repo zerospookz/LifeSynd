@@ -120,12 +120,57 @@ const pct = totalBudget>0 ? Math.round((totalSpent/totalBudget)*100) : 0;
 dBudget.innerHTML = totalBudget>0 ? `
   <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge ${pct<80?'ok':'warn'}">${pct}% used</span></div>
   <div class="metric">${Math.round(remaining)}</div>
-  <div class="small">Remaining this month (sum of category budgets).</div>
+  <div style="margin:10px 0 6px">
+    <canvas id="budgetGoalChart" width="900" height="150" style="width:100%;height:150px"></canvas>
+  </div>
+  <div class="small">Monthly goal progress (spent vs budget).</div>
 ` : `
   <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge">Not set</span></div>
   <div class="metric">—</div>
   <div class="small">Set category budgets in Finances.</div>
 `;
+
+function drawBudgetGoalChart(){
+  const canvas=document.getElementById("budgetGoalChart");
+  if(!canvas || totalBudget<=0) return;
+  const ctx=canvas.getContext("2d");
+  const w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  // background track
+  const left=18, top=50, barH=26, barW=w-36;
+  ctx.globalAlpha=0.25;
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(left, top, barW, barH);
+
+  // progress fill
+  const used=Math.min(1, totalSpent/totalBudget);
+  ctx.globalAlpha=0.55;
+  ctx.fillRect(left, top, barW*used, barH);
+
+  // labels
+  ctx.globalAlpha=0.9;
+  ctx.font="24px Inter, system-ui";
+  const label=`${Math.round(totalSpent)} / ${Math.round(totalBudget)}`;
+  ctx.fillText(label, left, 34);
+  ctx.globalAlpha=0.7;
+  ctx.font="16px Inter, system-ui";
+  ctx.fillText(`Spent this month`, left, 96);
+
+  // tick for 80% warning
+  const t=0.8;
+  ctx.globalAlpha=0.35;
+  ctx.fillRect(left+barW*t, top-10, 2, barH+20);
+
+  // percent on right
+  ctx.globalAlpha=0.9;
+  ctx.textAlign="right";
+  ctx.font="20px Inter, system-ui";
+  ctx.fillText(`${pct}%`, left+barW, 34);
+  ctx.textAlign="left";
+  ctx.globalAlpha=1;
+}
+drawBudgetGoalChart();
 
 // Dashboard transaction modal
 function openTxModal(){

@@ -81,11 +81,40 @@
   <div class="cardHeader"><h3 class="cardTitle">Recent transactions</h3><span class="badge">Last 12</span></div>
   <table class="table">
     <thead>
-      <tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th></tr>
+      <tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th>Actions</th></tr>
     </thead>
     <tbody id="txBody"></tbody>
   </table>
   <div class="small">Stored locally in your browser.</div>
+</div>
+
+<div class="modalBackdrop" id="editTxModal" aria-hidden="true">
+  <div class="modal">
+    <div class="modalHeader">
+      <h3 class="modalTitle">Edit transaction</h3>
+      <button class="iconBtn" onclick="closeEditTxModal()">✕</button>
+    </div>
+    <div class="small">Update or delete this entry. Changes are saved locally.</div>
+    <div class="hr"></div>
+    <input type="hidden" id="eTxId">
+    <div class="actionsRow">
+      <select id="eTxType">
+        <option value="expense">Expense</option>
+        <option value="income">Income</option>
+      </select>
+      <input id="eTxAmount" type="number" placeholder="Amount">
+      <input id="eTxCategory" placeholder="Category (Food, Rent...)">
+      <input id="eTxNote" placeholder="Note (optional)">
+      <input id="eTxDate" type="date">
+    </div>
+    <div class="actionsRow" style="margin-top:12px;justify-content:space-between">
+      <button class="btn secondary" onclick="deleteTxFromModal()">Delete</button>
+      <div class="actionsRow">
+        <button class="btn secondary" onclick="closeEditTxModal()">Cancel</button>
+        <button onclick="saveEditedTx()">Save</button>
+      </div>
+    </div>
+  </div>
 </div>
 
   </main>
