@@ -1,32 +1,47 @@
 
-const store = (k,d)=>JSON.parse(localStorage.getItem(k)||JSON.stringify(d));
-const data = store("workoutHistory", []);
+const store=(k,d)=>JSON.parse(localStorage.getItem(k)||JSON.stringify(d));
+const history=store("workoutHistory",[]);
 
-function logWorkout(exercises){
-  const day = new Date().toISOString().slice(0,10);
-  exercises.forEach(e=>{
-    data.push({
-      day,
-      name:e.name,
-      volume:(+e.sets)*(+e.reps)*(+e.weight||0),
-      weight:+e.weight||0
-    });
-  });
-  localStorage.setItem("workoutHistory", JSON.stringify(data));
+function weekKey(d){
+  const date=new Date(d);
+  const first=new Date(date.setDate(date.getDate()-date.getDay()));
+  return first.toISOString().slice(0,10);
 }
 
-function renderAnalytics(){
-  const list=document.getElementById("analytics");
-  if(!list) return;
-  const grouped={};
-  data.forEach(d=>{
-    grouped[d.name] ??= {best:0,total:0};
-    grouped[d.name].best=Math.max(grouped[d.name].best,d.weight);
-    grouped[d.name].total+=d.volume;
+function renderWeekly(){
+  const el=document.getElementById("weekly");
+  if(!el) return;
+  const weeks={};
+  history.forEach(h=>{
+    const k=weekKey(h.day);
+    weeks[k]=(weeks[k]||0)+h.volume;
   });
-  list.innerHTML="";
-  Object.entries(grouped).forEach(([k,v])=>{
-    list.innerHTML+=`<div class=card><strong>${k}</strong><br/>PR: ${v.best} kg<br/>Total Volume: ${v.total}</div>`;
+  el.innerHTML="";
+  Object.entries(weeks).forEach(([w,v])=>{
+    const bar=document.createElement("div");
+    bar.className="bar";
+    bar.style.height=Math.min(100,v/5000*100)+"%";
+    bar.title=`${w}: ${v}`;
+    el.appendChild(bar);
   });
 }
-document.addEventListener("DOMContentLoaded", renderAnalytics);
+
+function renderExerciseHistory(){
+  const el=document.getElementById("exerciseHistory");
+  if(!el) return;
+  const map={};
+  history.forEach(h=>{
+    map[h.name]??=[];
+    map[h.name].push(h.weight);
+  });
+  el.innerHTML="";
+  Object.entries(map).forEach(([name,arr])=>{
+    const best=Math.max(...arr);
+    el.innerHTML+=`<div class=card><h4>${name}</h4>PR: ${best} kg</div>`;
+  });
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  renderWeekly();
+  renderExerciseHistory();
+});
