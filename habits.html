@@ -1,26 +1,36 @@
-
 <!DOCTYPE html><html><head><meta charset=utf-8>
 <title>Habits</title><link rel="stylesheet" href="style.css"></head>
-<body>
-<div class="layout">
-
+<body><div class="layout">
 <aside class="sidebar">
   <a href="dashboard.html">🏠 Dashboard</a>
   <a href="habits.html">🔥 Habits</a>
   <a href="workouts.html">🏋️ Workouts</a>
+  <a href="planner.html">📅 Planner</a>
   <a href="nutrition.html">🍎 Nutrition</a>
-  <a href="analytics.html">📊 Analytics</a>
+  <a href="finances.html">💰 Finances</a>
+  <a href="settings.html">⚙️ Settings</a>
 </aside>
 
 <main class="content">
 <h1>Habits</h1>
 <div class="card">
-<input id="habitName" placeholder="New habit">
-<button onclick="addHabit()">Add</button>
+  <div class="row">
+    <input id="habitName" placeholder="New habit">
+    <button onclick="addHabit()">Add</button>
+  </div>
+  <hr>
+  <div class="row">
+    <label class="small">Mark date:</label>
+    <input id="markDate" type="date">
+    <span class="small">(defaults to today)</span>
+  </div>
 </div>
-<div id="habitList"></div>
-</main>
+<div class="grid">
+  <div class="card" id="insights"></div>
+  <div class="card" id="streakSummary"></div>
 </div>
+<div id="habitList" class="grid"></div>
+</main></div>
 <script src="ui.js"></script>
 <script src="habits.js"></script>
 </body></html>

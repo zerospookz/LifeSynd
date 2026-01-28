@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><meta charset=utf-8>
+<title>Planner</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="layout">
+<aside class="sidebar">
+  <a href="dashboard.html">🏠 Dashboard</a>
+  <a href="habits.html">🔥 Habits</a>
+  <a href="workouts.html">🏋️ Workouts</a>
+  <a href="planner.html">📅 Planner</a>
+  <a href="nutrition.html">🍎 Nutrition</a>
+  <a href="finances.html">💰 Finances</a>
+  <a href="settings.html">⚙️ Settings</a>
+</aside>
+
+<main class="content">
+<h1>Workout Planner</h1>
+<div class="grid">
+  <div class="card">
+    <h3>Templates</h3>
+    <div class="row">
+      <input id="tplName" placeholder="Template name (e.g., Push)">
+      <button onclick="saveTemplate()">Save template</button>
+    </div>
+    <p class="small">Quick start: Push / Pull / Legs are included. You can add custom ones too.</p>
+    <div id="tplList"></div>
+  </div>
+
+  <div class="card">
+    <h3>Plan this week</h3>
+    <p class="small">Assign a template to each day. Mark it done when completed.</p>
+    <div id="weekList"></div>
+    <hr>
+    <div id="weekSummary"></div>
+  </div>
+</div>
+</main></div>
+<script src="ui.js"></script>
+<script src="planner.js"></script>
+</body></html>

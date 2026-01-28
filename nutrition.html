@@ -1,27 +1,27 @@
-
 <!DOCTYPE html><html><head><meta charset=utf-8>
 <title>Nutrition</title><link rel="stylesheet" href="style.css"></head>
-<body>
-<div class="layout">
-
+<body><div class="layout">
 <aside class="sidebar">
   <a href="dashboard.html">🏠 Dashboard</a>
   <a href="habits.html">🔥 Habits</a>
   <a href="workouts.html">🏋️ Workouts</a>
+  <a href="planner.html">📅 Planner</a>
   <a href="nutrition.html">🍎 Nutrition</a>
-  <a href="analytics.html">📊 Analytics</a>
+  <a href="finances.html">💰 Finances</a>
+  <a href="settings.html">⚙️ Settings</a>
 </aside>
 
 <main class="content">
 <h1>Nutrition</h1>
 <div class="card">
-<input id="meal" placeholder="Meal">
-<input id="cal" type=number placeholder="Calories">
-<button onclick="addMeal()">Add</button>
+  <div class="row">
+    <input id="meal" placeholder="Meal">
+    <input id="cal" type=number placeholder="Calories">
+    <button onclick="addMeal()">Add</button>
+  </div>
 </div>
 <div id="mealList"></div>
-</main>
-</div>
+</main></div>
 <script src="ui.js"></script>
 <script src="nutrition.js"></script>
 </body></html>

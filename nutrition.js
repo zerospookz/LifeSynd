@@ -9,6 +9,7 @@ function addMeal(){
 }
 function render(){
  mealList.innerHTML="";
+ if(!meals.length){ mealList.innerHTML='<p class="empty">No meals logged yet.</p>'; return; }
  meals.forEach(m=>mealList.innerHTML+=`<div class="card">${m.name} – ${m.cal} kcal</div>`);
 }
 render();

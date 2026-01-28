@@ -6,3 +6,7 @@ function showToast(msg){
  document.body.appendChild(t);
  setTimeout(()=>t.remove(),2000);
 }
+function isoToday(){
+ const d=new Date();
+ return d.toISOString().slice(0,10);
+}

@@ -1,33 +1,31 @@
-
 <!DOCTYPE html><html><head><meta charset=utf-8>
 <title>Workouts</title><link rel="stylesheet" href="style.css"></head>
-<body>
-<div class="layout">
-
+<body><div class="layout">
 <aside class="sidebar">
   <a href="dashboard.html">🏠 Dashboard</a>
   <a href="habits.html">🔥 Habits</a>
   <a href="workouts.html">🏋️ Workouts</a>
+  <a href="planner.html">📅 Planner</a>
   <a href="nutrition.html">🍎 Nutrition</a>
-  <a href="analytics.html">📊 Analytics</a>
+  <a href="finances.html">💰 Finances</a>
+  <a href="settings.html">⚙️ Settings</a>
 </aside>
 
 <main class="content">
 <h1>Workouts</h1>
-
 <div class="card">
-  <input id="ex" placeholder="Exercise">
-  <input id="sets" type="number" placeholder="Sets">
-  <input id="reps" type="number" placeholder="Reps">
-  <input id="weight" type="number" placeholder="Weight">
-  <button onclick="logSet()">Log Set</button>
+  <div class="row">
+    <input id="ex" placeholder="Exercise">
+    <input id="sets" type="number" placeholder="Sets">
+    <input id="reps" type="number" placeholder="Reps">
+    <input id="weight" type="number" placeholder="Weight">
+    <button onclick="logSet()">Log Set</button>
+  </div>
+  <p class="small" style="margin:12px 0 0">Plan your week in <strong>Planner</strong> using Push/Pull/Legs templates.</p>
 </div>
-
 <div id="prBox" class="card"></div>
 <div id="workoutList" class="grid"></div>
-
-</main>
-</div>
+</main></div>
 <script src="ui.js"></script>
 <script src="workouts.js"></script>
 </body></html>

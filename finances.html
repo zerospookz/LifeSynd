@@ -1,45 +1,52 @@
+<!DOCTYPE html><html><head><meta charset=utf-8>
+<title>Finances</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="layout">
+<aside class="sidebar">
+  <a href="dashboard.html">🏠 Dashboard</a>
+  <a href="habits.html">🔥 Habits</a>
+  <a href="workouts.html">🏋️ Workouts</a>
+  <a href="planner.html">📅 Planner</a>
+  <a href="nutrition.html">🍎 Nutrition</a>
+  <a href="finances.html">💰 Finances</a>
+  <a href="settings.html">⚙️ Settings</a>
+</aside>
 
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8"/>
-<title>Finances</title>
-<link rel="stylesheet" href="style.css"/>
-<link rel="stylesheet" href="ui-fix.css"/>
-<script defer src="finance.js"></script>
-</head>
-<body>
-<div class="app-shell">
+<main class="content">
 <h1>Finances</h1>
 
-<section class="grid">
-  <div class="card">
-    <h3>Monthly Spend</h3>
-    <canvas id="spendChart" height="160"></canvas>
+<div class="card">
+  <h3>Add transaction</h3>
+  <div class="row">
+    <select id="txType">
+      <option value="expense">Expense</option>
+      <option value="income">Income</option>
+    </select>
+    <input id="txAmount" type="number" placeholder="Amount">
+    <input id="txCategory" placeholder="Category (Food, Rent...)">
+    <input id="txNote" placeholder="Note (optional)">
+    <input id="txDate" type="date">
+    <button onclick="addTx()">Add</button>
   </div>
-
-  <div class="card">
-    <h3>Category Breakdown</h3>
-    <canvas id="categoryChart" height="160"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Budget Health</h3>
-    <div id="budgetHealth" class="big"></div>
-  </div>
-</section>
-
-<section class="card">
-  <h3>Add Transaction</h3>
-  <input id="tName" placeholder="Description"/>
-  <input id="tAmount" type="number" placeholder="Amount"/>
-  <select id="tCat">
-    <option>Food</option><option>Transport</option>
-    <option>Health</option><option>Other</option>
-  </select>
-  <button onclick="addTransaction()">Add</button>
-</section>
-
+  <p class="small" style="margin:12px 0 0">Tip: keep categories consistent to get cleaner insights.</p>
 </div>
-</body>
-</html>
+
+<div class="grid">
+  <div class="card" id="fSummary"></div>
+  <div class="card" id="fCategories"></div>
+</div>
+
+<div class="card">
+  <h3>Recent transactions</h3>
+  <table class="table" id="txTable">
+    <thead>
+      <tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th></tr>
+    </thead>
+    <tbody id="txBody"></tbody>
+  </table>
+  <p class="small">Stored locally in your browser.</p>
+</div>
+
+</main></div>
+<script src="ui.js"></script>
+<script src="finances.js"></script>
+</body></html>
