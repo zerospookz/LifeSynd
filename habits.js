@@ -900,6 +900,7 @@ function renderInsights(){
   const H = getFilteredHabits();
   const r7=completionRate(7);
   const r30=completionRate(30);
+  const r60=completionRate(60);
 
   // Weakest habit: lowest completion over last 14 days
   const weakest = (()=>{
@@ -926,11 +927,23 @@ function renderInsights(){
       <h3 class="cardTitle">Insights</h3>
       <span class="badge">Consistency</span>
     </div>
-    <div class="kpiRow">
-      <div class="kpi"><div class="kpiLabel">7‑day completion</div><div class="kpiValue">${r7}%</div></div>
-      <div class="kpi"><div class="kpiLabel">30‑day completion</div><div class="kpiValue">${r30}%</div></div>
+    <div class="consistencyViz">
+      <div class="arcReactor" id="consistencyArc" aria-label="60 day completion visualization" role="img">
+        <div class="arcCore">
+          <div class="arcPct">${r60}%</div>
+          <div class="arcLbl">60D</div>
+        </div>
+      </div>
+      <div class="consistencyMeta">
+        <div class="kpiRow" style="margin:0">
+          <div class="kpi"><div class="kpiLabel">7‑day</div><div class="kpiValue">${r7}%</div></div>
+          <div class="kpi"><div class="kpiLabel">30‑day</div><div class="kpiValue">${r30}%</div></div>
+          <div class="kpi"><div class="kpiLabel">60‑day</div><div class="kpiValue">${r60}%</div></div>
+        </div>
+        <p class="small" style="margin-top:10px">60 days is a strong baseline for building a habit.</p>
+      </div>
     </div>
-    <p class="small" style="margin-top:10px">Mark H in the Analytics grid above.</p>
+    <p class="small" style="margin-top:12px">Tap to toggle. Drag to paint in the Analytics grid.</p>
     ${weakest?`
       <div class="hintCard compact" style="margin-top:12px" id="weakestHint" role="button" tabindex="0" aria-label="Jump to weakest habit">
         <div class="hintIcon">🧠</div>
@@ -943,12 +956,49 @@ function renderInsights(){
     `:""}
   `;
 
+  // Modern segmented "arc reactor" for 60-day consistency.
+  const arc = el.querySelector('#consistencyArc');
+  if(arc) setArcReactor(arc, r60, 6);
+  // Store last computed value so the right-panel copy can re-apply styles.
+  window.__lastConsistency60 = r60;
+
   if(weakest){
     const hint = el.querySelector('#weakestHint');
     const go = ()=>{ setCarouselIndex(H.findIndex(x=>x.id===weakest.h.id)); };
     hint?.addEventListener('click', go);
     hint?.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); go(); } });
   }
+}
+
+function buildArcGradient(pct, segments){
+  const seg = Math.max(3, Math.min(8, segments||6));
+  const lit = Math.round((pct/100) * seg);
+  const slice = 360/seg;
+  const gap = Math.min(10, slice*0.18); // degrees
+  const fill = slice-gap;
+  const on = 'hsla(210, 100%, 70%, 0.95)';
+  const off = 'hsla(210, 35%, 45%, 0.18)';
+  const stops=[];
+  for(let i=0;i<seg;i++){
+    const a0 = i*slice;
+    const a1 = a0 + fill;
+    const a2 = a0 + slice;
+    const c = i<lit ? on : off;
+    stops.push(`${c} ${a0}deg ${a1}deg`);
+    stops.push(`transparent ${a1}deg ${a2}deg`);
+  }
+  return `conic-gradient(from -90deg, ${stops.join(',')})`;
+}
+
+function setArcReactor(el, pct, segments){
+  const p = Math.max(0, Math.min(100, Number(pct)||0));
+  el.style.backgroundImage = buildArcGradient(p, segments);
+  el.style.setProperty('--arc-p', String(p));
+  // Trigger a subtle "charge" animation on update.
+  el.classList.remove('charged');
+  requestAnimationFrame(()=>{
+    el.classList.add('charged');
+  });
 }
 
 function renderStreakSummary(){
@@ -1128,6 +1178,12 @@ function syncSidePanels(){
   const iSide = document.getElementById("insightsSide");
   if(sMain && sSide) sSide.innerHTML = sMain.innerHTML;
   if(iMain && iSide) iSide.innerHTML = iMain.innerHTML;
+
+  // Re-apply arc styling for the duplicated Insights card on desktop right panel.
+  const sideArc = iSide?.querySelector?.('.arcReactor');
+  if(sideArc && Number.isFinite(window.__lastConsistency60)){
+    setArcReactor(sideArc, window.__lastConsistency60, 6);
+  }
 }
 
 function wireHabitsLayout(){

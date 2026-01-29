@@ -1007,6 +1007,60 @@ input:focus,select:focus{
   color: rgba(255,255,255,0.92);
 }
 
+/* ------------------------
+   Segmented "Arc Reactor" (Stats → Consistency)
+   ------------------------ */
+.consistencyViz{display:flex;gap:14px;align-items:center}
+.consistencyMeta{flex:1;min-width:0}
+
+.arcReactor{
+  --arc: 110px;
+  width: var(--arc);
+  height: var(--arc);
+  border-radius: 50%;
+  background-image: conic-gradient(from -90deg, rgba(99,102,241,0.45) 0 30deg, transparent 30deg 60deg);
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10) inset,
+    0 10px 30px rgba(0,0,0,0.40);
+  overflow: hidden;
+}
+.arcReactor::before{
+  content:"";
+  position:absolute; inset: 10px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255,255,255,0.10), transparent 55%),
+    radial-gradient(circle at 50% 60%, rgba(99,102,241,0.10), transparent 60%),
+    rgba(10,12,24,0.86);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.arcReactor::after{
+  content:"";
+  position:absolute; inset: 0;
+  background: radial-gradient(circle, transparent 46%, rgba(255,255,255,0.07) 47%, transparent 52%);
+  opacity: .9;
+  pointer-events:none;
+}
+
+.arcCore{position:absolute; inset: 18px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; z-index:2}
+.arcPct{font-size: 20px; font-weight: 800; letter-spacing:-0.02em}
+.arcLbl{font-size: 12px; color: rgba(255,255,255,0.65); font-weight:600}
+
+/* Charge animation when updated */
+.arcReactor.charged{animation: arcCharge .55s ease-out}
+@keyframes arcCharge{
+  0%{transform: translateY(2px) scale(.98); filter: brightness(.95)}
+  55%{transform: translateY(0) scale(1.01); filter: brightness(1.12)}
+  100%{transform: translateY(0) scale(1); filter: brightness(1)}
+}
+
+@media (max-width: 760px){
+  .consistencyViz{gap:12px}
+  .arcReactor{--arc: 96px}
+  .arcPct{font-size: 18px}
+}
+
 .focusCard{padding: 14px 16px}
 .focusRow{display:flex;align-items:flex-start;gap:12px}
 .focusIcon{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background: rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10)}
