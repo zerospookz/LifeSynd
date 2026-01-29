@@ -2,65 +2,6 @@
 
 const $ = (id) => document.getElementById(id);
 
-// --- Ring progress animation (1% → target%) ---
-// Animates CSS var --p in true integer steps (1,2,3...) with an ease-out feel.
-function animateRingProgress(ringEl, targetPct){
-  if(!ringEl) return;
-  const target = Math.max(0, Math.min(100, Math.round(Number(targetPct) || 0)));
-
-  // Respect reduced motion preferences.
-  try{
-    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-      ringEl.style.setProperty('--p', String(target));
-      const n = ringEl.querySelector('.ringBig');
-      if(n) n.textContent = `${target}%`;
-      return;
-    }
-  }catch(e){}
-
-  let current = 0;
-  let lastTs = 0;
-  let acc = 0;
-
-  const easeOutCubic = (x) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
-
-  const set = (v) => {
-    ringEl.style.setProperty('--p', String(v));
-    const n = ringEl.querySelector('.ringBig');
-    if(n) n.textContent = `${v}%`;
-  };
-
-  // Start state
-  set(0);
-
-  // We still use rAF for smoothness, but step in whole percents.
-  // Delay grows as we approach target (ease-out feel).
-  const minDelay = 16;  // ~60fps
-  const maxDelay = 90;  // slows near the end
-
-  function frame(ts){
-    if(!lastTs) lastTs = ts;
-    const dt = ts - lastTs;
-    lastTs = ts;
-    acc += dt;
-
-    // recompute delay based on current progress fraction
-    const frac = target ? (current / target) : 1;
-    const delay = minDelay + (maxDelay - minDelay) * easeOutCubic(frac);
-
-    if(acc >= delay && current < target){
-      // consume one step per check to guarantee 1% increments
-      acc = 0;
-      current += 1;
-      set(current);
-    }
-
-    if(current < target) requestAnimationFrame(frame);
-  }
-
-  requestAnimationFrame(frame);
-}
-
 function formatPrettyDate(iso){
   try{
     const d = new Date(iso + "T00:00:00");
@@ -325,7 +266,11 @@ function render(){
 
       // Animate ring in true % steps (1% → target%)
       const ring = bCard.querySelector('.ringChart');
-      if(ring) animateRingProgress(ring, pct);
+      if(ring){
+        ring.style.setProperty('--p', String(pct));
+        const n = ring.querySelector('.ringBig');
+        if(n) n.textContent = `${pct}%`;
+      }
     }else{
       bCard.innerHTML = `
         <div class="cardHeader"><h3 class="cardTitle">Budget</h3><span class="badge">Not set</span></div>
