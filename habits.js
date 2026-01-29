@@ -972,35 +972,69 @@ function renderInsights(){
   }
 }
 
-function buildArcGradient(pct, segments){
+function buildArcGradient(pct, segments, onColor, offColor){
   const seg = Math.max(3, Math.min(8, segments||6));
-  const lit = Math.round((pct/100) * seg);
+  const p = Math.max(0, Math.min(100, Number(pct)||0));
+  const total = (p/100) * seg;
+  const full = Math.floor(total);
+  const partial = total - full;
+
   const slice = 360/seg;
-  const gap = Math.min(10, slice*0.18); // degrees
+  const gap = Math.min(10, slice*0.18); // degrees between segments
   const fill = slice-gap;
-  const on = 'hsla(210, 100%, 70%, 0.95)';
-  const off = 'hsla(210, 35%, 45%, 0.18)';
+
+  const on = onColor || 'hsla(210, 100%, 70%, 0.95)';
+  const off = offColor || 'hsla(210, 35%, 45%, 0.18)';
   const stops=[];
+
   for(let i=0;i<seg;i++){
     const a0 = i*slice;
-    const a1 = a0 + fill;
+    const aFillEnd = a0 + fill;
     const a2 = a0 + slice;
-    const c = i<lit ? on : off;
-    stops.push(`${c} ${a0}deg ${a1}deg`);
-    stops.push(`transparent ${a1}deg ${a2}deg`);
+
+    if(i < full){
+      stops.push(`${on} ${a0}deg ${aFillEnd}deg`);
+    }else if(i === full && partial > 0){
+      const aMid = a0 + (fill * partial);
+      stops.push(`${on} ${a0}deg ${aMid}deg`);
+      stops.push(`${off} ${aMid}deg ${aFillEnd}deg`);
+    }else{
+      stops.push(`${off} ${a0}deg ${aFillEnd}deg`);
+    }
+    stops.push(`transparent ${aFillEnd}deg ${a2}deg`);
   }
   return `conic-gradient(from -90deg, ${stops.join(',')})`;
 }
 
 function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
-  el.style.backgroundImage = buildArcGradient(p, segments);
+
+  const scheme = (el.getAttribute('data-scheme')||'').toLowerCase();
+  let on, off;
+
+  if(scheme === 'status'){
+    if(p < 30){
+      on = 'hsla(0, 90%, 62%, 0.95)';      // red
+      off = 'hsla(0, 40%, 35%, 0.22)';
+    }else if(p < 70){
+      on = 'hsla(45, 100%, 60%, 0.95)';    // yellow
+      off = 'hsla(45, 45%, 35%, 0.22)';
+    }else{
+      on = 'hsla(140, 85%, 55%, 0.95)';    // green
+      off = 'hsla(140, 45%, 30%, 0.22)';
+    }
+    el.style.setProperty('--arc-glow', on);
+  }else{
+    on = 'hsla(210, 100%, 70%, 0.95)';
+    off = 'hsla(210, 35%, 45%, 0.18)';
+    el.style.setProperty('--arc-glow', 'hsla(210, 100%, 70%, 0.65)');
+  }
+
+  el.style.backgroundImage = buildArcGradient(p, segments, on, off);
   el.style.setProperty('--arc-p', String(p));
-  // Trigger a subtle "charge" animation on update.
+
   el.classList.remove('charged');
-  requestAnimationFrame(()=>{
-    el.classList.add('charged');
-  });
+  requestAnimationFrame(()=>{ el.classList.add('charged'); });
 }
 
 function renderStreakSummary(){
@@ -1114,10 +1148,9 @@ function renderHero(){
           <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
           <div class="small">Keep it simple: small wins compound.</div>
         </div>
-        <div class="arcReactor heroArc" id="heroArc" data-pct="${pct}" aria-label="Today's completion" role="img">
+        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
           <div class="arcCore">
             <div class="arcPct">${pct}%</div>
-            <div class="arcLbl">Today</div>
           </div>
         </div>
       </div>

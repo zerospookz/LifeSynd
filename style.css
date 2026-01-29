@@ -1034,7 +1034,8 @@ input:focus,select:focus{
   position: relative;
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.10) inset,
-    0 10px 30px rgba(0,0,0,0.40);
+    0 10px 30px rgba(0,0,0,0.40),
+    0 0 18px var(--arc-glow, rgba(99,102,241,0.40));
   overflow: hidden;
 }
 .arcReactor::before{
@@ -1282,3 +1283,7 @@ input:focus,select:focus{
 
 /* Override generic .grid in List tab container */
 [data-panel="list"] #habitList.grid{display:block;}
+
+@media (max-width:760px){
+  .matrixHeaderRow{padding: 10px 0 12px;}
+}
