@@ -1020,8 +1020,8 @@ function renderHero(){
         </div>
       </div>
       <div class="heroActions">
-        <button class="btn secondary" onclick="setAnalyticsOffset(0)">Today</button>
-        <button class="btn secondary onlyMobile" onclick="openAddHabit()">Add habit</button>
+        <button class="heroPill" onclick="setAnalyticsOffset(0)">Today</button>
+        <button class="heroPill onlyMobile" onclick="openAddHabit()">Add habit</button>
       </div>
     </div>
   `;
