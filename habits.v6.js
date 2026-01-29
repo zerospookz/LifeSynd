@@ -14,16 +14,17 @@ function rangeDates(rangeDays, offsetDays){
     res.push(x.toISOString().slice(0,10));
   }
 
+  return res;
+}
 
+// Format ISO date (YYYY-MM-DD) to e.g. "Jan 29"
 function fmtMonthDay(iso){
   const d = new Date(iso+"T00:00:00");
   try{
-    return new Intl.DateTimeFormat(undefined,{month:"short", day:"2-digit"}).format(d);
+    return new Intl.DateTimeFormat(undefined,{month:"short", day:"numeric"}).format(d);
   }catch(e){
     return iso.slice(5);
   }
-}
-  return res;
 }
 
 // Forward-looking range (start at today+offset and go forward)
