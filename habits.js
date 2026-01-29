@@ -1052,9 +1052,12 @@ function setArcReactor(el, pct, segments){
   el.style.setProperty('--arc-on', on);
   el.style.setProperty('--arc-off', off);
 
+  // reset state
   el.classList.remove('charged', 'fullPulse');
+  el.classList.add('charging');
 
-  const DURATION = 520;
+  // Slower fill so it feels like a smooth "loading" sweep.
+  const DURATION = 1050;
   const t0 = performance.now();
 
   const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
@@ -1072,6 +1075,7 @@ function setArcReactor(el, pct, segments){
     // Snap to final value and add "charged" animation.
     el.style.backgroundImage = buildArcGradient(p, seg, on, off);
     el.style.setProperty('--arc-p', String(p));
+    el.classList.remove('charging');
     el.classList.add('charged');
     if(p >= 100){
       el.classList.add('fullPulse');
