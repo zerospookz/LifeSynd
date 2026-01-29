@@ -1057,21 +1057,40 @@ function setArcReactor(el, pct, segments){
   el.classList.add('charging');
 
   // Slower fill so it feels like a smooth "loading" sweep.
+    // Slower fill so it feels like a smooth "loading" sweep,
+  // but we advance in *real* integer % steps: 1%, 2%, 3% ... target.
   const DURATION = 1050;
   const t0 = performance.now();
 
   const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
 
+  // We only re-render when the integer percentage changes.
+  // This guarantees the visual passes through 1%, 2%, 3% ... (or downwards if needed).
+  let lastInt = (Number.isFinite(prev) ? Math.round(prev) : 0);
+
   const tick = (t)=>{
     const k = Math.max(0, Math.min(1, (t - t0) / DURATION));
     const e = easeOutCubic(k);
-    const cur = prev + (p - prev) * e;
-    el.style.backgroundImage = buildArcGradient(cur, seg, on, off);
-    el.style.setProperty('--arc-p', String(cur));
+    const easedVal = prev + (p - prev) * e;
+
+    let nextInt;
+    if(p >= prev){
+      nextInt = Math.min(p, Math.max(lastInt, Math.floor(easedVal)));
+    }else{
+      nextInt = Math.max(p, Math.min(lastInt, Math.ceil(easedVal)));
+    }
+
+    if(nextInt !== lastInt){
+      lastInt = nextInt;
+      el.style.backgroundImage = buildArcGradient(lastInt, seg, on, off);
+      el.style.setProperty('--arc-p', String(lastInt));
+    }
+
     if(k < 1){
       requestAnimationFrame(tick);
       return;
     }
+
     // Snap to final value and add "charged" animation.
     el.style.backgroundImage = buildArcGradient(p, seg, on, off);
     el.style.setProperty('--arc-p', String(p));
