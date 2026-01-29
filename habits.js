@@ -1528,6 +1528,7 @@ function wireHabitsLayout(){
       const tab = btn.getAttribute("data-tab");
       panels.forEach(p=>p.classList.toggle("active", p.getAttribute("data-panel")===tab));
       // On desktop, keep all visible via CSS
+      if(tab==="stats"){ try{ renderFocusCard(); }catch(e){} }
     });
   });
 }
