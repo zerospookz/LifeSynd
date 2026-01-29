@@ -394,12 +394,13 @@ input:focus,select:focus{
 
 /* Mobile transpose layout: first column is the habit name (sticky like dates). */
 .matrixHabitName{
+  --habit-accent: var(--accent);
   position: sticky;
   left: 0;
   z-index: 2;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.02);
+  border: 1px solid color-mix(in oklab, var(--habit-accent) 22%, rgba(255,255,255,.08));
+  background: color-mix(in oklab, var(--habit-accent) 10%, rgba(255,255,255,.02));
   padding: 10px 10px;
   font-weight: 700;
   letter-spacing: -.01em;
@@ -407,6 +408,8 @@ input:focus,select:focus{
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.matrixHabitName span{display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: color-mix(in oklab, var(--habit-accent) 72%, var(--text));}
 
 .matrixDayHead{
   border-radius: 12px;
@@ -859,9 +862,12 @@ input:focus,select:focus{
 }
 
 .matrixHabit{ position: relative; }
+/* Mobile transpose: enable hold-to-delete progress on the sticky habit-name column too */
+.matrixHabitName{ position: relative; }
 
 /* Hold-to-delete progress (Habits analytics header) */
-.matrixHabit .holdBar{
+.matrixHabit .holdBar,
+.matrixHabitName .holdBar{
   position:absolute;
   left:10px;
   right:10px;
@@ -873,14 +879,16 @@ input:focus,select:focus{
   opacity:0;
   transition: opacity .12s ease;
 }
-.matrixHabit .holdBar::after{
+.matrixHabit .holdBar::after,
+.matrixHabitName .holdBar::after{
   content:"";
   display:block;
   height:100%;
   width: calc(var(--hold, 0) * 100%);
   background: color-mix(in oklab, var(--habit-accent) 75%, rgba(255,255,255,.35));
 }
-.matrixHabit.holding .holdBar{ opacity:1; }
+.matrixHabit.holding .holdBar,
+.matrixHabitName.holding .holdBar{ opacity:1; }
 
 /* --- Bigger Heatmap --- */
 .matrixWrap{
@@ -987,7 +995,10 @@ input:focus,select:focus{
   box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset;
   transition: --p .72s cubic-bezier(.2,.9,.2,1);
 }
-.ringInner{
+/* Hero ring inner: scope to .ring to avoid clashing with the global .ringInner used by .ringChart */
+.ring .ringInner{
+  position: static; /* override earlier .ringInner { position:absolute; inset:... } */
+  inset: auto;
   width:100%;height:100%;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background: rgba(10,12,24,0.85);

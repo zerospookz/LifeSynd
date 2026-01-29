@@ -325,6 +325,49 @@ function renderAnalytics(){
   if(!card) return;
   const H = getFilteredHabits();
 
+  // Shared: hold-to-delete (2.5s) for habit labels (desktop header + mobile sticky column)
+  function bindHoldToDelete(labelEl, habit){
+    if(!labelEl || !habit) return;
+    // Avoid double-binding on rerenders
+    if(labelEl.dataset.holdBound === "1") return;
+    labelEl.dataset.holdBound = "1";
+
+    let holdTimer = null;
+    let raf = null;
+    let holdStart = 0;
+    const HOLD_MS = 2500;
+
+    function clearHold(){
+      if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+      if(raf){ cancelAnimationFrame(raf); raf = null; }
+      labelEl.classList.remove("holding");
+      labelEl.style.removeProperty("--hold");
+    }
+
+    function tick(){
+      const t = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
+      labelEl.style.setProperty("--hold", String(t));
+      if(t < 1) raf = requestAnimationFrame(tick);
+    }
+
+    labelEl.addEventListener("pointerdown", (ev)=>{
+      if(ev.button != null && ev.button !== 0) return;
+      holdStart = performance.now();
+      labelEl.classList.add("holding");
+      tick();
+      holdTimer = setTimeout(()=>{
+        clearHold();
+        habits = (habits||[]).filter(x=>x.id!==habit.id);
+        save();
+        showToast("Habit removed");
+        render();
+      }, HOLD_MS);
+    });
+    ["pointerup","pointercancel","pointerleave"].forEach(evt=>{
+      labelEl.addEventListener(evt, clearHold);
+    });
+  }
+
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
   // Mobile: show a 7-day viewport and allow paging via swipe.
   const range = isMobile ? 7 : (analyticsView==="week" ? 14 : 60);
@@ -453,43 +496,7 @@ function renderAnalytics(){
       el.title = h.name;
       el.innerHTML = `<span>${escapeHtml(h.name)}</span><div class="holdBar" aria-hidden="true"></div>`;
 
-      // Hold-to-delete (2.5 seconds)
-      let holdTimer = null;
-      let raf = null;
-      let holdStart = 0;
-      const HOLD_MS = 2500;
-
-      function clearHold(){
-        if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
-        if(raf){ cancelAnimationFrame(raf); raf = null; }
-        el.classList.remove("holding");
-        el.style.removeProperty("--hold");
-      }
-
-      function tick(){
-        const t = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
-        el.style.setProperty("--hold", String(t));
-        if(t < 1) raf = requestAnimationFrame(tick);
-      }
-
-      el.addEventListener("pointerdown", (ev)=>{
-        // Only primary button / touch
-        if(ev.button != null && ev.button !== 0) return;
-        holdStart = performance.now();
-        el.classList.add("holding");
-        tick();
-        holdTimer = setTimeout(()=>{
-          clearHold();
-          // remove habit
-          habits = (habits||[]).filter(x=>x.id!==h.id);
-          save();
-          showToast("Habit removed");
-          render();
-        }, HOLD_MS);
-      });
-      ["pointerup","pointercancel","pointerleave"].forEach(evt=>{
-        el.addEventListener(evt, clearHold);
-      });
+      bindHoldToDelete(el, h);
 
       header.appendChild(el);
     });
@@ -570,8 +577,10 @@ function renderAnalytics(){
 
       const name = document.createElement("div");
       name.className = "matrixHabitName";
+      name.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
       name.title = h.name;
-      name.textContent = h.name;
+      name.innerHTML = `<span>${escapeHtml(h.name)}</span><div class="holdBar" aria-hidden="true"></div>`;
+      bindHoldToDelete(name, h);
       row.appendChild(name);
 
       dates.forEach(iso=>{
