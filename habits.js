@@ -1,20 +1,29 @@
-
+"use strict";
 // --- Analytics state (must be defined before first render) ---
 let analyticsView = localStorage.getItem("habitsAnalyticsView") || "month";
 let analyticsOffsetDays = parseInt(localStorage.getItem("habitsAnalyticsOffsetDays") || "0", 10);
 let analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || "mark"; // mark | erase
 let lastPulse = null; // {hid, iso, mode:"done"|"miss"} for subtle mark animation
 
-function rangeDates(rangeDays, offsetDays){
+function rangeDates(rangeDays, offsetDays, dir="backward"){
+  // dir: "backward" (default) returns [oldest..newest] ending at (today+offset)
+  //      "forward" returns [today+offset .. +rangeDays-1]
   const base = new Date();
   base.setDate(base.getDate() + (offsetDays||0));
   const res=[];
-  for(let i=rangeDays-1;i>=0;i--){
-    const x=new Date(base);
-    x.setDate(base.getDate()-i);
-    res.push(x.toISOString().slice(0,10));
+  if(dir === "forward"){
+    for(let i=0;i<rangeDays;i++){
+      const x=new Date(base);
+      x.setDate(base.getDate()+i);
+      res.push(x.toISOString().slice(0,10));
+    }
+  }else{
+    for(let i=rangeDays-1;i>=0;i--){
+      const x=new Date(base);
+      x.setDate(base.getDate()-i);
+      res.push(x.toISOString().slice(0,10));
+    }
   }
-
   return res;
 }
 
@@ -27,21 +36,6 @@ function fmtMonthDay(iso){
     return iso.slice(5);
   }
 }
-
-// Forward-looking range (start at today+offset and go forward)
-function rangeDatesForward(rangeDays, offsetDays){
-  const start = new Date();
-  start.setDate(start.getDate() + (offsetDays||0));
-  const res=[];
-  for(let i=0;i<rangeDays;i++){
-    const x=new Date(start);
-    x.setDate(start.getDate()+i);
-    res.push(x.toISOString().slice(0,10));
-  }
-  return res;
-}
-
-
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 // --- UI filters ---
@@ -189,17 +183,6 @@ function habitHue(id){
   return HUE_PALETTE[habitHueFrom(id)%HUE_PALETTE.length];
 }
 
-function lastNDates(n=21){
-  const res=[];
-  const d=new Date();
-  for(let i=n-1;i>=0;i--){
-    const x=new Date(d);
-    x.setDate(d.getDate()-i);
-    res.push(x.toISOString().slice(0,10));
-  }
-  return res;
-}
-
 
 
 
@@ -207,13 +190,6 @@ function fmtWeekday(iso){
   const d=new Date(iso+"T00:00:00");
   return d.toLocaleDateString(undefined,{weekday:"short"});
 }
-
-// ---------- Templates ----------
-const HABIT_TEMPLATES={
-  morning:["Drink water","Meditate 5 min","Plan the day","Walk 10 min"],
-  gym:["Workout","Protein target","Stretch","Steps 8k"],
-  study:["Deep work 45 min","Review notes","Read 20 pages"],
-};
 
 
 function addHabit(){
@@ -257,11 +233,6 @@ function toggleHabitAt(id, iso, opts={}){
   return nowDone;
 }
 
-function toggleHabit(id){
-  // kept for compatibility, but UI no longer uses buttons
-  const date = getMarkDate();
-  return toggleHabitAt(id, date, {preserveScroll:true});
-}
 
 function streakFor(h){
   const dates=(h.datesDone||[]).slice().sort();
@@ -306,7 +277,6 @@ function completionRate(days){
   return Math.round((done/total)*100);
 }
 
-// Mini GitHub-style heatmap: last 28 days (4 weeks)
 // Mini GitHub-style heatmap: last 28 days (4 weeks)
 // 5 levels based on *consecutive* completions ending on each day (caps at 4).
 function miniHeatHtml(h){
@@ -439,7 +409,7 @@ function renderAnalytics(){
 
   // Week view should look forward (today → next N days). Month view remains historical.
   const dates = analyticsView === "week"
-    ? rangeDatesForward(range, analyticsOffsetDays)
+    ? rangeDates(range, analyticsOffsetDays, "forward")
     : rangeDates(range, analyticsOffsetDays);
 
   const todayIso = today();
