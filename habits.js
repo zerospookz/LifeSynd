@@ -1143,8 +1143,98 @@ function wireHabitsLayout(){
 }
 
 
+
+
+// ----------------------
+// Daily reminder (configurable in Settings)
+// ----------------------
+let __habitsReminderTimer = null;
+
+function getHabitsReminderSettings(){
+  try{
+    const raw = JSON.parse(localStorage.getItem("habitsReminder")||"null") || {};
+    return {
+      enabled: raw.enabled !== false,
+      time: typeof raw.time==="string" ? raw.time : "20:00",
+      threshold: Number.isFinite(raw.threshold) ? Math.max(0, Math.min(100, raw.threshold)) : 50
+    };
+  }catch(_){
+    return { enabled:true, time:"20:00", threshold:50 };
+  }
+}
+
+function computeTodayCompletionPct(){
+  const H = getFilteredHabits();
+  if(!H.length) return 0;
+  const iso = today();
+  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
+  return Math.round((done / H.length) * 100);
+}
+
+function notifyHabitsReminder(pct, threshold){
+  const title = "Habits reminder";
+  const body = `You're at ${pct}% today (target ${threshold}%). Open Habits to finish today.`;
+  // Prefer system notifications if allowed; fallback to toast/alert.
+  if("Notification" in window && Notification.permission === "granted"){
+    try{
+      const n = new Notification(title, { body });
+      // Some browsers require a user gesture to focus; ignore errors.
+      n.onclick = ()=>{ try{ window.focus(); }catch(_){} };
+      return;
+    }catch(_){}
+  }
+  if(typeof showToast === "function") showToast(body);
+  else alert(body);
+}
+
+function runHabitsReminderCheck(){
+  const s = getHabitsReminderSettings();
+  if(!s.enabled) return;
+  const H = getFilteredHabits();
+  if(!H.length) return;
+
+  const iso = today();
+  const last = localStorage.getItem("habitsReminderLastNotified") || "";
+  const pct = computeTodayCompletionPct();
+
+  if(pct < s.threshold && last !== iso){
+    localStorage.setItem("habitsReminderLastNotified", iso);
+    notifyHabitsReminder(pct, s.threshold);
+  }
+}
+
+function scheduleHabitsReminder(){
+  if(__habitsReminderTimer) clearTimeout(__habitsReminderTimer);
+  const s = getHabitsReminderSettings();
+  if(!s.enabled) return;
+
+  const now = new Date();
+  const [hh, mm] = String(s.time||"20:00").split(":").map(x=>parseInt(x,10));
+  const target = new Date(now);
+  target.setHours(Number.isFinite(hh)?hh:20, Number.isFinite(mm)?mm:0, 0, 0);
+
+  // If already past today's target, schedule for tomorrow.
+  if(target.getTime() <= now.getTime()){
+    target.setDate(target.getDate() + 1);
+  }
+
+  const ms = Math.max(250, target.getTime() - now.getTime());
+  __habitsReminderTimer = setTimeout(()=>{
+    runHabitsReminderCheck();
+    scheduleHabitsReminder(); // reschedule next day
+  }, ms);
+}
+
+// Keep reminder schedule in sync if Settings are changed in another tab.
+window.addEventListener("storage", (e)=>{
+  if(e && e.key === "habitsReminder") scheduleHabitsReminder();
+});
+
+
 wireHabitsLayout();
 render();
+// Start daily reminder timer (if enabled)
+scheduleHabitsReminder();
 
 // Keep the grid layout in sync when switching between desktop ↔ mobile widths.
 // (Needed because the grid renderer branches on a media query.)

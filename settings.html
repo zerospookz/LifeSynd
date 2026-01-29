@@ -1,5 +1,7 @@
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0f1a">
 <title>Settings</title>
 <link rel="stylesheet" href="style.css"></head>
 <body>
@@ -37,6 +39,29 @@
     </div>
 
     
+
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Habits reminder</h3><span class="badge">Daily</span></div>
+  <p class="small">Get a reminder if today’s completion is below your target at the chosen time. When Push is enabled (and a server is connected), reminders can arrive in the background.</p>
+  <div class="formRow" style="display:flex; gap:12px; flex-wrap:wrap; align-items:end">
+    <label style="display:flex; gap:8px; align-items:center">
+      <input id="hr_enabled" type="checkbox">
+      <span class="small">Enabled</span>
+    </label>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <span class="small">Time</span>
+      <input id="hr_time" type="time" value="20:00">
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <span class="small">Target %</span>
+      <input id="hr_pct" type="number" min="0" max="100" step="1" value="50" style="width:110px">
+    </div>
+    <button id="hr_perm" class="btn secondary" type="button">Enable notifications</button>
+    <span id="hr_status" class="small" style="opacity:.8"></span>
+  </div>
+</div>
+
+
 <div class="card soft">
   <div class="cardHeader"><h3 class="cardTitle">Data</h3><span class="badge">Backup</span></div>
   <p class="small">Everything is stored locally in your browser. Export before switching devices.</p>
