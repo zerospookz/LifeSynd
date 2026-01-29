@@ -44,6 +44,14 @@ function rangeDatesForward(rangeDays, offsetDays){
 
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
+// --- UI filters ---
+let habitSearchTerm = "";
+function getFilteredHabits(){
+  const term = (habitSearchTerm||"").trim().toLowerCase();
+  if(!term) return habits;
+  return (habits||[]).filter(h => (h.name||"").toLowerCase().includes(term));
+}
+
 
 // --- Habit carousel state ---
 let habitCarouselIndex = parseInt(localStorage.getItem('habitsCarouselIndex')||'0',10);
@@ -345,6 +353,7 @@ function miniHeatHtml(h){
 function renderAnalytics(){
   const card = document.getElementById("habitAnalytics");
   if(!card) return;
+  const H = getFilteredHabits();
 
   const range = analyticsView==="week" ? 14 : 60; // bigger heatmap
   const step  = analyticsView==="week" ? 14 : 30;
@@ -421,7 +430,7 @@ function renderAnalytics(){
     renderAnalytics();
   });
 
-  if(!habits || habits.length===0){
+  if(!H || H.length===0){
     grid.innerHTML = '<p class="empty">Add a habit to see analytics.</p>';
     return;
   }
@@ -431,17 +440,17 @@ function renderAnalytics(){
     ? rangeDatesForward(range, analyticsOffsetDays)
     : rangeDates(range, analyticsOffsetDays);
   const dateCol = 190;
-  // compute cell size to fill available width when there are few habits
+  // compute cell size to fill available width when there are few H
   const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
   const gap = 8;
   const maxCell = 74;
   const minCell = 44;
-  const avail = Math.max(0, wrapW - dateCol - gap*(habits.length+1));
-  const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, habits.length))));
+  const avail = Math.max(0, wrapW - dateCol - gap*(H.length+1));
+  const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, H.length))));
   grid.style.setProperty("--dateCol", dateCol+"px");
   grid.style.setProperty("--cell", cell+"px");
 
-  const colTemplate = `var(--dateCol) repeat(${habits.length}, var(--cell))`;
+  const colTemplate = `var(--dateCol) repeat(${H.length}, var(--cell))`;
 
   // header row
   const header = document.createElement("div");
@@ -456,7 +465,7 @@ function renderAnalytics(){
   `;
   header.appendChild(corner);
 
-  habits.forEach(h=>{
+  H.forEach(h=>{
     const el = document.createElement("div");
     el.className = "matrixHabit";
     el.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
@@ -490,7 +499,7 @@ function renderAnalytics(){
       tick();
       holdTimer = setTimeout(()=>{
         clearHold();
-        habits = habits.filter(x=>x.id!==h.id);
+        H = H.filter(x=>x.id!==h.id);
         save();
         showToast("Habit removed");
         render();
@@ -518,7 +527,7 @@ function renderAnalytics(){
     dateEl.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
     row.appendChild(dateEl);
 
-    habits.forEach(h=>{
+    H.forEach(h=>{
       const cell = document.createElement("div");
       cell.className = "matrixCell";
       cell.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
@@ -561,7 +570,7 @@ function renderAnalytics(){
     if(touched.has(key)) return;
     touched.add(key);
 
-    const h = habits.find(x=>x.id===hid);
+    const h = H.find(x=>x.id===hid);
     if(!h) return;
 
     const set = new Set(h.datesDone||[]);
@@ -681,7 +690,7 @@ function renderInsights(){
 
   // Weakest habit: lowest completion over last 14 days
   const weakest = (()=>{
-    if(!habits.length) return null;
+    if(!H.length) return null;
     const now=new Date(today()+"T00:00:00");
     const days=14;
     const window=[];
@@ -690,7 +699,7 @@ function renderInsights(){
       window.push(d.toISOString().slice(0,10));
     }
     let best=null;
-    for(const h of habits){
+    for(const h of H){
       const set=new Set(h.datesDone||[]);
       const done=window.reduce((acc,iso)=>acc+(set.has(iso)?1:0),0);
       const rate=done/days;
@@ -708,7 +717,7 @@ function renderInsights(){
       <div class="kpi"><div class="kpiLabel">7‑day completion</div><div class="kpiValue">${r7}%</div></div>
       <div class="kpi"><div class="kpiLabel">30‑day completion</div><div class="kpiValue">${r30}%</div></div>
     </div>
-    <p class="small" style="margin-top:10px">Mark habits in the Analytics grid above.</p>
+    <p class="small" style="margin-top:10px">Mark H in the Analytics grid above.</p>
     ${weakest?`
       <div class="hintCard compact" style="margin-top:12px" id="weakestHint" role="button" tabindex="0" aria-label="Jump to weakest habit">
         <div class="hintIcon">🧠</div>
@@ -723,7 +732,7 @@ function renderInsights(){
 
   if(weakest){
     const hint = el.querySelector('#weakestHint');
-    const go = ()=>{ setCarouselIndex(habits.findIndex(x=>x.id===weakest.h.id)); };
+    const go = ()=>{ setCarouselIndex(H.findIndex(x=>x.id===weakest.h.id)); };
     hint?.addEventListener('click', go);
     hint?.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); go(); } });
   }
@@ -732,11 +741,11 @@ function renderInsights(){
 function renderStreakSummary(){
   const el=document.getElementById("streakSummary");
   if(!el) return;
-  if(!habits.length){
-    el.innerHTML='<div class="cardHeader"><h3 class="cardTitle">Streaks</h3></div><p class="empty">No habits yet.</p>';
+  if(!H.length){
+    el.innerHTML='<div class="cardHeader"><h3 class="cardTitle">Streaks</h3></div><p class="empty">No H yet.</p>';
     return;
   }
-  const stats=habits.map(h=>({h, s:streakFor(h)}));
+  const stats=H.map(h=>({h, s:streakFor(h)}));
   stats.sort((a,b)=>b.s.current-a.s.current);
   const top=stats.slice(0,4);
   const maxCurrent = Math.max(1, ...top.map(x=>x.s.current));
@@ -766,25 +775,29 @@ function renderStreakSummary(){
 }
 
 function render(){
-  if(!markDate.value) markDate.value=today();
+  if(markDate && !markDate.value) markDate.value=today();
+  const H = getFilteredHabits();
 
   renderAnalytics();
   renderInsights();
   renderStreakSummary();
+  renderHero();
+  renderFocusCard();
+  syncSidePanels();
 
   habitList.innerHTML="";
-  if(habits.length===0){
-    habitList.innerHTML='<p class="empty">No habits yet. Add your first habit above.</p>';
+  if(H.length===0){
+    habitList.innerHTML='<p class="empty">No H yet. Add your first habit above.</p>';
     return;
   }
 
   const date=getMarkDate();
-  const cards = habits.map((h, idx)=>{
+  const cards = H.map((h, idx)=>{
     const set=new Set(h.datesDone||[]);
     const done=set.has(date);
     const s=streakFor(h);
     return `
-      <div class="card habitSlide" data-index="${idx}" aria-label="Habit ${idx+1} of ${habits.length}">
+      <div class="card habitSlide" data-index="${idx}" aria-label="Habit ${idx+1} of ${H.length}">
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div>
             <strong>${escapeHtml(h.name)}</strong>
@@ -820,6 +833,7 @@ if(typeof markDate!=="undefined"){
   markDate.addEventListener("change", ()=>render());
 }
 
+wireHabitsLayout();
 render();
 
 
@@ -827,5 +841,137 @@ function deleteHabit(id){
   if(!confirm("Delete this habit?")) return;
   habits = habits.filter(h=>h.id!==id);
   save();
+  
+function renderHero(){
+  const el = document.getElementById("habitsHero");
+  if(!el) return;
+  const H = getFilteredHabits();
+  const iso = today();
+  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
+  const total = H.length || 0;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  el.innerHTML = `
+    <div class="card heroCard">
+      <div class="heroTop">
+        <div>
+          <div class="cardTitle">Today</div>
+          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
+          <div class="small">Keep it simple: small wins compound.</div>
+        </div>
+        <div class="ring" style="--p:${pct}">
+          <div class="ringInner">${pct}%</div>
+        </div>
+      </div>
+      <div class="heroActions">
+        <button class="btn primary" onclick="document.querySelector('[data-tab=\'grid\']')?.click()">Mark habits</button>
+        <button class="btn secondary" onclick="setAnalyticsOffset(0)">Today</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderFocusCard(){
+  const el = document.getElementById("focusHint");
+  if(!el) return;
+  const H = getFilteredHabits();
+  if(!H.length){
+    el.innerHTML = `<div class="cardHeader"><h3 class="cardTitle">Focus</h3></div><p class="small">Add a habit to see insights.</p>`;
+    return;
+  }
+  // reuse logic from insights (weakest habit over last 14 days)
+  const now=new Date(today()+"T00:00:00");
+  const days=14;
+  const window=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(now); d.setDate(now.getDate()-i);
+    window.push(d.toISOString().slice(0,10));
+  }
+  let weakest=null, weakestCount=Infinity, weakestDone=0;
+  for(const h of H){
+    const set=new Set(h.datesDone||[]);
+    const done=window.reduce((a,iso)=>a+(set.has(iso)?1:0),0);
+    if(done < weakestCount){
+      weakest=h; weakestCount=done; weakestDone=done;
+    }
+  }
+  const label = weakest ? weakest.name : "—";
+  el.innerHTML = `
+    <div class="focusRow">
+      <div class="focusIcon">🧠</div>
+      <div class="focusText">
+        <div class="focusTitle">Focus hint</div>
+        <div class="focusBody">Weakest habit: <b>${escapeHtml(label)}</b> — ${weakestDone}/${days} days in the last 2 weeks</div>
+      </div>
+      <button class="btn tertiary" onclick="jumpToHabit('${weakest?weakest.id:""}')">Jump →</button>
+    </div>
+  `;
+}
+
+function syncSidePanels(){
+  const sMain = document.getElementById("streakSummary");
+  const iMain = document.getElementById("insights");
+  const sSide = document.getElementById("streakSummarySide");
+  const iSide = document.getElementById("insightsSide");
+  if(sMain && sSide) sSide.innerHTML = sMain.innerHTML;
+  if(iMain && iSide) iSide.innerHTML = iMain.innerHTML;
+}
+
+function wireHabitsLayout(){
+  const sel = document.getElementById("dateRangeSelect");
+  const sel2 = document.getElementById("appWeekSelect");
+  const applyRange = (val)=>{
+    analyticsView = (val==="week") ? "week" : "month";
+    localStorage.setItem("habitsAnalyticsView", analyticsView);
+    render();
+  };
+  if(sel){
+    sel.value = (analyticsView==="week") ? "week" : "sixty";
+    sel.addEventListener("change", ()=>applyRange(sel.value));
+  }
+  if(sel2){
+    sel2.value = (analyticsView==="week") ? "week" : "sixty";
+    sel2.addEventListener("change", ()=>applyRange(sel2.value));
+  }
+
+  const search = document.getElementById("habitSearch");
+  if(search){
+    search.addEventListener("input", ()=>{
+      habitSearchTerm = search.value || "";
+      render();
+    });
+  }
+
+  const newBtn = document.getElementById("newHabitBtn");
+  const newBtn2 = document.getElementById("appNewHabitBtn");
+  const showAdd = ()=>{
+    const card = document.getElementById("addCard");
+    if(card) card.classList.toggle("open");
+    const input = document.getElementById("habitName");
+    input && input.focus && input.focus();
+  };
+  if(newBtn) newBtn.addEventListener("click", showAdd);
+  if(newBtn2) newBtn2.addEventListener("click", showAdd);
+
+  // tabs (mobile)
+  const tabBtns = Array.from(document.querySelectorAll(".tabBtn"));
+  const panels = Array.from(document.querySelectorAll(".tabPanel"));
+  tabBtns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      tabBtns.forEach(b=>b.classList.toggle("active", b===btn));
+      const tab = btn.getAttribute("data-tab");
+      panels.forEach(p=>p.classList.toggle("active", p.getAttribute("data-panel")===tab));
+      // On desktop, keep all visible via CSS
+    });
+  });
+}
+
+
+wireHabitsLayout();
+render();
+
+function setAnalyticsOffset(val){
+  analyticsOffsetDays = val;
+  localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
+}
 }

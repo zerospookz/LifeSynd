@@ -1,69 +1,111 @@
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Habits</title>
-<link rel="stylesheet" href="style.css">
-<link rel="icon" href="favicon.ico"></head>
+<link href="style.css" rel="stylesheet"/>
+<link href="favicon.ico" rel="icon"/></head>
 <body>
 <div class="layout">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logoDot"></div>
-      <div>
-        <div class="brandTitle">LifeSync</div>
-        <div class="brandSub">Command center</div>
-      </div>
-    </div>
-
-    <nav class="nav">
-      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
-      <a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
-      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
-      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
-      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
-      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
-    </nav>
-
-    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
-  </aside>
-
-  <main class="content">
-    <div class="topbar">
-      <div>
-        <h1 class="pageTitle">Habits</h1>
-        <p class="subtitle">Streaks, consistency and recovery.</p>
-      </div>
-      <div class="actionsRow">
-        <a class="btn secondary" href="dashboard.html">Home</a>
-      </div>
-    </div>
-
-    
-<div class="card soft">
-  <div class="cardHeader"><h3 class="cardTitle">Add & mark</h3><span class="badge">Streaks</span></div>
-  <div class="actionsRow">
-    <input id="habitName" placeholder="New habit">
-    <button onclick="addHabit()">Add habit</button>
-    <span class="pill" style="margin-left:auto">Mark date</span>
-    <input id="markDate" type="date">
-  </div>
-  <p class="small" style="margin:12px 0 0">Pick a date to recover missed days and keep streaks honest.</p>
+<aside class="sidebar">
+<div class="brand">
+<div class="logoDot"></div>
+<div>
+<div class="brandTitle">LifeSync</div>
+<div class="brandSub">Command center</div>
 </div>
-
-<div class="grid" style="margin-top:14px">
-  
-
-
-  <div class="card analyticsCard" id="habitAnalytics"></div>
 </div>
-
+<nav class="nav">
+<a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+<a href="habits.html"><span class="left">🔥 <span>Habits</span></span><span class="pill">Streaks</span></a>
+<a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+<a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+<a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+<a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+</nav>
+<div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+</aside>
+<main class="content">
+<div class="habitsPage">
+<header class="habitsTopbar">
+<div class="habitsTitleBlock">
+<h1 class="pageTitle">Habits</h1>
+<p class="subtitle">Streaks, consistency and recovery.</p>
+</div>
+<div class="habitsTopControls">
+<div class="controlGroup">
+<label class="microLabel" for="dateRangeSelect">Date range</label>
+<select class="select" id="dateRangeSelect">
+<option value="week">2W</option>
+<option value="sixty">60D</option>
+</select>
+</div>
+<div class="controlGroup searchGroup">
+<label class="microLabel" for="habitSearch">Search</label>
+<input class="input" id="habitSearch" placeholder="Search habits"/>
+</div>
+<button class="btn primary" id="newHabitBtn">New habit +</button>
+</div>
+</header>
+<!-- Mobile app bar -->
+<header class="habitsAppbar">
+<div class="appbarRow">
+<div class="appbarTitle">Habits</div>
+<div class="appbarRight">
+<select class="select smallSelect" id="appWeekSelect">
+<option value="week">Week</option>
+<option value="sixty">60D</option>
+</select>
+<button class="iconBtn" id="appNewHabitBtn" title="New habit">+</button>
+</div>
+</div>
+</header>
+<section class="habitsHero" id="habitsHero"></section>
+<div class="habitsTabs">
+<button class="tabBtn active" data-tab="grid">Grid</button>
+<button class="tabBtn" data-tab="list">List</button>
+<button class="tabBtn" data-tab="stats">Stats</button>
+</div>
+<div class="habitsLayout">
+<div class="habitsMain">
+<div class="card soft habitsAddCard" id="addCard">
+<div class="cardHeader">
+<h3 class="cardTitle">Add &amp; mark</h3><span class="badge">Streaks</span>
+</div>
+<div class="actionsRow">
+<input class="input" id="habitName" placeholder="New habit"/>
+<button onclick="addHabit()">Add habit</button>
+<span class="pill" style="margin-left:auto">Mark date</span>
+<input class="input" id="markDate" type="date"/>
+</div>
+<p class="small" style="margin:12px 0 0">Pick a date to recover missed days and keep streaks honest.</p>
+</div>
+<section class="tabPanel active" data-panel="grid">
+<div class="card analyticsCard" id="habitAnalytics"></div>
+<div class="card focusCard" id="focusHint"></div>
+</section>
+<section class="tabPanel" data-panel="list">
+<div class="grid" id="habitList"></div>
+</section>
+<section class="tabPanel" data-panel="stats">
 <div class="grid insightsGrid">
-  <div class="card" id="insights"></div>
-  <div class="card" id="streakSummary"></div>
+<div class="card" id="insights"></div>
+<div class="card" id="streakSummary"></div>
 </div>
-
-<div style="margin-top:18px" id="habitList" class="grid"></div>
-
-  </main>
+</section>
+</div>
+<aside class="habitsRight">
+<div class="card" id="streakSummarySide"></div>
+<div class="card" id="insightsSide"></div>
+</aside>
+</div>
+<nav class="bottomNav">
+<a href="dashboard.html">🏠<span>Dashboard</span></a>
+<a class="active" href="habits.html">🔥<span>Habits</span></a>
+<a href="analytics.html">📊<span>Stats</span></a>
+<a href="settings.html">⚙️<span>Settings</span></a>
+</nav>
+</div>
+</main>
 </div>
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="habits.js"></script>
