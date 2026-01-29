@@ -1097,3 +1097,24 @@ input:focus,select:focus{
 @media (max-width: 760px){ .sidebar{display:none} }
 
 @media (min-width: 761px){ .tabPanel[data-panel="stats"]{display:none} .habitsTabs{display:none} }
+
+
+/* Habits: List tab stacked layout */
+.habitListStack{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.habitListStack .card{
+  width:100%;
+}
+
+/* Utility: show only on phone */
+.onlyMobile{display:none;}
+@media (max-width:760px){
+  .onlyMobile{display:inline-flex;}
+}
+
+
+/* Override generic .grid in List tab container */
+[data-panel="list"] #habitList.grid{display:block;}

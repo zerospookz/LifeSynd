@@ -204,6 +204,20 @@ function addHabitNamed(name){
   showToast("Habit added");
 }
 
+function openAddHabit(){
+  const isPhone = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+  const card = document.getElementById('addCard');
+  if(isPhone){
+    const name = prompt('New habit name:');
+    if(name===null) return;
+    addHabitNamed(name);
+    return;
+  }
+  if(card) card.classList.toggle('open');
+  const input = document.getElementById('habitName');
+  input && input.focus && input.focus();
+}
+
 function addHabit(){
   // Used by the desktop "Add & mark" card.
   if(typeof habitName === "undefined") return;
@@ -912,18 +926,8 @@ function render(){
     `;
   }).join('');
 
-  habitList.innerHTML = `
-    <div class="habitCarousel" id="habitCarousel">
-      <button class="iconBtn" type="button" id="habPrev" aria-label="Previous habit">←</button>
-      <div class="habitViewport" id="habViewport" aria-label="Habits carousel">
-        <div class="habitTrack" id="habTrack">${cards}</div>
-      </div>
-      <button class="iconBtn" type="button" id="habNext" aria-label="Next habit">→</button>
-    </div>
-    <div class="habitDots" id="habitDots" aria-label="Habit navigation dots"></div>
-  `;
+  habitList.innerHTML = `<div class="habitListStack">${cards}</div>`;
 
-  setupHabitCarousel();
 }
 
 // Re-render when the selected mark date changes (affects streaks + insights)
@@ -961,6 +965,7 @@ function renderHero(){
       </div>
       <div class="heroActions">
         <button class="btn secondary" onclick="setAnalyticsOffset(0)">Today</button>
+        <button class="btn primary onlyMobile" onclick="openAddHabit()">Add habit +</button>
       </div>
     </div>
   `;
@@ -1057,13 +1062,9 @@ function wireHabitsLayout(){
     input && input.focus && input.focus();
   };
 
-  const addFromPrompt = ()=>{
-    const name = prompt("New habit name:");
-    if(name===null) return; // cancelled
-    addHabitNamed(name);
-  };
+  
 
-  if(newBtn) newBtn.addEventListener("click", showAddCard);
+  if(newBtn) newBtn.addEventListener("click", openAddHabit);
   if(newBtn2){
     newBtn2.addEventListener("click", ()=>{
       // On phone screens, go straight to a prompt so adding a habit is always accessible.
