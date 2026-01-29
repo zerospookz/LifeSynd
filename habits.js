@@ -1023,65 +1023,70 @@ function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
   const seg = Math.max(3, Math.min(8, Number(segments)||5));
 
-  // Animate between previous and next value so partial segment fill feels alive.
-  const prev = Math.max(0, Math.min(100, Number(el.dataset.pct)||0));
+  // Always animate from 0 → target so the viewer can *see* every single
+  // percent step (1%, 2%, 3% ... target), like a true "filling" animation.
+  const prev = 0;
   el.dataset.pct = String(p);
 
   const scheme = (el.getAttribute('data-scheme')||'').toLowerCase();
+  let on, off;
 
-  // Color logic for the "status" scheme:
-  // - 1% starts very dark red
-  // - contrast/brightness ramps up each % until 30% (red → orange)
-  // - 30–70% stays in the yellow range (more vivid as % increases)
-  // - 70–100% transitions to green (optional "good" zone)
-  const clamp = (v, a, b)=>Math.max(a, Math.min(b, v));
-  const lerp = (a,b,t)=>a + (b-a)*t;
-  const hsla = (h,s,l,a)=>`hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
-
-  function statusColorsFor(pctInt){
-    const x = clamp(Number(pctInt)||0, 0, 100);
-    let h, s, l;
-    if(x < 30){
-      // very dark red → warm orange-red
-      const t = x/30;
-      h = lerp(0, 20, t);
-      s = lerp(96, 88, t);
-      l = lerp(18, 60, t);
-    }else if(x < 70){
-      // orange → yellow (keep it "yellow" zone)
-      const t = (x-30)/40;
-      h = lerp(28, 55, t);
-      s = lerp(98, 100, t);
-      l = lerp(58, 66, t);
-    }else{
-      // yellow → green
-      const t = (x-70)/30;
-      h = lerp(55, 140, t);
-      s = lerp(100, 88, t);
-      l = lerp(64, 56, t);
+  // Build status colors *per integer percent* so color visibly evolves
+  // while the arc advances 1% at a time.
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+  function hsla(h,s,l,a){
+    return `hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
+  }
+  function statusColors(pi){
+    const x = Math.max(0, Math.min(100, Math.round(pi)));
+    // 0–30: dark red → brighter red (contrast drops as it fills)
+    if(x <= 30){
+      const t = clamp01(x/30);
+      const L = lerp(18, 62, t);
+      const offL = lerp(10, 28, t);
+      return {
+        on:  hsla(0, 92, L, 0.96),
+        off: hsla(0, 50, offL, 0.22),
+        glow: hsla(0, 92, lerp(30, 70, t), 0.70)
+      };
     }
-
-    const on  = hsla(h, s, l, 0.95);
-    const off = hsla(h, lerp(42, 34, Math.min(1, x/100)), lerp(30, 26, Math.min(1, x/100)), 0.22);
-    const glow = hsla(h, s, l, 0.65);
-    return { on, off, glow };
+    // 30–70: yellow range (stays yellow, subtly brightens)
+    if(x <= 70){
+      const t = clamp01((x-30)/40);
+      const L = lerp(54, 62, t);
+      const offL = lerp(24, 34, t);
+      return {
+        on:  hsla(45, 100, L, 0.96),
+        off: hsla(45, 55, offL, 0.22),
+        glow: hsla(45, 100, lerp(58, 70, t), 0.70)
+      };
+    }
+    // 70–100: transition toward green (keeps the "success" feel)
+    {
+      const t = clamp01((x-70)/30);
+      const H = lerp(45, 140, t);
+      const L = lerp(62, 55, t);
+      const offL = lerp(34, 30, t);
+      return {
+        on:  hsla(H, 92, L, 0.96),
+        off: hsla(H, 55, offL, 0.22),
+        glow: hsla(H, 92, lerp(70, 62, t), 0.70)
+      };
+    }
   }
 
-  // default (non-status) colors
-  const DEFAULT_ON  = 'hsla(210, 100%, 70%, 0.95)';
-  const DEFAULT_OFF = 'hsla(210, 35%, 45%, 0.18)';
-  const DEFAULT_GLOW = 'hsla(210, 100%, 70%, 0.65)';
+  if(scheme === 'status'){
+    ({on, off} = statusColors(0));
+    el.style.setProperty('--arc-glow', on);
+  }else{
+    on = 'hsla(210, 100%, 70%, 0.95)';
+    off = 'hsla(210, 35%, 45%, 0.18)';
+    el.style.setProperty('--arc-glow', 'hsla(210, 100%, 70%, 0.65)');
+  }
 
-  // Initialize colors based on the starting integer value.
-  const startInt = clamp(Math.round(prev), 0, 100);
-  const pctNode = el.querySelector('.arcPct');
-  if(pctNode) pctNode.textContent = `${startInt}%`;
-  const initC = (scheme === 'status') ? statusColorsFor(startInt) : ({ on: DEFAULT_ON, off: DEFAULT_OFF, glow: DEFAULT_GLOW });
-  el.style.setProperty('--arc-on', initC.on);
-  el.style.setProperty('--arc-off', initC.off);
-  el.style.setProperty('--arc-glow', initC.glow);
-  el.style.backgroundImage = buildArcGradient(startInt, seg, initC.on, initC.off);
-  el.style.setProperty('--arc-p', String(startInt));
+  el.style.setProperty('--arc-on', on);
+  el.style.setProperty('--arc-off', off);
 
   // reset state
   el.classList.remove('charged', 'fullPulse');
@@ -1090,14 +1095,15 @@ function setArcReactor(el, pct, segments){
   // Slower fill so it feels like a smooth "loading" sweep.
     // Slower fill so it feels like a smooth "loading" sweep,
   // but we advance in *real* integer % steps: 1%, 2%, 3% ... target.
-  const DURATION = 1050;
+  // Make each 1% step readable. (e.g. 30% ≈ 1.2s, 70% ≈ 2.6s)
+  const DURATION = Math.max(900, Math.round(p * 38));
   const t0 = performance.now();
 
   const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
 
   // We only re-render when the integer percentage changes.
   // This guarantees the visual passes through 1%, 2%, 3% ... (or downwards if needed).
-  let lastInt = startInt;
+  let lastInt = 0;
 
   const tick = (t)=>{
     const k = Math.max(0, Math.min(1, (t - t0) / DURATION));
@@ -1113,17 +1119,16 @@ function setArcReactor(el, pct, segments){
 
     if(nextInt !== lastInt){
       lastInt = nextInt;
-
-      if(pctNode) pctNode.textContent = `${lastInt}%`;
-
-      const c = (scheme === 'status') ? statusColorsFor(lastInt) : ({ on: DEFAULT_ON, off: DEFAULT_OFF, glow: DEFAULT_GLOW });
-      el.style.setProperty('--arc-on', c.on);
-      el.style.setProperty('--arc-off', c.off);
-      el.style.setProperty('--arc-glow', c.glow);
-
-      el.style.backgroundImage = buildArcGradient(lastInt, seg, c.on, c.off);
+      // Update colors per integer % (only for the status scheme)
+      if(scheme === 'status'){
+        const c = statusColors(lastInt);
+        on = c.on; off = c.off;
+        el.style.setProperty('--arc-on', on);
+        el.style.setProperty('--arc-off', off);
+        el.style.setProperty('--arc-glow', c.glow);
+      }
+      el.style.backgroundImage = buildArcGradient(lastInt, seg, on, off);
       el.style.setProperty('--arc-p', String(lastInt));
-      if(pctNode) pctNode.textContent = `${lastInt}%`;
     }
 
     if(k < 1){
@@ -1132,14 +1137,16 @@ function setArcReactor(el, pct, segments){
     }
 
     // Snap to final value and add "charged" animation.
-    const finalInt = clamp(Math.round(p), 0, 100);
-    const cFinal = (scheme === 'status') ? statusColorsFor(finalInt) : ({ on: DEFAULT_ON, off: DEFAULT_OFF, glow: DEFAULT_GLOW });
-    el.style.setProperty('--arc-on', cFinal.on);
-    el.style.setProperty('--arc-off', cFinal.off);
-    el.style.setProperty('--arc-glow', cFinal.glow);
-    el.style.backgroundImage = buildArcGradient(finalInt, seg, cFinal.on, cFinal.off);
-    el.style.setProperty('--arc-p', String(finalInt));
-    if(pctNode) pctNode.textContent = `${finalInt}%`;
+    // Final snap (and final color state)
+    if(scheme === 'status'){
+      const c = statusColors(p);
+      on = c.on; off = c.off;
+      el.style.setProperty('--arc-on', on);
+      el.style.setProperty('--arc-off', off);
+      el.style.setProperty('--arc-glow', c.glow);
+    }
+    el.style.backgroundImage = buildArcGradient(p, seg, on, off);
+    el.style.setProperty('--arc-p', String(p));
     el.classList.remove('charging');
     el.classList.add('charged');
     if(p >= 100){
