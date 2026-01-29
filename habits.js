@@ -355,8 +355,10 @@ function renderAnalytics(){
   if(!card) return;
   const H = getFilteredHabits();
 
-  const range = analyticsView==="week" ? 14 : 60; // bigger heatmap
-  const step  = analyticsView==="week" ? 14 : 30;
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+  // Mobile: show a 7-day viewport and allow paging via swipe.
+  const range = isMobile ? 7 : (analyticsView==="week" ? 14 : 60);
+  const step  = isMobile ? 7 : (analyticsView==="week" ? 14 : 30);
 
   const viewLabel = analyticsView==="week" ? "2W" : "60D";
   const offsetLabel = analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`);
@@ -435,119 +437,220 @@ function renderAnalytics(){
     return;
   }
 
-  // Week view should look forward (today → next 14 days). Month view remains historical.
+  // Week view should look forward (today → next N days). Month view remains historical.
   const dates = analyticsView === "week"
     ? rangeDatesForward(range, analyticsOffsetDays)
     : rangeDates(range, analyticsOffsetDays);
-  const dateCol = 190;
-  // compute cell size to fill available width when there are few H
-  const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
-  const gap = 8;
-  const maxCell = 74;
-  const minCell = 44;
-  const avail = Math.max(0, wrapW - dateCol - gap*(H.length+1));
-  const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, H.length))));
-  grid.style.setProperty("--dateCol", dateCol+"px");
-  grid.style.setProperty("--cell", cell+"px");
-
-  const colTemplate = `var(--dateCol) repeat(${H.length}, var(--cell))`;
-
-  // header row
-  const header = document.createElement("div");
-  header.className = "matrixHeaderRow";
-  header.style.gridTemplateColumns = colTemplate;
-
-  const corner = document.createElement("div");
-  corner.className = "matrixCorner";
-  corner.innerHTML = `
-    <div style="font-weight:800">Dates</div>
-    <div class="small" style="margin-top:4px;opacity:.85">${fmtMonthDay(dates[0])} → ${fmtMonthDay(dates[dates.length-1])}</div>
-  `;
-  header.appendChild(corner);
-
-  H.forEach(h=>{
-    const el = document.createElement("div");
-    el.className = "matrixHabit";
-    el.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
-    el.title = h.name;
-    el.innerHTML = `<span>${escapeHtml(h.name)}</span><div class="holdBar" aria-hidden="true"></div>`;
-
-    // Hold-to-delete (2.5 seconds)
-    let holdTimer = null;
-    let raf = null;
-    let holdStart = 0;
-    const HOLD_MS = 2500;
-
-    function clearHold(){
-      if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
-      if(raf){ cancelAnimationFrame(raf); raf = null; }
-      el.classList.remove("holding");
-      el.style.removeProperty("--hold");
-    }
-
-    function tick(){
-      const t = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
-      el.style.setProperty("--hold", String(t));
-      if(t < 1) raf = requestAnimationFrame(tick);
-    }
-
-    el.addEventListener("pointerdown", (ev)=>{
-      // Only primary button / touch
-      if(ev.button != null && ev.button !== 0) return;
-      holdStart = performance.now();
-      el.classList.add("holding");
-      tick();
-      holdTimer = setTimeout(()=>{
-        clearHold();
-        H = H.filter(x=>x.id!==h.id);
-        save();
-        showToast("Habit removed");
-        render();
-      }, HOLD_MS);
-    });
-    ["pointerup","pointercancel","pointerleave"].forEach(evt=>{
-      el.addEventListener(evt, clearHold);
-    });
-
-    header.appendChild(el);
-  });
-
-  grid.appendChild(header);
 
   const todayIso = today();
 
-  // rows
-  dates.forEach(iso=>{
-    const row = document.createElement("div");
-    row.className = "matrixRow" + (iso===todayIso ? " today" : "");
-    row.style.gridTemplateColumns = colTemplate;
+  // ------------------------
+  // Desktop: dates (rows) x habits (cols)
+  // Mobile:  habits (rows) x dates (cols) with 7-day viewport + swipe paging
+  // ------------------------
 
-    const dateEl = document.createElement("div");
-    dateEl.className = "matrixDate";
-    dateEl.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
-    row.appendChild(dateEl);
+  if(!isMobile){
+    const dateCol = 190;
+    // compute cell size to fill available width when there are few H
+    const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
+    const gap = 8;
+    const maxCell = 74;
+    const minCell = 44;
+    const avail = Math.max(0, wrapW - dateCol - gap*(H.length+1));
+    const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, H.length))));
+    grid.style.setProperty("--dateCol", dateCol+"px");
+    grid.style.setProperty("--cell", cell+"px");
+
+    const colTemplate = `var(--dateCol) repeat(${H.length}, var(--cell))`;
+
+    // header row
+    const header = document.createElement("div");
+    header.className = "matrixHeaderRow";
+    header.style.gridTemplateColumns = colTemplate;
+
+    const corner = document.createElement("div");
+    corner.className = "matrixCorner";
+    corner.innerHTML = `
+      <div style="font-weight:800">Dates</div>
+      <div class="small" style="margin-top:4px;opacity:.85">${fmtMonthDay(dates[0])} → ${fmtMonthDay(dates[dates.length-1])}</div>
+    `;
+    header.appendChild(corner);
 
     H.forEach(h=>{
-      const cell = document.createElement("div");
-      cell.className = "matrixCell";
-      cell.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
+      const el = document.createElement("div");
+      el.className = "matrixHabit";
+      el.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
+      el.title = h.name;
+      el.innerHTML = `<span>${escapeHtml(h.name)}</span><div class="holdBar" aria-hidden="true"></div>`;
 
-      const set = new Set(h.datesDone||[]);
-      const done = set.has(iso);
-      if(done) cell.classList.add("done");
-      else if(iso < todayIso) cell.classList.add("missed");
+      // Hold-to-delete (2.5 seconds)
+      let holdTimer = null;
+      let raf = null;
+      let holdStart = 0;
+      const HOLD_MS = 2500;
 
-      if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
-        cell.classList.add("justChanged");
-        if(lastPulse.mode==="miss") cell.classList.add("pulseMiss");
+      function clearHold(){
+        if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+        if(raf){ cancelAnimationFrame(raf); raf = null; }
+        el.classList.remove("holding");
+        el.style.removeProperty("--hold");
       }
-      cell.dataset.hid = h.id;
-      cell.dataset.iso = iso;
-      row.appendChild(cell);
+
+      function tick(){
+        const t = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
+        el.style.setProperty("--hold", String(t));
+        if(t < 1) raf = requestAnimationFrame(tick);
+      }
+
+      el.addEventListener("pointerdown", (ev)=>{
+        // Only primary button / touch
+        if(ev.button != null && ev.button !== 0) return;
+        holdStart = performance.now();
+        el.classList.add("holding");
+        tick();
+        holdTimer = setTimeout(()=>{
+          clearHold();
+          // remove habit
+          habits = (habits||[]).filter(x=>x.id!==h.id);
+          save();
+          showToast("Habit removed");
+          render();
+        }, HOLD_MS);
+      });
+      ["pointerup","pointercancel","pointerleave"].forEach(evt=>{
+        el.addEventListener(evt, clearHold);
+      });
+
+      header.appendChild(el);
     });
 
-    grid.appendChild(row);
-  });
+    grid.appendChild(header);
+
+    // rows
+    dates.forEach(iso=>{
+      const row = document.createElement("div");
+      row.className = "matrixRow" + (iso===todayIso ? " today" : "");
+      row.style.gridTemplateColumns = colTemplate;
+
+      const dateEl = document.createElement("div");
+      dateEl.className = "matrixDate";
+      dateEl.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
+      row.appendChild(dateEl);
+
+      H.forEach(h=>{
+        const cell = document.createElement("div");
+        cell.className = "matrixCell";
+        cell.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
+
+        const set = new Set(h.datesDone||[]);
+        const done = set.has(iso);
+        if(done) cell.classList.add("done");
+        else if(iso < todayIso) cell.classList.add("missed");
+
+        if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
+          cell.classList.add("justChanged");
+          if(lastPulse.mode==="miss") cell.classList.add("pulseMiss");
+        }
+        cell.dataset.hid = h.id;
+        cell.dataset.iso = iso;
+        row.appendChild(cell);
+      });
+
+      grid.appendChild(row);
+    });
+  } else {
+    // Mobile transpose
+    const habitCol = 170;
+    const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
+    const gap = 8;
+    const maxCell = 66;
+    const minCell = 42;
+    const avail = Math.max(0, wrapW - habitCol - gap*(dates.length+1));
+    const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, dates.length))));
+    grid.style.setProperty("--habitCol", habitCol+"px");
+    grid.style.setProperty("--cell", cell+"px");
+
+    const colTemplate = `var(--habitCol) repeat(${dates.length}, var(--cell))`;
+
+    const header = document.createElement("div");
+    header.className = "matrixHeaderRow";
+    header.style.gridTemplateColumns = colTemplate;
+
+    const corner = document.createElement("div");
+    corner.className = "matrixCorner";
+    corner.innerHTML = `
+      <div style="font-weight:800">Habits</div>
+      <div class="small" style="margin-top:4px;opacity:.85">Swipe ← → (7‑day viewport)</div>
+    `;
+    header.appendChild(corner);
+
+    dates.forEach(iso=>{
+      const d = document.createElement("div");
+      d.className = "matrixDayHead";
+      d.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
+      header.appendChild(d);
+    });
+
+    grid.appendChild(header);
+
+    H.forEach(h=>{
+      const row = document.createElement("div");
+      row.className = "matrixRow";
+      row.style.gridTemplateColumns = colTemplate;
+
+      const name = document.createElement("div");
+      name.className = "matrixHabitName";
+      name.title = h.name;
+      name.textContent = h.name;
+      row.appendChild(name);
+
+      dates.forEach(iso=>{
+        const cell = document.createElement("div");
+        cell.className = "matrixCell";
+        cell.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
+
+        const set = new Set(h.datesDone||[]);
+        const done = set.has(iso);
+        if(done) cell.classList.add("done");
+        else if(iso < todayIso) cell.classList.add("missed");
+
+        if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
+          cell.classList.add("justChanged");
+          if(lastPulse.mode==="miss") cell.classList.add("pulseMiss");
+        }
+
+        cell.dataset.hid = h.id;
+        cell.dataset.iso = iso;
+        row.appendChild(cell);
+      });
+
+      grid.appendChild(row);
+    });
+
+    // Swipe paging (7 days)
+    const wrap = card.querySelector('.matrixWrap');
+    if(wrap && !wrap.dataset.swipeBound){
+      wrap.dataset.swipeBound = '1';
+      let sx=0, sy=0;
+      let pointerDown=false;
+      wrap.addEventListener('pointerdown', (e)=>{
+        if(e.target && e.target.closest('.matrixCell')) return; // don't fight paint/tap
+        pointerDown=true;
+        sx=e.clientX; sy=e.clientY;
+      });
+      wrap.addEventListener('pointerup', (e)=>{
+        if(!pointerDown) return;
+        pointerDown=false;
+        const dx = e.clientX - sx;
+        const dy = e.clientY - sy;
+        if(Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+        analyticsOffsetDays += (dx < 0 ? step : -step);
+        localStorage.setItem('habitsAnalyticsOffsetDays', String(analyticsOffsetDays));
+        renderAnalytics();
+      });
+      wrap.addEventListener('pointercancel', ()=>{ pointerDown=false; });
+    }
+  }
 
   // interactions: tap to toggle, hold then drag to paint
   let dragging = false;
@@ -857,7 +960,7 @@ function renderHero(){
           <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
           <div class="small">Keep it simple: small wins compound.</div>
         </div>
-        <div class="ring" style="--p:${pct}">
+        <div class="ring" style="--p:0" data-pct="${pct}">
           <div class="ringInner">${pct}%</div>
         </div>
       </div>
@@ -867,6 +970,17 @@ function renderHero(){
       </div>
     </div>
   `;
+
+  // Animate the progress ring from 0 → pct on each render.
+  const ring = el.querySelector('.ring');
+  if(ring){
+    const target = parseFloat(ring.getAttribute('data-pct')||'0') || 0;
+    // restart animation
+    ring.style.setProperty('--p', '0');
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>ring.style.setProperty('--p', String(target)));
+    });
+  }
 }
 
 function renderFocusCard(){
