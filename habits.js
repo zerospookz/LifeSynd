@@ -3,6 +3,7 @@
 let analyticsView = localStorage.getItem("habitsAnalyticsView") || "month";
 let analyticsOffsetDays = parseInt(localStorage.getItem("habitsAnalyticsOffsetDays") || "0", 10);
 let analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || "mark"; // mark | erase
+let lastPulse = null; // {hid, iso, mode:"done"|"miss"} for subtle mark animation
 
 function rangeDates(rangeDays, offsetDays){
   const base = new Date();
@@ -230,6 +231,7 @@ function toggleHabitAt(id, iso, opts={}){
     nowDone = true;
     showToast("Marked done");
   }
+  lastPulse = { hid: id, iso, mode: nowDone ? "done" : "miss" };
   save();
 
   // Preserve matrix scroll position for a smoother feel
@@ -336,7 +338,6 @@ function miniHeatHtml(h){
   `;
 }
 
-}
 
 // ---------- Analytics (Matrix) ----------
 
@@ -527,6 +528,10 @@ function renderAnalytics(){
       if(done) cell.classList.add("done");
       else if(iso < todayIso) cell.classList.add("missed");
 
+      if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
+        cell.classList.add("justChanged");
+        if(lastPulse.mode==="miss") cell.classList.add("pulseMiss");
+      }
       cell.dataset.hid = h.id;
       cell.dataset.iso = iso;
       row.appendChild(cell);
@@ -579,6 +584,11 @@ function renderAnalytics(){
       cell.classList.remove("done");
       if(iso < todayIso) cell.classList.add("missed");
     }
+
+    // one-shot micro animation on paint toggle
+    cell.classList.add("justChanged");
+    if(!targetDone) cell.classList.add("pulseMiss");
+    setTimeout(()=>cell.classList.remove("justChanged","pulseMiss"), 280);
   }
 
   function endDrag(e){
@@ -649,6 +659,16 @@ function renderAnalytics(){
   grid.addEventListener("pointerup", endDrag);
   grid.addEventListener("pointercancel", endDrag);
   grid.addEventListener("lostpointercapture", endDrag);
+
+  // Subtle pulse animation for the most recently toggled cell (one-shot).
+  if(lastPulse){
+    requestAnimationFrame(()=>{
+      document.querySelectorAll(".matrixCell.justChanged").forEach(c=>{
+        setTimeout(()=>c.classList.remove("justChanged","pulseMiss"), 280);
+      });
+    });
+    lastPulse = null;
+  }
 }
 
 
