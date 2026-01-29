@@ -497,9 +497,8 @@ function renderAnalytics(){
 
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
   // Mobile: show a 7-day viewport and allow paging via swipe.
-  // Mobile viewport: show more days by default.
-  const range = isMobile ? 9 : (analyticsView==="week" ? 14 : 60);
-  const step  = isMobile ? 9 : (analyticsView==="week" ? 14 : 30);
+  const range = isMobile ? 7 : (analyticsView==="week" ? 14 : 60);
+  const step  = isMobile ? 7 : (analyticsView==="week" ? 14 : 30);
 
   const viewLabel = analyticsView==="week" ? "2W" : "60D";
   const offsetLabel = analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`);
@@ -568,8 +567,14 @@ function renderAnalytics(){
     renderAnalytics();
   });
   card.querySelector("#calToday").addEventListener("click", ()=>{
+    // On phone we want a clean "today → next 7 days" view.
+    if(isMobile){
+      analyticsView = "week";
+      localStorage.setItem("habitsAnalyticsView", analyticsView);
+    }
     analyticsOffsetDays = 0;
     localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    window.__resetMatrixScroll = true;
     renderAnalytics();
   });
 
@@ -758,6 +763,14 @@ function renderAnalytics(){
       });
       wrap.addEventListener('pointercancel', ()=>{ pointerDown=false; });
     }
+  }
+
+  // If user tapped "Today", ensure the viewport starts from the first day.
+  const wrapEl = card.querySelector('.matrixWrap');
+  if(wrapEl && window.__resetMatrixScroll){
+    wrapEl.scrollLeft = 0;
+    wrapEl.scrollTop = 0;
+    window.__resetMatrixScroll = false;
   }
 
   // interactions: tap to toggle, hold then drag to paint
@@ -960,7 +973,7 @@ function renderInsights(){
 
   // Modern segmented "arc reactor" for 60-day consistency.
   const arc = el.querySelector('#consistencyArc');
-  if(arc) setArcReactor(arc, r180, 6);
+  if(arc) setArcReactor(arc, r180, 5);
   // Store last computed value so the right-panel copy can re-apply styles.
   window.__lastConsistency180 = r180;
 
@@ -1008,6 +1021,11 @@ function buildArcGradient(pct, segments, onColor, offColor){
 
 function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
+  const seg = Math.max(3, Math.min(8, Number(segments)||5));
+
+  // Animate between previous and next value so partial segment fill feels alive.
+  const prev = Math.max(0, Math.min(100, Number(el.dataset.pct)||0));
+  el.dataset.pct = String(p);
 
   const scheme = (el.getAttribute('data-scheme')||'').toLowerCase();
   let on, off;
@@ -1034,11 +1052,33 @@ function setArcReactor(el, pct, segments){
   el.style.setProperty('--arc-on', on);
   el.style.setProperty('--arc-off', off);
 
-  el.style.backgroundImage = buildArcGradient(p, segments, on, off);
-  el.style.setProperty('--arc-p', String(p));
+  el.classList.remove('charged', 'fullPulse');
 
-  el.classList.remove('charged');
-  requestAnimationFrame(()=>{ el.classList.add('charged'); });
+  const DURATION = 520;
+  const t0 = performance.now();
+
+  const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
+
+  const tick = (t)=>{
+    const k = Math.max(0, Math.min(1, (t - t0) / DURATION));
+    const e = easeOutCubic(k);
+    const cur = prev + (p - prev) * e;
+    el.style.backgroundImage = buildArcGradient(cur, seg, on, off);
+    el.style.setProperty('--arc-p', String(cur));
+    if(k < 1){
+      requestAnimationFrame(tick);
+      return;
+    }
+    // Snap to final value and add "charged" animation.
+    el.style.backgroundImage = buildArcGradient(p, seg, on, off);
+    el.style.setProperty('--arc-p', String(p));
+    el.classList.add('charged');
+    if(p >= 100){
+      el.classList.add('fullPulse');
+    }
+  };
+
+  requestAnimationFrame(tick);
 }
 
 function renderStreakSummary(){
@@ -1166,7 +1206,7 @@ function renderHero(){
 
   // Animate the segmented Arc Reactor (more modern than a single ring).
   const arc = el.querySelector('#heroArc');
-  if(arc) setArcReactor(arc, pct, 6);
+  if(arc) setArcReactor(arc, pct, 5);
 }
 
 function renderFocusCard(){
@@ -1217,7 +1257,7 @@ function syncSidePanels(){
   // Re-apply arc styling for the duplicated Insights card on desktop right panel.
   const sideArc = iSide?.querySelector?.('.arcReactor');
   if(sideArc && Number.isFinite(window.__lastConsistency180)){
-    setArcReactor(sideArc, window.__lastConsistency180, 6);
+    setArcReactor(sideArc, window.__lastConsistency180, 5);
   }
 }
 
