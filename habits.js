@@ -1025,10 +1025,16 @@ function setArcReactor(el, pct, segments){
 
   // Always animate from 0 → target so the viewer can *see* every single
   // percent step (1%, 2%, 3% ... target), like a true "filling" animation.
-  const prev = 0;
+  // Start at 1% (when target > 0) so the user can visually see
+  // 1%, 2%, 3% ... as distinct steps.
+  const prev = (p > 0 ? 1 : 0);
   el.dataset.pct = String(p);
 
+  // Optional center label ("xx%") inside the arc.
+  const pctLabel = el.querySelector('.arcPct');
+
   const scheme = (el.getAttribute('data-scheme')||'').toLowerCase();
+  const pctEl = el.querySelector('.arcPct');
   let on, off;
 
   // Build status colors *per integer percent* so color visibly evolves
@@ -1077,7 +1083,7 @@ function setArcReactor(el, pct, segments){
   }
 
   if(scheme === 'status'){
-    ({on, off} = statusColors(0));
+    ({on, off} = statusColors(prev));
     el.style.setProperty('--arc-glow', on);
   }else{
     on = 'hsla(210, 100%, 70%, 0.95)';
@@ -1087,6 +1093,11 @@ function setArcReactor(el, pct, segments){
 
   el.style.setProperty('--arc-on', on);
   el.style.setProperty('--arc-off', off);
+
+  // Paint the initial 1% state immediately so the first visible frame isn't 0%.
+  el.style.backgroundImage = buildArcGradient(prev, seg, on, off);
+  el.style.setProperty('--arc-p', String(prev));
+  if(pctEl) pctEl.textContent = `${prev}%`;
 
   // reset state
   el.classList.remove('charged', 'fullPulse');
@@ -1103,7 +1114,7 @@ function setArcReactor(el, pct, segments){
 
   // We only re-render when the integer percentage changes.
   // This guarantees the visual passes through 1%, 2%, 3% ... (or downwards if needed).
-  let lastInt = 0;
+  let lastInt = prev;
 
   const tick = (t)=>{
     const k = Math.max(0, Math.min(1, (t - t0) / DURATION));
@@ -1119,6 +1130,7 @@ function setArcReactor(el, pct, segments){
 
     if(nextInt !== lastInt){
       lastInt = nextInt;
+      if(pctEl) pctEl.textContent = `${lastInt}%`;
       // Update colors per integer % (only for the status scheme)
       if(scheme === 'status'){
         const c = statusColors(lastInt);
@@ -1129,6 +1141,7 @@ function setArcReactor(el, pct, segments){
       }
       el.style.backgroundImage = buildArcGradient(lastInt, seg, on, off);
       el.style.setProperty('--arc-p', String(lastInt));
+      if(pctEl) pctEl.textContent = `${lastInt}%`;
     }
 
     if(k < 1){
@@ -1147,6 +1160,7 @@ function setArcReactor(el, pct, segments){
     }
     el.style.backgroundImage = buildArcGradient(p, seg, on, off);
     el.style.setProperty('--arc-p', String(p));
+    if(pctEl) pctEl.textContent = `${p}%`;
     el.classList.remove('charging');
     el.classList.add('charged');
     if(p >= 100){
