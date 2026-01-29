@@ -38,6 +38,13 @@ function fmtMonthDay(iso){
 }
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
+
+// Normalize hues on load so accents stay stable and unique.
+// (If older data had duplicates, we keep the first occurrence and reassign the rest.)
+try{
+  ensureHabitHues();
+  ensureUniqueHues();
+}catch(e){ /* ignore */ }
 // --- UI filters ---
 let habitSearchTerm = "";
 function getFilteredHabits(){
@@ -197,11 +204,55 @@ function addHabitNamed(name){
   if(!n) return;
   // Persist an explicit hue so the habit keeps a stable accent everywhere
   // (especially important in the transposed mobile grid).
-  const hue = HUE_PALETTE[Math.floor(Math.random()*HUE_PALETTE.length)];
+  const used = new Set((habits||[]).map(h=>h.hue).filter(v=>typeof v==="number"));
+  // Prefer an unused palette hue; if the palette is exhausted, generate a unique hue.
+  let hue = null;
+  for(const candidate of HUE_PALETTE){
+    if(!used.has(candidate)){ hue = candidate; break; }
+  }
+  if(hue === null){
+    // Deterministic-ish starting point based on name, then step until unique.
+    let base = 0;
+    for(let i=0;i<n.length;i++) base = (base*31 + n.charCodeAt(i)) % 360;
+    hue = base;
+    const STEP = 29;
+    let guard = 0;
+    while(used.has(hue) && guard < 400){
+      hue = (hue + STEP) % 360;
+      guard++;
+    }
+  }
   habits.push({id:crypto.randomUUID(), name:n, created:today(), datesDone:[], hue});
   save();
   render();
   showToast("Habit added");
+}
+
+// Ensure no two habits share the same hue. Keeps the first occurrence and reassigns duplicates.
+function ensureUniqueHues(){
+  const used = new Set();
+  let changed = false;
+  for(const h of (habits||[])){
+    if(typeof h.hue !== "number") continue;
+    if(!used.has(h.hue)){
+      used.add(h.hue);
+      continue;
+    }
+    // duplicate hue → pick next unused palette hue, else step through the hue wheel
+    let next = null;
+    for(const candidate of HUE_PALETTE){
+      if(!used.has(candidate)){ next = candidate; break; }
+    }
+    if(next === null){
+      next = (h.hue + 29) % 360;
+      let guard = 0;
+      while(used.has(next) && guard < 400){ next = (next + 29) % 360; guard++; }
+    }
+    h.hue = next;
+    used.add(next);
+    changed = true;
+  }
+  if(changed) save();
 }
 
 function openAddHabit(){
@@ -244,16 +295,19 @@ function toggleHabitAt(id, iso, opts={}){
   lastPulse = { hid: id, iso, mode: nowDone ? "done" : "miss" };
   save();
 
-  // Preserve matrix scroll position for a smoother feel
+  // Preserve scroll positions for a smoother feel (both matrix + page)
   const wrap = document.querySelector('.matrixWrap');
   const scroll = wrap ? {top:wrap.scrollTop, left:wrap.scrollLeft} : null;
+  const pageScrollY = window.scrollY;
 
   render();
 
-  if(opts && opts.preserveScroll && scroll){
+  if(opts && opts.preserveScroll){
     requestAnimationFrame(()=>{
       const w = document.querySelector('.matrixWrap');
-      if(w){ w.scrollTop = scroll.top; w.scrollLeft = scroll.left; }
+      if(w && scroll){ w.scrollTop = scroll.top; w.scrollLeft = scroll.left; }
+      // prevent "jump to top" after re-render
+      window.scrollTo({ top: pageScrollY, left: 0, behavior: 'auto' });
     });
   }
   return nowDone;
