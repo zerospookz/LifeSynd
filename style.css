@@ -426,7 +426,7 @@ input:focus,select:focus{
 .matrixCell{touch-action:none;
   --habit-accent: var(--accent);
   aspect-ratio: 1/1;
-  width: 54px;
+  width: var(--cell, 54px);
   justify-self: center;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.07);
@@ -503,7 +503,7 @@ input:focus,select:focus{
 
 
 @media (max-width: 520px){
-  .matrixCell{touch-action:none;width: 54px;border-radius:10px}
+  .matrixCell{touch-action:none;width: var(--cell, 44px);border-radius:10px}
 }
 
 @media (max-width: 1040px){
@@ -827,7 +827,7 @@ input:focus,select:focus{
 .matrixWrap{ padding: 14px; }
 .matrixGrid{ gap: 10px; }
 .matrixHeaderRow, .matrixRow{ gap: 10px; }
-.matrixCell{touch-action:none; width: 54px; border-radius: 14px; }
+.matrixCell{touch-action:none; width: var(--cell, 54px); border-radius: 14px; }
 .matrixCorner, .matrixHabit, .matrixDate{ border-radius: 14px; }
 .matrixHabit{ text-align:center; }
 .matrixDate{ min-width: 170px; }
@@ -899,8 +899,8 @@ input:focus,select:focus{
   gap: 14px;
 }
 .matrixCell{
-  width: 54px;
-  height: 52px;
+  width: var(--cell, 54px);
+  height: var(--cell, 52px);
   border-radius: 16px;
 }
 .matrixDate{

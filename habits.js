@@ -396,8 +396,9 @@ function renderAnalytics(){
 
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
   // Mobile: show a 7-day viewport and allow paging via swipe.
-  const range = isMobile ? 7 : (analyticsView==="week" ? 14 : 60);
-  const step  = isMobile ? 7 : (analyticsView==="week" ? 14 : 30);
+  // Mobile viewport: show more days by default.
+  const range = isMobile ? 9 : (analyticsView==="week" ? 14 : 60);
+  const step  = isMobile ? 9 : (analyticsView==="week" ? 14 : 30);
 
   const viewLabel = analyticsView==="week" ? "2W" : "60D";
   const offsetLabel = analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`);
@@ -563,11 +564,12 @@ function renderAnalytics(){
     });
   } else {
     // Mobile transpose
-    const habitCol = 170;
+    const habitCol = 152;
     const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
     const gap = 8;
-    const maxCell = 66;
-    const minCell = 42;
+    // Slightly smaller cells on phone so more days fit comfortably.
+    const maxCell = 58;
+    const minCell = 34;
     const avail = Math.max(0, wrapW - habitCol - gap*(dates.length+1));
     const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, dates.length))));
     grid.style.setProperty("--habitCol", habitCol+"px");
@@ -583,7 +585,7 @@ function renderAnalytics(){
     corner.className = "matrixCorner";
     corner.innerHTML = `
       <div style="font-weight:800">Habits</div>
-      <div class="small" style="margin-top:4px;opacity:.85">Swipe ← → (7‑day viewport)</div>
+      <div class="small" style="margin-top:4px;opacity:.85">Swipe ← →</div>
     `;
     header.appendChild(corner);
 
@@ -632,7 +634,7 @@ function renderAnalytics(){
       grid.appendChild(row);
     });
 
-    // Swipe paging (7 days)
+    // Swipe paging (mobile viewport)
     const wrap = card.querySelector('.matrixWrap');
     if(wrap && !wrap.dataset.swipeBound){
       wrap.dataset.swipeBound = '1';
@@ -965,7 +967,7 @@ function renderHero(){
       </div>
       <div class="heroActions">
         <button class="btn secondary" onclick="setAnalyticsOffset(0)">Today</button>
-        <button class="btn primary onlyMobile" onclick="openAddHabit()">Add habit +</button>
+        <button class="btn secondary onlyMobile" onclick="openAddHabit()">Add habit</button>
       </div>
     </div>
   `;
@@ -1089,6 +1091,21 @@ function wireHabitsLayout(){
 
 wireHabitsLayout();
 render();
+
+// Keep the grid layout in sync when switching between desktop ↔ mobile widths.
+// (Needed because the grid renderer branches on a media query.)
+let __habitsLastIsMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+let __habitsResizeTimer = null;
+window.addEventListener("resize", ()=>{
+  const nowIsMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+  const breakpointChanged = nowIsMobile !== __habitsLastIsMobile;
+  __habitsLastIsMobile = nowIsMobile;
+  if(__habitsResizeTimer) clearTimeout(__habitsResizeTimer);
+  __habitsResizeTimer = setTimeout(()=>{
+    // Re-render so the grid orientation + cell sizing recalculates.
+    render();
+  }, breakpointChanged ? 0 : 120);
+});
 
 function setAnalyticsOffset(val){
   analyticsOffsetDays = val;
