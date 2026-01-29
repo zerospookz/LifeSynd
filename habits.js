@@ -192,11 +192,23 @@ function fmtWeekday(iso){
 }
 
 
+function addHabitNamed(name){
+  const n = (name||"").trim();
+  if(!n) return;
+  // Persist an explicit hue so the habit keeps a stable accent everywhere
+  // (especially important in the transposed mobile grid).
+  const hue = HUE_PALETTE[Math.floor(Math.random()*HUE_PALETTE.length)];
+  habits.push({id:crypto.randomUUID(), name:n, created:today(), datesDone:[], hue});
+  save();
+  render();
+  showToast("Habit added");
+}
+
 function addHabit(){
-  if(!habitName.value) return;
-  habits.push({id:crypto.randomUUID(), name:habitName.value, created:today(), datesDone:[]});
+  // Used by the desktop "Add & mark" card.
+  if(typeof habitName === "undefined") return;
+  addHabitNamed(habitName.value);
   habitName.value="";
-  save(); render(); showToast("Habit added");
 }
 
 function toggleHabitAt(id, iso, opts={}){
@@ -948,7 +960,6 @@ function renderHero(){
         </div>
       </div>
       <div class="heroActions">
-        <button class="btn primary" onclick="document.querySelector('[data-tab=\'grid\']')?.click()">Mark habits</button>
         <button class="btn secondary" onclick="setAnalyticsOffset(0)">Today</button>
       </div>
     </div>
@@ -1039,14 +1050,27 @@ function wireHabitsLayout(){
 
   const newBtn = document.getElementById("newHabitBtn");
   const newBtn2 = document.getElementById("appNewHabitBtn");
-  const showAdd = ()=>{
+  const showAddCard = ()=>{
     const card = document.getElementById("addCard");
     if(card) card.classList.toggle("open");
     const input = document.getElementById("habitName");
     input && input.focus && input.focus();
   };
-  if(newBtn) newBtn.addEventListener("click", showAdd);
-  if(newBtn2) newBtn2.addEventListener("click", showAdd);
+
+  const addFromPrompt = ()=>{
+    const name = prompt("New habit name:");
+    if(name===null) return; // cancelled
+    addHabitNamed(name);
+  };
+
+  if(newBtn) newBtn.addEventListener("click", showAddCard);
+  if(newBtn2){
+    newBtn2.addEventListener("click", ()=>{
+      // On phone screens, go straight to a prompt so adding a habit is always accessible.
+      if(window.matchMedia && window.matchMedia("(max-width: 760px)").matches) addFromPrompt();
+      else showAddCard();
+    });
+  }
 
   // tabs (mobile)
   const tabBtns = Array.from(document.querySelectorAll(".tabBtn"));
