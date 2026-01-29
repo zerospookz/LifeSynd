@@ -1112,8 +1112,11 @@ function renderHero(){
           <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
           <div class="small">Keep it simple: small wins compound.</div>
         </div>
-        <div class="ring" style="--p:0" data-pct="${pct}">
-          <div class="ringInner">${pct}%</div>
+        <div class="arcReactor heroArc" id="heroArc" data-pct="${pct}" aria-label="Today's completion" role="img">
+          <div class="arcCore">
+            <div class="arcPct">${pct}%</div>
+            <div class="arcLbl">Today</div>
+          </div>
         </div>
       </div>
       <div class="heroActions">
@@ -1122,16 +1125,9 @@ function renderHero(){
     </div>
   `;
 
-  // Animate the progress ring from 0 → pct on each render.
-  const ring = el.querySelector('.ring');
-  if(ring){
-    const target = parseFloat(ring.getAttribute('data-pct')||'0') || 0;
-    // restart animation
-    ring.style.setProperty('--p', '0');
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>ring.style.setProperty('--p', String(target)));
-    });
-  }
+  // Animate the segmented Arc Reactor (more modern than a single ring).
+  const arc = el.querySelector('#heroArc');
+  if(arc) setArcReactor(arc, pct, 6);
 }
 
 function renderFocusCard(){
