@@ -1019,6 +1019,45 @@ function buildArcGradient(pct, segments, onColor, offColor){
   return `conic-gradient(from -90deg, ${stops.join(',')})`;
 }
 
+
+
+// --- Percent-based status coloring (shared by arc + stats fills) ---
+function statusColorForPercent(pi){
+  const x = Math.max(0, Math.min(100, Math.round(Number(pi)||0)));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+  const clamp01 = (t)=>Math.max(0, Math.min(1, t));
+  const hsla = (h,s,l,a)=>`hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
+
+  if(x <= 30){
+    const t = clamp01(x/30);
+    const L = lerp(18, 62, t);
+    return {
+      on:  hsla(0, 92, L, 0.96),
+      off: hsla(0, 50, lerp(10, 28, t), 0.22),
+      glow: hsla(0, 92, lerp(30, 70, t), 0.70)
+    };
+  }
+  if(x <= 70){
+    const t = clamp01((x-30)/40);
+    const L = lerp(54, 62, t);
+    return {
+      on:  hsla(45, 100, L, 0.96),
+      off: hsla(45, 55, lerp(24, 34, t), 0.22),
+      glow: hsla(45, 100, lerp(58, 70, t), 0.70)
+    };
+  }
+  {
+    const t = clamp01((x-70)/30);
+    const H = lerp(45, 140, t);
+    const L = lerp(62, 55, t);
+    return {
+      on:  hsla(H, 92, L, 0.96),
+      off: hsla(H, 55, lerp(34, 30, t), 0.22),
+      glow: hsla(H, 92, lerp(70, 62, t), 0.70)
+    };
+  }
+}
+
 function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
   const seg = Math.max(3, Math.min(8, Number(segments)||5));
@@ -1027,7 +1066,8 @@ function setArcReactor(el, pct, segments){
   // percent step (1%, 2%, 3% ... target), like a true "filling" animation.
   // Start at 1% (when target > 0) so the user can visually see
   // 1%, 2%, 3% ... as distinct steps.
-  const prev = (p > 0 ? 1 : 0);
+  const existing = Number(el.dataset.curPct ?? el.style.getPropertyValue('--arc-p') ?? 0) || 0;
+  const prev = (existing > 0 || p <= 0) ? Math.max(0, Math.min(100, Math.round(existing))) : 1;
   el.dataset.pct = String(p);
 
   // Optional center label ("xx%") inside the arc.
@@ -1044,43 +1084,7 @@ function setArcReactor(el, pct, segments){
   function hsla(h,s,l,a){
     return `hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
   }
-  function statusColors(pi){
-    const x = Math.max(0, Math.min(100, Math.round(pi)));
-    // 0–30: dark red → brighter red (contrast drops as it fills)
-    if(x <= 30){
-      const t = clamp01(x/30);
-      const L = lerp(18, 62, t);
-      const offL = lerp(10, 28, t);
-      return {
-        on:  hsla(0, 92, L, 0.96),
-        off: hsla(0, 50, offL, 0.22),
-        glow: hsla(0, 92, lerp(30, 70, t), 0.70)
-      };
-    }
-    // 30–70: yellow range (stays yellow, subtly brightens)
-    if(x <= 70){
-      const t = clamp01((x-30)/40);
-      const L = lerp(54, 62, t);
-      const offL = lerp(24, 34, t);
-      return {
-        on:  hsla(45, 100, L, 0.96),
-        off: hsla(45, 55, offL, 0.22),
-        glow: hsla(45, 100, lerp(58, 70, t), 0.70)
-      };
-    }
-    // 70–100: transition toward green (keeps the "success" feel)
-    {
-      const t = clamp01((x-70)/30);
-      const H = lerp(45, 140, t);
-      const L = lerp(62, 55, t);
-      const offL = lerp(34, 30, t);
-      return {
-        on:  hsla(H, 92, L, 0.96),
-        off: hsla(H, 55, offL, 0.22),
-        glow: hsla(H, 92, lerp(70, 62, t), 0.70)
-      };
-    }
-  }
+  function statusColors(pi){ return statusColorForPercent(pi); }
 
   if(scheme === 'status'){
     ({on, off} = statusColors(prev));
@@ -1097,6 +1101,7 @@ function setArcReactor(el, pct, segments){
   // Paint the initial 1% state immediately so the first visible frame isn't 0%.
   el.style.backgroundImage = buildArcGradient(prev, seg, on, off);
   el.style.setProperty('--arc-p', String(prev));
+  el.dataset.curPct = String(prev);
   if(pctEl) pctEl.textContent = `${prev}%`;
 
   // reset state
@@ -1141,6 +1146,7 @@ function setArcReactor(el, pct, segments){
       }
       el.style.backgroundImage = buildArcGradient(lastInt, seg, on, off);
       el.style.setProperty('--arc-p', String(lastInt));
+      el.dataset.curPct = String(lastInt);
       if(pctEl) pctEl.textContent = `${lastInt}%`;
     }
 
@@ -1160,12 +1166,74 @@ function setArcReactor(el, pct, segments){
     }
     el.style.backgroundImage = buildArcGradient(p, seg, on, off);
     el.style.setProperty('--arc-p', String(p));
+    el.dataset.curPct = String(p);
     if(pctEl) pctEl.textContent = `${p}%`;
     el.classList.remove('charging');
     el.classList.add('charged');
     if(p >= 100){
       el.classList.add('fullPulse');
     }
+  };
+
+  requestAnimationFrame(tick);
+}
+
+
+
+// --- Habits > Stats chart animation (streak bars) ---
+const __streakFillState = new Map(); // key -> last integer pct rendered
+
+function animateStreakFill(fillEl, targetPct, key){
+  const p = Math.max(0, Math.min(100, Math.round(Number(targetPct)||0)));
+  const prevRaw = __streakFillState.has(key) ? __streakFillState.get(key) : Number(fillEl.dataset.curPct||0)||0;
+  const prev = Math.max(0, Math.min(100, Math.round(prevRaw)));
+
+  // If the element is newly created, paint the previous state immediately (so it continues from there).
+  fillEl.style.width = `${prev}%`;
+  fillEl.dataset.curPct = String(prev);
+  __streakFillState.set(key, prev);
+
+  const DURATION = Math.max(650, Math.round(Math.abs(p - prev) * 28));
+  const t0 = performance.now();
+  const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
+  let lastInt = prev;
+
+  const tick = (t)=>{
+    const k = Math.max(0, Math.min(1, (t - t0) / DURATION));
+    const e = easeOutCubic(k);
+    const easedVal = prev + (p - prev) * e;
+
+    let nextInt;
+    if(p >= prev){
+      nextInt = Math.min(p, Math.max(lastInt, Math.floor(easedVal)));
+    }else{
+      nextInt = Math.max(p, Math.min(lastInt, Math.ceil(easedVal)));
+    }
+
+    if(nextInt !== lastInt){
+      lastInt = nextInt;
+      fillEl.style.width = `${lastInt}%`;
+      fillEl.dataset.curPct = String(lastInt);
+      __streakFillState.set(key, lastInt);
+
+      // Color shifts per % (same scheme as the pie)
+      const c = statusColorForPercent(lastInt);
+      fillEl.style.background = c.on;
+      fillEl.style.boxShadow = `0 0 0 rgba(0,0,0,0), 0 0 14px ${c.glow}`;
+    }
+
+    if(k < 1){
+      requestAnimationFrame(tick);
+      return;
+    }
+
+    // final snap
+    fillEl.style.width = `${p}%`;
+    fillEl.dataset.curPct = String(p);
+    __streakFillState.set(key, p);
+    const c = statusColorForPercent(p);
+    fillEl.style.background = c.on;
+    fillEl.style.boxShadow = `0 0 0 rgba(0,0,0,0), 0 0 14px ${c.glow}`;
   };
 
   requestAnimationFrame(tick);
@@ -1204,6 +1272,23 @@ function renderStreakSummary(){
             <div class="streakBar"><div class="streakFill" style="width:${pct}%"></div></div>
           </div>
         `;
+
+
+// Animate the Stats chart bars (continue from previous % instead of restarting).
+// Keyed by habit name (stable enough for this app); if you have ids, switch to h.id.
+requestAnimationFrame(()=>{
+  const items = el.querySelectorAll('.streakItem');
+  items.forEach(item=>{
+    const nameEl = item.querySelector('.streakName');
+    const fillEl = item.querySelector('.streakFill');
+    if(!fillEl) return;
+    const key = (nameEl ? nameEl.textContent.trim() : '') || fillEl.dataset.key || '';
+    const target = parseFloat((fillEl.style.width||'').replace('%','')) || 0;
+    // store key for future renders
+    fillEl.dataset.key = key;
+    animateStreakFill(fillEl, target, key);
+  });
+});
       }).join("")}
     </div>
   `;
