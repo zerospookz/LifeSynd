@@ -833,15 +833,14 @@ if(typeof markDate!=="undefined"){
   markDate.addEventListener("change", ()=>render());
 }
 
-wireHabitsLayout();
-render();
-
 
 function deleteHabit(id){
   if(!confirm("Delete this habit?")) return;
   habits = habits.filter(h=>h.id!==id);
   save();
-  
+  render();
+}
+
 function renderHero(){
   const el = document.getElementById("habitsHero");
   if(!el) return;
@@ -973,5 +972,4 @@ function setAnalyticsOffset(val){
   analyticsOffsetDays = val;
   localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
-}
 }
