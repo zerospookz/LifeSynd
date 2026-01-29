@@ -43,6 +43,95 @@ function rangeDatesForward(rangeDays, offsetDays){
 
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
+
+// --- Habit carousel state ---
+let habitCarouselIndex = parseInt(localStorage.getItem('habitsCarouselIndex')||'0',10);
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+function setCarouselIndex(i){
+  habitCarouselIndex = clamp(i, 0, Math.max(0, habits.length-1));
+  localStorage.setItem('habitsCarouselIndex', String(habitCarouselIndex));
+  // If carousel is present, update without full rerender.
+  const track = document.getElementById('habTrack');
+  const dots = document.getElementById('habitDots');
+  if(track){
+    track.style.transform = `translateX(${-habitCarouselIndex*100}%)`;
+  }
+  if(dots){
+    [...dots.querySelectorAll('button')].forEach((b,idx)=>b.classList.toggle('active', idx===habitCarouselIndex));
+  }
+}
+
+function setupHabitCarousel(){
+  const track = document.getElementById('habTrack');
+  const viewport = document.getElementById('habViewport');
+  const prev = document.getElementById('habPrev');
+  const next = document.getElementById('habNext');
+  const dots = document.getElementById('habitDots');
+  if(!track || !viewport || !dots) return;
+
+  // Re-clamp in case habits length changed
+  habitCarouselIndex = clamp(habitCarouselIndex, 0, Math.max(0, habits.length-1));
+  localStorage.setItem('habitsCarouselIndex', String(habitCarouselIndex));
+
+  // Build dots
+  dots.innerHTML = habits.map((_,idx)=>`<button type="button" class="dotBtn ${idx===habitCarouselIndex?'active':''}" aria-label="Go to habit ${idx+1}"></button>`).join('');
+  [...dots.querySelectorAll('button')].forEach((b,idx)=>b.addEventListener('click', ()=>setCarouselIndex(idx)));
+
+  prev?.addEventListener('click', ()=>setCarouselIndex(habitCarouselIndex-1));
+  next?.addEventListener('click', ()=>setCarouselIndex(habitCarouselIndex+1));
+
+  // Swipe/drag to change slide
+  if(viewport.dataset.bound === '1'){
+    track.style.transition='transform .22s ease';
+    setCarouselIndex(habitCarouselIndex);
+    return;
+  }
+  viewport.dataset.bound = '1';
+  let startX=0;
+  let dx=0;
+  let isDown=false;
+  let dragging=false;
+  const THRESH=48; // px
+
+  function onDown(e){
+    isDown=true; dragging=false; dx=0;
+    startX = (e.touches?e.touches[0].clientX:e.clientX);
+    track.style.transition='none';
+  }
+  function onMove(e){
+    if(!isDown) return;
+    const x = (e.touches?e.touches[0].clientX:e.clientX);
+    dx = x-startX;
+    if(Math.abs(dx) > 6) dragging=true;
+    if(!dragging) return;
+    // prevent vertical scroll when swiping horizontally
+    if(e.cancelable) e.preventDefault();
+    const pct = (dx / Math.max(1, viewport.clientWidth)) * 100;
+    track.style.transform = `translateX(calc(${-habitCarouselIndex*100}% + ${pct}%))`;
+  }
+  function onUp(){
+    if(!isDown) return;
+    isDown=false;
+    track.style.transition='transform .22s ease';
+    if(dragging && Math.abs(dx) > THRESH){
+      setCarouselIndex(habitCarouselIndex + (dx<0 ? 1 : -1));
+    }else{
+      setCarouselIndex(habitCarouselIndex);
+    }
+  }
+
+  viewport.addEventListener('touchstart', onDown, {passive:true});
+  viewport.addEventListener('touchmove', onMove, {passive:false});
+  viewport.addEventListener('touchend', onUp, {passive:true});
+  viewport.addEventListener('mousedown', onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+
+  // init position
+  track.style.transition='transform .22s ease';
+  setCarouselIndex(habitCarouselIndex);
+}
 // ---------- helpers ----------
 function escapeHtml(str){
   return String(str ?? "")
@@ -178,9 +267,10 @@ function completionRate(days){
   return Math.round((done/total)*100);
 }
 
+// Mini GitHub-style heatmap: last 28 days (4 weeks)
 function miniHeatHtml(h){
-  const days=10;
-  const now=new Date(getMarkDate()+"T00:00:00");
+  const days=28;
+  const now=new Date(today()+"T00:00:00");
   const set=new Set(h.datesDone||[]);
   const cells=[];
   for(let i=days-1;i>=0;i--){
@@ -189,10 +279,15 @@ function miniHeatHtml(h){
     const on=set.has(iso);
     const hue=habitHue(h.id);
     const accent=`hsl(${hue} 70% 55%)`;
-    const p=on?0.65:0.10;
+    const p=on?0.75:0.10;
     cells.push(`<div class="miniCell" style="background: color-mix(in oklab, ${accent} ${Math.round(p*100)}%, rgba(255,255,255,.05))"></div>`);
   }
-  return `<div class="miniHeat">${cells.join("")}</div>`;
+  return `
+    <div class="miniHeatWrap">
+      <div class="miniHeat">${cells.join("")}</div>
+      <div class="miniHeatLegend"><span class="dot"></span><span class="dot on"></span><span class="label">last 4 weeks</span></div>
+    </div>
+  `;
 }
 
 // ---------- Analytics (Matrix) ----------
@@ -506,9 +601,6 @@ function renderAnalytics(){
   grid.addEventListener("pointerup", endDrag);
   grid.addEventListener("pointercancel", endDrag);
   grid.addEventListener("lostpointercapture", endDrag);
-    if(!cell) return;
-    toggleHabitAt(cell.dataset.hid, cell.dataset.iso, {preserveScroll:true});
-  });
 }
 
 
@@ -518,6 +610,27 @@ function renderInsights(){
   if(!el) return;
   const r7=completionRate(7);
   const r30=completionRate(30);
+
+  // Weakest habit: lowest completion over last 14 days
+  const weakest = (()=>{
+    if(!habits.length) return null;
+    const now=new Date(today()+"T00:00:00");
+    const days=14;
+    const window=[];
+    for(let i=days-1;i>=0;i--){
+      const d=new Date(now); d.setDate(now.getDate()-i);
+      window.push(d.toISOString().slice(0,10));
+    }
+    let best=null;
+    for(const h of habits){
+      const set=new Set(h.datesDone||[]);
+      const done=window.reduce((acc,iso)=>acc+(set.has(iso)?1:0),0);
+      const rate=done/days;
+      if(!best || rate < best.rate) best={h, done, days, rate};
+    }
+    return best;
+  })();
+
   el.innerHTML=`
     <div class="cardHeader">
       <h3 class="cardTitle">Insights</h3>
@@ -528,7 +641,20 @@ function renderInsights(){
       <div class="kpi"><div class="kpiLabel">30‑day completion</div><div class="kpiValue">${r30}%</div></div>
     </div>
     <p class="small" style="margin-top:10px">Mark habits in the Analytics grid above.</p>
+    ${weakest?`
+      <div class="hintCard" style="margin-top:12px" id="weakestHint" role="button" tabindex="0" aria-label="Jump to weakest habit">
+        <div class="hintTitle">🧠 Focus hint</div>
+        <div class="hintBody">Weakest habit: <strong>${escapeHtml(weakest.h.name)}</strong> — ${weakest.done}/${weakest.days} days in the last 2 weeks. Tap to jump.</div>
+      </div>
+    `:""}
   `;
+
+  if(weakest){
+    const hint = el.querySelector('#weakestHint');
+    const go = ()=>{ setCarouselIndex(habits.findIndex(x=>x.id===weakest.h.id)); };
+    hint?.addEventListener('click', go);
+    hint?.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); go(); } });
+  }
 }
 
 function renderStreakSummary(){
@@ -567,12 +693,12 @@ function render(){
   }
 
   const date=getMarkDate();
-  habits.forEach(h=>{
+  const cards = habits.map((h, idx)=>{
     const set=new Set(h.datesDone||[]);
     const done=set.has(date);
     const s=streakFor(h);
-    habitList.innerHTML+=`
-      <div class="card">
+    return `
+      <div class="card habitSlide" data-index="${idx}" aria-label="Habit ${idx+1} of ${habits.length}">
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div>
             <strong>${escapeHtml(h.name)}</strong>
@@ -587,7 +713,20 @@ function render(){
         ${miniHeatHtml(h)}
       </div>
     `;
-  });
+  }).join('');
+
+  habitList.innerHTML = `
+    <div class="habitCarousel" id="habitCarousel">
+      <button class="iconBtn" type="button" id="habPrev" aria-label="Previous habit">←</button>
+      <div class="habitViewport" id="habViewport" aria-label="Habits carousel">
+        <div class="habitTrack" id="habTrack">${cards}</div>
+      </div>
+      <button class="iconBtn" type="button" id="habNext" aria-label="Next habit">→</button>
+    </div>
+    <div class="habitDots" id="habitDots" aria-label="Habit navigation dots"></div>
+  `;
+
+  setupHabitCarousel();
 }
 
 // Re-render when the selected mark date changes (affects streaks + insights)
