@@ -933,6 +933,7 @@ input:focus,select:focus{
 /* ===== Habits responsive layout (desktop + app) ===== */
 .habitsAppbar{display:none}
 .habitsTabs{display:none}
+  #focusHint{margin-bottom: 12px}
 .bottomNav{display:none}
 
 .habitsTopbar{

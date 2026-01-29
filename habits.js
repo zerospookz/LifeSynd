@@ -901,6 +901,7 @@ function renderInsights(){
   const r7=completionRate(7);
   const r30=completionRate(30);
   const r60=completionRate(60);
+  const r180=completionRate(180);
 
   // Weakest habit: lowest completion over last 14 days
   const weakest = (()=>{
@@ -928,10 +929,10 @@ function renderInsights(){
       <span class="badge">Consistency</span>
     </div>
     <div class="consistencyViz">
-      <div class="arcReactor" id="consistencyArc" aria-label="60 day completion visualization" role="img">
+      <div class="arcReactor" id="consistencyArc" aria-label="180 day completion visualization" role="img">
         <div class="arcCore">
-          <div class="arcPct">${r60}%</div>
-          <div class="arcLbl">60D</div>
+          <div class="arcPct">${r180}%</div>
+          <div class="arcLbl">180D</div>
         </div>
       </div>
       <div class="consistencyMeta">
@@ -939,8 +940,9 @@ function renderInsights(){
           <div class="kpi"><div class="kpiLabel">7‑day</div><div class="kpiValue">${r7}%</div></div>
           <div class="kpi"><div class="kpiLabel">30‑day</div><div class="kpiValue">${r30}%</div></div>
           <div class="kpi"><div class="kpiLabel">60‑day</div><div class="kpiValue">${r60}%</div></div>
+          <div class="kpi"><div class="kpiLabel">180‑day</div><div class="kpiValue">${r180}%</div></div>
         </div>
-        <p class="small" style="margin-top:10px">60 days is a strong baseline for building a habit.</p>
+        <p class="small" style="margin-top:10px">180 days is a strong baseline for long‑term habit formation.</p>
       </div>
     </div>
     <p class="small" style="margin-top:12px">Tap to toggle. Drag to paint in the Analytics grid.</p>
@@ -958,9 +960,9 @@ function renderInsights(){
 
   // Modern segmented "arc reactor" for 60-day consistency.
   const arc = el.querySelector('#consistencyArc');
-  if(arc) setArcReactor(arc, r60, 6);
+  if(arc) setArcReactor(arc, r180, 6);
   // Store last computed value so the right-panel copy can re-apply styles.
-  window.__lastConsistency60 = r60;
+  window.__lastConsistency180 = r180;
 
   if(weakest){
     const hint = el.querySelector('#weakestHint');
@@ -1177,8 +1179,8 @@ function syncSidePanels(){
 
   // Re-apply arc styling for the duplicated Insights card on desktop right panel.
   const sideArc = iSide?.querySelector?.('.arcReactor');
-  if(sideArc && Number.isFinite(window.__lastConsistency60)){
-    setArcReactor(sideArc, window.__lastConsistency60, 6);
+  if(sideArc && Number.isFinite(window.__lastConsistency180)){
+    setArcReactor(sideArc, window.__lastConsistency180, 6);
   }
 }
 
