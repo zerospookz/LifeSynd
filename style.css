@@ -759,15 +759,3 @@ input:focus,select:focus{
 .matrixDate .d1{font-size:1rem;}
 .matrixDate .d2{font-size:.78rem;}
 .analyticsCard #habitAnalytics, #habitAnalytics{width:100%;}
-
-/* --- Heatmap date header --- */
-.matrixCorner{ display:flex; flex-direction:column; gap:2px; align-items:flex-start; justify-content:center; }
-.matrixCorner .cap{ letter-spacing:.12em; font-weight:800; font-size:.68rem; color: rgba(255,255,255,.60); }
-.matrixCorner .big{ font-size:1.02rem; font-weight:800; color: var(--text); }
-.matrixCorner .small{ font-size:.78rem; color: rgba(255,255,255,.55); }
-
-/* long-press affordance */
-.matrixHabit.holding{
-  outline: 1px solid color-mix(in oklab, var(--habit-accent) 45%, rgba(255,255,255,.12));
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--habit-accent) 12%, transparent), 0 18px 40px rgba(0,0,0,.35);
-}
