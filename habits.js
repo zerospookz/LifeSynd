@@ -788,6 +788,8 @@ function renderAnalytics(){
 function renderInsights(){
   const el=document.getElementById("insights");
   if(!el) return;
+  // Resolve the currently filtered habits locally (don't rely on external scope).
+  const H = getFilteredHabits();
   const r7=completionRate(7);
   const r30=completionRate(30);
 
@@ -844,6 +846,8 @@ function renderInsights(){
 function renderStreakSummary(){
   const el=document.getElementById("streakSummary");
   if(!el) return;
+  // Resolve the currently filtered habits locally (don't rely on external scope).
+  const H = getFilteredHabits();
   if(!H.length){
     el.innerHTML='<div class="cardHeader"><h3 class="cardTitle">Streaks</h3></div><p class="empty">No H yet.</p>';
     return;
