@@ -929,7 +929,7 @@ function renderInsights(){
       <span class="badge">Consistency</span>
     </div>
     <div class="consistencyViz">
-      <div class="arcReactor" id="consistencyArc" aria-label="180 day completion visualization" role="img">
+      <div class="arcReactor" id="consistencyArc" data-scheme="status" aria-label="180 day completion visualization" role="img">
         <div class="arcCore">
           <div class="arcPct">${r180}%</div>
           <div class="arcLbl">180D</div>
@@ -1029,6 +1029,10 @@ function setArcReactor(el, pct, segments){
     off = 'hsla(210, 35%, 45%, 0.18)';
     el.style.setProperty('--arc-glow', 'hsla(210, 100%, 70%, 0.65)');
   }
+
+
+  el.style.setProperty('--arc-on', on);
+  el.style.setProperty('--arc-off', off);
 
   el.style.backgroundImage = buildArcGradient(p, segments, on, off);
   el.style.setProperty('--arc-p', String(p));
