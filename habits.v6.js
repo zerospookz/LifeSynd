@@ -4,6 +4,10 @@ let analyticsView = localStorage.getItem("habitsAnalyticsView") || "month";
 let analyticsOffsetDays = parseInt(localStorage.getItem("habitsAnalyticsOffsetDays") || "0", 10);
 let analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || "mark"; // mark | erase
 
+// Optional custom date filter (inclusive). If set, the matrix is filtered to this range.
+let analyticsFrom = localStorage.getItem("habitsAnalyticsFrom") || ""; // yyyy-mm-dd
+let analyticsTo   = localStorage.getItem("habitsAnalyticsTo")   || ""; // yyyy-mm-dd
+
 function rangeDates(rangeDays, offsetDays){
   const base = new Date();
   base.setDate(base.getDate() + (offsetDays||0));
@@ -13,18 +17,51 @@ function rangeDates(rangeDays, offsetDays){
     x.setDate(base.getDate()-i);
     res.push(x.toISOString().slice(0,10));
   }
-
   return res;
 }
 
-// Format ISO date (YYYY-MM-DD) to e.g. "Jan 29"
 function fmtMonthDay(iso){
   const d = new Date(iso+"T00:00:00");
   try{
-    return new Intl.DateTimeFormat(undefined,{month:"short", day:"numeric"}).format(d);
+    return new Intl.DateTimeFormat(undefined,{month:"short", day:"2-digit"}).format(d);
   }catch(e){
     return iso.slice(5);
   }
+}
+
+function clampIso(iso){
+  // Basic guard for empty/invalid values
+  if(!iso || typeof iso !== 'string' || iso.length < 10) return "";
+  return iso.slice(0,10);
+}
+
+function isoAddDays(iso, days){
+  const d = new Date(iso+"T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0,10);
+}
+
+function rangeBetween(fromIso, toIso){
+  const from = new Date(fromIso+"T00:00:00");
+  const to = new Date(toIso+"T00:00:00");
+  if(Number.isNaN(+from) || Number.isNaN(+to)) return [];
+  const res=[];
+  const dir = from <= to ? 1 : -1;
+  const cur = new Date(from);
+  while(true){
+    res.push(cur.toISOString().slice(0,10));
+    if(cur.toISOString().slice(0,10) === to.toISOString().slice(0,10)) break;
+    cur.setDate(cur.getDate() + dir);
+    if(res.length > 120) break; // safety
+  }
+  return dir === 1 ? res : res.reverse();
+}
+
+function addDaysIso(iso, days){
+  if(!isIsoDate(iso)) return "";
+  const d = new Date(iso+"T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0,10);
 }
 
 // Forward-looking range (start at today+offset and go forward)
@@ -35,6 +72,40 @@ function rangeDatesForward(rangeDays, offsetDays){
   for(let i=0;i<rangeDays;i++){
     const x=new Date(start);
     x.setDate(start.getDate()+i);
+    res.push(x.toISOString().slice(0,10));
+  }
+  return res;
+}
+
+function isIsoDate(s){
+  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
+function clampRange(fromIso, toIso, maxDays){
+  if(!isIsoDate(fromIso) || !isIsoDate(toIso)) return {from:"", to:""};
+  if(toIso < fromIso){ const t=fromIso; fromIso=toIso; toIso=t; }
+  // Limit max span to keep UI usable
+  const fromD = new Date(fromIso+"T00:00:00");
+  const toD = new Date(toIso+"T00:00:00");
+  const diff = Math.floor((toD - fromD)/(24*3600*1000));
+  if(diff > maxDays-1){
+    const x = new Date(fromD);
+    x.setDate(fromD.getDate() + (maxDays-1));
+    toIso = x.toISOString().slice(0,10);
+  }
+  return {from:fromIso, to:toIso};
+}
+
+function rangeBetween(fromIso, toIso){
+  if(!isIsoDate(fromIso) || !isIsoDate(toIso)) return [];
+  if(toIso < fromIso){ const t=fromIso; fromIso=toIso; toIso=t; }
+  const res=[];
+  const d0 = new Date(fromIso+"T00:00:00");
+  const d1 = new Date(toIso+"T00:00:00");
+  const days = Math.floor((d1 - d0)/(24*3600*1000));
+  for(let i=0;i<=days;i++){
+    const x = new Date(d0);
+    x.setDate(d0.getDate()+i);
     res.push(x.toISOString().slice(0,10));
   }
   return res;
@@ -226,6 +297,17 @@ function renderAnalytics(){
         <button class="btn ghost" id="calPrev" type="button">←</button>
         <button class="btn ghost" id="calToday" type="button">Today</button>
         <button class="btn ghost" id="calNext" type="button">→</button>
+
+        <div class="analyticsDateFilters" title="Filter the matrix by a specific date range">
+          <label class="df">
+            <span>From</span>
+            <input id="analyticsFrom" type="date">
+          </label>
+          <label class="df">
+            <span>To</span>
+            <input id="analyticsTo" type="date">
+          </label>
+        </div>
       </div>
     </div>
 
@@ -262,18 +344,39 @@ function renderAnalytics(){
 
   // calendar navigation
   card.querySelector("#calPrev").addEventListener("click", ()=>{
-    analyticsOffsetDays -= step;
-    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    const hasCustom = isIsoDate(analyticsFrom) && isIsoDate(analyticsTo);
+    if(hasCustom){
+      analyticsFrom = addDaysIso(analyticsFrom, -step);
+      analyticsTo = addDaysIso(analyticsTo, -step);
+      localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
+      localStorage.setItem("habitsAnalyticsTo", analyticsTo);
+    }else{
+      analyticsOffsetDays -= step;
+      localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    }
     renderAnalytics();
   });
   card.querySelector("#calNext").addEventListener("click", ()=>{
-    analyticsOffsetDays += step;
-    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    const hasCustom = isIsoDate(analyticsFrom) && isIsoDate(analyticsTo);
+    if(hasCustom){
+      analyticsFrom = addDaysIso(analyticsFrom, step);
+      analyticsTo = addDaysIso(analyticsTo, step);
+      localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
+      localStorage.setItem("habitsAnalyticsTo", analyticsTo);
+    }else{
+      analyticsOffsetDays += step;
+      localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    }
     renderAnalytics();
   });
   card.querySelector("#calToday").addEventListener("click", ()=>{
     analyticsOffsetDays = 0;
     localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    // Reset custom filter
+    analyticsFrom = "";
+    analyticsTo = "";
+    localStorage.removeItem("habitsAnalyticsFrom");
+    localStorage.removeItem("habitsAnalyticsTo");
     renderAnalytics();
   });
 
@@ -282,10 +385,24 @@ function renderAnalytics(){
     return;
   }
 
-  // Week view should look forward (today → next 14 days). Month view remains historical.
-  const dates = analyticsView === "week"
-    ? rangeDatesForward(range, analyticsOffsetDays)
-    : rangeDates(range, analyticsOffsetDays);
+  // Week view defaults to forward-looking (today → next 14 days). Month view remains historical.
+  // If the user picks a custom From/To, we use that inclusive range (clamped to the current view limit).
+  let dates;
+  const maxSpan = analyticsView === "week" ? 14 : 60;
+  const hasCustom = isIsoDate(analyticsFrom) && isIsoDate(analyticsTo);
+  if(hasCustom){
+    const cl = clampRange(analyticsFrom, analyticsTo, maxSpan);
+    // Persist any clamping/swap that happened
+    analyticsFrom = cl.from;
+    analyticsTo = cl.to;
+    localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
+    localStorage.setItem("habitsAnalyticsTo", analyticsTo);
+    dates = rangeBetween(analyticsFrom, analyticsTo);
+  }else{
+    dates = analyticsView === "week"
+      ? rangeDatesForward(range, analyticsOffsetDays)
+      : rangeDates(range, analyticsOffsetDays);
+  }
   const dateCol = 190;
   // compute cell size to fill available width when there are few habits
   const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
@@ -296,6 +413,40 @@ function renderAnalytics(){
   const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, habits.length))));
   grid.style.setProperty("--dateCol", dateCol+"px");
   grid.style.setProperty("--cell", cell+"px");
+
+  // Wire up date filter inputs
+  const fromInput = card.querySelector("#analyticsFrom");
+  const toInput = card.querySelector("#analyticsTo");
+  if(fromInput && toInput){
+    // Show current matrix range in inputs when no custom filter is set
+    if(!hasCustom){
+      fromInput.value = dates[0] || "";
+      toInput.value = dates[dates.length-1] || "";
+    }else{
+      fromInput.value = analyticsFrom;
+      toInput.value = analyticsTo;
+    }
+
+    const applyDateFilter = ()=>{
+      const f = fromInput.value;
+      const t = toInput.value;
+      if(isIsoDate(f) && isIsoDate(t)){
+        analyticsFrom = f;
+        analyticsTo = t;
+        localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
+        localStorage.setItem("habitsAnalyticsTo", analyticsTo);
+      }else{
+        analyticsFrom = "";
+        analyticsTo = "";
+        localStorage.removeItem("habitsAnalyticsFrom");
+        localStorage.removeItem("habitsAnalyticsTo");
+      }
+      renderAnalytics();
+    };
+
+    fromInput.onchange = applyDateFilter;
+    toInput.onchange = applyDateFilter;
+  }
 
   const colTemplate = `var(--dateCol) repeat(${habits.length}, var(--cell))`;
 
