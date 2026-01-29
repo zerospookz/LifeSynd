@@ -340,6 +340,9 @@ input:focus,select:focus{
   background: rgba(255,255,255,.02);
   padding: 12px;
   overflow: auto;
+  /* Prevent mobile overscroll from revealing background seams */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .matrixGrid{display:grid;gap:8px;min-width:100%;--cell:54px;--dateCol:190px}
 .matrixHeaderRow{
@@ -374,7 +377,8 @@ input:focus,select:focus{
   font-size: .8rem;
   font-weight: 650;
   letter-spacing: -.01em;
-  color: color-mix(in oklab, var(--habit-accent) 72%, var(--text));
+  /* Keep labels readable even for very bright accents */
+  color: rgba(255,255,255,.92);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -410,7 +414,25 @@ input:focus,select:focus{
   text-overflow: ellipsis;
 }
 
-.matrixHabitName span{display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: color-mix(in oklab, var(--habit-accent) 72%, var(--text));}
+.matrixHabitName span{
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  /* Keep text readable on green/yellow accents */
+  color: rgba(255,255,255,.92);
+}
+
+/* Mobile day chip: allow month/day to stack cleanly */
+.matrixDayHead .m{display:block; font-weight:800; line-height:1.05}
+.matrixDayHead .n{display:block; font-weight:850; line-height:1.05}
+
+@media (max-width: 520px){
+  .matrixDayHead{padding: 7px 6px; border-radius: 10px}
+  .matrixDayHead .m{font-size: .70rem}
+  .matrixDayHead .n{font-size: .85rem}
+  .matrixDayHead .d2{font-size: .60rem; margin-top: 1px}
+}
 
 .matrixDayHead{
   border-radius: 12px;
@@ -1147,6 +1169,8 @@ input:focus,select:focus{
   .habitsTopbar{display:none}
   .habitsLayout{grid-template-columns: 1fr}
   .habitsRight{display:none}
+  /* Reserve space for the fixed bottom nav so content doesn't sit underneath it */
+  .content{padding-bottom: 76px;}
 
   .habitsAppbar{
     display:block;

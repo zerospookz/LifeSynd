@@ -698,7 +698,18 @@ function renderAnalytics(){
     dates.forEach(iso=>{
       const d = document.createElement("div");
       d.className = "matrixDayHead";
-      d.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
+      // On small screens, stack month + day so "Feb" never escapes the chip.
+      const dd = new Date(iso+"T00:00:00");
+      let mon = "";
+      let day = "";
+      try{
+        mon = new Intl.DateTimeFormat(undefined,{month:"short"}).format(dd);
+        day = new Intl.DateTimeFormat(undefined,{day:"numeric"}).format(dd);
+      }catch(e){
+        mon = iso.slice(5,7);
+        day = iso.slice(8,10);
+      }
+      d.innerHTML = `<div class="d1"><span class="m">${mon}</span><span class="n">${day}</span></div><div class="d2">${fmtWeekday(iso)}</div>`;
       header.appendChild(d);
     });
 
