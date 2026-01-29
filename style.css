@@ -20,7 +20,27 @@
   --radius-sm: 12px;
   --radius-md: 14px;
   --radius-lg: 16px;
+  /* Typography tokens */
+  --h1-size: 2.05rem;
+  --h1-weight: 800;
+  --h1-letter: -0.045em;
+
+  --section-size: 1.05rem;
+  --section-weight: 650;
+  --section-letter: -0.02em;
+
+  --body-size: .95rem;
+  --body-weight: 450;
+  --body-color: rgba(229,231,235,.78);
+
+  --label-size: .82rem;
+  --label-color: rgba(148,163,184,.78);
+
+  --micro-size: .78rem;
+  --micro-color: rgba(148,163,184,.6);
+
 }
+
 
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -146,6 +166,10 @@ a{color:inherit}
 .dashSectionTitle{color:var(--muted);font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;margin:4px 2px}
 .dashKpis{display:grid;grid-template-columns: repeat(3, minmax(0,1fr));gap:12px}
 .kpi{padding:16px 16px}
+.kpiLabel{font-size: var(--label-size); color: var(--label-color);}
+.kpiValue{font-size: 1.35rem; font-weight: 750; letter-spacing: -0.02em; color:#fff; margin-top:4px}
+.kpiRow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+
 .dashStack{display:flex;flex-direction:column;gap:14px}
 
 .miniList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
@@ -175,13 +199,16 @@ a{color:inherit}
 }
 .pageTitle{
   margin:0;
-  font-size: 2rem;
-  letter-spacing: -.04em;
+  font-size: var(--h1-size);
+  font-weight: var(--h1-weight);
+  letter-spacing: var(--h1-letter);
+  color: #fff;
 }
 .subtitle{
   margin: 6px 0 0;
-  color: var(--muted);
-  font-size: .95rem;
+  color: var(--label-color);
+  font-size: var(--body-size);
+  font-weight: 450;
 }
 
 .actionsRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -451,14 +478,24 @@ input:focus,select:focus{
 .cardHeader{
   display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;
 }
-.cardTitle{margin:0;font-size:1rem;font-weight:700;letter-spacing:-.02em}
+.cardTitle{
+  margin:0;
+  font-size: var(--section-size);
+  font-weight: var(--section-weight);
+  letter-spacing: var(--section-letter);
+  color: rgba(255,255,255,.88);
+}
 .metric{
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -.04em;
   margin: 6px 0 0;
 }
-.small{color:var(--muted);font-size:.9rem}
+.small{
+  color: var(--micro-color);
+  font-size: var(--micro-size);
+  font-weight: 450;
+}
 .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .badge{
   display:inline-flex;align-items:center;gap:8px;
@@ -571,7 +608,11 @@ input:focus,select:focus{
 .miniCell:hover{transform:translateY(-1px);filter:brightness(1.15)}
 .miniHeatLegend{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--muted);font-size:12px}
 .miniHeatLegend .dot{width:12px;height:12px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
-.miniHeatLegend .dot.on{background:rgba(124,92,255,.55)}
+.miniHeatLegend .dot.l0{background:rgba(255,255,255,.04)}
+.miniHeatLegend .dot.l1{background:color-mix(in oklab, var(--accent2) 25%, rgba(255,255,255,.04))}
+.miniHeatLegend .dot.l2{background:color-mix(in oklab, var(--accent2) 45%, rgba(255,255,255,.04))}
+.miniHeatLegend .dot.l3{background:color-mix(in oklab, var(--accent2) 65%, rgba(255,255,255,.04))}
+.miniHeatLegend .dot.l4{background:color-mix(in oklab, var(--accent2) 85%, rgba(255,255,255,.04))}
 .miniHeatLegend .label{margin-left:auto;opacity:.85}
 
 /* Habits carousel */
@@ -791,3 +832,12 @@ input:focus,select:focus{
 .matrixDate .d1{font-size:1rem;}
 .matrixDate .d2{font-size:.78rem;}
 .analyticsCard #habitAnalytics, #habitAnalytics{width:100%;}
+
+
+/* Mini heatmap levels (0-4)
+   Each cell sets --heatP (percent of habit accent) */
+.miniCell{border-radius:6px;background: color-mix(in oklab, var(--habitAccent) var(--heatP, 8%), rgba(255,255,255,.05));}
+
+.miniCell{border-radius:6px;}
+.miniCell.l0{background: rgba(255,255,255,.05)}
+.miniCell.l1,.miniCell.l2,.miniCell.l3,.miniCell.l4{background: color-mix(in oklab, var(--habitAccent) 0%, rgba(255,255,255,.05))}

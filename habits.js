@@ -145,10 +145,39 @@ function escapeHtml(str){
 function today(){return isoToday();}
 function getMarkDate(){ return markDate.value ? markDate.value : today(); }
 
-function habitHue(id){
+const HUE_PALETTE = [140, 260, 20, 200, 320, 80, 0, 170, 240, 300, 110, 30];
+
+function habitHueFrom(id){
   let hash=0;
   for(let i=0;i<id.length;i++) hash=id.charCodeAt(i)+((hash<<5)-hash);
-  return Math.abs(hash)%360;
+  return Math.abs(hash);
+}
+
+function ensureHabitHues(){
+  const used = new Set(habits.map(h=>h.hue).filter(v=>typeof v==="number"));
+  let changed = false;
+  for(const h of habits){
+    if(typeof h.hue !== "number"){
+      // pick next unused palette hue; fallback to hashed palette slot
+      let hue = null;
+      for(const candidate of HUE_PALETTE){
+        if(!used.has(candidate)){ hue=candidate; break; }
+      }
+      if(hue === null){
+        hue = HUE_PALETTE[habitHueFrom(h.id)%HUE_PALETTE.length];
+      }
+      h.hue = hue;
+      used.add(hue);
+      changed = true;
+    }
+  }
+  if(changed) save();
+}
+
+function habitHue(id){
+  const h = habits.find(x=>x.id===id);
+  if(h && typeof h.hue==="number") return h.hue;
+  return HUE_PALETTE[habitHueFrom(id)%HUE_PALETTE.length];
 }
 
 function lastNDates(n=21){
@@ -268,26 +297,45 @@ function completionRate(days){
 }
 
 // Mini GitHub-style heatmap: last 28 days (4 weeks)
+// Mini GitHub-style heatmap: last 28 days (4 weeks)
+// 5 levels based on *consecutive* completions ending on each day (caps at 4).
 function miniHeatHtml(h){
   const days=28;
   const now=new Date(today()+"T00:00:00");
   const set=new Set(h.datesDone||[]);
   const cells=[];
+  let streak=0;
+
+  // We render oldest -> newest so streak is meaningful.
   for(let i=days-1;i>=0;i--){
     const d=new Date(now); d.setDate(now.getDate()-i);
     const iso=d.toISOString().slice(0,10);
     const on=set.has(iso);
-    const hue=habitHue(h.id);
-    const accent=`hsl(${hue} 70% 55%)`;
-    const p=on?0.75:0.10;
-    cells.push(`<div class="miniCell" style="background: color-mix(in oklab, ${accent} ${Math.round(p*100)}%, rgba(255,255,255,.05))"></div>`);
+
+    streak = on ? Math.min(4, streak+1) : 0; // 0..4
+    const level = streak;
+
+    // map level -> percent of accent used in color-mix (deterministic, non-random)
+    const PCTS = [8, 22, 38, 56, 78];
+    const heatP = PCTS[level];
+
+    const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
+    cells.push(
+      `<div class="miniCell" title="${iso}" style="--habitAccent:${accent};--heatP:${heatP}%"></div>`
+    );
   }
+
   return `
     <div class="miniHeatWrap">
       <div class="miniHeat">${cells.join("")}</div>
-      <div class="miniHeatLegend"><span class="dot"></span><span class="dot on"></span><span class="label">last 4 weeks</span></div>
+      <div class="miniHeatLegend">
+        <span class="dot l0"></span><span class="dot l1"></span><span class="dot l2"></span><span class="dot l3"></span><span class="dot l4"></span>
+        <span class="label">last 4 weeks</span>
+      </div>
     </div>
   `;
+}
+
 }
 
 // ---------- Analytics (Matrix) ----------
