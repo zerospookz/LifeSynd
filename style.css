@@ -719,17 +719,28 @@ input:focus,select:focus{
 }
 
 .matrixHabit{ position: relative; }
-.matrixDelete{
+
+/* Hold-to-delete progress (Habits analytics header) */
+.matrixHabit .holdBar{
   position:absolute;
-  top:4px;
-  right:6px;
-  background:none;
-  border:none;
-  color:rgba(255,255,255,.45);
-  font-size:12px;
-  cursor:pointer;
+  left:10px;
+  right:10px;
+  bottom:8px;
+  height:4px;
+  border-radius:999px;
+  background: rgba(255,255,255,.14);
+  overflow:hidden;
+  opacity:0;
+  transition: opacity .12s ease;
 }
-.matrixDelete:hover{ color:#fff; }
+.matrixHabit .holdBar::after{
+  content:"";
+  display:block;
+  height:100%;
+  width: calc(var(--hold, 0) * 100%);
+  background: color-mix(in oklab, var(--habit-accent) 75%, rgba(255,255,255,.35));
+}
+.matrixHabit.holding .holdBar{ opacity:1; }
 
 /* --- Bigger Heatmap --- */
 .matrixWrap{

@@ -26,6 +26,19 @@ function fmtMonthDay(iso){
   return res;
 }
 
+// Forward-looking range (start at today+offset and go forward)
+function rangeDatesForward(rangeDays, offsetDays){
+  const start = new Date();
+  start.setDate(start.getDate() + (offsetDays||0));
+  const res=[];
+  for(let i=0;i<rangeDays;i++){
+    const x=new Date(start);
+    x.setDate(start.getDate()+i);
+    res.push(x.toISOString().slice(0,10));
+  }
+  return res;
+}
+
 
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
@@ -218,7 +231,7 @@ function renderAnalytics(){
     <div class="matrixWrap"><div class="matrixGrid" id="matrixGrid"></div></div>
 
     <div class="matrixHelp">
-      <div class="matrixHint">Tip: drag to paint. Hold Shift to erase temporarily. Use ✕ to remove a habit.</div>
+      <div class="matrixHint">Tip: drag to paint. Hold Shift to erase temporarily. Hold a habit name for 4s to remove it.</div>
     </div>
   `;
 
@@ -268,7 +281,10 @@ function renderAnalytics(){
     return;
   }
 
-  const dates = rangeDates(range, analyticsOffsetDays);
+  // Week view should look forward (today → next 14 days). Month view remains historical.
+  const dates = analyticsView === "week"
+    ? rangeDatesForward(range, analyticsOffsetDays)
+    : rangeDates(range, analyticsOffsetDays);
   const dateCol = 190;
   // compute cell size to fill available width when there are few habits
   const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
@@ -289,7 +305,10 @@ function renderAnalytics(){
 
   const corner = document.createElement("div");
   corner.className = "matrixCorner";
-  corner.textContent = "Date";
+  corner.innerHTML = `
+    <div style="font-weight:800">Dates</div>
+    <div class="small" style="margin-top:4px;opacity:.85">${fmtMonthDay(dates[0])} → ${fmtMonthDay(dates[dates.length-1])}</div>
+  `;
   header.appendChild(corner);
 
   habits.forEach(h=>{
@@ -297,15 +316,45 @@ function renderAnalytics(){
     el.className = "matrixHabit";
     el.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
     el.title = h.name;
-    el.innerHTML = `<span>${escapeHtml(h.name)}</span><button class="matrixDelete" title="Remove habit" type="button">✕</button>`;
-    el.querySelector(".matrixDelete").onclick = (ev)=>{
-      ev.stopPropagation();
-      if(confirm("Remove habit?")){
+    el.innerHTML = `<span>${escapeHtml(h.name)}</span><div class="holdBar" aria-hidden="true"></div>`;
+
+    // Hold-to-delete (4 seconds)
+    let holdTimer = null;
+    let raf = null;
+    let holdStart = 0;
+    const HOLD_MS = 4000;
+
+    function clearHold(){
+      if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+      if(raf){ cancelAnimationFrame(raf); raf = null; }
+      el.classList.remove("holding");
+      el.style.removeProperty("--hold");
+    }
+
+    function tick(){
+      const t = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
+      el.style.setProperty("--hold", String(t));
+      if(t < 1) raf = requestAnimationFrame(tick);
+    }
+
+    el.addEventListener("pointerdown", (ev)=>{
+      // Only primary button / touch
+      if(ev.button != null && ev.button !== 0) return;
+      holdStart = performance.now();
+      el.classList.add("holding");
+      tick();
+      holdTimer = setTimeout(()=>{
+        clearHold();
         habits = habits.filter(x=>x.id!==h.id);
         save();
+        showToast("Habit removed");
         render();
-      }
-    };
+      }, HOLD_MS);
+    });
+    ["pointerup","pointercancel","pointerleave"].forEach(evt=>{
+      el.addEventListener(evt, clearHold);
+    });
+
     header.appendChild(el);
   });
 
