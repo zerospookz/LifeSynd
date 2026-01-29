@@ -103,6 +103,26 @@
 </div>
 </main>
 </div>
+
+<!-- Add habit modal (used on phone screens instead of browser prompt) -->
+<div class="modal" id="addHabitModal" aria-hidden="true">
+  <div class="modalBackdrop" data-close></div>
+  <div class="modalSheet" role="dialog" aria-modal="true" aria-label="Add habit">
+    <div class="modalHeader">
+      <div class="modalTitle">Add habit</div>
+      <button class="iconBtn" id="addHabitClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modalBody">
+      <input class="input modalInput" id="addHabitModalInput" placeholder="Habit name (e.g., Water 5 cups)" maxlength="28" />
+      <div class="small">Keep it short and measurable.</div>
+    </div>
+    <div class="modalActions">
+      <button class="btn ghost" id="addHabitCancel">Cancel</button>
+      <button class="btn primary" id="addHabitConfirm">Add</button>
+    </div>
+  </div>
+</div>
+
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="habits.js"></script>
 </body></html>

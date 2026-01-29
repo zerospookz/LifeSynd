@@ -1081,6 +1081,81 @@ input:focus,select:focus{
     box-shadow: 0 0 0 3px rgba(99,102,241,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
   }
 
+  /* Add-habit click animation */
+  @keyframes pillPop{
+    0%{transform: scale(1)}
+    45%{transform: scale(0.96)}
+    100%{transform: scale(1)}
+  }
+  .heroPill.pillPop{animation: pillPop .18s ease-out}
+
+  /* Mobile add-habit modal */
+  .modal{display:none}
+  .modal.open{display:block}
+  .modalBackdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.48);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+  }
+  .modalSheet{
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 201;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(16,18,32,0.92);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+    padding: 14px;
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  .modal.open .modalSheet{
+    animation: sheetUp .18s ease-out forwards;
+  }
+  @keyframes sheetUp{
+    from{transform: translateY(16px); opacity:0}
+    to{transform: translateY(0); opacity:1}
+  }
+  .modalHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 10px;
+  }
+  .modalTitle{font-weight: 750; letter-spacing: -.01em}
+  .iconBtn{
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.9);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .iconBtn::after{opacity:0}
+  .iconBtn:active{transform: translateY(1px)}
+  .modalBody{display:flex; flex-direction:column; gap:8px}
+  .modalActions{display:flex; gap:10px; justify-content:flex-end; margin-top: 12px}
+  .modalActions .btn{min-width: 92px}
+
+  @keyframes shake{
+    0%,100%{transform: translateX(0)}
+    20%{transform: translateX(-4px)}
+    40%{transform: translateX(4px)}
+    60%{transform: translateX(-3px)}
+    80%{transform: translateX(3px)}
+  }
+  .modalInput.shake{animation: shake .24s ease-in-out}
+
+  /* prevent background scroll when modal is open */
+  .modalOpen{overflow:hidden}
+
   .tabPanel{display:none}
   .tabPanel.active{display:block}
 

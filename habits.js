@@ -255,18 +255,65 @@ function ensureUniqueHues(){
   if(changed) save();
 }
 
-function openAddHabit(){
+function openAddHabit(triggerEl){
   const isPhone = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
   const card = document.getElementById('addCard');
   if(isPhone){
-    const name = prompt('New habit name:');
-    if(name===null) return;
-    addHabitNamed(name);
+    openAddHabitModal(triggerEl);
     return;
   }
   if(card) card.classList.toggle('open');
   const input = document.getElementById('habitName');
   input && input.focus && input.focus();
+}
+
+function openAddHabitModal(triggerEl){
+  const modal = document.getElementById('addHabitModal');
+  const input = document.getElementById('addHabitModalInput');
+  if(!modal || !input){
+    // Safe fallback
+    const name = prompt('New habit name:');
+    if(name===null) return;
+    addHabitNamed(name);
+    return;
+  }
+
+  // Button pop animation
+  if(triggerEl && triggerEl.classList){
+    triggerEl.classList.remove('pillPop');
+    // force reflow to restart animation
+    void triggerEl.offsetWidth;
+    triggerEl.classList.add('pillPop');
+  }
+
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.documentElement.classList.add('modalOpen');
+  input.value = '';
+  setTimeout(()=>input.focus(), 60);
+}
+
+function closeAddHabitModal(){
+  const modal = document.getElementById('addHabitModal');
+  if(!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.documentElement.classList.remove('modalOpen');
+}
+
+function confirmAddHabitModal(){
+  const input = document.getElementById('addHabitModalInput');
+  if(!input) return;
+  const name = (input.value || '').trim();
+  if(!name){
+    input.classList.remove('shake');
+    void input.offsetWidth;
+    input.classList.add('shake');
+    input.focus();
+    return;
+  }
+  addHabitNamed(name);
+  closeAddHabitModal();
 }
 
 function addHabit(){
@@ -1020,8 +1067,7 @@ function renderHero(){
         </div>
       </div>
       <div class="heroActions">
-        <button class="heroPill" onclick="setAnalyticsOffset(0)">Today</button>
-        <button class="heroPill onlyMobile" onclick="openAddHabit()">Add habit</button>
+        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
       </div>
     </div>
   `;
@@ -1111,21 +1157,30 @@ function wireHabitsLayout(){
 
   const newBtn = document.getElementById("newHabitBtn");
   const newBtn2 = document.getElementById("appNewHabitBtn");
-  const showAddCard = ()=>{
-    const card = document.getElementById("addCard");
-    if(card) card.classList.toggle("open");
-    const input = document.getElementById("habitName");
-    input && input.focus && input.focus();
-  };
+  if(newBtn) newBtn.addEventListener("click", (e)=>openAddHabit(e.currentTarget));
+  if(newBtn2) newBtn2.addEventListener("click", (e)=>openAddHabit(e.currentTarget));
 
-  
+  // Add-habit modal wiring (mobile-friendly)
+  const modal = document.getElementById('addHabitModal');
+  if(modal && !modal.__wired){
+    modal.__wired = true;
+    const input = document.getElementById('addHabitModalInput');
+    const close = document.getElementById('addHabitClose');
+    const cancel = document.getElementById('addHabitCancel');
+    const confirm = document.getElementById('addHabitConfirm');
+    const backdrop = modal.querySelector('[data-close]');
 
-  if(newBtn) newBtn.addEventListener("click", openAddHabit);
-  if(newBtn2){
-    newBtn2.addEventListener("click", ()=>{
-      // On phone screens, go straight to a prompt so adding a habit is always accessible.
-      if(window.matchMedia && window.matchMedia("(max-width: 760px)").matches) addFromPrompt();
-      else showAddCard();
+    const onClose = ()=>closeAddHabitModal();
+    close && close.addEventListener('click', onClose);
+    cancel && cancel.addEventListener('click', onClose);
+    backdrop && backdrop.addEventListener('click', onClose);
+    confirm && confirm.addEventListener('click', ()=>confirmAddHabitModal());
+    input && input.addEventListener('keydown', (ev)=>{
+      if(ev.key==='Enter') confirmAddHabitModal();
+      if(ev.key==='Escape') onClose();
+    });
+    document.addEventListener('keydown', (ev)=>{
+      if(ev.key==='Escape' && modal.classList.contains('open')) onClose();
     });
   }
 
