@@ -565,29 +565,9 @@ input:focus,select:focus{
 }
 .select:focus{box-shadow:0 0 0 4px rgba(124,92,255,.18)}
 .analyticsContext{display:flex;justify-content:space-between;gap:10px;margin-top:8px;margin-bottom:10px}
-.miniHeatWrap{margin-top:12px}
-.miniHeat{display:grid;grid-template-columns:repeat(7, 1fr);gap:6px}
-.miniCell{height:12px;border-radius:6px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);transition:transform .12s ease, filter .12s ease, box-shadow .12s ease}
+.miniHeat{display:grid;grid-template-columns:repeat(7, 1fr);gap:6px;margin-top:12px}
+.miniCell{height:10px;border-radius:8px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);transition:transform .12s ease, filter .12s ease, box-shadow .12s ease}
 .miniCell:hover{transform:translateY(-1px);filter:brightness(1.15)}
-.miniHeatLegend{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--muted);font-size:12px}
-.miniHeatLegend .dot{width:12px;height:12px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
-.miniHeatLegend .dot.on{background:rgba(124,92,255,.55)}
-.miniHeatLegend .label{margin-left:auto;opacity:.85}
-
-/* Habits carousel */
-.habitCarousel{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:stretch}
-.habitViewport{overflow:hidden;border-radius:18px}
-.habitTrack{display:flex;width:100%;transform:translateX(0%)}
-.habitSlide{flex:0 0 100%}
-.habitDots{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:10px}
-.dotBtn{width:10px;height:10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);cursor:pointer}
-.dotBtn.active{background:rgba(124,92,255,.6);border-color:rgba(124,92,255,.85)}
-
-/* Focus hint card */
-.hintCard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:12px 12px;cursor:pointer;user-select:none}
-.hintCard:hover{transform:translateY(-1px);box-shadow:0 16px 40px rgba(0,0,0,.35)}
-.hintTitle{font-weight:800;margin-bottom:4px}
-.hintBody{color:var(--text);opacity:.92;font-size:13px;line-height:1.35}
 
 
 /* Modern ring (donut) chart */
