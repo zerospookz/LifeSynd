@@ -1058,6 +1058,8 @@ function statusColorForPercent(pi){
   }
 }
 
+const __arcReactorState = new Map(); // key -> last integer pct rendered for arc reactors
+
 function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
   const seg = Math.max(3, Math.min(8, Number(segments)||5));
@@ -1066,7 +1068,13 @@ function setArcReactor(el, pct, segments){
   // percent step (1%, 2%, 3% ... target), like a true "filling" animation.
   // Start at 1% (when target > 0) so the user can visually see
   // 1%, 2%, 3% ... as distinct steps.
-  const existing = Number(el.dataset.curPct ?? el.style.getPropertyValue('--arc-p') ?? 0) || 0;
+  // Persist last rendered % across re-renders so the arc can continue (or rollback) from where it was.
+  const key = (el.id || el.getAttribute('data-key') || '').trim();
+  const stored = key && __arcReactorState.has(key) ? Number(__arcReactorState.get(key)) : NaN;
+  const inline = Number(el.dataset.curPct ?? el.style.getPropertyValue('--arc-p') ?? 0) || 0;
+  const existing = Number.isFinite(stored) ? stored : inline;
+
+  // If we have no prior state and target > 0, start at 1% so the user sees the first visible step.
   const prev = (existing > 0 || p <= 0) ? Math.max(0, Math.min(100, Math.round(existing))) : 1;
   el.dataset.pct = String(p);
 
@@ -1102,6 +1110,7 @@ function setArcReactor(el, pct, segments){
   el.style.backgroundImage = buildArcGradient(prev, seg, on, off);
   el.style.setProperty('--arc-p', String(prev));
   el.dataset.curPct = String(prev);
+  if(key) __arcReactorState.set(key, prev);
   if(pctEl) pctEl.textContent = `${prev}%`;
 
   // reset state
@@ -1147,6 +1156,7 @@ function setArcReactor(el, pct, segments){
       el.style.backgroundImage = buildArcGradient(lastInt, seg, on, off);
       el.style.setProperty('--arc-p', String(lastInt));
       el.dataset.curPct = String(lastInt);
+      if(key) __arcReactorState.set(key, lastInt);
       if(pctEl) pctEl.textContent = `${lastInt}%`;
     }
 
@@ -1167,6 +1177,7 @@ function setArcReactor(el, pct, segments){
     el.style.backgroundImage = buildArcGradient(p, seg, on, off);
     el.style.setProperty('--arc-p', String(p));
     el.dataset.curPct = String(p);
+    if(key) __arcReactorState.set(key, p);
     if(pctEl) pctEl.textContent = `${p}%`;
     el.classList.remove('charging');
     el.classList.add('charged');
