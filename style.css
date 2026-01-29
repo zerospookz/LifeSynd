@@ -347,10 +347,9 @@ input:focus,select:focus{
   font-weight: 650;
   letter-spacing: -.01em;
   color: color-mix(in oklab, var(--habit-accent) 72%, var(--text));
-  /* Allow long habit names to wrap inside the small header boxes */
-  white-space: normal;
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: clip;
+  text-overflow: ellipsis;
   text-align: center;
 }
 .matrixDate{
@@ -659,10 +658,6 @@ input:focus,select:focus{
 /* --- Habits Analytics upgrades --- */
 .analyticsCard{ margin-top: 18px; }
 .analyticsControls{ display:flex; gap:10px; align-items:center; justify-content:flex-end; }
-.analyticsDateFilters{ display:flex; gap:8px; align-items:flex-end; }
-.analyticsDateFilters .df{ display:flex; flex-direction:column; gap:4px; }
-.analyticsDateFilters .df span{ font-size:.68rem; color: var(--muted); letter-spacing:.06em; text-transform: uppercase; }
-.analyticsDateFilters input[type="date"]{ height:34px; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--text); }
 .seg{
   display:inline-flex;
   border: 1px solid rgba(255,255,255,.12);
@@ -769,7 +764,8 @@ input:focus,select:focus{
 
 /* --- Heatmap readability tweaks --- */
 .matrixHabit{font-size:.9rem; padding:12px 10px; white-space:normal; line-height:1.05;}
-.matrixHabit span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+/* Allow habit names to wrap (no ellipsis/clamp) */
+.matrixHabit span{display:block; white-space:normal; overflow:visible; word-break:break-word;}
 .matrixRow.today .matrixDate{border-color: color-mix(in oklab, var(--accent) 35%, rgba(255,255,255,.12)); background: rgba(255,255,255,.05);}
 .matrixRow.today .matrixDate .d1{color: var(--text);}
 .matrixDate .d1{font-size:1rem;}

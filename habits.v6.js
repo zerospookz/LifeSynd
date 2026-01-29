@@ -4,10 +4,6 @@ let analyticsView = localStorage.getItem("habitsAnalyticsView") || "month";
 let analyticsOffsetDays = parseInt(localStorage.getItem("habitsAnalyticsOffsetDays") || "0", 10);
 let analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || "mark"; // mark | erase
 
-// Optional custom date filter (inclusive). If set, the matrix is filtered to this range.
-let analyticsFrom = localStorage.getItem("habitsAnalyticsFrom") || ""; // yyyy-mm-dd
-let analyticsTo   = localStorage.getItem("habitsAnalyticsTo")   || ""; // yyyy-mm-dd
-
 function rangeDates(rangeDays, offsetDays){
   const base = new Date();
   base.setDate(base.getDate() + (offsetDays||0));
@@ -17,51 +13,18 @@ function rangeDates(rangeDays, offsetDays){
     x.setDate(base.getDate()-i);
     res.push(x.toISOString().slice(0,10));
   }
+
   return res;
 }
 
+// Format ISO date (YYYY-MM-DD) to e.g. "Jan 29"
 function fmtMonthDay(iso){
   const d = new Date(iso+"T00:00:00");
   try{
-    return new Intl.DateTimeFormat(undefined,{month:"short", day:"2-digit"}).format(d);
+    return new Intl.DateTimeFormat(undefined,{month:"short", day:"numeric"}).format(d);
   }catch(e){
     return iso.slice(5);
   }
-}
-
-function clampIso(iso){
-  // Basic guard for empty/invalid values
-  if(!iso || typeof iso !== 'string' || iso.length < 10) return "";
-  return iso.slice(0,10);
-}
-
-function isoAddDays(iso, days){
-  const d = new Date(iso+"T00:00:00");
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0,10);
-}
-
-function rangeBetween(fromIso, toIso){
-  const from = new Date(fromIso+"T00:00:00");
-  const to = new Date(toIso+"T00:00:00");
-  if(Number.isNaN(+from) || Number.isNaN(+to)) return [];
-  const res=[];
-  const dir = from <= to ? 1 : -1;
-  const cur = new Date(from);
-  while(true){
-    res.push(cur.toISOString().slice(0,10));
-    if(cur.toISOString().slice(0,10) === to.toISOString().slice(0,10)) break;
-    cur.setDate(cur.getDate() + dir);
-    if(res.length > 120) break; // safety
-  }
-  return dir === 1 ? res : res.reverse();
-}
-
-function addDaysIso(iso, days){
-  if(!isIsoDate(iso)) return "";
-  const d = new Date(iso+"T00:00:00");
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0,10);
 }
 
 // Forward-looking range (start at today+offset and go forward)
@@ -72,40 +35,6 @@ function rangeDatesForward(rangeDays, offsetDays){
   for(let i=0;i<rangeDays;i++){
     const x=new Date(start);
     x.setDate(start.getDate()+i);
-    res.push(x.toISOString().slice(0,10));
-  }
-  return res;
-}
-
-function isIsoDate(s){
-  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
-}
-
-function clampRange(fromIso, toIso, maxDays){
-  if(!isIsoDate(fromIso) || !isIsoDate(toIso)) return {from:"", to:""};
-  if(toIso < fromIso){ const t=fromIso; fromIso=toIso; toIso=t; }
-  // Limit max span to keep UI usable
-  const fromD = new Date(fromIso+"T00:00:00");
-  const toD = new Date(toIso+"T00:00:00");
-  const diff = Math.floor((toD - fromD)/(24*3600*1000));
-  if(diff > maxDays-1){
-    const x = new Date(fromD);
-    x.setDate(fromD.getDate() + (maxDays-1));
-    toIso = x.toISOString().slice(0,10);
-  }
-  return {from:fromIso, to:toIso};
-}
-
-function rangeBetween(fromIso, toIso){
-  if(!isIsoDate(fromIso) || !isIsoDate(toIso)) return [];
-  if(toIso < fromIso){ const t=fromIso; fromIso=toIso; toIso=t; }
-  const res=[];
-  const d0 = new Date(fromIso+"T00:00:00");
-  const d1 = new Date(toIso+"T00:00:00");
-  const days = Math.floor((d1 - d0)/(24*3600*1000));
-  for(let i=0;i<=days;i++){
-    const x = new Date(d0);
-    x.setDate(d0.getDate()+i);
     res.push(x.toISOString().slice(0,10));
   }
   return res;
@@ -297,24 +226,13 @@ function renderAnalytics(){
         <button class="btn ghost" id="calPrev" type="button">←</button>
         <button class="btn ghost" id="calToday" type="button">Today</button>
         <button class="btn ghost" id="calNext" type="button">→</button>
-
-        <div class="analyticsDateFilters" title="Filter the matrix by a specific date range">
-          <label class="df">
-            <span>From</span>
-            <input id="analyticsFrom" type="date">
-          </label>
-          <label class="df">
-            <span>To</span>
-            <input id="analyticsTo" type="date">
-          </label>
-        </div>
       </div>
     </div>
 
     <div class="matrixWrap"><div class="matrixGrid" id="matrixGrid"></div></div>
 
     <div class="matrixHelp">
-      <div class="matrixHint">Tip: drag to paint. Hold Shift to erase temporarily. Hold a habit name for 4s to remove it.</div>
+      <div class="matrixHint">Tip: hold then drag to paint. Hold Shift to erase temporarily. Hold a habit name for 2.5s to remove it.</div>
     </div>
   `;
 
@@ -344,39 +262,18 @@ function renderAnalytics(){
 
   // calendar navigation
   card.querySelector("#calPrev").addEventListener("click", ()=>{
-    const hasCustom = isIsoDate(analyticsFrom) && isIsoDate(analyticsTo);
-    if(hasCustom){
-      analyticsFrom = addDaysIso(analyticsFrom, -step);
-      analyticsTo = addDaysIso(analyticsTo, -step);
-      localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
-      localStorage.setItem("habitsAnalyticsTo", analyticsTo);
-    }else{
-      analyticsOffsetDays -= step;
-      localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
-    }
+    analyticsOffsetDays -= step;
+    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
     renderAnalytics();
   });
   card.querySelector("#calNext").addEventListener("click", ()=>{
-    const hasCustom = isIsoDate(analyticsFrom) && isIsoDate(analyticsTo);
-    if(hasCustom){
-      analyticsFrom = addDaysIso(analyticsFrom, step);
-      analyticsTo = addDaysIso(analyticsTo, step);
-      localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
-      localStorage.setItem("habitsAnalyticsTo", analyticsTo);
-    }else{
-      analyticsOffsetDays += step;
-      localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
-    }
+    analyticsOffsetDays += step;
+    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
     renderAnalytics();
   });
   card.querySelector("#calToday").addEventListener("click", ()=>{
     analyticsOffsetDays = 0;
     localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
-    // Reset custom filter
-    analyticsFrom = "";
-    analyticsTo = "";
-    localStorage.removeItem("habitsAnalyticsFrom");
-    localStorage.removeItem("habitsAnalyticsTo");
     renderAnalytics();
   });
 
@@ -385,24 +282,10 @@ function renderAnalytics(){
     return;
   }
 
-  // Week view defaults to forward-looking (today → next 14 days). Month view remains historical.
-  // If the user picks a custom From/To, we use that inclusive range (clamped to the current view limit).
-  let dates;
-  const maxSpan = analyticsView === "week" ? 14 : 60;
-  const hasCustom = isIsoDate(analyticsFrom) && isIsoDate(analyticsTo);
-  if(hasCustom){
-    const cl = clampRange(analyticsFrom, analyticsTo, maxSpan);
-    // Persist any clamping/swap that happened
-    analyticsFrom = cl.from;
-    analyticsTo = cl.to;
-    localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
-    localStorage.setItem("habitsAnalyticsTo", analyticsTo);
-    dates = rangeBetween(analyticsFrom, analyticsTo);
-  }else{
-    dates = analyticsView === "week"
-      ? rangeDatesForward(range, analyticsOffsetDays)
-      : rangeDates(range, analyticsOffsetDays);
-  }
+  // Week view should look forward (today → next 14 days). Month view remains historical.
+  const dates = analyticsView === "week"
+    ? rangeDatesForward(range, analyticsOffsetDays)
+    : rangeDates(range, analyticsOffsetDays);
   const dateCol = 190;
   // compute cell size to fill available width when there are few habits
   const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
@@ -413,40 +296,6 @@ function renderAnalytics(){
   const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, habits.length))));
   grid.style.setProperty("--dateCol", dateCol+"px");
   grid.style.setProperty("--cell", cell+"px");
-
-  // Wire up date filter inputs
-  const fromInput = card.querySelector("#analyticsFrom");
-  const toInput = card.querySelector("#analyticsTo");
-  if(fromInput && toInput){
-    // Show current matrix range in inputs when no custom filter is set
-    if(!hasCustom){
-      fromInput.value = dates[0] || "";
-      toInput.value = dates[dates.length-1] || "";
-    }else{
-      fromInput.value = analyticsFrom;
-      toInput.value = analyticsTo;
-    }
-
-    const applyDateFilter = ()=>{
-      const f = fromInput.value;
-      const t = toInput.value;
-      if(isIsoDate(f) && isIsoDate(t)){
-        analyticsFrom = f;
-        analyticsTo = t;
-        localStorage.setItem("habitsAnalyticsFrom", analyticsFrom);
-        localStorage.setItem("habitsAnalyticsTo", analyticsTo);
-      }else{
-        analyticsFrom = "";
-        analyticsTo = "";
-        localStorage.removeItem("habitsAnalyticsFrom");
-        localStorage.removeItem("habitsAnalyticsTo");
-      }
-      renderAnalytics();
-    };
-
-    fromInput.onchange = applyDateFilter;
-    toInput.onchange = applyDateFilter;
-  }
 
   const colTemplate = `var(--dateCol) repeat(${habits.length}, var(--cell))`;
 
@@ -470,11 +319,11 @@ function renderAnalytics(){
     el.title = h.name;
     el.innerHTML = `<span>${escapeHtml(h.name)}</span><div class="holdBar" aria-hidden="true"></div>`;
 
-    // Hold-to-delete (4 seconds)
+    // Hold-to-delete (2.5 seconds)
     let holdTimer = null;
     let raf = null;
     let holdStart = 0;
-    const HOLD_MS = 4000;
+    const HOLD_MS = 2500;
 
     function clearHold(){
       if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
@@ -543,11 +392,15 @@ function renderAnalytics(){
     grid.appendChild(row);
   });
 
-  // interactions: click vs drag threshold
+  // interactions: tap to toggle, hold then drag to paint
   let dragging = false;
   let dragStarted = false;
   let dragStartX = 0;
   let dragStartY = 0;
+  let dragHoldTimer = null;
+  let dragPrimed = false;
+  let dragStartCell = null;
+  const DRAG_HOLD_MS = 380; // must hold this long before painting
   let targetDone = true;
   let touched = new Set();
   let dirty = false;
@@ -586,6 +439,9 @@ function renderAnalytics(){
   }
 
   function endDrag(){
+    if(dragHoldTimer){ clearTimeout(dragHoldTimer); dragHoldTimer = null; }
+    dragPrimed = false;
+    dragStartCell = null;
     if(!dragging && !dragStarted) return;
     if(dirty) save();
     dirty = false;
@@ -602,11 +458,22 @@ function renderAnalytics(){
     dragStartY = e.clientY;
     dragStarted = false;
     dragging = false;
+    dragPrimed = true;
+    dragStartCell = cell;
     touched = new Set();
     dirty = false;
 
     targetDone = (analyticsPaintMode==="erase" ? false : !cell.classList.contains("done"));
     if(e.shiftKey) targetDone = false;
+
+    // Arm paint mode only after a short hold. If user releases quickly, it's just a tap.
+    if(dragHoldTimer){ clearTimeout(dragHoldTimer); }
+    dragHoldTimer = setTimeout(()=>{
+      if(!dragPrimed) return;
+      dragStarted = true;
+      dragging = true;
+      applyCell(dragStartCell);
+    }, DRAG_HOLD_MS);
 
     grid.setPointerCapture?.(e.pointerId);
   });
@@ -615,13 +482,15 @@ function renderAnalytics(){
     const dx = Math.abs(e.clientX - dragStartX);
     const dy = Math.abs(e.clientY - dragStartY);
 
-    if(!dragStarted && (dx > 6 || dy > 6)){
-      dragStarted = true;
-      dragging = true;
-      e.preventDefault();
+    // If user starts moving before holding long enough, treat it as scroll/hover and cancel drag.
+    if(!dragging && (dx > 12 || dy > 12)){
+      if(dragHoldTimer){ clearTimeout(dragHoldTimer); dragHoldTimer = null; }
+      dragPrimed = false;
+      return;
     }
     if(!dragging) return;
 
+    e.preventDefault();
     if(e.shiftKey) targetDone = false;
     const el = document.elementFromPoint(e.clientX, e.clientY);
     const cell = el ? el.closest(".matrixCell") : null;
