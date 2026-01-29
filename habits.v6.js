@@ -438,11 +438,17 @@ function renderAnalytics(){
     }
   }
 
-  function endDrag(){
+  function endDrag(e){
     if(dragHoldTimer){ clearTimeout(dragHoldTimer); dragHoldTimer = null; }
+
+    // If we never entered paint mode, treat this as a tap toggle (desktop-safe).
+    if(dragPrimed && !dragStarted && dragStartCell){
+      toggleHabitAt(dragStartCell.dataset.hid, dragStartCell.dataset.iso, {preserveScroll:true});
+    }
+
     dragPrimed = false;
     dragStartCell = null;
-    if(!dragging && !dragStarted) return;
+
     if(dirty) save();
     dirty = false;
     touched = new Set();
@@ -500,10 +506,6 @@ function renderAnalytics(){
   grid.addEventListener("pointerup", endDrag);
   grid.addEventListener("pointercancel", endDrag);
   grid.addEventListener("lostpointercapture", endDrag);
-
-  grid.addEventListener("click", (e)=>{
-    if(dragStarted) return;
-    const cell = e.target.closest(".matrixCell");
     if(!cell) return;
     toggleHabitAt(cell.dataset.hid, cell.dataset.iso, {preserveScroll:true});
   });
