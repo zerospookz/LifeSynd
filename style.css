@@ -367,6 +367,12 @@ input:focus,select:focus{
   color: var(--muted);
   letter-spacing: .08em;
   text-transform: uppercase;
+  /* Keep the "green" active block anchored to top-left on mobile/desktop */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 .matrixHabit{
   --habit-accent: var(--accent);
@@ -423,15 +429,38 @@ input:focus,select:focus{
   color: rgba(255,255,255,.92);
 }
 
-/* Mobile day chip: allow month/day to stack cleanly */
-.matrixDayHead .m{display:block; font-weight:800; line-height:1.05}
-.matrixDayHead .n{display:block; font-weight:850; line-height:1.05}
+/* Mobile day chip: month / day+weekday in exactly 2 rows */
+.matrixDayHead{ overflow: hidden; }
+.matrixDayHead .d1, .matrixDayHead .d2{ line-height: 1.05; }
+.matrixDayHead .m{
+  display:block;
+  font-weight: 850;
+  font-size: clamp(.66rem, 2.2vw, .82rem);
+  letter-spacing: .02em;
+}
+.matrixDayHead .d2{
+  display:flex;
+  gap: .18rem;
+  justify-content: center;
+  align-items: baseline;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.matrixDayHead .n{
+  font-weight: 900;
+  font-size: clamp(.78rem, 2.7vw, .98rem);
+}
+.matrixDayHead .w{
+  font-weight: 750;
+  font-size: clamp(.62rem, 2.0vw, .78rem);
+  opacity: .9;
+}
 
 @media (max-width: 520px){
   .matrixDayHead{padding: 7px 6px; border-radius: 10px}
-  .matrixDayHead .m{font-size: .70rem}
-  .matrixDayHead .n{font-size: .85rem}
-  .matrixDayHead .d2{font-size: .60rem; margin-top: 1px}
+  /* sizes handled via clamp(); keep only spacing tweaks here */
+  .matrixDayHead .d2{ margin-top: 1px }
 }
 
 .matrixDayHead{
@@ -443,15 +472,14 @@ input:focus,select:focus{
   font-weight: 750;
   letter-spacing: -.01em;
 }
-.matrixDayHead .d1{font-size:.95rem}
-.matrixDayHead .d2{font-size:.75rem;color:var(--muted);margin-top:2px}
-.matrixDayHead .d2{font-size:.75rem;color:var(--muted);margin-top:2px}
+.matrixDayHead .d1{margin-top: 0}
+.matrixDayHead .d2{color:var(--muted);margin-top:2px}
 
 @media (max-width: 420px){
   /* Tighter day chips so dates stay fully inside their boxes on small screens */
   .matrixDayHead{padding: 6px 6px; border-radius: 10px}
-  .matrixDayHead .d1{font-size: .78rem; line-height: 1.05; word-break: break-word}
-  .matrixDayHead .d2{font-size: .62rem; margin-top: 1px}
+  .matrixDayHead .d1{word-break: break-word}
+  .matrixDayHead .d2{ margin-top: 1px }
 }
 .matrixCell{touch-action:none;
   --habit-accent: var(--accent);

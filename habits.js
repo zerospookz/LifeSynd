@@ -698,7 +698,10 @@ function renderAnalytics(){
     dates.forEach(iso=>{
       const d = document.createElement("div");
       d.className = "matrixDayHead";
-      // On small screens, stack month + day so "Feb" never escapes the chip.
+      // Mobile day chip: keep month/day/weekday INSIDE the chip.
+      // Requirement: month / day / weekday -> always in 2 rows.
+      // Row 1: month
+      // Row 2: day + weekday
       const dd = new Date(iso+"T00:00:00");
       let mon = "";
       let day = "";
@@ -709,7 +712,11 @@ function renderAnalytics(){
         mon = iso.slice(5,7);
         day = iso.slice(8,10);
       }
-      d.innerHTML = `<div class="d1"><span class="m">${mon}</span><span class="n">${day}</span></div><div class="d2">${fmtWeekday(iso)}</div>`;
+      const wd = fmtWeekday(iso);
+      d.innerHTML = `
+        <div class="d1"><span class="m">${mon}</span></div>
+        <div class="d2"><span class="n">${day}</span><span class="w">${wd}</span></div>
+      `;
       header.appendChild(d);
     });
 
