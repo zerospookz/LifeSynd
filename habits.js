@@ -710,9 +710,13 @@ function renderInsights(){
     </div>
     <p class="small" style="margin-top:10px">Mark habits in the Analytics grid above.</p>
     ${weakest?`
-      <div class="hintCard" style="margin-top:12px" id="weakestHint" role="button" tabindex="0" aria-label="Jump to weakest habit">
-        <div class="hintTitle">🧠 Focus hint</div>
-        <div class="hintBody">Weakest habit: <strong>${escapeHtml(weakest.h.name)}</strong> — ${weakest.done}/${weakest.days} days in the last 2 weeks. Tap to jump.</div>
+      <div class="hintCard compact" style="margin-top:12px" id="weakestHint" role="button" tabindex="0" aria-label="Jump to weakest habit">
+        <div class="hintIcon">🧠</div>
+        <div class="hintText">
+          <div class="hintTitle">Focus hint</div>
+          <div class="hintBody">Weakest: <strong>${escapeHtml(weakest.h.name)}</strong> • ${weakest.done}/${weakest.days} in last 2 weeks</div>
+        </div>
+        <div class="hintCta">Jump →</div>
       </div>
     `:""}
   `;
@@ -735,15 +739,29 @@ function renderStreakSummary(){
   const stats=habits.map(h=>({h, s:streakFor(h)}));
   stats.sort((a,b)=>b.s.current-a.s.current);
   const top=stats.slice(0,4);
+  const maxCurrent = Math.max(1, ...top.map(x=>x.s.current));
   el.innerHTML=`
     <div class="cardHeader">
       <h3 class="cardTitle">Streaks</h3>
       <span class="badge">Top</span>
     </div>
-    ${top.map(x=>`<div class="row" style="justify-content:space-between;margin:10px 0">
-      <div><strong>${escapeHtml(x.h.name)}</strong><div class="small">Best ${x.s.best}</div></div>
-      <div class="pill">${x.s.current} days</div>
-    </div>`).join("")}
+    <div class="streakList">
+      ${top.map(x=>{
+        const pct = Math.round((x.s.current / maxCurrent) * 100);
+        return `
+          <div class="streakItem">
+            <div class="streakMeta">
+              <div class="streakName">${escapeHtml(x.h.name)}</div>
+              <div class="streakSub">Best ${x.s.best}</div>
+            </div>
+            <div class="streakRight">
+              <div class="pill">${x.s.current}d</div>
+            </div>
+            <div class="streakBar"><div class="streakFill" style="width:${pct}%"></div></div>
+          </div>
+        `;
+      }).join("")}
+    </div>
   `;
 }
 
