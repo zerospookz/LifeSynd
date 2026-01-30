@@ -1492,9 +1492,13 @@ font-weight: 750;
 
 /* Sidebar nav icons */
 .sidebar .navIcon{
-  width: 30px;
-  height: 30px;
-  font-size: 22px;
+  width: clamp(22px, 2.6vw, 30px);
+  height: clamp(22px, 2.6vw, 30px);
+  display:inline-block;
+  object-fit: contain;
+  vertical-align: -3px;
+  margin-right: 8px;
+  filter: brightness(1.18) saturate(1.25);
 }
 
 /* Toolbar / header icons */
@@ -1796,4 +1800,16 @@ font-weight: 750;
 @media (max-width: 520px){
   .navIcon{ width: 14px; height: 14px; margin-right: 6px; }
   .navIconBottom{ width: 15px; height: 15px; margin-right: 5px; }
+}
+
+.bottomNav .navIcon{
+  width: clamp(20px, 5.0vw, 28px);
+  height: clamp(20px, 5.0vw, 28px);
+  margin-right: 0;
+  vertical-align: 0;
+}
+
+.nav a.active .navIcon,
+.bottomNav a.active .navIcon{
+  filter: brightness(1.25) saturate(1.35) drop-shadow(0 0 8px rgba(64,255,255,0.25));
 }
