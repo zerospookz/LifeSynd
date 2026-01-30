@@ -1007,13 +1007,37 @@ function renderInsights(){
 }
 
 function buildArcGradient(pct, segments, onColor, offColor){
-  // v18: smooth (non-segmented) arc. Keep existing logic, only visual.
+  const seg = Math.max(3, Math.min(8, segments||6));
   const p = Math.max(0, Math.min(100, Number(pct)||0));
-  const deg = p * 3.6;
-  const on = onColor || "rgba(255,214,102,.95)";
-  const off = offColor || "rgba(255,255,255,.08)";
-  // Start at top (-90deg). Arc fills smoothly, remainder is track.
-  return `conic-gradient(from -90deg, ${on} 0deg ${deg}deg, ${off} ${deg}deg 360deg)`;
+  const total = (p/100) * seg;
+  const full = Math.floor(total);
+  const partial = total - full;
+
+  const slice = 360/seg;
+  const gap = Math.min(10, slice*0.18); // degrees between segments
+  const fill = slice-gap;
+
+  const on = onColor || 'hsla(210, 100%, 70%, 0.95)';
+  const off = offColor || 'hsla(210, 35%, 45%, 0.18)';
+  const stops=[];
+
+  for(let i=0;i<seg;i++){
+    const a0 = i*slice;
+    const aFillEnd = a0 + fill;
+    const a2 = a0 + slice;
+
+    if(i < full){
+      stops.push(`${on} ${a0}deg ${aFillEnd}deg`);
+    }else if(i === full && partial > 0){
+      const aMid = a0 + (fill * partial);
+      stops.push(`${on} ${a0}deg ${aMid}deg`);
+      stops.push(`${off} ${aMid}deg ${aFillEnd}deg`);
+    }else{
+      stops.push(`${off} ${a0}deg ${aFillEnd}deg`);
+    }
+    stops.push(`transparent ${aFillEnd}deg ${a2}deg`);
+  }
+  return `conic-gradient(from -90deg, ${stops.join(',')})`;
 }
 
 
@@ -1059,67 +1083,132 @@ const __arcReactorState = new Map(); // key -> last integer pct rendered for arc
 
 function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
+  const seg = Math.max(3, Math.min(8, Number(segments)||5));
 
-  // Keep old behavior: easing animation + scheme coloring
+  // Always animate from 0 → target so the viewer can *see* every single
+  // percent step (1%, 2%, 3% ... target), like a true "filling" animation.
+  // Start at 1% (when target > 0) so the user can visually see
+  // 1%, 2%, 3% ... as distinct steps.
+  // Persist last rendered % across re-renders so the arc can continue (or rollback) from where it was.
   const key = (el.id || el.getAttribute('data-key') || '').trim();
-  const stored = key ? Number(localStorage.getItem('arc_'+key) || '0') : 0;
-  const start = Number.isFinite(stored) ? stored : 0;
+  const stored = key && __arcReactorState.has(key) ? Number(__arcReactorState.get(key)) : NaN;
+  const inline = Number(el.dataset.curPct ?? el.style.getPropertyValue('--arc-p') ?? 0) || 0;
+  const existing = Number.isFinite(stored) ? stored : inline;
 
-  const scheme = (el.getAttribute('data-scheme') || 'status').trim();
+  // If we have no prior state and target > 0, start at 1% so the user sees the first visible step.
+  const prev = (existing > 0 || p <= 0) ? Math.max(0, Math.min(100, Math.round(existing))) : 1;
+  el.dataset.pct = String(p);
 
+  // Optional center label ("xx%") inside the arc.
+  const pctLabel = el.querySelector('.arcPct');
+
+  const scheme = (el.getAttribute('data-scheme')||'').toLowerCase();
   const pctEl = el.querySelector('.arcPct');
+  let on, off;
 
-  const from = (p > 0 && start === 0) ? 1 : start;
-  const to = p;
+  // Build status colors *per integer percent* so color visibly evolves
+  // while the arc advances 1% at a time.
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+  function hsla(h,s,l,a){
+    return `hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
+  }
+  function statusColors(pi){ return statusColorForPercent(pi); }
 
-  const duration = 520;
+  if(scheme === 'status'){
+    ({on, off} = statusColors(prev));
+    el.style.setProperty('--arc-glow', on);
+  }else{
+    on = 'hsla(210, 100%, 70%, 0.95)';
+    off = 'hsla(210, 35%, 45%, 0.18)';
+    el.style.setProperty('--arc-glow', 'hsla(210, 100%, 70%, 0.65)');
+  }
+
+  el.style.setProperty('--arc-on', on);
+  el.style.setProperty('--arc-off', off);
+
+  // Paint the initial 1% state immediately so the first visible frame isn't 0%.
+  el.style.backgroundImage = buildArcGradient(prev, seg, on, off);
+  el.style.setProperty('--arc-p', String(prev));
+  el.dataset.curPct = String(prev);
+  if(key) __arcReactorState.set(key, prev);
+  if(pctEl) pctEl.textContent = `${prev}%`;
+
+  // reset state
+  el.classList.remove('charged', 'fullPulse');
+  el.classList.add('charging');
+
+  // Slower fill so it feels like a smooth "loading" sweep.
+    // Slower fill so it feels like a smooth "loading" sweep,
+  // but we advance in *real* integer % steps: 1%, 2%, 3% ... target.
+  // Make each 1% step readable. (e.g. 30% ≈ 1.2s, 70% ≈ 2.6s)
+  const DURATION = Math.max(900, Math.round(p * 38));
   const t0 = performance.now();
 
-  function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+  const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
 
-  function colorsFor(cur){
-    if(scheme === 'status' && typeof statusColorForPercent === 'function'){
-      return statusColorForPercent(cur);
-    }
-    return { on: '#60a5fa', off: 'rgba(96,165,250,.16)', glow: 'rgba(96,165,250,.55)' };
-  }
+  // We only re-render when the integer percentage changes.
+  // This guarantees the visual passes through 1%, 2%, 3% ... (or downwards if needed).
+  let lastInt = prev;
 
-  function tick(now){
-    const t = Math.min(1, (now - t0) / duration);
-    const eased = easeOutCubic(t);
-    const cur = Math.round(from + (to - from) * eased);
+  const tick = (t)=>{
+    const k = Math.max(0, Math.min(1, (t - t0) / DURATION));
+    const e = easeOutCubic(k);
+    const easedVal = prev + (p - prev) * e;
 
-    if(key) localStorage.setItem('arc_'+key, String(cur));
-
-    const c = colorsFor(cur);
-    el.style.setProperty('--p', String(cur/100));
-    el.style.setProperty('--arcOn', c.on);
-    el.style.setProperty('--arcOff', c.off);
-    el.style.setProperty('--arcGlow', c.glow || c.on);
-
-    if(pctEl) pctEl.textContent = `${cur}%`;
-
-    if(t < 1){
-      requestAnimationFrame(tick);
+    let nextInt;
+    if(p >= prev){
+      nextInt = Math.min(p, Math.max(lastInt, Math.floor(easedVal)));
     }else{
-      const cf = colorsFor(p);
-      el.style.setProperty('--p', String(p/100));
-      el.style.setProperty('--arcOn', cf.on);
-      el.style.setProperty('--arcOff', cf.off);
-      el.style.setProperty('--arcGlow', cf.glow || cf.on);
-      if(pctEl) pctEl.textContent = `${p}%`;
-      el.classList.remove('charging');
-      el.classList.add('charged');
-      if(p >= 100) el.classList.add('fullPulse');
+      nextInt = Math.max(p, Math.min(lastInt, Math.ceil(easedVal)));
     }
-  }
 
-  el.classList.add('charging');
-  el.classList.remove('charged','fullPulse');
+    if(nextInt !== lastInt){
+      lastInt = nextInt;
+      if(pctEl) pctEl.textContent = `${lastInt}%`;
+      // Update colors per integer % (only for the status scheme)
+      if(scheme === 'status'){
+        const c = statusColors(lastInt);
+        on = c.on; off = c.off;
+        el.style.setProperty('--arc-on', on);
+        el.style.setProperty('--arc-off', off);
+        el.style.setProperty('--arc-glow', c.glow);
+      }
+      el.style.backgroundImage = buildArcGradient(lastInt, seg, on, off);
+      el.style.setProperty('--arc-p', String(lastInt));
+      el.dataset.curPct = String(lastInt);
+      if(key) __arcReactorState.set(key, lastInt);
+      if(pctEl) pctEl.textContent = `${lastInt}%`;
+    }
+
+    if(k < 1){
+      requestAnimationFrame(tick);
+      return;
+    }
+
+    // Snap to final value and add "charged" animation.
+    // Final snap (and final color state)
+    if(scheme === 'status'){
+      const c = statusColors(p);
+      on = c.on; off = c.off;
+      el.style.setProperty('--arc-on', on);
+      el.style.setProperty('--arc-off', off);
+      el.style.setProperty('--arc-glow', c.glow);
+    }
+    el.style.backgroundImage = buildArcGradient(p, seg, on, off);
+    el.style.setProperty('--arc-p', String(p));
+    el.dataset.curPct = String(p);
+    if(key) __arcReactorState.set(key, p);
+    if(pctEl) pctEl.textContent = `${p}%`;
+    el.classList.remove('charging');
+    el.classList.add('charged');
+    if(p >= 100){
+      el.classList.add('fullPulse');
+    }
+  };
+
   requestAnimationFrame(tick);
 }
-
-
 
 
 
@@ -1294,7 +1383,38 @@ function deleteHabit(id){
   render();
 }
 
+function renderHero(){
+  const el = document.getElementById("habitsHero");
+  if(!el) return;
+  const H = getFilteredHabits();
+  const iso = today();
+  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
+  const total = H.length || 0;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  el.innerHTML = `
+    <div class="card heroCard">
+      <div class="heroTop">
+        <div>
+          <div class="cardTitle">Today</div>
+          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
+          <div class="small">Keep it simple: small wins compound.</div>
+        </div>
+        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
+          <div class="arcCore">
+            <div class="arcPct">${pct}%</div>
+          </div>
+        </div>
+      </div>
+      <div class="heroActions">
+        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
+      </div>
+    </div>
+  `;
 
+  // Animate the segmented Arc Reactor (more modern than a single ring).
+  const arc = el.querySelector('#heroArc');
+  if(arc) setArcReactor(arc, pct, 5);
+}
 
 function renderFocusCard(){
   // v10: avoid duplicate "Focus hint" cards. We keep the single compact hint tile.
@@ -1520,69 +1640,3 @@ function setAnalyticsOffset(val){
   localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
 }
-
-
-function setHeroWheel(el, pct){
-  const p = Math.max(0, Math.min(100, Number(pct)||0));
-  const r = 46;
-  const c = 2 * Math.PI * r;
-
-  // Create a small gap at the top (like the reference design)
-  const gap = 0.085; // 8.5% of circumference
-  const usable = c * (1 - gap);
-
-  const track = el.querySelector(".wheelTrack");
-  const prog  = el.querySelector(".wheelProg");
-
-  if(track){
-    track.style.strokeDasharray = `${usable} ${c}`;
-    track.style.strokeDashoffset = `${c * gap * 0.5}`;
-  }
-  if(prog){
-    const filled = usable * (p/100);
-    prog.style.strokeDasharray = `${filled} ${c}`;
-    // offset to start after half-gap so the gap stays centered at 12 o'clock
-    prog.style.strokeDashoffset = `${c * gap * 0.5}`;
-  }
-
-  // Update labels
-  const label = el.querySelector(".wheelPct");
-  if(label) label.textContent = `${p}%`;
-}
-
-
-
-function renderHero(){
-  const el = document.getElementById("habitsHero");
-  if(!el) return;
-  const H = getFilteredHabits();
-  const iso = today();
-  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
-  const total = H.length || 0;
-  const pct = total ? Math.round((done/total)*100) : 0;
-  el.innerHTML = `
-    <div class="card heroCard">
-      <div class="heroTop">
-        <div>
-          <div class="cardTitle">Today</div>
-          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
-          <div class="small">Keep it simple: small wins compound.</div>
-        </div>
-        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
-          <div class="arcCore">
-            <div class="arcPct">${pct}%</div>
-          <div class="arcLbl">${done} of ${total||0} done</div>
-            </div>
-        </div>
-      </div>
-      <div class="heroActions">
-        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
-      </div>
-    </div>
-  `;
-
-  // Animate the segmented Arc Reactor (more modern than a single ring).
-  const arc = el.querySelector('#heroArc');
-  if(arc) setArcReactor(arc, (Number.isFinite(pct)?pct:0), 5);
-}
-
