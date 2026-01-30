@@ -51,6 +51,15 @@ function animateRingProgress(ringEl, targetPct){
   if(!ringEl) return;
   const target = Math.max(0, Math.min(100, Math.round(Number(targetPct) || 0)));
 
+  // Define easing locally (renderer is loaded standalone).
+  const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
+  // Soft "back" (spring-ish) easing with small overshoot, stable for rapid retargeting.
+  const easeOutSoftBack = (t)=>{
+    const c1 = 1.15;
+    const c3 = c1 + 1;
+    return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2);
+  };
+
   // Respect reduced motion preferences.
   try{
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
@@ -64,70 +73,79 @@ function animateRingProgress(ringEl, targetPct){
     }
   }catch(e){}
 
-  // Cancel any in-flight animation so rapid mark/unmark doesn't glitch.
-  if(ringEl._raf){
-    cancelAnimationFrame(ringEl._raf);
-    ringEl._raf = null;
+  // --- Robust animator (fix: rapid mark/unmark sometimes resulted in no animation) ---
+  // Instead of cancel/restart race conditions, we retarget smoothly.
+  if(!ringEl._ringAnim){
+    ringEl._ringAnim = {
+      raf: null,
+      value: (typeof ringEl._animValue === 'number') ? ringEl._animValue : (Number(ringEl.dataset.curPct) || 0),
+      start: 0,
+      target: 0,
+      t0: 0,
+      dur: 0,
+      needsRetarget: false
+    };
   }
 
-  const cur = (typeof ringEl._animValue === 'number')
-    ? ringEl._animValue
-    : (Number(ringEl.dataset.curPct) || 0);
+  const anim = ringEl._ringAnim;
+  anim.target = target;
+  anim.needsRetarget = true;
 
-  const startVal = Math.max(0, Math.min(100, cur));
-  const delta = target - startVal;
-
-  // If no change, just ensure visuals are correct.
-  if(Math.abs(delta) < 0.001){
-    ringEl.style.setProperty('--p', String(target));
-    ringEl.dataset.curPct = String(target);
-    ringEl._animValue = target;
-    const n = ringEl.querySelector('.ringBig');
-    if(n) n.textContent = `${target}%`;
-    applyRingStatus(ringEl, target, {isAnimating:false});
-    return;
-  }
-
-  // Duration scales slightly with distance, capped.
-  const dur = Math.max(260, Math.min(900, 320 + Math.abs(delta) * 6));
-  let t0 = 0;
-
-  const set = (v)=>{
+  const set = (v, isAnimating)=>{
     const clamped = Math.max(0, Math.min(100, v));
+    anim.value = clamped;
     ringEl._animValue = clamped;
     ringEl.style.setProperty('--p', String(clamped));
     ringEl.dataset.curPct = String(Math.round(clamped));
     const n = ringEl.querySelector('.ringBig');
     if(n) n.textContent = `${Math.round(clamped)}%`; // realtime % update
-    applyRingStatus(ringEl, Math.round(clamped), {isAnimating:true});
+    applyRingStatus(ringEl, Math.round(clamped), {isAnimating: !!isAnimating});
   };
 
-  // Initialize at current (not at target) to avoid "flash".
-  set(startVal);
+  function retarget(ts){
+    anim.start = Math.max(0, Math.min(100, anim.value));
+    const delta = anim.target - anim.start;
+    if(Math.abs(delta) < 0.001){
+      set(anim.target, false);
+      anim.needsRetarget = false;
+      anim.t0 = 0;
+      anim.dur = 0;
+      return;
+    }
+    anim.dur = Math.max(260, Math.min(950, 320 + Math.abs(delta) * 7));
+    anim.t0 = ts;
+    anim.needsRetarget = false;
+  }
 
   function frame(ts){
-    if(!t0) t0 = ts;
-    const t = Math.max(0, Math.min(1, (ts - t0) / dur));
-    // Smooth spring-ish ease without overshoot (stable for rapid updates)
-    // (keeps previous spring/pulse behavior elsewhere intact)
-    const eased = easeOutCubic(t);
-    const v = startVal + delta * eased;
-    set(v);
+    if(anim.needsRetarget || !anim.t0){
+      retarget(ts);
+      if(!anim.dur){
+        anim.raf = null;
+        return;
+      }
+    }
+
+    const t = Math.max(0, Math.min(1, (ts - anim.t0) / anim.dur));
+    const e = (t < 0.92) ? easeOutCubic(t) : easeOutSoftBack(t);
+    const v = anim.start + (anim.target - anim.start) * e;
+    set(v, true);
 
     if(t < 1){
-      ringEl._raf = requestAnimationFrame(frame);
+      anim.raf = requestAnimationFrame(frame);
     }else{
-      ringEl._raf = null;
-      ringEl.style.setProperty('--p', String(target));
-      ringEl.dataset.curPct = String(target);
-      ringEl._animValue = target;
-      const n = ringEl.querySelector('.ringBig');
-      if(n) n.textContent = `${target}%`;
-      applyRingStatus(ringEl, target, {isAnimating:false});
+      set(anim.target, false);
+      anim.raf = null;
+      anim.t0 = 0;
+      anim.dur = 0;
+      if(anim.needsRetarget) anim.raf = requestAnimationFrame(frame);
     }
   }
 
-  ringEl._raf = requestAnimationFrame(frame);
+  if(!anim.raf){
+    set(anim.value, false);
+    anim.raf = requestAnimationFrame(frame);
+  }
 }
 
 
