@@ -3,7 +3,18 @@
   const path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   document.querySelectorAll('.nav a').forEach(a=>{
     const href = (a.getAttribute('href')||'').toLowerCase();
-    if(href === path) a.classList.add('active');
+    if(href === path){
+      a.classList.add('active');
+
+      // Icon micro-pulse (runs once per page load / tab open)
+      const img = a.querySelector('img.navIcon, img.navIconBottom');
+      if(img){
+        img.classList.remove('pulseOnce');
+        // restart animation reliably
+        void img.offsetWidth;
+        img.classList.add('pulseOnce');
+      }
+    }
   });
 
   // Service Worker (required for background Push Notifications)
