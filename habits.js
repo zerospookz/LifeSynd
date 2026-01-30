@@ -1772,9 +1772,11 @@ function setHeroWheel(el, pct){
   const dur = Math.max(560, Math.min(1500, 560 + Math.abs(delta) * 9));
 
   // Micro-delay between ring and % label (premium feel)
-  const textDelayMs = 120;
+  const textLagTauMs = 90; // percent label 'chases' ring smoothly (no weird delay)
 
   let t0 = 0;
+  let lastTs = 0;
+  let vText = start;
 
   // Start anim state
   setAnimating(true);
@@ -1783,16 +1785,16 @@ function setHeroWheel(el, pct){
     if(!t0) t0 = ts;
 
     const tRing = Math.max(0, Math.min(1, (ts - t0) / dur));
-    const tText = Math.max(0, Math.min(1, (ts - t0 - textDelayMs) / dur));
-
     const eRing = spring(tRing);
-    const eText = spring(tText);
 
     // Ring can move in sub-percent floats for smoother motion
     const vRing = start + delta * eRing;
 
-    // Text follows the same spring but slightly later
-    const vText = (ts - t0) < textDelayMs ? start : (start + delta * eText);
+    // Percent label follows the ring with a small, natural lag (1st-order follower)
+    const dt = lastTs ? (ts - lastTs) : 16;
+    lastTs = ts;
+    const alpha = 1 - Math.exp(-dt / textLagTauMs);
+    vText = vText + (vRing - vText) * alpha;
 
     applyRing(vRing);
 
