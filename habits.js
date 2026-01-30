@@ -1383,7 +1383,38 @@ function deleteHabit(id){
   render();
 }
 
+function renderHero(){
+  const el = document.getElementById("habitsHero");
+  if(!el) return;
+  const H = getFilteredHabits();
+  const iso = today();
+  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
+  const total = H.length || 0;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  el.innerHTML = `
+    <div class="card heroCard">
+      <div class="heroTop">
+        <div>
+          <div class="cardTitle">Today</div>
+          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
+          <div class="small">Keep it simple: small wins compound.</div>
+        </div>
+        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
+          <div class="arcCore">
+            <div class="arcPct">${pct}%</div>
+          </div>
+        </div>
+      </div>
+      <div class="heroActions">
+        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
+      </div>
+    </div>
+  `;
 
+  // Animate the segmented Arc Reactor (more modern than a single ring).
+  const arc = el.querySelector('#heroArc');
+  if(arc) setArcReactor(arc, pct, 5);
+}
 
 function renderFocusCard(){
   // v10: avoid duplicate "Focus hint" cards. We keep the single compact hint tile.
@@ -1609,125 +1640,3 @@ function setAnalyticsOffset(val){
   localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
 }
-
-
-// --- Hero arc: strict banded colors (0–33 red, 34–66 yellow, 67–100 green) ---
-function statusColorForPercentBands(percent){
-  const p = Math.max(0, Math.min(100, Number(percent) || 0));
-  if(p <= 33){
-    return { on: "rgba(255, 82, 82, 0.95)", glow: "rgba(255, 82, 82, 0.55)", text: "rgba(255, 82, 82, 0.95)" };
-  }
-  if(p <= 66){
-    return { on: "rgba(255, 214, 64, 0.98)", glow: "rgba(255, 214, 64, 0.45)", text: "rgba(255, 214, 64, 0.98)" };
-  }
-  return { on: "rgba(93, 230, 152, 0.95)", glow: "rgba(93, 230, 152, 0.45)", text: "rgba(93, 230, 152, 0.95)" };
-}
-
-function easeOutCubic(t){
-  return 1 - Math.pow(1 - t, 3);
-}
-
-let heroArcRaf = null;
-
-function animateHeroArc(el, targetPercent){
-  if(!el) return;
-  if(heroArcRaf){
-    cancelAnimationFrame(heroArcRaf);
-    heroArcRaf = null;
-  }
-
-  // Clamp + edge guards
-  const tp = Math.max(0, Math.min(100, Number(targetPercent) || 0));
-  const arcId = el.getAttribute("data-arc-id") || "hero";
-
-  // Start from previous (persisted) value
-  const key = `arc_${arcId}`;
-  let sp = Number(localStorage.getItem(key));
-  if(!Number.isFinite(sp)) sp = tp;
-  sp = Math.max(0, Math.min(100, sp));
-
-  // Colors are based on TARGET (status), while the ring fills smoothly
-  const colors = statusColorForPercentBands(tp);
-  el.style.setProperty("--arcOn", colors.on);
-  el.style.setProperty("--arcOff", "rgba(255,255,255,0.10)");
-  el.style.setProperty("--arcGlow", colors.glow);
-
-  const pctEl = el.querySelector(".wheelPct");
-
-  const start = performance.now();
-  const dur = 780; // premium but snappy
-  el.classList.add("isAnimating");
-
-  const tick = (now) => {
-    const t = Math.min(1, (now - start) / dur);
-    const e = easeOutCubic(t);
-    const cur = sp + (tp - sp) * e;
-    const curPct = Math.round(cur);
-
-    // CSS contract: only feed progress 0..1 + colors
-    el.style.setProperty("--p", String(cur / 100));
-    if(pctEl) pctEl.textContent = `${curPct}%`;
-
-    if(t < 1){
-      heroArcRaf = requestAnimationFrame(tick);
-    }else{
-      heroArcRaf = null;
-      el.classList.remove("isAnimating");
-      if(tp >= 100) el.classList.add("fullPulse");
-      else el.classList.remove("fullPulse");
-      localStorage.setItem(key, String(tp));
-    }
-  };
-
-  // Initialize instantly to start value to avoid flash
-  el.style.setProperty("--p", String(sp / 100));
-  if(pctEl) pctEl.textContent = `${Math.round(sp)}%`;
-  if(tp >= 100) el.classList.add("fullPulse");
-  else el.classList.remove("fullPulse");
-
-  heroArcRaf = requestAnimationFrame(tick);
-}
-
-
-
-function renderHero(){
-  const el = document.getElementById("habitsHero");
-  if(!el) return;
-  const H = getFilteredHabits();
-  const iso = today();
-  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
-  const total = H.length || 0;
-  // Progress with guards
-  let pct = 0;
-  if(total > 0) pct = Math.round((done/total)*100);
-  if(done > total) pct = 100;
-  pct = Math.max(0, Math.min(100, pct));
-
-  el.innerHTML = `
-    <div class="card heroCard">
-      <div class="heroTop">
-        <div>
-          <div class="cardTitle">Today</div>
-          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
-          <div class="small">Keep it simple: small wins compound.</div>
-        </div>
-
-        <div class="habitWheel" id="heroArc" data-arc-id="today" role="img" aria-label="Today's completion">
-          <div class="arcRing" aria-hidden="true"></div>
-          <div class="wheelCenter">
-            <div class="wheelPct">${pct}%</div>
-            <div class="wheelSub">${done} of ${total||0} done</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="heroActions">
-        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
-      </div>
-    </div>
-  `;
-
-  const wheel = el.querySelector("#heroArc");
-  if(wheel) animateHeroArc(wheel, pct);
-}
-
