@@ -193,55 +193,6 @@ function habitHue(id){
 
 
 
-
-function abbr(s,n){ return (s||"").slice(0,n); }
-
-function fmtMonthAbbr(iso, n){
-  const d=new Date(iso+"T00:00:00");
-  let m;
-  try{
-    m=new Intl.DateTimeFormat(undefined,{month:"short"}).format(d);
-  }catch(e){
-    m=d.toLocaleDateString(undefined,{month:"short"});
-  }
-  return abbr(m,n);
-}
-
-function fmtWeekdayAbbr(iso, n){
-  const d=new Date(iso+"T00:00:00");
-  let w;
-  try{
-    w=d.toLocaleDateString(undefined,{weekday:"short"});
-  }catch(e){
-    w=fmtWeekday(iso);
-  }
-  return abbr(w,n);
-}
-
-function chooseAbbrLen(px){
-  // tuned for matrixDate width
-  if(px >= 56) return 3;
-  if(px >= 46) return 2;
-  return 1;
-}
-
-function applyMatrixDateAbbr(scope){
-  const items = Array.from((scope||document).querySelectorAll(".matrixDate"));
-  if(!items.length) return;
-  const w = Math.floor(items[0].getBoundingClientRect().width || 0);
-  const n = chooseAbbrLen(w);
-  items.forEach(el=>{
-    const iso = el.getAttribute("data-iso");
-    if(!iso) return;
-    const mEl = el.querySelector(".m");
-    const dEl = el.querySelector(".d");
-    const wEl = el.querySelector(".w");
-    if(mEl) mEl.textContent = fmtMonthAbbr(iso,n);
-    if(dEl) dEl.textContent = new Date(iso+"T00:00:00").getDate();
-    if(wEl) wEl.textContent = fmtWeekdayAbbr(iso,n);
-  });
-}
-
 function fmtWeekday(iso){
   const d=new Date(iso+"T00:00:00");
   return d.toLocaleDateString(undefined,{weekday:"short"});
@@ -305,7 +256,7 @@ function ensureUniqueHues(){
 }
 
 function openAddHabit(triggerEl){
-  const isPhone = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+  const isPhone = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
   const card = document.getElementById('addCard');
   if(isPhone){
     openAddHabitModal(triggerEl);
@@ -544,7 +495,7 @@ function renderAnalytics(){
     });
   }
 
-  const isMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
   // Mobile: show a 7-day viewport and allow paging via swipe.
   const range = isMobile ? 7 : (analyticsView==="week" ? 14 : 60);
   const step  = isMobile ? 7 : (analyticsView==="week" ? 14 : 30);
@@ -684,6 +635,7 @@ function renderAnalytics(){
     });
 
     grid.appendChild(header);
+    requestAnimationFrame(()=>adaptDayLabels(header));
 
     // rows
     dates.forEach(iso=>{
@@ -693,9 +645,7 @@ function renderAnalytics(){
 
       const dateEl = document.createElement("div");
       dateEl.className = "matrixDate";
-      dateEl.setAttribute("data-iso", iso);
-      dateEl.innerHTML = `<span class="m" aria-hidden="true"></span><span class="d" aria-hidden="true"></span><span class="w" aria-hidden="true"></span>`;
-      dateEl.setAttribute("role","group");
+      dateEl.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
       row.appendChild(dateEl);
 
       H.forEach(h=>{
@@ -765,13 +715,14 @@ function renderAnalytics(){
       }
       const wd = fmtWeekday(iso);
       d.innerHTML = `
-        <div class="d1"><span class="m">${mon}</span></div>
-        <div class="d2"><span class="n">${day}</span><span class="w">${wd}</span></div>
+        <div class="d1"><span class="m" data-full="${mon}">${mon}</span></div>
+        <div class="d2"><span class="n">${day}</span><span class="w" data-full="${wd}">${wd}</span></div>
       `;
       header.appendChild(d);
     });
 
     grid.appendChild(header);
+    requestAnimationFrame(()=>adaptDayLabels(header));
 
     H.forEach(h=>{
       const row = document.createElement("div");
@@ -1680,10 +1631,12 @@ scheduleHabitsReminder();
 
 // Keep the grid layout in sync when switching between desktop ↔ mobile widths.
 // (Needed because the grid renderer branches on a media query.)
-let __habitsLastIsMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+// Treat tablet widths as desktop so the Dates column is visible on larger screens.
+// (Users reported the date column disappearing on "big" screens when the mobile transpose kicks in.)
+let __habitsLastIsMobile = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
 let __habitsResizeTimer = null;
 window.addEventListener("resize", ()=>{
-  const nowIsMobile = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+  const nowIsMobile = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
   const breakpointChanged = nowIsMobile !== __habitsLastIsMobile;
   __habitsLastIsMobile = nowIsMobile;
   if(__habitsResizeTimer) clearTimeout(__habitsResizeTimer);
@@ -1693,24 +1646,25 @@ window.addEventListener("resize", ()=>{
   }, breakpointChanged ? 0 : 120);
 });
 
+
+function adaptLabel(el, maxChars=3){
+  if(!el) return;
+  const full = (el.dataset && el.dataset.full) ? el.dataset.full : el.textContent;
+  if(el.dataset) el.dataset.full = full;
+
+  for(let len = Math.min(maxChars, full.length); len >= 1; len--){
+    el.textContent = full.slice(0, len);
+    if(el.scrollWidth <= el.clientWidth) return;
+  }
+}
+
+function adaptDayLabels(scope=document){
+  scope.querySelectorAll(".matrixDayHead .m").forEach(el=>adaptLabel(el,3));
+  scope.querySelectorAll(".matrixDayHead .w").forEach(el=>adaptLabel(el,3));
+}
+
 function setAnalyticsOffset(val){
   analyticsOffsetDays = val;
   localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
 }
-
-
-// Keep date labels readable on resize
-(function(){
-  let ro;
-  function init(){
-    const m = document.querySelector(".matrix");
-    if(!m) return;
-    if(ro) ro.disconnect();
-    ro = new ResizeObserver(()=>applyMatrixDateAbbr(m));
-    ro.observe(m);
-    applyMatrixDateAbbr(m);
-  }
-  window.addEventListener("resize", ()=>init(), {passive:true});
-  document.addEventListener("DOMContentLoaded", ()=>init());
-})();

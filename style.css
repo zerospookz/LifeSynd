@@ -397,54 +397,11 @@ input:focus,select:focus{
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.02);
-
-  /* This fixes low-res: no wrapping + progressive disclosure */
-  container-type: inline-size;
-  container-name: datecell;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-
   padding: 10px 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
-  min-width: 0;
-  line-height: 1;
+  line-height: 1.15;
 }
-
-.matrixDate .m,
-.matrixDate .d,
-.matrixDate .w{
-  font-size: clamp(10px, 1.8cqi, 12px);
-  letter-spacing: -.01em;
-  min-width: 0;
-}
-
-.matrixDate .d{
-  font-weight: 800;
-  letter-spacing: -.02em;
-}
-
-.matrixDate .w{
-  color: var(--muted);
-  font-size: clamp(9px, 1.6cqi, 11px);
-}
-
-/* Progressive disclosure for narrow cells */
-@container datecell (max-width: 44px){
-  .matrixDate .w{ display:none; } /* drop weekday first */
-}
-@container datecell (max-width: 36px){
-  .matrixDate .m{ display:none; } /* then drop month */
-  .matrixDate{ gap: 0; }
-}
-@container datecell (max-width: 28px){
-  .matrixDate{ padding: 6px 6px; }
-  .matrixDate .d{ font-size: 12px; }
-}
+.matrixDate .d1{font-weight:700;letter-spacing:-.02em}
+.matrixDate .d2{font-size:.75rem;color:var(--muted);margin-top:2px}
 
 /* Mobile transpose layout: first column is the habit name (sticky like dates). */
 .matrixHabitName{
@@ -476,7 +433,10 @@ input:focus,select:focus{
 .matrixDayHead{ overflow: hidden; }
 .matrixDayHead .d1, .matrixDayHead .d2{ line-height: 1.05; }
 .matrixDayHead .m{
-  display:block;
+  display:inline-block;
+  max-width: 3ch;
+  white-space: nowrap;
+  overflow: hidden;
   font-weight: 850;
   font-size: clamp(.66rem, 2.2vw, .82rem);
   letter-spacing: .02em;
@@ -495,9 +455,13 @@ input:focus,select:focus{
   font-size: clamp(.78rem, 2.7vw, .98rem);
 }
 .matrixDayHead .w{
-  font-weight: 750;
+font-weight: 750;
   font-size: clamp(.62rem, 2.0vw, .78rem);
   opacity: .9;
+  display:inline-block;
+  max-width: 3ch;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 @media (max-width: 520px){
@@ -1038,7 +1002,10 @@ input:focus,select:focus{
 /* Allow habit names to wrap (no ellipsis/clamp) */
 .matrixHabit span{display:block; white-space:normal; overflow:visible; word-break:break-word;}
 .matrixRow.today .matrixDate{border-color: color-mix(in oklab, var(--accent) 35%, rgba(255,255,255,.12)); background: rgba(255,255,255,.05);}
-.matrixRow.today .analyticsCard #habitAnalytics, #habitAnalytics{width:100%;}
+.matrixRow.today .matrixDate .d1{color: var(--text);}
+.matrixDate .d1{font-size:1rem;}
+.matrixDate .d2{font-size:.78rem;}
+.analyticsCard #habitAnalytics, #habitAnalytics{width:100%;}
 
 
 /* Mini heatmap levels (0-4)
@@ -1233,7 +1200,7 @@ input:focus,select:focus{
 .habitsAddCard.open{display:block}
 
 /* App layout */
-@media (max-width: 760px){
+@media (max-width: 900px){
   .habitsTopbar{display:none}
   .habitsLayout{grid-template-columns: 1fr}
   .habitsRight{display:none}
@@ -1405,13 +1372,13 @@ input:focus,select:focus{
 }
 
 /* On desktop show all panels (tabs are mobile-only) */
-@media (min-width: 761px){
+@media (min-width: 901px){
   .tabPanel{display:block}
 }
 
-@media (max-width: 760px){ .sidebar{display:none} }
+@media (max-width: 900px){ .sidebar{display:none} }
 
-@media (min-width: 761px){ .tabPanel[data-panel="stats"]{display:none} .habitsTabs{display:none} }
+@media (min-width: 901px){ .tabPanel[data-panel="stats"]{display:none} .habitsTabs{display:none} }
 
 
 /* Habits: List tab stacked layout */
@@ -1426,7 +1393,7 @@ input:focus,select:focus{
 
 /* Utility: show only on phone */
 .onlyMobile{display:none;}
-@media (max-width:760px){
+@media (max-width:900px){
   .onlyMobile{display:inline-flex;}
 }
 
@@ -1434,17 +1401,6 @@ input:focus,select:focus{
 /* Override generic .grid in List tab container */
 [data-panel="list"] #habitList.grid{display:block;}
 
-@media (max-width:760px){
+@media (max-width:900px){
   .matrixHeaderRow{padding: 10px 0 12px;}
-}
-
-
-/* Adaptive labels */
-.adaptive-label {
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  white-space: nowrap;
 }
