@@ -1888,3 +1888,11 @@ font-weight: 750;
     drop-shadow(0 0 10px rgba(120,200,255,.45))
     saturate(1.15);
 }
+
+/* ===== v18: Smooth ring + dynamic glow (status colors) ===== */
+.arcReactor.heroArc::before{
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--arc-glow, rgba(255,214,102,.6)) 55%, transparent));
+}
+.arcReactor.heroArc .arcPct{
+  font-size: 30px !important; /* slightly smaller */
+}

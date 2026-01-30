@@ -1007,37 +1007,13 @@ function renderInsights(){
 }
 
 function buildArcGradient(pct, segments, onColor, offColor){
-  const seg = Math.max(3, Math.min(8, segments||6));
+  // v18: smooth (non-segmented) arc. Keep existing logic, only visual.
   const p = Math.max(0, Math.min(100, Number(pct)||0));
-  const total = (p/100) * seg;
-  const full = Math.floor(total);
-  const partial = total - full;
-
-  const slice = 360/seg;
-  const gap = Math.min(10, slice*0.18); // degrees between segments
-  const fill = slice-gap;
-
-  const on = onColor || 'hsla(210, 100%, 70%, 0.95)';
-  const off = offColor || 'hsla(210, 35%, 45%, 0.18)';
-  const stops=[];
-
-  for(let i=0;i<seg;i++){
-    const a0 = i*slice;
-    const aFillEnd = a0 + fill;
-    const a2 = a0 + slice;
-
-    if(i < full){
-      stops.push(`${on} ${a0}deg ${aFillEnd}deg`);
-    }else if(i === full && partial > 0){
-      const aMid = a0 + (fill * partial);
-      stops.push(`${on} ${a0}deg ${aMid}deg`);
-      stops.push(`${off} ${aMid}deg ${aFillEnd}deg`);
-    }else{
-      stops.push(`${off} ${a0}deg ${aFillEnd}deg`);
-    }
-    stops.push(`transparent ${aFillEnd}deg ${a2}deg`);
-  }
-  return `conic-gradient(from -90deg, ${stops.join(',')})`;
+  const deg = p * 3.6;
+  const on = onColor || "rgba(255,214,102,.95)";
+  const off = offColor || "rgba(255,255,255,.08)";
+  // Start at top (-90deg). Arc fills smoothly, remainder is track.
+  return `conic-gradient(from -90deg, ${on} 0deg ${deg}deg, ${off} ${deg}deg 360deg)`;
 }
 
 
