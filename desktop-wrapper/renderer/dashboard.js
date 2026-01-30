@@ -2,49 +2,6 @@
 
 const $ = (id) => document.getElementById(id);
 
-// --- Status colors (0–33 Low=Red, 34–66 Medium=Yellow, 67–100 Good=Green) ---
-function statusColorForPercent(percent){
-  const p = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
-  // iOS-like, high-contrast colors on dark UI
-  const RED = [255, 59, 48];
-  const YEL = [255, 214, 10];
-  const GRN = [52, 199, 89];
-  const rgb = (arr)=>`rgb(${arr[0]}, ${arr[1]}, ${arr[2]})`;
-  const rgba = (arr,a)=>`rgba(${arr[0]}, ${arr[1]}, ${arr[2]}, ${a})`;
-
-  let c = RED;
-  if(p >= 67) c = GRN;
-  else if(p >= 34) c = YEL;
-
-  // Glow intensity scales with percent (stronger at high %)
-  const baseA = 0.16 + (p/100)*0.18;      // ~0.16 → 0.34
-  const strongA = Math.min(0.55, baseA + 0.18); // up to ~0.52
-
-  return {
-    pct: p,
-    color: rgb(c),
-    glow: rgba(c, baseA),
-    glowStrong: rgba(c, strongA)
-  };
-}
-
-function applyRingStatus(ringEl, percent, opts={}){
-  if(!ringEl) return;
-  const s = statusColorForPercent(percent);
-  ringEl.style.setProperty('--ring-accent', s.color);
-  ringEl.style.setProperty('--ring-glow', s.glow);
-  ringEl.style.setProperty('--ring-glow-strong', s.glowStrong);
-  const n = ringEl.querySelector('.ringBig');
-  if(n) n.style.color = s.color;
-
-  // Pulse only at 100%
-  if(s.pct === 100) ringEl.classList.add('fullPulse');
-  else ringEl.classList.remove('fullPulse');
-
-  if(opts.isAnimating) ringEl.classList.add('isAnimating');
-  else ringEl.classList.remove('isAnimating');
-}
-
 // --- Ring progress animation (1% → target%) ---
 // Animates CSS var --p in true integer steps (1,2,3...) with an ease-out feel.
 function animateRingProgress(ringEl, targetPct){
@@ -55,64 +12,50 @@ function animateRingProgress(ringEl, targetPct){
   try{
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       ringEl.style.setProperty('--p', String(target));
-      ringEl.dataset.curPct = String(target);
       const n = ringEl.querySelector('.ringBig');
       if(n) n.textContent = `${target}%`;
-      applyRingStatus(ringEl, target, {isAnimating:false});
       return;
     }
   }catch(e){}
 
-  // Animate from previous → target (not always from 0)
-  const prev = Math.max(0, Math.min(100, Math.round(Number(ringEl.dataset.curPct || ringEl.style.getPropertyValue('--p') || 0))));
-  const start = prev;
-  const delta = target - start;
+  let current = 0;
+  let lastTs = 0;
+  let acc = 0;
 
-  // If no change, still ensure colors are correct.
-  if(delta === 0){
-    ringEl.style.setProperty('--p', String(target));
-    ringEl.dataset.curPct = String(target);
-    const n = ringEl.querySelector('.ringBig');
-    if(n) n.textContent = `${target}%`;
-    applyRingStatus(ringEl, target, {isAnimating:false});
-    return;
-  }
-
-  const dur = Math.max(420, Math.min(1400, 420 + Math.abs(delta) * 10));
   const easeOutCubic = (x) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
-
-  let t0 = 0;
-  let lastInt = start;
 
   const set = (v) => {
     ringEl.style.setProperty('--p', String(v));
-    ringEl.dataset.curPct = String(v);
     const n = ringEl.querySelector('.ringBig');
     if(n) n.textContent = `${v}%`;
-    // Status color follows the animated value
-    applyRingStatus(ringEl, v, {isAnimating:true});
   };
 
-  // Initialize
-  set(start);
+  // Start state
+  set(0);
+
+  // We still use rAF for smoothness, but step in whole percents.
+  // Delay grows as we approach target (ease-out feel).
+  const minDelay = 16;  // ~60fps
+  const maxDelay = 90;  // slows near the end
 
   function frame(ts){
-    if(!t0) t0 = ts;
-    const t = Math.max(0, Math.min(1, (ts - t0) / dur));
-    const eased = easeOutCubic(t);
-    const v = Math.round(start + delta * eased);
+    if(!lastTs) lastTs = ts;
+    const dt = ts - lastTs;
+    lastTs = ts;
+    acc += dt;
 
-    if(v !== lastInt){
-      lastInt = v;
-      set(v);
+    // recompute delay based on current progress fraction
+    const frac = target ? (current / target) : 1;
+    const delay = minDelay + (maxDelay - minDelay) * easeOutCubic(frac);
+
+    if(acc >= delay && current < target){
+      // consume one step per check to guarantee 1% increments
+      acc = 0;
+      current += 1;
+      set(current);
     }
 
-    if(t < 1){
-      requestAnimationFrame(frame);
-    }else{
-      // Final state
-      applyRingStatus(ringEl, target, {isAnimating:false});
-    }
+    if(current < target) requestAnimationFrame(frame);
   }
 
   requestAnimationFrame(frame);
