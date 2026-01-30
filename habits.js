@@ -1647,6 +1647,7 @@ function setAnalyticsOffset(val){
 function setHeroWheel(el, pct){
   if(!el) return;
   const target = Math.max(0, Math.min(100, Math.round(Number(pct)||0)));
+  const LS_KEY = "heroWheelPrevPct";
   const r = 46;
   const c = 2 * Math.PI * r;
 
@@ -1706,16 +1707,32 @@ function setHeroWheel(el, pct){
   try{
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       apply(target, {isAnimating:false});
+      try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
       return;
     }
   }catch(e){}
 
-  const prev = Math.max(0, Math.min(100, Math.round(Number(el.dataset.curPct || el.getAttribute('data-pct') || 0))));
+  // Determine previous percent for smooth load:
+  // load → get previousPercent → render ring @ previousPercent → animate(previous → target)
+  let prev = Number(el.dataset.curPct);
+
+  if(!Number.isFinite(prev)){
+    const stored = Number(localStorage.getItem(LS_KEY));
+    prev = Number.isFinite(stored) ? stored : 0;
+  }
+
+  prev = Math.max(0, Math.min(100, Math.round(prev)));
+
+  // Always render at previous first (prevents instant flash to target on load)
+  apply(prev, {isAnimating:false});
+
   const start = prev;
+
   const delta = target - start;
 
   if(delta === 0){
     apply(target, {isAnimating:false});
+    try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
     return;
   }
 
@@ -1741,6 +1758,7 @@ function setHeroWheel(el, pct){
       requestAnimationFrame(frame);
     }else{
       apply(target, {isAnimating:false});
+      try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
     }
   }
 

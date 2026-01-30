@@ -1645,7 +1645,9 @@ function setAnalyticsOffset(val){
 
 
 function setHeroWheel(el, pct){
-  const p = Math.max(0, Math.min(100, Number(pct)||0));
+  if(!el) return;
+  const target = Math.max(0, Math.min(100, Math.round(Number(pct)||0)));
+  const LS_KEY = "heroWheelPrevPct";
   const r = 46;
   const c = 2 * Math.PI * r;
 
@@ -1655,22 +1657,116 @@ function setHeroWheel(el, pct){
 
   const track = el.querySelector(".wheelTrack");
   const prog  = el.querySelector(".wheelProg");
-
-  if(track){
-    track.style.strokeDasharray = `${usable} ${c}`;
-    track.style.strokeDashoffset = `${c * gap * 0.5}`;
-  }
-  if(prog){
-    const filled = usable * (p/100);
-    prog.style.strokeDasharray = `${filled} ${c}`;
-    // offset to start after half-gap so the gap stays centered at 12 o'clock
-    prog.style.strokeDashoffset = `${c * gap * 0.5}`;
-  }
-
-  // Update labels
   const label = el.querySelector(".wheelPct");
-  if(label) label.textContent = `${p}%`;
+  const defs = el.querySelector('defs');
+  const stops = defs ? Array.from(defs.querySelectorAll('#wheelGrad stop')) : [];
+
+  const apply = (v, opts={})=>{
+    const p = Math.max(0, Math.min(100, Math.round(Number(v)||0)));
+
+    if(track){
+      track.style.strokeDasharray = `${usable} ${c}`;
+      track.style.strokeDashoffset = `${c * gap * 0.5}`;
+    }
+    if(prog){
+      const filled = usable * (p/100);
+      prog.style.strokeDasharray = `${filled} ${c}`;
+      prog.style.strokeDashoffset = `${c * gap * 0.5}`;
+    }
+
+    // Status colors affect: glow, percent text, and the ring stroke
+    const sc = statusColorForPercent(p);
+    el.style.setProperty('--wheel-glow', sc.glow);
+
+    if(stops.length){
+      stops[0]?.setAttribute('stop-color', sc.on);
+      stops[1]?.setAttribute('stop-color', sc.on);
+      stops[2]?.setAttribute('stop-color', sc.on);
+    }
+
+    if(label){
+      label.textContent = `${p}%`;
+      label.style.color = sc.on;
+      label.style.textShadow = `0 10px 30px ${sc.glow}`;
+    }
+
+    if(p === 100) el.classList.add('fullPulse');
+    else el.classList.remove('fullPulse');
+
+    if(opts.isAnimating) el.classList.add('isAnimating');
+    else el.classList.remove('isAnimating');
+
+    el.dataset.curPct = String(p);
+  };
+
+  // Respect reduced motion preferences.
+  try{
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      apply(target, {isAnimating:false});
+      try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
+      return;
+    }
+  }catch(e){}
+
+  // Determine previous percent for smooth load:
+  // load → get previousPercent → render ring @ previousPercent → animate(previous → target)
+  let prev = Number(el.dataset.curPct);
+
+  if(!Number.isFinite(prev)){
+    const stored = Number(localStorage.getItem(LS_KEY));
+    prev = Number.isFinite(stored) ? stored : 0;
+  }
+
+  prev = Math.max(0, Math.min(100, Math.round(prev)));
+
+  // Always render at previous first (prevents instant flash to target on load)
+  apply(prev, {isAnimating:false});
+
+  const start = prev;
+  const delta = target - start;
+
+  if(delta === 0){
+    apply(target, {isAnimating:false});
+    try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
+    return;
+  }
+
+  const dur = Math.max(420, Math.min(1400, 420 + Math.abs(delta) * 10));
+  const easeOutCubic = (x) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
+
+  let t0 = 0;
+  let lastInt = start;
+
+  function frame(ts){
+    if(!t0) t0 = ts;
+    const t = Math.max(0, Math.min(1, (ts - t0) / dur));
+    const eased = easeOutCubic(t);
+    const v = Math.round(start + delta * eased);
+
+    if(v !== lastInt){
+      lastInt = v;
+      apply(v, {isAnimating:true});
+    }else{
+      // still keep animating class + glow intensity during active fill
+      applyRingLikeAnimatingState();
+    }
+
+    if(t < 1){
+      requestAnimationFrame(frame);
+    }else{
+      apply(target, {isAnimating:false});
+      try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
+    }
+  }
+
+  function applyRingLikeAnimatingState(){
+    // lightweight: just ensure class present during animation
+    el.classList.add('isAnimating');
+  }
+
+  requestAnimationFrame(frame);
 }
+
 
 
 
