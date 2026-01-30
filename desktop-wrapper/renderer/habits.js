@@ -1383,38 +1383,7 @@ function deleteHabit(id){
   render();
 }
 
-function renderHero(){
-  const el = document.getElementById("habitsHero");
-  if(!el) return;
-  const H = getFilteredHabits();
-  const iso = today();
-  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
-  const total = H.length || 0;
-  const pct = total ? Math.round((done/total)*100) : 0;
-  el.innerHTML = `
-    <div class="card heroCard">
-      <div class="heroTop">
-        <div>
-          <div class="cardTitle">Today</div>
-          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
-          <div class="small">Keep it simple: small wins compound.</div>
-        </div>
-        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
-          <div class="arcCore">
-            <div class="arcPct">${pct}%</div>
-          </div>
-        </div>
-      </div>
-      <div class="heroActions">
-        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
-      </div>
-    </div>
-  `;
 
-  // Animate the segmented Arc Reactor (more modern than a single ring).
-  const arc = el.querySelector('#heroArc');
-  if(arc) setArcReactor(arc, pct, 5);
-}
 
 function renderFocusCard(){
   // v10: avoid duplicate "Focus hint" cards. We keep the single compact hint tile.
@@ -1640,3 +1609,98 @@ function setAnalyticsOffset(val){
   localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
 }
+
+
+function setHeroWheel(el, pct){
+  const p = Math.max(0, Math.min(100, Number(pct)||0));
+  const r = 46;
+  const c = 2 * Math.PI * r;
+
+  // Create a small gap at the top (like the reference design)
+  const gap = 0.085; // 8.5% of circumference
+  const usable = c * (1 - gap);
+
+  const track = el.querySelector(".wheelTrack");
+  const prog  = el.querySelector(".wheelProg");
+
+  if(track){
+    track.style.strokeDasharray = `${usable} ${c}`;
+    track.style.strokeDashoffset = `${c * gap * 0.5}`;
+  }
+  if(prog){
+    const filled = usable * (p/100);
+    prog.style.strokeDasharray = `${filled} ${c}`;
+    // offset to start after half-gap so the gap stays centered at 12 o'clock
+    prog.style.strokeDashoffset = `${c * gap * 0.5}`;
+  }
+
+  // Update labels
+  const label = el.querySelector(".wheelPct");
+  if(label) label.textContent = `${p}%`;
+}
+
+
+
+function renderHero(){
+  const el = document.getElementById("habitsHero");
+  if(!el) return;
+  const H = getFilteredHabits();
+  const iso = today();
+  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
+  const total = H.length || 0;
+  const pct = total ? Math.round((done/total)*100) : 0;
+
+  el.innerHTML = `
+    <div class="card heroCard">
+      <div class="heroTop">
+        <div>
+          <div class="cardTitle">Today</div>
+          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
+          <div class="small">Keep it simple: small wins compound.</div>
+        </div>
+
+        <div class="habitWheel" id="heroArc" data-pct="${pct}" role="img" aria-label="Today's completion">
+          <svg class="wheelSvg" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="wheelGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="rgba(255, 222, 107, 0.95)"/>
+                <stop offset="55%" stop-color="rgba(255, 204, 64, 0.98)"/>
+                <stop offset="100%" stop-color="rgba(255, 180, 35, 0.95)"/>
+              </linearGradient>
+              <filter id="wheelGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                <feColorMatrix in="blur" type="matrix"
+                  values="1 0 0 0 0
+                          0 1 0 0 0
+                          0 0 1 0 0
+                          0 0 0 0.75 0" result="glow"/>
+                <feMerge>
+                  <feMergeNode in="glow"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g class="wheelRot">
+              <circle class="wheelTrack" cx="60" cy="60" r="46"></circle>
+              <circle class="wheelProg" cx="60" cy="60" r="46"></circle>
+            </g>
+          </svg>
+
+          <div class="wheelCenter">
+            <div class="wheelPct">${pct}%</div>
+            <div class="wheelSub">${done} of ${total||0} done</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="heroActions">
+        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
+      </div>
+    </div>
+  `;
+
+  const wheel = el.querySelector("#heroArc");
+  if(wheel) setHeroWheel(wheel, pct);
+}
+

@@ -1383,104 +1383,7 @@ function deleteHabit(id){
   render();
 }
 
-function renderHero(){
-  const el = document.getElementById("habitsHero");
-  if(!el) return;
-  const H = getFilteredHabits();
-  const iso = today();
-  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
-  const total = H.length || 0;
-  const pct = total ? Math.round((done/total)*100) : 0;
-  const vibe = (()=>{
-    if(!total) return "Add your first habit";
-    if(pct >= 100) return "All done";
-    if(pct >= 70) return "Almost there";
-    if(pct >= 40) return "Halfway there";
-    return "Keep going";
-  })();
 
-  el.innerHTML = `
-    <div class="card heroCard heroNeo">
-      <div class="heroTop heroNeoTop">
-        <div class="heroLeft">
-          <div class="cardTitle">Today</div>
-          <div class="heroKpiNeo">
-            <span class="heroNumNeo">${done}</span>
-            <span class="heroOfNeo">of ${total}</span>
-            <span class="heroDoneNeo">done</span>
-          </div>
-          <div class="heroSubNeo">${escapeHtml(vibe)}</div>
-          <button class="btn ghost heroAddNeo" onclick="openAddHabit(this)">+ Add habit</button>
-        </div>
-
-        <div class="neoRing" id="heroRing" data-pct="${pct}" aria-label="Today's completion" role="img">
-          <svg class="neoRingSvg" viewBox="0 0 120 120" aria-hidden="true">
-            <defs>
-              <linearGradient id="neoGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="var(--neo-on, #f6d24a)" stop-opacity="1"/>
-                <stop offset="100%" stop-color="var(--neo-on-2, #ffd86a)" stop-opacity="1"/>
-              </linearGradient>
-              <filter id="neoGlow" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="3.6" result="blur"/>
-                <feMerge>
-                  <feMergeNode in="blur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <circle class="neoTrack" cx="60" cy="60" r="46" />
-            <circle class="neoProg" cx="60" cy="60" r="46" />
-          </svg>
-          <div class="neoCenter">
-            <div class="neoPct">${pct}%</div>
-            <div class="neoMeta">${done} of ${total} done</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const ring = el.querySelector('#heroRing');
-  if(ring) setNeoRing(ring, pct);
-}
-
-// --- Neo ring (Habits hero) ---
-// Keeps the same % logic; only changes the visual to a smooth glassy ring.
-function setNeoRing(ringEl, pct){
-  const p = Math.max(0, Math.min(100, Number(pct)||0));
-  const svg = ringEl.querySelector('svg');
-  const prog = ringEl.querySelector('.neoProg');
-  const track = ringEl.querySelector('.neoTrack');
-  const pctEl = ringEl.querySelector('.neoPct');
-  if(!svg || !prog || !track) return;
-
-  // ring geometry
-  const r = Number(prog.getAttribute('r')) || 46;
-  const C = 2 * Math.PI * r;
-  // A tiny gap at the top, like the reference mock.
-  const GAP_DEG = 10; // degrees
-  const gapLen = C * (GAP_DEG/360);
-  const usable = Math.max(0, C - gapLen);
-  const startOffset = gapLen / 2; // center the gap at 12 o'clock
-
-  // dash config (track + progress share same gap)
-  track.style.strokeDasharray = `${usable} ${C}`;
-  track.style.strokeDashoffset = `${startOffset}`;
-
-  const len = usable * (p/100);
-  prog.style.strokeDasharray = `${len} ${C}`;
-  prog.style.strokeDashoffset = `${startOffset}`;
-
-  // label
-  if(pctEl) pctEl.textContent = `${Math.round(p)}%`;
-  ringEl.dataset.pct = String(p);
-
-  // color scheme: keep the existing statusColorForPercent behavior
-  // but map it into a warmer "gold" at mid and above.
-  const c = statusColorForPercent(p);
-  // use the computed glow, but slightly warmer for the hero
-  ringEl.style.setProperty('--neo-glow', c.glow);
-}
 
 function renderFocusCard(){
   // v10: avoid duplicate "Focus hint" cards. We keep the single compact hint tile.
@@ -1706,3 +1609,98 @@ function setAnalyticsOffset(val){
   localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
 }
+
+
+function setHeroWheel(el, pct){
+  const p = Math.max(0, Math.min(100, Number(pct)||0));
+  const r = 46;
+  const c = 2 * Math.PI * r;
+
+  // Create a small gap at the top (like the reference design)
+  const gap = 0.085; // 8.5% of circumference
+  const usable = c * (1 - gap);
+
+  const track = el.querySelector(".wheelTrack");
+  const prog  = el.querySelector(".wheelProg");
+
+  if(track){
+    track.style.strokeDasharray = `${usable} ${c}`;
+    track.style.strokeDashoffset = `${c * gap * 0.5}`;
+  }
+  if(prog){
+    const filled = usable * (p/100);
+    prog.style.strokeDasharray = `${filled} ${c}`;
+    // offset to start after half-gap so the gap stays centered at 12 o'clock
+    prog.style.strokeDashoffset = `${c * gap * 0.5}`;
+  }
+
+  // Update labels
+  const label = el.querySelector(".wheelPct");
+  if(label) label.textContent = `${p}%`;
+}
+
+
+
+function renderHero(){
+  const el = document.getElementById("habitsHero");
+  if(!el) return;
+  const H = getFilteredHabits();
+  const iso = today();
+  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
+  const total = H.length || 0;
+  const pct = total ? Math.round((done/total)*100) : 0;
+
+  el.innerHTML = `
+    <div class="card heroCard">
+      <div class="heroTop">
+        <div>
+          <div class="cardTitle">Today</div>
+          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
+          <div class="small">Keep it simple: small wins compound.</div>
+        </div>
+
+        <div class="habitWheel" id="heroArc" data-pct="${pct}" role="img" aria-label="Today's completion">
+          <svg class="wheelSvg" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="wheelGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="rgba(255, 222, 107, 0.95)"/>
+                <stop offset="55%" stop-color="rgba(255, 204, 64, 0.98)"/>
+                <stop offset="100%" stop-color="rgba(255, 180, 35, 0.95)"/>
+              </linearGradient>
+              <filter id="wheelGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                <feColorMatrix in="blur" type="matrix"
+                  values="1 0 0 0 0
+                          0 1 0 0 0
+                          0 0 1 0 0
+                          0 0 0 0.75 0" result="glow"/>
+                <feMerge>
+                  <feMergeNode in="glow"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g class="wheelRot">
+              <circle class="wheelTrack" cx="60" cy="60" r="46"></circle>
+              <circle class="wheelProg" cx="60" cy="60" r="46"></circle>
+            </g>
+          </svg>
+
+          <div class="wheelCenter">
+            <div class="wheelPct">${pct}%</div>
+            <div class="wheelSub">${done} of ${total||0} done</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="heroActions">
+        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
+      </div>
+    </div>
+  `;
+
+  const wheel = el.querySelector("#heroArc");
+  if(wheel) setHeroWheel(wheel, pct);
+}
+

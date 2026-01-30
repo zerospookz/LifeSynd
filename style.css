@@ -1047,81 +1047,6 @@ font-weight: 750;
 .heroDen{opacity:.6;margin-left:4px}
 .heroActions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 
-/* ------------------------
-   Habits hero: glass + smooth ring (reference look)
-   ------------------------ */
-.heroNeo{
-  background: radial-gradient(1200px 420px at 20% 20%, rgba(255,255,255,0.06), transparent 45%),
-              rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.06) inset,
-    0 18px 52px rgba(0,0,0,0.50);
-}
-.heroNeoTop{gap:24px}
-.heroLeft{display:flex;flex-direction:column;gap:10px;min-width:0}
-.heroKpiNeo{display:flex;align-items:baseline;gap:10px;line-height:1}
-.heroNumNeo{font-size: 56px; font-weight: 860; letter-spacing:-0.03em; color: rgba(255,255,255,0.92)}
-.heroOfNeo{font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.72)}
-.heroDoneNeo{font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.86)}
-.heroSubNeo{font-size: 18px; color: rgba(255,255,255,0.55); font-weight: 650}
-.heroAddNeo{align-self:flex-start; padding: 10px 14px; border-radius: 14px}
-
-.neoRing{
-  --neo-glow: rgba(246,210,74,0.55);
-  width: 170px;
-  height: 170px;
-  border-radius: 26px;
-  position: relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.neoRingSvg{position:absolute; inset:0; width:100%; height:100%;}
-.neoTrack{
-  fill: none;
-  stroke: rgba(255,255,255,0.12);
-  stroke-width: 14;
-  opacity: 0.9;
-  transform: rotate(-90deg);
-  transform-origin: 60px 60px;
-}
-.neoProg{
-  fill: none;
-  stroke: url(#neoGrad);
-  stroke-width: 14;
-  stroke-linecap: round;
-  filter: url(#neoGlow);
-  transform: rotate(-90deg);
-  transform-origin: 60px 60px;
-}
-.neoCenter{
-  width: 126px;
-  height: 126px;
-  border-radius: 30px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap: 6px;
-  background:
-    radial-gradient(120px 90px at 50% 35%, rgba(255,255,255,0.10), transparent 55%),
-    rgba(10,12,24,0.70);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.06) inset,
-    0 0 24px var(--neo-glow);
-  backdrop-filter: blur(10px);
-}
-.neoPct{font-size: 46px; font-weight: 900; letter-spacing:-0.03em; color: rgba(255,255,255,0.92); text-shadow: 0 0 20px var(--neo-glow)}
-.neoMeta{font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.55)}
-
-@media (max-width: 760px){
-  .neoRing{width: 150px; height: 150px}
-  .heroNumNeo{font-size: 48px}
-  .neoPct{font-size: 40px}
-}
-
 /* Smooth progress-ring animation (supported in modern Chromium/WebKit). */
 @property --p {
   syntax: '<number>';
@@ -1747,4 +1672,56 @@ font-weight: 750;
 
 .tabIcon img, .tab img{
   object-fit: contain;
+}
+
+/* ===== v12: Habits wheel redesign (keep logic) ===== */
+.habitWheel{
+  width: clamp(140px, 18vw, 210px);
+  height: clamp(140px, 18vw, 210px);
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.wheelSvg{
+  width: 100%;
+  height: 100%;
+}
+.wheelRot{
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+.wheelTrack{
+  fill: none;
+  stroke: rgba(255,255,255,0.09);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+.wheelProg{
+  fill: none;
+  stroke: url(#wheelGrad);
+  stroke-width: 12;
+  stroke-linecap: round;
+  filter: url(#wheelGlow);
+  transition: stroke-dasharray .55s ease;
+}
+.wheelCenter{
+  position:absolute;
+  inset: 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap: 6px;
+  text-align:center;
+}
+.wheelPct{
+  font-size: clamp(34px, 4.2vw, 54px);
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: rgba(255, 222, 107, 0.98);
+  text-shadow: 0 10px 30px rgba(255, 204, 64, 0.18);
+}
+.wheelSub{
+  font-size: 14px;
+  color: rgba(230, 234, 248, 0.65);
 }
