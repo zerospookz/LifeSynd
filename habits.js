@@ -1648,10 +1648,12 @@ function setAnalyticsOffset(val){
 function setHeroWheel(el, pct){
   if(!el) return;
   const target = Math.max(0, Math.min(100, Math.round(Number(pct)||0)));
+
   // Persist previous % per-day so refreshes during the same day animate from
   // the last seen value, but a new day starts fresh.
   const dayIso = (typeof today === 'function') ? today() : new Date().toISOString().slice(0,10);
   const LS_KEY = `heroWheelPrevPct:${dayIso}`;
+
   const r = 46;
   const c = 2 * Math.PI * r;
 
@@ -1663,115 +1665,163 @@ function setHeroWheel(el, pct){
   const prog  = el.querySelector(".wheelProg");
   const label = el.querySelector(".wheelPct");
   const defs = el.querySelector('defs');
-
-  // Gradient stops inside the SVG
   const stops = defs ? Array.from(defs.querySelectorAll('#wheelGrad stop')) : [];
 
-  const apply = (v, opts={})=>{
-    const pRaw = Math.max(0, Math.min(100, Number(v)||0));
-    const p = Math.max(0, Math.min(100, Math.round(pRaw)));
+  // Stronger glow helper
+  const strongerGlow = (rgbaStr)=>{
+    const m = String(rgbaStr||'').match(/rgba\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\)/i);
+    if(!m) return rgbaStr;
+    const a = Math.max(0, Math.min(1, Number(m[4])||0));
+    const a2 = Math.min(1, a + 0.22);
+    return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${a2})`;
+  };
+
+  const applyRing = (pRaw)=>{
+    const v = Math.max(0, Math.min(100, Number(pRaw)||0));
 
     if(track){
       track.style.strokeDasharray = `${usable} ${c}`;
       track.style.strokeDashoffset = `${c * gap * 0.5}`;
     }
     if(prog){
-      const filled = usable * (pRaw/100);
+      const filled = usable * (v/100);
       prog.style.strokeDasharray = `${filled} ${c}`;
       prog.style.strokeDashoffset = `${c * gap * 0.5}`;
     }
+  };
 
-    // Status colors affect: glow, percent text, and the ring stroke
+  const applyStatus = (pInt)=>{
+    const p = Math.max(0, Math.min(100, Math.round(Number(pInt)||0)));
     const sc = statusColorForPercent(p);
-    // Drive CSS glow color (used by drop-shadow)
-    const strongerGlow = (rgbaStr)=>{
-      const m = String(rgbaStr||'').match(/rgba\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\)/i);
-      if(!m) return rgbaStr;
-      const a = Math.max(0, Math.min(1, Number(m[4])||0));
-      const a2 = Math.min(1, a + 0.22);
-      return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${a2})`;
-    };
+
     el.style.setProperty('--wheel-glow', sc.glow);
     el.style.setProperty('--wheel-glow-strong', strongerGlow(sc.glow));
+
     if(stops.length){
-      // Keep it subtle: same hue, slightly different alphas
+      // Same hue, subtle alpha differences via gradient stops
       stops[0]?.setAttribute('stop-color', sc.on);
       stops[1]?.setAttribute('stop-color', sc.on);
       stops[2]?.setAttribute('stop-color', sc.on);
     }
 
     if(label){
-      label.textContent = `${p}%`;
       label.style.color = sc.on;
       label.style.textShadow = `0 10px 30px ${sc.glow}`;
     }
 
-    // 100% pulse accent
     if(p === 100) el.classList.add('fullPulse');
     else el.classList.remove('fullPulse');
-
-    if(opts.isAnimating) el.classList.add('isAnimating');
-    else el.classList.remove('isAnimating');
-
-    el.dataset.curPct = String(p);
   };
 
-  // Respect reduced motion preferences.
+  const applyText = (pRaw)=>{
+    const pInt = Math.max(0, Math.min(100, Math.round(Number(pRaw)||0)));
+    if(label) label.textContent = `${pInt}%`;
+  };
+
+  const setAnimating = (isAnimating)=>{
+    if(isAnimating) el.classList.add('isAnimating');
+    else el.classList.remove('isAnimating');
+  };
+
+  // Reduced motion: snap
   try{
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-      apply(target, {isAnimating:false});
+      applyRing(target);
+      applyStatus(target);
+      applyText(target);
+      el.dataset.curPct = String(target);
       try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
       return;
     }
   }catch(e){}
 
-  // Determine previous percent for smooth load:
   // load → get previousPercent → render ring @ previousPercent → animate(previous → target)
   let prev = Number(el.dataset.curPct);
-
   if(!Number.isFinite(prev)){
     const stored = Number(localStorage.getItem(LS_KEY));
     prev = Number.isFinite(stored) ? stored : 0;
   }
-
   prev = Math.max(0, Math.min(100, Math.round(prev)));
 
-  // Always render at previous first (prevents instant flash to target on load)
-  apply(prev, {isAnimating:false});
+  // Render previous first (prevents instant flash to target on load)
+  applyRing(prev);
+  applyStatus(prev);
+  applyText(prev);
+  setAnimating(false);
 
   const start = prev;
-
   const delta = target - start;
 
   if(delta === 0){
-    apply(target, {isAnimating:false});
+    el.dataset.curPct = String(target);
     try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
     return;
   }
 
-  const dur = Math.max(420, Math.min(1400, 420 + Math.abs(delta) * 10));
-  const easeOutCubic = (x) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
+  // --- Spring/Bounce easing ---
+  // Produces a soft overshoot + settle. Works for both increase & decrease.
+  const spring = (t)=>{
+    const x = Math.max(0, Math.min(1, t));
+    const damping = 10.5;      // higher = less bounce
+    const omega = 12.5;        // higher = faster oscillation
+    // 1 - e^{-d t} * cos(ω t)
+    return 1 - Math.exp(-damping * x) * Math.cos(omega * x);
+  };
+
+  // Duration scales with delta; keep it snappy but readable.
+  const dur = Math.max(560, Math.min(1500, 560 + Math.abs(delta) * 9));
+
+  // Micro-delay between ring and % label (premium feel)
+  const textDelayMs = 120;
 
   let t0 = 0;
-  apply(start, {isAnimating:true});
+
+  // Start anim state
+  setAnimating(true);
 
   function frame(ts){
     if(!t0) t0 = ts;
-    const t = Math.max(0, Math.min(1, (ts - t0) / dur));
-    const eased = easeOutCubic(t);
-    const vRaw = start + delta * eased;
-    apply(vRaw, {isAnimating:true});
 
-    if(t < 1){
+    const tRing = Math.max(0, Math.min(1, (ts - t0) / dur));
+    const tText = Math.max(0, Math.min(1, (ts - t0 - textDelayMs) / dur));
+
+    const eRing = spring(tRing);
+    const eText = spring(tText);
+
+    // Ring can move in sub-percent floats for smoother motion
+    const vRing = start + delta * eRing;
+
+    // Text follows the same spring but slightly later
+    const vText = (ts - t0) < textDelayMs ? start : (start + delta * eText);
+
+    applyRing(vRing);
+
+    // Status/glow should follow the ring (so color changes feel tied to the motion)
+    const ringInt = Math.round(Math.max(0, Math.min(100, vRing)));
+    applyStatus(ringInt);
+
+    // Percent updates in real-time during animation
+    applyText(vText);
+
+    // Persist last rendered integer as "current"
+    el.dataset.curPct = String(ringInt);
+
+    if(tRing < 1){
       requestAnimationFrame(frame);
     }else{
-      apply(target, {isAnimating:false});
+      // Final snap
+      applyRing(target);
+      applyStatus(target);
+      applyText(target);
+      setAnimating(false);
+      el.dataset.curPct = String(target);
       try{ localStorage.setItem(LS_KEY, String(target)); }catch(e){}
     }
   }
 
   requestAnimationFrame(frame);
 }
+
 
 
 

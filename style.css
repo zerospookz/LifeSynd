@@ -1710,13 +1710,13 @@ font-weight: 750;
 .wheelTrack{
   fill: none;
   stroke: rgba(255,255,255,0.09);
-  stroke-width: 8;
+  stroke-width: 7;
   stroke-linecap: round;
 }
 .wheelProg{
   fill: none;
   stroke: url(#wheelGrad);
-  stroke-width: 8;
+  stroke-width: 7;
   stroke-linecap: round;
   filter:
     drop-shadow(0 0 10px var(--wheel-glow-strong, var(--wheel-glow, rgba(255, 204, 64, 0.30))))
@@ -1726,7 +1726,13 @@ font-weight: 750;
 
 /* animation helpers (status glow + pulse) */
 .habitWheel.isAnimating{
-  filter: drop-shadow(0 0 20px var(--wheel-glow, rgba(255, 204, 64, 0.16)));
+  /* Avoid boxy glow around the whole square bounds; keep glow on the ring only */
+  filter: none;
+}
+.habitWheel.isAnimating .wheelProg{
+  filter:
+    drop-shadow(0 0 14px var(--wheel-glow-strong, var(--wheel-glow, rgba(255, 204, 64, 0.34))))
+    drop-shadow(0 0 30px var(--wheel-glow, rgba(255, 204, 64, 0.26)));
 }
 .habitWheel.fullPulse{
   animation: wheelPulse 1.6s ease-in-out infinite;
