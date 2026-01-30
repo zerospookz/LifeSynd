@@ -1647,7 +1647,10 @@ function setAnalyticsOffset(val){
 function setHeroWheel(el, pct){
   if(!el) return;
   const target = Math.max(0, Math.min(100, Math.round(Number(pct)||0)));
-  const LS_KEY = "heroWheelPrevPct";
+  // Persist previous % per-day so refreshes during the same day animate from
+  // the last seen value, but a new day starts fresh.
+  const dayIso = (typeof today === 'function') ? today() : new Date().toISOString().slice(0,10);
+  const LS_KEY = `heroWheelPrevPct:${dayIso}`;
   const r = 46;
   const c = 2 * Math.PI * r;
 

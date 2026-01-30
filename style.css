@@ -1710,13 +1710,13 @@ font-weight: 750;
 .wheelTrack{
   fill: none;
   stroke: rgba(255,255,255,0.09);
-  stroke-width: 10;
+  stroke-width: 8;
   stroke-linecap: round;
 }
 .wheelProg{
   fill: none;
   stroke: url(#wheelGrad);
-  stroke-width: 10;
+  stroke-width: 8;
   stroke-linecap: round;
   filter: drop-shadow(0 0 16px var(--wheel-glow, rgba(255, 204, 64, 0.25)));
   /* rAF animation controls fill; avoid CSS transition fighting it */
@@ -1752,6 +1752,12 @@ font-weight: 750;
   text-shadow: 0 10px 30px rgba(255, 204, 64, 0.18);
 }
 .wheelSub{
-  font-size: 14px;
+  /* Scale down on small screens so it doesn't crowd the center */
+  font-size: clamp(11px, 1.9vw, 14px);
+  line-height: 1.15;
   color: rgba(230, 234, 248, 0.65);
+}
+
+@media (max-width: 420px){
+  .wheelSub{ font-size: 11px; }
 }
