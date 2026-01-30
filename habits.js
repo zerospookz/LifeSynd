@@ -1059,132 +1059,58 @@ const __arcReactorState = new Map(); // key -> last integer pct rendered for arc
 
 function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
-  const seg = Math.max(3, Math.min(8, Number(segments)||5));
 
-  // Always animate from 0 → target so the viewer can *see* every single
-  // percent step (1%, 2%, 3% ... target), like a true "filling" animation.
-  // Start at 1% (when target > 0) so the user can visually see
-  // 1%, 2%, 3% ... as distinct steps.
-  // Persist last rendered % across re-renders so the arc can continue (or rollback) from where it was.
+  // Keep the original behavior: easing + animation + scheme colors
   const key = (el.id || el.getAttribute('data-key') || '').trim();
-  const stored = key && __arcReactorState.has(key) ? Number(__arcReactorState.get(key)) : NaN;
-  const inline = Number(el.dataset.curPct ?? el.style.getPropertyValue('--arc-p') ?? 0) || 0;
-  const existing = Number.isFinite(stored) ? stored : inline;
+  const stored = key ? Number(localStorage.getItem('arc_'+key) || '0') : 0;
+  const start = Number.isFinite(stored) ? stored : 0;
 
-  // If we have no prior state and target > 0, start at 1% so the user sees the first visible step.
-  const prev = (existing > 0 || p <= 0) ? Math.max(0, Math.min(100, Math.round(existing))) : 1;
-  el.dataset.pct = String(p);
+  const scheme = (el.getAttribute('data-scheme') || 'status').trim();
+  const colors = getSchemeColors(scheme, p);
+  const on = colors.on;
+  const off = colors.off;
 
-  // Optional center label ("xx%") inside the arc.
-  const pctLabel = el.querySelector('.arcPct');
-
-  const scheme = (el.getAttribute('data-scheme')||'').toLowerCase();
   const pctEl = el.querySelector('.arcPct');
-  let on, off;
 
-  // Build status colors *per integer percent* so color visibly evolves
-  // while the arc advances 1% at a time.
-  function lerp(a,b,t){ return a + (b-a)*t; }
-  function clamp01(x){ return Math.max(0, Math.min(1, x)); }
-  function hsla(h,s,l,a){
-    return `hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
-  }
-  function statusColors(pi){ return statusColorForPercent(pi); }
+  const from = (p > 0 && start === 0) ? 1 : start;
+  const to = p;
 
-  if(scheme === 'status'){
-    ({on, off} = statusColors(prev));
-    el.style.setProperty('--arc-glow', on);
-  }else{
-    on = 'hsla(210, 100%, 70%, 0.95)';
-    off = 'hsla(210, 35%, 45%, 0.18)';
-    el.style.setProperty('--arc-glow', 'hsla(210, 100%, 70%, 0.65)');
-  }
-
-  el.style.setProperty('--arc-on', on);
-  el.style.setProperty('--arc-off', off);
-
-  // Paint the initial 1% state immediately so the first visible frame isn't 0%.
-  el.style.backgroundImage = buildArcGradient(prev, seg, on, off);
-  el.style.setProperty('--arc-p', String(prev));
-  el.dataset.curPct = String(prev);
-  if(key) __arcReactorState.set(key, prev);
-  if(pctEl) pctEl.textContent = `${prev}%`;
-
-  // reset state
-  el.classList.remove('charged', 'fullPulse');
-  el.classList.add('charging');
-
-  // Slower fill so it feels like a smooth "loading" sweep.
-    // Slower fill so it feels like a smooth "loading" sweep,
-  // but we advance in *real* integer % steps: 1%, 2%, 3% ... target.
-  // Make each 1% step readable. (e.g. 30% ≈ 1.2s, 70% ≈ 2.6s)
-  const DURATION = Math.max(900, Math.round(p * 38));
+  const duration = 520;
   const t0 = performance.now();
 
-  const easeOutCubic = (t)=>1 - Math.pow(1-t, 3);
+  function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
 
-  // We only re-render when the integer percentage changes.
-  // This guarantees the visual passes through 1%, 2%, 3% ... (or downwards if needed).
-  let lastInt = prev;
+  function tick(now){
+    const t = Math.min(1, (now - t0) / duration);
+    const eased = easeOutCubic(t);
+    const cur = Math.round(from + (to - from) * eased);
 
-  const tick = (t)=>{
-    const k = Math.max(0, Math.min(1, (t - t0) / DURATION));
-    const e = easeOutCubic(k);
-    const easedVal = prev + (p - prev) * e;
+    if(key) localStorage.setItem('arc_'+key, String(cur));
 
-    let nextInt;
-    if(p >= prev){
-      nextInt = Math.min(p, Math.max(lastInt, Math.floor(easedVal)));
-    }else{
-      nextInt = Math.max(p, Math.min(lastInt, Math.ceil(easedVal)));
-    }
+    el.style.setProperty('--p', String(cur/100));        // 0..1
+    el.style.setProperty('--arcOn', on);
+    el.style.setProperty('--arcOff', off);
 
-    if(nextInt !== lastInt){
-      lastInt = nextInt;
-      if(pctEl) pctEl.textContent = `${lastInt}%`;
-      // Update colors per integer % (only for the status scheme)
-      if(scheme === 'status'){
-        const c = statusColors(lastInt);
-        on = c.on; off = c.off;
-        el.style.setProperty('--arc-on', on);
-        el.style.setProperty('--arc-off', off);
-        el.style.setProperty('--arc-glow', c.glow);
-      }
-      el.style.backgroundImage = buildArcGradient(lastInt, seg, on, off);
-      el.style.setProperty('--arc-p', String(lastInt));
-      el.dataset.curPct = String(lastInt);
-      if(key) __arcReactorState.set(key, lastInt);
-      if(pctEl) pctEl.textContent = `${lastInt}%`;
-    }
+    if(pctEl) pctEl.textContent = `${cur}%`;
 
-    if(k < 1){
+    if(t < 1){
       requestAnimationFrame(tick);
-      return;
+    }else{
+      el.style.setProperty('--p', String(p/100));
+      el.style.setProperty('--arcOn', on);
+      el.style.setProperty('--arcOff', off);
+      if(pctEl) pctEl.textContent = `${p}%`;
+      el.classList.remove('charging');
+      el.classList.add('charged');
+      if(p >= 100) el.classList.add('fullPulse');
     }
+  }
 
-    // Snap to final value and add "charged" animation.
-    // Final snap (and final color state)
-    if(scheme === 'status'){
-      const c = statusColors(p);
-      on = c.on; off = c.off;
-      el.style.setProperty('--arc-on', on);
-      el.style.setProperty('--arc-off', off);
-      el.style.setProperty('--arc-glow', c.glow);
-    }
-    el.style.backgroundImage = buildArcGradient(p, seg, on, off);
-    el.style.setProperty('--arc-p', String(p));
-    el.dataset.curPct = String(p);
-    if(key) __arcReactorState.set(key, p);
-    if(pctEl) pctEl.textContent = `${p}%`;
-    el.classList.remove('charging');
-    el.classList.add('charged');
-    if(p >= 100){
-      el.classList.add('fullPulse');
-    }
-  };
-
+  el.classList.add('charging');
+  el.classList.remove('charged','fullPulse');
   requestAnimationFrame(tick);
 }
+
 
 
 
