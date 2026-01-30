@@ -1939,7 +1939,7 @@ font-weight: 750;
     transparent calc(100% - var(--gap)) 100%);
   -webkit-mask: radial-gradient(farthest-side, transparent calc(50% - 14px), #000 calc(50% - 13px));
           mask: radial-gradient(farthest-side, transparent calc(50% - 14px), #000 calc(50% - 13px));
-  filter: drop-shadow(0 0 18px rgba(255,214,102,.25)) drop-shadow(0 10px 26px rgba(0,0,0,.45));
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--arcGlow) 55%, transparent)) drop-shadow(0 10px 26px rgba(0,0,0,.45));
   opacity: .98;
   z-index: 2;
 }

@@ -1060,15 +1060,12 @@ const __arcReactorState = new Map(); // key -> last integer pct rendered for arc
 function setArcReactor(el, pct, segments){
   const p = Math.max(0, Math.min(100, Number(pct)||0));
 
-  // Keep the original behavior: easing + animation + scheme colors
+  // Keep old behavior: easing animation + scheme coloring
   const key = (el.id || el.getAttribute('data-key') || '').trim();
   const stored = key ? Number(localStorage.getItem('arc_'+key) || '0') : 0;
   const start = Number.isFinite(stored) ? stored : 0;
 
   const scheme = (el.getAttribute('data-scheme') || 'status').trim();
-  const colors = getSchemeColors(scheme, p);
-  const on = colors.on;
-  const off = colors.off;
 
   const pctEl = el.querySelector('.arcPct');
 
@@ -1080,6 +1077,13 @@ function setArcReactor(el, pct, segments){
 
   function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
 
+  function colorsFor(cur){
+    if(scheme === 'status' && typeof statusColorForPercent === 'function'){
+      return statusColorForPercent(cur);
+    }
+    return { on: '#60a5fa', off: 'rgba(96,165,250,.16)', glow: 'rgba(96,165,250,.55)' };
+  }
+
   function tick(now){
     const t = Math.min(1, (now - t0) / duration);
     const eased = easeOutCubic(t);
@@ -1087,18 +1091,22 @@ function setArcReactor(el, pct, segments){
 
     if(key) localStorage.setItem('arc_'+key, String(cur));
 
-    el.style.setProperty('--p', String(cur/100));        // 0..1
-    el.style.setProperty('--arcOn', on);
-    el.style.setProperty('--arcOff', off);
+    const c = colorsFor(cur);
+    el.style.setProperty('--p', String(cur/100));
+    el.style.setProperty('--arcOn', c.on);
+    el.style.setProperty('--arcOff', c.off);
+    el.style.setProperty('--arcGlow', c.glow || c.on);
 
     if(pctEl) pctEl.textContent = `${cur}%`;
 
     if(t < 1){
       requestAnimationFrame(tick);
     }else{
+      const cf = colorsFor(p);
       el.style.setProperty('--p', String(p/100));
-      el.style.setProperty('--arcOn', on);
-      el.style.setProperty('--arcOff', off);
+      el.style.setProperty('--arcOn', cf.on);
+      el.style.setProperty('--arcOff', cf.off);
+      el.style.setProperty('--arcGlow', cf.glow || cf.on);
       if(pctEl) pctEl.textContent = `${p}%`;
       el.classList.remove('charging');
       el.classList.add('charged');
@@ -1110,6 +1118,7 @@ function setArcReactor(el, pct, segments){
   el.classList.remove('charged','fullPulse');
   requestAnimationFrame(tick);
 }
+
 
 
 
