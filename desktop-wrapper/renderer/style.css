@@ -784,16 +784,33 @@ font-weight: 750;
   --p: 0;              /* percentage 0-100 */
   --size: 150px;
   --thickness: 18px;
+  /* ring status colors (set via JS) */
+  --ring-accent: var(--accent);
+  --ring-glow: rgba(99,102,241,.20);
+  --ring-glow-strong: rgba(99,102,241,.35);
   width: var(--size);
   height: var(--size);
   border-radius: 999px;
   background:
-    conic-gradient(var(--accent) calc(var(--p)*1%), rgba(255,255,255,.08) 0);
+    conic-gradient(var(--ring-accent) calc(var(--p)*1%), rgba(255,255,255,.08) 0);
   position: relative;
   box-shadow:
-    0 18px 40px rgba(99,102,241,.20),
+    0 18px 40px var(--ring-glow),
     inset 0 1px 0 rgba(255,255,255,.10);
   transition: filter .2s ease, transform .2s ease;
+}
+
+.ringChart.isAnimating{
+  filter: drop-shadow(0 0 18px var(--ring-glow-strong));
+}
+
+.ringChart.fullPulse{
+  animation: ringPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ringPulse{
+  0%, 100%{ transform: translateZ(0) scale(1); filter: drop-shadow(0 0 10px var(--ring-glow-strong)); }
+  50%{ transform: translateZ(0) scale(1.02); filter: drop-shadow(0 0 20px var(--ring-glow-strong)); }
 }
 .ringChart::before{
   content:"";
@@ -817,7 +834,7 @@ font-weight: 750;
   padding: 10px;
 }
 .ringBig{
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing:-.03em;
 }
@@ -1704,6 +1721,18 @@ font-weight: 750;
   filter: url(#wheelGlow);
   transition: stroke-dasharray .55s ease;
 }
+
+/* animation helpers (status glow + pulse) */
+.habitWheel.isAnimating{
+  filter: drop-shadow(0 0 18px rgba(255,255,255,.08));
+}
+.habitWheel.fullPulse{
+  animation: wheelPulse 1.6s ease-in-out infinite;
+}
+@keyframes wheelPulse{
+  0%,100%{ transform: scale(1); }
+  50%{ transform: scale(1.02); }
+}
 .wheelCenter{
   position:absolute;
   inset: 0;
@@ -1715,7 +1744,8 @@ font-weight: 750;
   text-align:center;
 }
 .wheelPct{
-  font-size: clamp(34px, 4.2vw, 54px);
+  /* user request: smaller, centered % */
+  font-size: clamp(24px, 3.2vw, 38px);
   font-weight: 900;
   letter-spacing: .2px;
   color: rgba(255, 222, 107, 0.98);

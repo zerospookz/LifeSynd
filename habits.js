@@ -1044,37 +1044,68 @@ function buildArcGradient(pct, segments, onColor, offColor){
 
 // --- Percent-based status coloring (shared by arc + stats fills) ---
 function statusColorForPercent(pi){
+  // Spec ranges:
+  // 0–33  -> Low (red)
+  // 34–66 -> Medium (yellow)
+  // 67–100-> Good (green)
   const x = Math.max(0, Math.min(100, Math.round(Number(pi)||0)));
-  const lerp = (a,b,t)=>a+(b-a)*t;
-  const clamp01 = (t)=>Math.max(0, Math.min(1, t));
-  const hsla = (h,s,l,a)=>`hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
 
-  if(x <= 30){
-    const t = clamp01(x/30);
-    const L = lerp(18, 62, t);
+  // SVG attributes are picky about color formats; use rgba() to be safe.
+  const clamp01 = (t)=>Math.max(0, Math.min(1, t));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+
+  function hslToRgb(h, s, l){
+    h = ((h%360)+360)%360;
+    s = Math.max(0, Math.min(100, s))/100;
+    l = Math.max(0, Math.min(100, l))/100;
+
+    const c = (1 - Math.abs(2*l - 1)) * s;
+    const hp = h / 60;
+    const x = c * (1 - Math.abs((hp % 2) - 1));
+    let r1=0,g1=0,b1=0;
+
+    if(0<=hp && hp<1){ r1=c; g1=x; b1=0; }
+    else if(1<=hp && hp<2){ r1=x; g1=c; b1=0; }
+    else if(2<=hp && hp<3){ r1=0; g1=c; b1=x; }
+    else if(3<=hp && hp<4){ r1=0; g1=x; b1=c; }
+    else if(4<=hp && hp<5){ r1=x; g1=0; b1=c; }
+    else if(5<=hp && hp<6){ r1=c; g1=0; b1=x; }
+
+    const m = l - c/2;
     return {
-      on:  hsla(0, 92, L, 0.96),
-      off: hsla(0, 50, lerp(10, 28, t), 0.22),
-      glow: hsla(0, 92, lerp(30, 70, t), 0.70)
+      r: Math.round((r1+m)*255),
+      g: Math.round((g1+m)*255),
+      b: Math.round((b1+m)*255),
     };
   }
-  if(x <= 70){
-    const t = clamp01((x-30)/40);
-    const L = lerp(54, 62, t);
+
+  const rgba = (h,s,l,a)=>{
+    const {r,g,b} = hslToRgb(h,s,l);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  };
+
+  if(x <= 33){
+    const t = clamp01(x/33);
     return {
-      on:  hsla(45, 100, L, 0.96),
-      off: hsla(45, 55, lerp(24, 34, t), 0.22),
-      glow: hsla(45, 100, lerp(58, 70, t), 0.70)
+      on:   rgba(0, 92, lerp(54, 62, t), 0.96),
+      off:  rgba(0, 50, lerp(20, 28, t), 0.22),
+      glow: rgba(0, 92, lerp(58, 70, t), 0.75),
+    };
+  }
+  if(x <= 66){
+    const t = clamp01((x-34)/32);
+    return {
+      on:   rgba(45, 100, lerp(54, 62, t), 0.96),
+      off:  rgba(45, 55,  lerp(24, 34, t), 0.22),
+      glow: rgba(45, 100, lerp(58, 72, t), 0.75),
     };
   }
   {
-    const t = clamp01((x-70)/30);
-    const H = lerp(45, 140, t);
-    const L = lerp(62, 55, t);
+    const t = clamp01((x-67)/33);
     return {
-      on:  hsla(H, 92, L, 0.96),
-      off: hsla(H, 55, lerp(34, 30, t), 0.22),
-      glow: hsla(H, 92, lerp(70, 62, t), 0.70)
+      on:   rgba(135, 90, lerp(58, 54, t), 0.96),
+      off:  rgba(135, 55, lerp(32, 28, t), 0.22),
+      glow: rgba(135, 90, lerp(68, 62, t), 0.75),
     };
   }
 }
@@ -1163,9 +1194,12 @@ function setArcReactor(el, pct, segments){
       nextInt = Math.max(p, Math.min(lastInt, Math.ceil(easedVal)));
     }
 
+    // Always keep the center % label in sync with the animated value.
+    // (Some renders previously only updated at the end or on sparse steps.)
+    if(pctEl) pctEl.textContent = `${nextInt}%`;
+
     if(nextInt !== lastInt){
       lastInt = nextInt;
-      if(pctEl) pctEl.textContent = `${lastInt}%`;
       // Update colors per integer % (only for the status scheme)
       if(scheme === 'status'){
         const c = statusColors(lastInt);
@@ -1178,7 +1212,6 @@ function setArcReactor(el, pct, segments){
       el.style.setProperty('--arc-p', String(lastInt));
       el.dataset.curPct = String(lastInt);
       if(key) __arcReactorState.set(key, lastInt);
-      if(pctEl) pctEl.textContent = `${lastInt}%`;
     }
 
     if(k < 1){
@@ -1611,81 +1644,107 @@ function setAnalyticsOffset(val){
 }
 
 
-// --- Hero arc: strict banded colors (0–33 red, 34–66 yellow, 67–100 green) ---
-function statusColorForPercentBands(percent){
-  const p = Math.max(0, Math.min(100, Number(percent) || 0));
-  if(p <= 33){
-    return { on: "rgba(255, 82, 82, 0.95)", glow: "rgba(255, 82, 82, 0.55)", text: "rgba(255, 82, 82, 0.95)" };
-  }
-  if(p <= 66){
-    return { on: "rgba(255, 214, 64, 0.98)", glow: "rgba(255, 214, 64, 0.45)", text: "rgba(255, 214, 64, 0.98)" };
-  }
-  return { on: "rgba(93, 230, 152, 0.95)", glow: "rgba(93, 230, 152, 0.45)", text: "rgba(93, 230, 152, 0.95)" };
-}
-
-function easeOutCubic(t){
-  return 1 - Math.pow(1 - t, 3);
-}
-
-let heroArcRaf = null;
-
-function animateHeroArc(el, targetPercent){
+function setHeroWheel(el, pct){
   if(!el) return;
-  if(heroArcRaf){
-    cancelAnimationFrame(heroArcRaf);
-    heroArcRaf = null;
-  }
+  const target = Math.max(0, Math.min(100, Math.round(Number(pct)||0)));
+  const r = 46;
+  const c = 2 * Math.PI * r;
 
-  // Clamp + edge guards
-  const tp = Math.max(0, Math.min(100, Number(targetPercent) || 0));
-  const arcId = el.getAttribute("data-arc-id") || "hero";
+  // Create a small gap at the top (like the reference design)
+  const gap = 0.085; // 8.5% of circumference
+  const usable = c * (1 - gap);
 
-  // Start from previous (persisted) value
-  const key = `arc_${arcId}`;
-  let sp = Number(localStorage.getItem(key));
-  if(!Number.isFinite(sp)) sp = tp;
-  sp = Math.max(0, Math.min(100, sp));
+  const track = el.querySelector(".wheelTrack");
+  const prog  = el.querySelector(".wheelProg");
+  const label = el.querySelector(".wheelPct");
+  const defs = el.querySelector('defs');
 
-  // Colors are based on TARGET (status), while the ring fills smoothly
-  const colors = statusColorForPercentBands(tp);
-  el.style.setProperty("--arcOn", colors.on);
-  el.style.setProperty("--arcOff", "rgba(255,255,255,0.10)");
-  el.style.setProperty("--arcGlow", colors.glow);
+  // Gradient stops inside the SVG
+  const stops = defs ? Array.from(defs.querySelectorAll('#wheelGrad stop')) : [];
 
-  const pctEl = el.querySelector(".wheelPct");
+  const apply = (v, opts={})=>{
+    const p = Math.max(0, Math.min(100, Math.round(Number(v)||0)));
 
-  const start = performance.now();
-  const dur = 780; // premium but snappy
-  el.classList.add("isAnimating");
-
-  const tick = (now) => {
-    const t = Math.min(1, (now - start) / dur);
-    const e = easeOutCubic(t);
-    const cur = sp + (tp - sp) * e;
-    const curPct = Math.round(cur);
-
-    // CSS contract: only feed progress 0..1 + colors
-    el.style.setProperty("--p", String(cur / 100));
-    if(pctEl) pctEl.textContent = `${curPct}%`;
-
-    if(t < 1){
-      heroArcRaf = requestAnimationFrame(tick);
-    }else{
-      heroArcRaf = null;
-      el.classList.remove("isAnimating");
-      if(tp >= 100) el.classList.add("fullPulse");
-      else el.classList.remove("fullPulse");
-      localStorage.setItem(key, String(tp));
+    if(track){
+      track.style.strokeDasharray = `${usable} ${c}`;
+      track.style.strokeDashoffset = `${c * gap * 0.5}`;
     }
+    if(prog){
+      const filled = usable * (p/100);
+      prog.style.strokeDasharray = `${filled} ${c}`;
+      prog.style.strokeDashoffset = `${c * gap * 0.5}`;
+    }
+
+    // Status colors affect: glow, percent text, and the ring stroke
+    const sc = statusColorForPercent(p);
+    // Drive CSS glow color (used by drop-shadow)
+    el.style.setProperty('--wheel-glow', sc.glow);
+    if(stops.length){
+      // Keep it subtle: same hue, slightly different alphas
+      stops[0]?.setAttribute('stop-color', sc.on);
+      stops[1]?.setAttribute('stop-color', sc.on);
+      stops[2]?.setAttribute('stop-color', sc.on);
+    }
+
+    if(label){
+      label.textContent = `${p}%`;
+      label.style.color = sc.on;
+      label.style.textShadow = `0 10px 30px ${sc.glow}`;
+    }
+
+    // 100% pulse accent
+    if(p === 100) el.classList.add('fullPulse');
+    else el.classList.remove('fullPulse');
+
+    if(opts.isAnimating) el.classList.add('isAnimating');
+    else el.classList.remove('isAnimating');
+
+    el.dataset.curPct = String(p);
   };
 
-  // Initialize instantly to start value to avoid flash
-  el.style.setProperty("--p", String(sp / 100));
-  if(pctEl) pctEl.textContent = `${Math.round(sp)}%`;
-  if(tp >= 100) el.classList.add("fullPulse");
-  else el.classList.remove("fullPulse");
+  // Respect reduced motion preferences.
+  try{
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      apply(target, {isAnimating:false});
+      return;
+    }
+  }catch(e){}
 
-  heroArcRaf = requestAnimationFrame(tick);
+  const prev = Math.max(0, Math.min(100, Math.round(Number(el.dataset.curPct || el.getAttribute('data-pct') || 0))));
+  const start = prev;
+  const delta = target - start;
+
+  if(delta === 0){
+    apply(target, {isAnimating:false});
+    return;
+  }
+
+  const dur = Math.max(420, Math.min(1400, 420 + Math.abs(delta) * 10));
+  const easeOutCubic = (x) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
+
+  let t0 = 0;
+  let lastInt = start;
+  apply(start, {isAnimating:true});
+
+  function frame(ts){
+    if(!t0) t0 = ts;
+    const t = Math.max(0, Math.min(1, (ts - t0) / dur));
+    const eased = easeOutCubic(t);
+    const v = Math.round(start + delta * eased);
+
+    if(v !== lastInt){
+      lastInt = v;
+      apply(v, {isAnimating:true});
+    }
+
+    if(t < 1){
+      requestAnimationFrame(frame);
+    }else{
+      apply(target, {isAnimating:false});
+    }
+  }
+
+  requestAnimationFrame(frame);
 }
 
 
@@ -1697,11 +1756,7 @@ function renderHero(){
   const iso = today();
   const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
   const total = H.length || 0;
-  // Progress with guards
-  let pct = 0;
-  if(total > 0) pct = Math.round((done/total)*100);
-  if(done > total) pct = 100;
-  pct = Math.max(0, Math.min(100, pct));
+  const pct = total ? Math.round((done/total)*100) : 0;
 
   el.innerHTML = `
     <div class="card heroCard">
@@ -1712,8 +1767,34 @@ function renderHero(){
           <div class="small">Keep it simple: small wins compound.</div>
         </div>
 
-        <div class="habitWheel" id="heroArc" data-arc-id="today" role="img" aria-label="Today's completion">
-          <div class="arcRing" aria-hidden="true"></div>
+        <div class="habitWheel" id="heroArc" data-pct="${pct}" role="img" aria-label="Today's completion">
+          <svg class="wheelSvg" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="wheelGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="rgba(255, 222, 107, 0.95)"/>
+                <stop offset="55%" stop-color="rgba(255, 204, 64, 0.98)"/>
+                <stop offset="100%" stop-color="rgba(255, 180, 35, 0.95)"/>
+              </linearGradient>
+              <filter id="wheelGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                <feColorMatrix in="blur" type="matrix"
+                  values="1 0 0 0 0
+                          0 1 0 0 0
+                          0 0 1 0 0
+                          0 0 0 0.75 0" result="glow"/>
+                <feMerge>
+                  <feMergeNode in="glow"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g class="wheelRot">
+              <circle class="wheelTrack" cx="60" cy="60" r="46"></circle>
+              <circle class="wheelProg" cx="60" cy="60" r="46"></circle>
+            </g>
+          </svg>
+
           <div class="wheelCenter">
             <div class="wheelPct">${pct}%</div>
             <div class="wheelSub">${done} of ${total||0} done</div>
@@ -1728,6 +1809,6 @@ function renderHero(){
   `;
 
   const wheel = el.querySelector("#heroArc");
-  if(wheel) animateHeroArc(wheel, pct);
+  if(wheel) setHeroWheel(wheel, pct);
 }
 

@@ -1044,37 +1044,68 @@ function buildArcGradient(pct, segments, onColor, offColor){
 
 // --- Percent-based status coloring (shared by arc + stats fills) ---
 function statusColorForPercent(pi){
+  // Spec ranges:
+  // 0–33  -> Low (red)
+  // 34–66 -> Medium (yellow)
+  // 67–100-> Good (green)
   const x = Math.max(0, Math.min(100, Math.round(Number(pi)||0)));
-  const lerp = (a,b,t)=>a+(b-a)*t;
-  const clamp01 = (t)=>Math.max(0, Math.min(1, t));
-  const hsla = (h,s,l,a)=>`hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
 
-  if(x <= 30){
-    const t = clamp01(x/30);
-    const L = lerp(18, 62, t);
+  // SVG attributes are picky about color formats; use rgba() to be safe.
+  const clamp01 = (t)=>Math.max(0, Math.min(1, t));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+
+  function hslToRgb(h, s, l){
+    h = ((h%360)+360)%360;
+    s = Math.max(0, Math.min(100, s))/100;
+    l = Math.max(0, Math.min(100, l))/100;
+
+    const c = (1 - Math.abs(2*l - 1)) * s;
+    const hp = h / 60;
+    const x = c * (1 - Math.abs((hp % 2) - 1));
+    let r1=0,g1=0,b1=0;
+
+    if(0<=hp && hp<1){ r1=c; g1=x; b1=0; }
+    else if(1<=hp && hp<2){ r1=x; g1=c; b1=0; }
+    else if(2<=hp && hp<3){ r1=0; g1=c; b1=x; }
+    else if(3<=hp && hp<4){ r1=0; g1=x; b1=c; }
+    else if(4<=hp && hp<5){ r1=x; g1=0; b1=c; }
+    else if(5<=hp && hp<6){ r1=c; g1=0; b1=x; }
+
+    const m = l - c/2;
     return {
-      on:  hsla(0, 92, L, 0.96),
-      off: hsla(0, 50, lerp(10, 28, t), 0.22),
-      glow: hsla(0, 92, lerp(30, 70, t), 0.70)
+      r: Math.round((r1+m)*255),
+      g: Math.round((g1+m)*255),
+      b: Math.round((b1+m)*255),
     };
   }
-  if(x <= 70){
-    const t = clamp01((x-30)/40);
-    const L = lerp(54, 62, t);
+
+  const rgba = (h,s,l,a)=>{
+    const {r,g,b} = hslToRgb(h,s,l);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  };
+
+  if(x <= 33){
+    const t = clamp01(x/33);
     return {
-      on:  hsla(45, 100, L, 0.96),
-      off: hsla(45, 55, lerp(24, 34, t), 0.22),
-      glow: hsla(45, 100, lerp(58, 70, t), 0.70)
+      on:   rgba(0, 92, lerp(54, 62, t), 0.96),
+      off:  rgba(0, 50, lerp(20, 28, t), 0.22),
+      glow: rgba(0, 92, lerp(58, 70, t), 0.75),
+    };
+  }
+  if(x <= 66){
+    const t = clamp01((x-34)/32);
+    return {
+      on:   rgba(45, 100, lerp(54, 62, t), 0.96),
+      off:  rgba(45, 55,  lerp(24, 34, t), 0.22),
+      glow: rgba(45, 100, lerp(58, 72, t), 0.75),
     };
   }
   {
-    const t = clamp01((x-70)/30);
-    const H = lerp(45, 140, t);
-    const L = lerp(62, 55, t);
+    const t = clamp01((x-67)/33);
     return {
-      on:  hsla(H, 92, L, 0.96),
-      off: hsla(H, 55, lerp(34, 30, t), 0.22),
-      glow: hsla(H, 92, lerp(70, 62, t), 0.70)
+      on:   rgba(135, 90, lerp(58, 54, t), 0.96),
+      off:  rgba(135, 55, lerp(32, 28, t), 0.22),
+      glow: rgba(135, 90, lerp(68, 62, t), 0.75),
     };
   }
 }
@@ -1163,9 +1194,12 @@ function setArcReactor(el, pct, segments){
       nextInt = Math.max(p, Math.min(lastInt, Math.ceil(easedVal)));
     }
 
+    // Always keep the center % label in sync with the animated value.
+    // (Some renders previously only updated at the end or on sparse steps.)
+    if(pctEl) pctEl.textContent = `${nextInt}%`;
+
     if(nextInt !== lastInt){
       lastInt = nextInt;
-      if(pctEl) pctEl.textContent = `${lastInt}%`;
       // Update colors per integer % (only for the status scheme)
       if(scheme === 'status'){
         const c = statusColors(lastInt);
@@ -1178,7 +1212,6 @@ function setArcReactor(el, pct, segments){
       el.style.setProperty('--arc-p', String(lastInt));
       el.dataset.curPct = String(lastInt);
       if(key) __arcReactorState.set(key, lastInt);
-      if(pctEl) pctEl.textContent = `${lastInt}%`;
     }
 
     if(k < 1){

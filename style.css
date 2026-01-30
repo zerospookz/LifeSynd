@@ -784,16 +784,33 @@ font-weight: 750;
   --p: 0;              /* percentage 0-100 */
   --size: 150px;
   --thickness: 18px;
+  /* ring status colors (set via JS) */
+  --ring-accent: var(--accent);
+  --ring-glow: rgba(99,102,241,.20);
+  --ring-glow-strong: rgba(99,102,241,.35);
   width: var(--size);
   height: var(--size);
   border-radius: 999px;
   background:
-    conic-gradient(var(--accent) calc(var(--p)*1%), rgba(255,255,255,.08) 0);
+    conic-gradient(var(--ring-accent) calc(var(--p)*1%), rgba(255,255,255,.08) 0);
   position: relative;
   box-shadow:
-    0 18px 40px rgba(99,102,241,.20),
+    0 18px 40px var(--ring-glow),
     inset 0 1px 0 rgba(255,255,255,.10);
   transition: filter .2s ease, transform .2s ease;
+}
+
+.ringChart.isAnimating{
+  filter: drop-shadow(0 0 18px var(--ring-glow-strong));
+}
+
+.ringChart.fullPulse{
+  animation: ringPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ringPulse{
+  0%, 100%{ transform: translateZ(0) scale(1); filter: drop-shadow(0 0 10px var(--ring-glow-strong)); }
+  50%{ transform: translateZ(0) scale(1.02); filter: drop-shadow(0 0 20px var(--ring-glow-strong)); }
 }
 .ringChart::before{
   content:"";
@@ -817,7 +834,7 @@ font-weight: 750;
   padding: 10px;
 }
 .ringBig{
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing:-.03em;
 }
@@ -1674,64 +1691,48 @@ font-weight: 750;
   object-fit: contain;
 }
 
-/* ===== v12: Habits hero arc (smooth ring, easing, status colors) ===== */
+/* ===== v12: Habits wheel redesign (keep logic) ===== */
 .habitWheel{
-  /* JS -> CSS contract */
-  --p: 0;                       /* progress 0..1 */
-  --arcOn: rgba(255,214,64,.98);
-  --arcOff: rgba(255,255,255,0.10);
-  --arcGlow: rgba(255,214,64,.45);
-
-  /* visual tuning */
-  --gap: 18deg;                 /* top gap */
-  --thick: 12px;                /* ring thickness */
-
-  width: clamp(128px, 18vw, 210px);
-  height: clamp(128px, 18vw, 210px);
+  width: clamp(120px, 16vw, 190px);
+  height: clamp(120px, 16vw, 190px);
   position: relative;
   display: grid;
   place-items: center;
 }
-
-.habitWheel .arcRing{
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-
-  /* Conic ring with a centered top gap */
-  background:
-    conic-gradient(
-      from -90deg,
-      transparent 0deg calc(var(--gap) / 2),
-      var(--arcOn) calc(var(--gap) / 2) calc((var(--gap) / 2) + (1turn - var(--gap)) * var(--p)),
-      var(--arcOff) calc((var(--gap) / 2) + (1turn - var(--gap)) * var(--p)) calc(1turn - (var(--gap) / 2)),
-      transparent calc(1turn - (var(--gap) / 2)) 1turn
-    );
-
-  /* ring mask */
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(50% - var(--thick)), #000 calc(50% - var(--thick) + 1px));
-  mask: radial-gradient(farthest-side, transparent calc(50% - var(--thick)), #000 calc(50% - var(--thick) + 1px));
-
-  filter:
-    drop-shadow(0 0 12px var(--arcGlow))
-    drop-shadow(0 0 26px rgba(0,0,0,0.25));
+.wheelSvg{
+  width: 100%;
+  height: 100%;
+}
+.wheelRot{
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+.wheelTrack{
+  fill: none;
+  stroke: rgba(255,255,255,0.09);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+.wheelProg{
+  fill: none;
+  stroke: url(#wheelGrad);
+  stroke-width: 10;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 16px var(--wheel-glow, rgba(255, 204, 64, 0.25)));
+  /* rAF animation controls fill; avoid CSS transition fighting it */
 }
 
-.habitWheel.isAnimating .arcRing{
-  filter:
-    drop-shadow(0 0 16px var(--arcGlow))
-    drop-shadow(0 0 34px var(--arcGlow));
+/* animation helpers (status glow + pulse) */
+.habitWheel.isAnimating{
+  filter: drop-shadow(0 0 18px rgba(255,255,255,.08));
 }
-
-.habitWheel.fullPulse .arcRing{
-  animation: wheelPulse 1.25s ease-in-out infinite;
+.habitWheel.fullPulse{
+  animation: wheelPulse 1.6s ease-in-out infinite;
 }
-
 @keyframes wheelPulse{
-  0%, 100%{ filter: drop-shadow(0 0 14px var(--arcGlow)) drop-shadow(0 0 28px var(--arcGlow)); }
-  50%{ filter: drop-shadow(0 0 20px var(--arcGlow)) drop-shadow(0 0 42px var(--arcGlow)); }
+  0%,100%{ transform: scale(1); }
+  50%{ transform: scale(1.02); }
 }
-
 .wheelCenter{
   position:absolute;
   inset: 0;
@@ -1741,23 +1742,16 @@ font-weight: 750;
   justify-content:center;
   gap: 6px;
   text-align:center;
-  pointer-events: none;
 }
-
 .wheelPct{
-  font-size: clamp(28px, 3.8vw, 46px);
+  /* user request: smaller, centered % */
+  font-size: clamp(18px, 2.8vw, 30px);
   font-weight: 900;
   letter-spacing: .2px;
-  color: var(--arcOn);
-  text-shadow: 0 10px 30px rgba(0,0,0,0.28);
+  color: rgba(255, 222, 107, 0.98);
+  text-shadow: 0 10px 30px rgba(255, 204, 64, 0.18);
 }
-
 .wheelSub{
   font-size: 14px;
   color: rgba(230, 234, 248, 0.65);
-}
-
-@media (max-width: 520px){
-  .habitWheel{ width: 140px; height: 140px; }
-  .wheelSub{ font-size: 13px; }
 }
