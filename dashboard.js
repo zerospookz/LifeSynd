@@ -83,15 +83,14 @@ function animateRingProgress(ringEl, targetPct){
 
   let raf = 0;
   let t0 = 0;
-  let lastInt = start;
-
-  const set = (v) => {
+  const set = (vRaw) => {
+    const v = Math.max(0, Math.min(100, Number(vRaw)||0));
+    const vi = Math.round(v);
     ringEl.style.setProperty('--p', String(v));
     ringEl.dataset.curPct = String(v);
     const n = ringEl.querySelector('.ringBig');
-    if(n) n.textContent = `${v}%`;
-    // Status color follows the animated value
-    applyRingStatus(ringEl, v, {isAnimating:true});
+    if(n) n.textContent = `${vi}%`;
+    applyRingStatus(ringEl, vi, {isAnimating:true});
   };
 
   // Initialize
@@ -101,17 +100,17 @@ function animateRingProgress(ringEl, targetPct){
     if(!t0) t0 = ts;
     const t = Math.max(0, Math.min(1, (ts - t0) / dur));
     const eased = easeOutCubic(t);
-    const v = Math.round(start + delta * eased);
-
-    if(v !== lastInt){
-      lastInt = v;
-      set(v);
-    }
+    const vRaw = start + delta * eased;
+    set(vRaw);
 
     if(t < 1){
       raf = requestAnimationFrame(frame);
     }else{
       // Final state
+      ringEl.style.setProperty('--p', String(target));
+      ringEl.dataset.curPct = String(target);
+      const n = ringEl.querySelector('.ringBig');
+      if(n) n.textContent = `${target}%`;
       applyRingStatus(ringEl, target, {isAnimating:false});
     }
   }

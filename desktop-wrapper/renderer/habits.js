@@ -514,10 +514,6 @@ function renderAnalytics(){
           <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">2W</button>
           <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">60D</button>
         </div>
-        <div class="seg" role="tablist" aria-label="Paint mode">
-          <button class="segBtn ${analyticsPaintMode==="mark"?"active":""}" data-paint="mark" type="button">Mark</button>
-          <button class="segBtn ${analyticsPaintMode==="erase"?"active":""}" data-paint="erase" type="button">Erase</button>
-        </div>
         <button class="btn ghost" id="calPrev" type="button">←</button>
         <button class="btn ghost" id="calToday" type="button">Today</button>
         <button class="btn ghost" id="calNext" type="button">→</button>
@@ -540,17 +536,6 @@ function renderAnalytics(){
       if(!v || v===analyticsView) return;
       analyticsView = v;
       localStorage.setItem("habitsAnalyticsView", analyticsView);
-      renderAnalytics();
-    });
-  });
-
-  // paint mode toggle
-  card.querySelectorAll("[data-paint]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const p = btn.dataset.paint;
-      if(!p || p===analyticsPaintMode) return;
-      analyticsPaintMode = p;
-      localStorage.setItem("habitsAnalyticsPaintMode", analyticsPaintMode);
       renderAnalytics();
     });
   });
@@ -771,13 +756,29 @@ function renderAnalytics(){
         if(e.target && e.target.closest('.matrixCell')) return; // don't fight paint/tap
         pointerDown=true;
         sx=e.clientX; sy=e.clientY;
+        const startScrollLeft = wrap.scrollLeft;
+        wrap.dataset._swipeStartSL = String(startScrollLeft);
       });
       wrap.addEventListener('pointerup', (e)=>{
         if(!pointerDown) return;
         pointerDown=false;
         const dx = e.clientX - sx;
         const dy = e.clientY - sy;
+
+        // If the user actually scrolled the matrix horizontally, do NOT page the week.
+        const startSL = Number(wrap.dataset._swipeStartSL || 0);
+        const curSL = wrap.scrollLeft;
+        if(Math.abs(curSL - startSL) > 6) return;
+
+        // Only page when the user is at the scroll edges; otherwise the swipe is intended to pan the grid.
+        const maxScroll = Math.max(0, wrap.scrollWidth - wrap.clientWidth);
+        const atLeftEdge  = curSL <= 2;
+        const atRightEdge = curSL >= (maxScroll - 2);
+
         if(Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+        if(dx < 0 && !atRightEdge) return; // swiping left but not at end → just scroll
+        if(dx > 0 && !atLeftEdge)  return; // swiping right but not at start → just scroll
+
         analyticsOffsetDays += (dx < 0 ? step : -step);
         localStorage.setItem('habitsAnalyticsOffsetDays', String(analyticsOffsetDays));
         renderAnalytics();
@@ -1148,7 +1149,7 @@ function setArcReactor(el, pct, segments){
 
   if(scheme === 'status'){
     ({on, off} = statusColors(prev));
-    el.style.setProperty('--arc-glow', on);
+    el.style.setProperty('--arc-glow', statusColors(prev).glow);
   }else{
     on = 'hsla(210, 100%, 70%, 0.95)';
     off = 'hsla(210, 35%, 45%, 0.18)';
@@ -1665,14 +1666,15 @@ function setHeroWheel(el, pct){
   const stops = defs ? Array.from(defs.querySelectorAll('#wheelGrad stop')) : [];
 
   const apply = (v, opts={})=>{
-    const p = Math.max(0, Math.min(100, Math.round(Number(v)||0)));
+    const pRaw = Math.max(0, Math.min(100, Number(v)||0));
+    const p = Math.max(0, Math.min(100, Math.round(pRaw)));
 
     if(track){
       track.style.strokeDasharray = `${usable} ${c}`;
       track.style.strokeDashoffset = `${c * gap * 0.5}`;
     }
     if(prog){
-      const filled = usable * (p/100);
+      const filled = usable * (pRaw/100);
       prog.style.strokeDasharray = `${filled} ${c}`;
       prog.style.strokeDashoffset = `${c * gap * 0.5}`;
     }

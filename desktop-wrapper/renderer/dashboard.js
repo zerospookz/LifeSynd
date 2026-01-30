@@ -84,13 +84,15 @@ function animateRingProgress(ringEl, targetPct){
   let t0 = 0;
   let lastInt = start;
 
-  const set = (v) => {
+  const set = (vRaw) => {
+    const v = Math.max(0, Math.min(100, Number(vRaw)||0));
+    const vi = Math.round(v);
     ringEl.style.setProperty('--p', String(v));
     ringEl.dataset.curPct = String(v);
     const n = ringEl.querySelector('.ringBig');
-    if(n) n.textContent = `${v}%`;
+    if(n) n.textContent = `${vi}%`;
     // Status color follows the animated value
-    applyRingStatus(ringEl, v, {isAnimating:true});
+    applyRingStatus(ringEl, vi, {isAnimating:true});
   };
 
   // Initialize

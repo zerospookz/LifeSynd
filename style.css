@@ -1718,13 +1718,15 @@ font-weight: 750;
   stroke: url(#wheelGrad);
   stroke-width: 8;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 16px var(--wheel-glow, rgba(255, 204, 64, 0.25)));
+  filter:
+    drop-shadow(0 0 10px var(--wheel-glow-strong, var(--wheel-glow, rgba(255, 204, 64, 0.30))))
+    drop-shadow(0 0 22px var(--wheel-glow, rgba(255, 204, 64, 0.22)));
   /* rAF animation controls fill; avoid CSS transition fighting it */
 }
 
 /* animation helpers (status glow + pulse) */
 .habitWheel.isAnimating{
-  filter: drop-shadow(0 0 18px rgba(255,255,255,.08));
+  filter: drop-shadow(0 0 20px var(--wheel-glow, rgba(255, 204, 64, 0.16)));
 }
 .habitWheel.fullPulse{
   animation: wheelPulse 1.6s ease-in-out infinite;
