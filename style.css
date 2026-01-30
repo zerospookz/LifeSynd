@@ -1661,3 +1661,15 @@ font-weight: 750;
   .matrixDayHead{ min-width: 46px; padding: 7px 6px; }
   .matrixDayHead .n{ font-size: 14px; }
 }
+
+/* ===== v11: In-app TAB icon fix ===== */
+.tabIcon, .tab img, .tabIcon img{
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px;
+  min-height: 22px;
+}
+
+.tabIcon img, .tab img{
+  object-fit: contain;
+}
