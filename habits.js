@@ -234,8 +234,8 @@ function applyMatrixDateAbbr(scope){
     const iso = el.getAttribute("data-iso");
     if(!iso) return;
     const mEl = el.querySelector(".m");
-    const dEl = el.querySelector(".day");
-    const wEl = el.querySelector(".d2");
+    const dEl = el.querySelector(".d");
+    const wEl = el.querySelector(".w");
     if(mEl) mEl.textContent = fmtMonthAbbr(iso,n);
     if(dEl) dEl.textContent = new Date(iso+"T00:00:00").getDate();
     if(wEl) wEl.textContent = fmtWeekdayAbbr(iso,n);
@@ -694,7 +694,8 @@ function renderAnalytics(){
       const dateEl = document.createElement("div");
       dateEl.className = "matrixDate";
       dateEl.setAttribute("data-iso", iso);
-      dateEl.innerHTML = `<div class="d1"><span class="m"></span> <span class="day"></span></div><div class="d2"></div>`;
+      dateEl.innerHTML = `<span class="m" aria-hidden="true"></span><span class="d" aria-hidden="true"></span><span class="w" aria-hidden="true"></span>`;
+      dateEl.setAttribute("role","group");
       row.appendChild(dateEl);
 
       H.forEach(h=>{

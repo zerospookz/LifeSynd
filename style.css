@@ -397,11 +397,54 @@ input:focus,select:focus{
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.02);
+
+  /* This fixes low-res: no wrapping + progressive disclosure */
+  container-type: inline-size;
+  container-name: datecell;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
   padding: 10px 10px;
-  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  min-width: 0;
+  line-height: 1;
 }
-.matrixDate .d1{font-weight:700;letter-spacing:-.02em}
-.matrixDate .d2{font-size:.75rem;color:var(--muted);margin-top:2px}
+
+.matrixDate .m,
+.matrixDate .d,
+.matrixDate .w{
+  font-size: clamp(10px, 1.8cqi, 12px);
+  letter-spacing: -.01em;
+  min-width: 0;
+}
+
+.matrixDate .d{
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.matrixDate .w{
+  color: var(--muted);
+  font-size: clamp(9px, 1.6cqi, 11px);
+}
+
+/* Progressive disclosure for narrow cells */
+@container datecell (max-width: 44px){
+  .matrixDate .w{ display:none; } /* drop weekday first */
+}
+@container datecell (max-width: 36px){
+  .matrixDate .m{ display:none; } /* then drop month */
+  .matrixDate{ gap: 0; }
+}
+@container datecell (max-width: 28px){
+  .matrixDate{ padding: 6px 6px; }
+  .matrixDate .d{ font-size: 12px; }
+}
 
 /* Mobile transpose layout: first column is the habit name (sticky like dates). */
 .matrixHabitName{
@@ -995,10 +1038,7 @@ input:focus,select:focus{
 /* Allow habit names to wrap (no ellipsis/clamp) */
 .matrixHabit span{display:block; white-space:normal; overflow:visible; word-break:break-word;}
 .matrixRow.today .matrixDate{border-color: color-mix(in oklab, var(--accent) 35%, rgba(255,255,255,.12)); background: rgba(255,255,255,.05);}
-.matrixRow.today .matrixDate .d1{color: var(--text);}
-.matrixDate .d1{font-size:1rem;}
-.matrixDate .d2{font-size:.78rem;}
-.analyticsCard #habitAnalytics, #habitAnalytics{width:100%;}
+.matrixRow.today .analyticsCard #habitAnalytics, #habitAnalytics{width:100%;}
 
 
 /* Mini heatmap levels (0-4)
