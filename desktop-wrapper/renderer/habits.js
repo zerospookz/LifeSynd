@@ -1659,40 +1659,13 @@ function renderHero(){
           <div class="small">Keep it simple: small wins compound.</div>
         </div>
 
-        <div class="habitWheel" id="heroArc" data-pct="${pct}" role="img" aria-label="Today's completion">
-          <svg class="wheelSvg" viewBox="0 0 120 120" aria-hidden="true">
-            <defs>
-              <linearGradient id="wheelGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="rgba(255, 222, 107, 0.95)"/>
-                <stop offset="55%" stop-color="rgba(255, 204, 64, 0.98)"/>
-                <stop offset="100%" stop-color="rgba(255, 180, 35, 0.95)"/>
-              </linearGradient>
-              <filter id="wheelGlow" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="3.5" result="blur"/>
-                <feColorMatrix in="blur" type="matrix"
-                  values="1 0 0 0 0
-                          0 1 0 0 0
-                          0 0 1 0 0
-                          0 0 0 0.75 0" result="glow"/>
-                <feMerge>
-                  <feMergeNode in="glow"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-
-            <g class="wheelRot">
-              <circle class="wheelTrack" cx="60" cy="60" r="46"></circle>
-              <circle class="wheelProg" cx="60" cy="60" r="46"></circle>
-            </g>
-          </svg>
-
-          <div class="wheelCenter">
-            <div class="wheelPct">${pct}%</div>
-            <div class="wheelSub">${done} of ${total||0} done</div>
+        <div class="
+        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
+          <div class="arcCore">
+            <div class="arcPct">${pct}%</div>
+            <div class="arcLbl">${done} of ${total||0} done</div>
           </div>
         </div>
-      </div>
 
       <div class="heroActions">
         <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
