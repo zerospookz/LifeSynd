@@ -1044,37 +1044,37 @@ function buildArcGradient(pct, segments, onColor, offColor){
 
 // --- Percent-based status coloring (shared by arc + stats fills) ---
 function statusColorForPercent(pi){
+  // Spec ranges:
+  // 0–33  -> Low (red)
+  // 34–66 -> Medium (yellow)
+  // 67–100-> Good (green)
   const x = Math.max(0, Math.min(100, Math.round(Number(pi)||0)));
+  const hsla = (h,s,l,a)=>`hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
   const lerp = (a,b,t)=>a+(b-a)*t;
   const clamp01 = (t)=>Math.max(0, Math.min(1, t));
-  const hsla = (h,s,l,a)=>`hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
 
-  if(x <= 30){
-    const t = clamp01(x/30);
-    const L = lerp(18, 62, t);
+  if(x <= 33){
+    const t = clamp01(x/33);
     return {
-      on:  hsla(0, 92, L, 0.96),
-      off: hsla(0, 50, lerp(10, 28, t), 0.22),
-      glow: hsla(0, 92, lerp(30, 70, t), 0.70)
+      on:  hsla(0, 92, lerp(54, 62, t), 0.96),
+      off: hsla(0, 50, lerp(20, 28, t), 0.22),
+      glow: hsla(0, 92, lerp(58, 70, t), 0.75)
     };
   }
-  if(x <= 70){
-    const t = clamp01((x-30)/40);
-    const L = lerp(54, 62, t);
+  if(x <= 66){
+    const t = clamp01((x-34)/32);
     return {
-      on:  hsla(45, 100, L, 0.96),
+      on:  hsla(45, 100, lerp(54, 62, t), 0.96),
       off: hsla(45, 55, lerp(24, 34, t), 0.22),
-      glow: hsla(45, 100, lerp(58, 70, t), 0.70)
+      glow: hsla(45, 100, lerp(58, 72, t), 0.75)
     };
   }
   {
-    const t = clamp01((x-70)/30);
-    const H = lerp(45, 140, t);
-    const L = lerp(62, 55, t);
+    const t = clamp01((x-67)/33);
     return {
-      on:  hsla(H, 92, L, 0.96),
-      off: hsla(H, 55, lerp(34, 30, t), 0.22),
-      glow: hsla(H, 92, lerp(70, 62, t), 0.70)
+      on:  hsla(135, 90, lerp(58, 54, t), 0.96),
+      off: hsla(135, 55, lerp(32, 28, t), 0.22),
+      glow: hsla(135, 90, lerp(68, 62, t), 0.75)
     };
   }
 }
@@ -1612,7 +1612,8 @@ function setAnalyticsOffset(val){
 
 
 function setHeroWheel(el, pct){
-  const p = Math.max(0, Math.min(100, Number(pct)||0));
+  if(!el) return;
+  const target = Math.max(0, Math.min(100, Math.round(Number(pct)||0)));
   const r = 46;
   const c = 2 * Math.PI * r;
 
@@ -1622,21 +1623,93 @@ function setHeroWheel(el, pct){
 
   const track = el.querySelector(".wheelTrack");
   const prog  = el.querySelector(".wheelProg");
-
-  if(track){
-    track.style.strokeDasharray = `${usable} ${c}`;
-    track.style.strokeDashoffset = `${c * gap * 0.5}`;
-  }
-  if(prog){
-    const filled = usable * (p/100);
-    prog.style.strokeDasharray = `${filled} ${c}`;
-    // offset to start after half-gap so the gap stays centered at 12 o'clock
-    prog.style.strokeDashoffset = `${c * gap * 0.5}`;
-  }
-
-  // Update labels
   const label = el.querySelector(".wheelPct");
-  if(label) label.textContent = `${p}%`;
+  const defs = el.querySelector('defs');
+
+  // Gradient stops inside the SVG
+  const stops = defs ? Array.from(defs.querySelectorAll('#wheelGrad stop')) : [];
+
+  const apply = (v, opts={})=>{
+    const p = Math.max(0, Math.min(100, Math.round(Number(v)||0)));
+
+    if(track){
+      track.style.strokeDasharray = `${usable} ${c}`;
+      track.style.strokeDashoffset = `${c * gap * 0.5}`;
+    }
+    if(prog){
+      const filled = usable * (p/100);
+      prog.style.strokeDasharray = `${filled} ${c}`;
+      prog.style.strokeDashoffset = `${c * gap * 0.5}`;
+    }
+
+    // Status colors affect: glow, percent text, and the ring stroke
+    const sc = statusColorForPercent(p);
+    if(stops.length){
+      // Keep it subtle: same hue, slightly different alphas
+      stops[0]?.setAttribute('stop-color', sc.on);
+      stops[1]?.setAttribute('stop-color', sc.on);
+      stops[2]?.setAttribute('stop-color', sc.on);
+    }
+
+    if(label){
+      label.textContent = `${p}%`;
+      label.style.color = sc.on;
+      label.style.textShadow = `0 10px 30px ${sc.glow}`;
+    }
+
+    // 100% pulse accent
+    if(p === 100) el.classList.add('fullPulse');
+    else el.classList.remove('fullPulse');
+
+    if(opts.isAnimating) el.classList.add('isAnimating');
+    else el.classList.remove('isAnimating');
+
+    el.dataset.curPct = String(p);
+  };
+
+  // Respect reduced motion preferences.
+  try{
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      apply(target, {isAnimating:false});
+      return;
+    }
+  }catch(e){}
+
+  const prev = Math.max(0, Math.min(100, Math.round(Number(el.dataset.curPct || el.getAttribute('data-pct') || 0))));
+  const start = prev;
+  const delta = target - start;
+
+  if(delta === 0){
+    apply(target, {isAnimating:false});
+    return;
+  }
+
+  const dur = Math.max(420, Math.min(1400, 420 + Math.abs(delta) * 10));
+  const easeOutCubic = (x) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
+
+  let t0 = 0;
+  let lastInt = start;
+  apply(start, {isAnimating:true});
+
+  function frame(ts){
+    if(!t0) t0 = ts;
+    const t = Math.max(0, Math.min(1, (ts - t0) / dur));
+    const eased = easeOutCubic(t);
+    const v = Math.round(start + delta * eased);
+
+    if(v !== lastInt){
+      lastInt = v;
+      apply(v, {isAnimating:true});
+    }
+
+    if(t < 1){
+      requestAnimationFrame(frame);
+    }else{
+      apply(target, {isAnimating:false});
+    }
+  }
+
+  requestAnimationFrame(frame);
 }
 
 
