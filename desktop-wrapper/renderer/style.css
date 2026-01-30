@@ -1,0 +1,6 @@
+
+
+/* responsive hide habitsAddCard */
+@media (max-width: 780px){
+  .habitsAddCard{ display:none !important; }
+}

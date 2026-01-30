@@ -1771,3 +1771,9 @@ font-weight: 750;
 @media (max-width: 420px){
   .wheelSub{ font-size: 11px; }
 }
+
+
+/* responsive hide habitsAddCard */
+@media (max-width: 780px){
+  .habitsAddCard{ display:none !important; }
+}

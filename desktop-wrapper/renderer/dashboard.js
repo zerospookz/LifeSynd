@@ -56,6 +56,7 @@ function animateRingProgress(ringEl, targetPct){
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       ringEl.style.setProperty('--p', String(target));
       ringEl.dataset.curPct = String(target);
+      ringEl._animValue = target;
       const n = ringEl.querySelector('.ringBig');
       if(n) n.textContent = `${target}%`;
       applyRingStatus(ringEl, target, {isAnimating:false});
@@ -63,62 +64,72 @@ function animateRingProgress(ringEl, targetPct){
     }
   }catch(e){}
 
-  // Animate from previous → target (not always from 0)
-  const prev = Math.max(0, Math.min(100, Math.round(Number(ringEl.dataset.curPct || ringEl.style.getPropertyValue('--p') || 0))));
-  const start = prev;
-  const delta = target - start;
+  // Cancel any in-flight animation so rapid mark/unmark doesn't glitch.
+  if(ringEl._raf){
+    cancelAnimationFrame(ringEl._raf);
+    ringEl._raf = null;
+  }
 
-  // If no change, still ensure colors are correct.
-  if(delta === 0){
+  const cur = (typeof ringEl._animValue === 'number')
+    ? ringEl._animValue
+    : (Number(ringEl.dataset.curPct) || 0);
+
+  const startVal = Math.max(0, Math.min(100, cur));
+  const delta = target - startVal;
+
+  // If no change, just ensure visuals are correct.
+  if(Math.abs(delta) < 0.001){
     ringEl.style.setProperty('--p', String(target));
     ringEl.dataset.curPct = String(target);
+    ringEl._animValue = target;
     const n = ringEl.querySelector('.ringBig');
     if(n) n.textContent = `${target}%`;
     applyRingStatus(ringEl, target, {isAnimating:false});
     return;
   }
 
-  const dur = Math.max(420, Math.min(1400, 420 + Math.abs(delta) * 10));
-  const easeOutCubic = (x) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
-
+  // Duration scales slightly with distance, capped.
+  const dur = Math.max(260, Math.min(900, 320 + Math.abs(delta) * 6));
   let t0 = 0;
-  let lastInt = start;
 
-  const set = (vRaw) => {
-    const v = Math.max(0, Math.min(100, Number(vRaw)||0));
-    const vi = Math.round(v);
-    ringEl.style.setProperty('--p', String(v));
-    ringEl.dataset.curPct = String(v);
+  const set = (v)=>{
+    const clamped = Math.max(0, Math.min(100, v));
+    ringEl._animValue = clamped;
+    ringEl.style.setProperty('--p', String(clamped));
+    ringEl.dataset.curPct = String(Math.round(clamped));
     const n = ringEl.querySelector('.ringBig');
-    if(n) n.textContent = `${vi}%`;
-    // Status color follows the animated value
-    applyRingStatus(ringEl, vi, {isAnimating:true});
+    if(n) n.textContent = `${Math.round(clamped)}%`; // realtime % update
+    applyRingStatus(ringEl, Math.round(clamped), {isAnimating:true});
   };
 
-  // Initialize
-  set(start);
+  // Initialize at current (not at target) to avoid "flash".
+  set(startVal);
 
   function frame(ts){
     if(!t0) t0 = ts;
     const t = Math.max(0, Math.min(1, (ts - t0) / dur));
+    // Smooth spring-ish ease without overshoot (stable for rapid updates)
+    // (keeps previous spring/pulse behavior elsewhere intact)
     const eased = easeOutCubic(t);
-    const v = Math.round(start + delta * eased);
-
-    if(v !== lastInt){
-      lastInt = v;
-      set(v);
-    }
+    const v = startVal + delta * eased;
+    set(v);
 
     if(t < 1){
-      requestAnimationFrame(frame);
+      ringEl._raf = requestAnimationFrame(frame);
     }else{
-      // Final state
+      ringEl._raf = null;
+      ringEl.style.setProperty('--p', String(target));
+      ringEl.dataset.curPct = String(target);
+      ringEl._animValue = target;
+      const n = ringEl.querySelector('.ringBig');
+      if(n) n.textContent = `${target}%`;
       applyRingStatus(ringEl, target, {isAnimating:false});
     }
   }
 
-  requestAnimationFrame(frame);
+  ringEl._raf = requestAnimationFrame(frame);
 }
+
 
 function formatPrettyDate(iso){
   try{
