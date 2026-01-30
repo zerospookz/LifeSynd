@@ -7,25 +7,31 @@
 
 /* Habits icon (replaces 🔥) */
 .navIcon{
-  width: clamp(22px, 2.6vw, 30px);
-  height: clamp(22px, 2.6vw, 30px);
+  width: clamp(18px, 2.4vw, 26px);
+  height: clamp(18px, 2.4vw, 26px);
   display:inline-block;
   object-fit: contain;
   vertical-align: -3px;
   margin-right: 8px;
-  filter: brightness(1.18) saturate(1.25);
+
+  image-rendering: -webkit-optimize-contrast;
+  filter: contrast(1.25) brightness(1.15) saturate(1.20);
 }
 .navIconBottom{
-  width: clamp(16px, 2.0vw, 18px);
-  height: clamp(16px, 2.0vw, 18px);
+  width: clamp(16px, 2.2vw, 22px);
+  height: clamp(16px, 2.2vw, 22px);
   object-fit: contain;
   vertical-align: -3px;
   margin-right: 6px;
+
+  image-rendering: -webkit-optimize-contrast;
+  filter: contrast(1.20) brightness(1.12) saturate(1.18);
 }
 @media (max-width: 520px){
-  .navIcon{ width: 14px; height: 14px; margin-right: 6px; }
-  .navIconBottom{ width: 15px; height: 15px; margin-right: 5px; }
+  .navIcon{ width: 18px; height: 18px; margin-right: 6px; }
+  .navIconBottom{ width: 16px; height: 16px; margin-right: 5px; }
 }
+
 
 .bottomNav .navIcon{
   width: clamp(20px, 5.0vw, 28px);
@@ -36,5 +42,5 @@
 
 .nav a.active .navIcon,
 .bottomNav a.active .navIcon{
-  filter: brightness(1.25) saturate(1.35) drop-shadow(0 0 8px rgba(64,255,255,0.25));
+  filter: contrast(1.30) brightness(1.20) saturate(1.25) drop-shadow(0 0 10px rgba(64,255,255,0.35));
 }
