@@ -1445,3 +1445,18 @@ font-weight: 750;
 .topbar > div:first-child{
   min-width: 0;
 }
+
+/* --- LifeSync branding images (v3 visibility) --- */
+.brand{
+  gap: 14px;
+}
+.logoMark{
+  width: clamp(44px, 3.2vw, 56px);
+  height: clamp(44px, 3.2vw, 56px);
+  border-radius: 14px;
+}
+.topbarLogo{
+  width: clamp(26px, 2.2vw, 34px);
+  height: clamp(26px, 2.2vw, 34px);
+  border-radius: 10px;
+}
