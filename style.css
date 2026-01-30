@@ -1459,3 +1459,53 @@ font-weight: 750;
 }
 .brandTitle{ font-size: 16px; }
 .brandSub{ font-size: 12px; opacity:.8; }
+
+/* ===== v5 HUGE ICON VISIBILITY FIX ===== */
+
+/* Sidebar brand block */
+.brand{
+  padding: 18px 16px;
+  gap: 18px;
+}
+.logoMark{
+  width: clamp(84px, 6vw, 110px);
+  height: clamp(84px, 6vw, 110px);
+  border-radius: 22px;
+}
+
+/* Sidebar nav icons */
+.sidebar .navIcon{
+  width: 30px;
+  height: 30px;
+  font-size: 22px;
+}
+
+/* Toolbar / header icons */
+.topbarLogo{
+  width: clamp(40px, 3.5vw, 56px);
+  height: clamp(40px, 3.5vw, 56px);
+  border-radius: 14px;
+}
+
+/* Buttons like Open in app */
+.btnIcon,
+.openInAppIcon{
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+}
+
+/* Welcome / hero icons */
+.heroIcon,
+.sectionIcon{
+  width: 48px;
+  height: 48px;
+  font-size: 34px;
+}
+
+/* Cards icons */
+.cardIcon{
+  width: 44px;
+  height: 44px;
+  font-size: 30px;
+}
