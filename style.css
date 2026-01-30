@@ -681,27 +681,10 @@ font-weight: 750;
 
 /* Desktop modal layout (mobile overrides below) */
 @media (min-width: 761px){
-  .modalBackdrop{
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(6px);
-    z-index: 200;
-    display:block;
-  }
-  .modalSheet{
-    position: fixed;
-    left: 50%;
-    top: 18%;
-    transform: translateX(-50%) translateY(8px);
-    width: min(560px, calc(100% - 28px));
-    border-radius: 22px;
-    border: 1px solid rgba(30,41,59,.9);
-    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-    box-shadow: 0 30px 80px rgba(0,0,0,.65);
-    padding: 18px;
-    opacity: 0;
-  }
+  .modalBackdrop{ z-index: 200; }
+  .modalBackdrop.show{ display:flex; }
+}
+
   .modal.open .modalSheet{animation: desktopModalIn .18s ease-out forwards}
   @keyframes desktopModalIn{to{transform: translateX(-50%) translateY(0); opacity:1}}
 }
@@ -1460,3 +1443,19 @@ font-weight: 750;
   height: clamp(26px, 2.2vw, 34px);
   border-radius: 10px;
 }
+
+/* v4: ensure modals don't dim the whole desktop unless opened */
+.modalBackdrop{display:none;}
+.modalBackdrop.show{display:flex;}
+
+/* v4: bigger, clearer brand mark */
+.logoMark{
+  width: clamp(60px, 4vw, 78px);
+  height: clamp(60px, 4vw, 78px);
+  border-radius: 18px;
+}
+.brand{
+  padding: 14px 14px;
+}
+.brandTitle{ font-size: 16px; }
+.brandSub{ font-size: 12px; opacity:.8; }
