@@ -1649,7 +1649,6 @@ function renderHero(){
   const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
   const total = H.length || 0;
   const pct = total ? Math.round((done/total)*100) : 0;
-
   el.innerHTML = `
     <div class="card heroCard">
       <div class="heroTop">
@@ -1658,22 +1657,21 @@ function renderHero(){
           <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
           <div class="small">Keep it simple: small wins compound.</div>
         </div>
-
-        <div class="
-        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
+        <div class="arcReactor heroArc" id="heroArc" data-scheme="status" data-scheme="status" data-pct="${pct}" aria-label="Today's completion" role="img">
           <div class="arcCore">
             <div class="arcPct">${pct}%</div>
-            <div class="arcLbl">${done} of ${total||0} done</div>
-          </div>
+          <div class="arcLbl">${done} of ${total||0} done</div>
+            </div>
         </div>
-
+      </div>
       <div class="heroActions">
         <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
       </div>
     </div>
   `;
 
-  const wheel = el.querySelector("#heroArc");
-  if(wheel) setHeroWheel(wheel, pct);
+  // Animate the segmented Arc Reactor (more modern than a single ring).
+  const arc = el.querySelector('#heroArc');
+  if(arc) setArcReactor(arc, (Number.isFinite(pct)?pct:0), 5);
 }
 
