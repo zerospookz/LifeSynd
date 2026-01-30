@@ -1533,3 +1533,51 @@ font-weight: 750;
   border-radius: 20px !important;
 }
 .pageTitleRow{ gap: 18px !important; }
+
+/* ===== v7: Brand card layout fix (desktop) ===== */
+@media (min-width: 900px){
+  /* Top-left brand card container */
+  .brand, .brandCard, .brandBox, .brandPanel{
+    display:flex !important;
+    align-items:center !important;
+    gap: 18px !important;
+    padding: 22px !important;
+    min-height: 180px !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure children don't get squished */
+  .brand > *, .brandCard > *, .brandBox > *, .brandPanel > *{
+    min-width: 0;
+  }
+
+  /* Logo */
+  .logoMark{
+    width: clamp(150px, 9vw, 190px) !important;
+    height: clamp(150px, 9vw, 190px) !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* Text area */
+  .brandText, .brandInfo{
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    gap: 6px !important;
+  }
+
+  .brandTitle{
+    font-size: 28px !important;
+    font-weight: 900 !important;
+    line-height: 1.05 !important;
+    color: #f3f6ff !important;
+    white-space: nowrap !important;
+  }
+
+  .brandSub{
+    font-size: 15px !important;
+    opacity: .86 !important;
+    white-space: nowrap !important;
+  }
+}
