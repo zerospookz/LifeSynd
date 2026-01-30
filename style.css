@@ -1673,3 +1673,55 @@ font-weight: 750;
 .tabIcon img, .tab img{
   object-fit: contain;
 }
+
+/* ===== v12: Habits wheel redesign (keep logic) ===== */
+.habitWheel{
+  width: clamp(140px, 18vw, 210px);
+  height: clamp(140px, 18vw, 210px);
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.wheelSvg{
+  width: 100%;
+  height: 100%;
+}
+.wheelRot{
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+.wheelTrack{
+  fill: none;
+  stroke: rgba(255,255,255,0.09);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+.wheelProg{
+  fill: none;
+  stroke: url(#wheelGrad);
+  stroke-width: 12;
+  stroke-linecap: round;
+  filter: url(#wheelGlow);
+  transition: stroke-dasharray .55s ease;
+}
+.wheelCenter{
+  position:absolute;
+  inset: 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap: 6px;
+  text-align:center;
+}
+.wheelPct{
+  font-size: clamp(34px, 4.2vw, 54px);
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: rgba(255, 222, 107, 0.98);
+  text-shadow: 0 10px 30px rgba(255, 204, 64, 0.18);
+}
+.wheelSub{
+  font-size: 14px;
+  color: rgba(230, 234, 248, 0.65);
+}
