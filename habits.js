@@ -193,6 +193,55 @@ function habitHue(id){
 
 
 
+
+function abbr(s,n){ return (s||"").slice(0,n); }
+
+function fmtMonthAbbr(iso, n){
+  const d=new Date(iso+"T00:00:00");
+  let m;
+  try{
+    m=new Intl.DateTimeFormat(undefined,{month:"short"}).format(d);
+  }catch(e){
+    m=d.toLocaleDateString(undefined,{month:"short"});
+  }
+  return abbr(m,n);
+}
+
+function fmtWeekdayAbbr(iso, n){
+  const d=new Date(iso+"T00:00:00");
+  let w;
+  try{
+    w=d.toLocaleDateString(undefined,{weekday:"short"});
+  }catch(e){
+    w=fmtWeekday(iso);
+  }
+  return abbr(w,n);
+}
+
+function chooseAbbrLen(px){
+  // tuned for matrixDate width
+  if(px >= 56) return 3;
+  if(px >= 46) return 2;
+  return 1;
+}
+
+function applyMatrixDateAbbr(scope){
+  const items = Array.from((scope||document).querySelectorAll(".matrixDate"));
+  if(!items.length) return;
+  const w = Math.floor(items[0].getBoundingClientRect().width || 0);
+  const n = chooseAbbrLen(w);
+  items.forEach(el=>{
+    const iso = el.getAttribute("data-iso");
+    if(!iso) return;
+    const mEl = el.querySelector(".m");
+    const dEl = el.querySelector(".day");
+    const wEl = el.querySelector(".d2");
+    if(mEl) mEl.textContent = fmtMonthAbbr(iso,n);
+    if(dEl) dEl.textContent = new Date(iso+"T00:00:00").getDate();
+    if(wEl) wEl.textContent = fmtWeekdayAbbr(iso,n);
+  });
+}
+
 function fmtWeekday(iso){
   const d=new Date(iso+"T00:00:00");
   return d.toLocaleDateString(undefined,{weekday:"short"});
@@ -644,7 +693,8 @@ function renderAnalytics(){
 
       const dateEl = document.createElement("div");
       dateEl.className = "matrixDate";
-      dateEl.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
+      dateEl.setAttribute("data-iso", iso);
+      dateEl.innerHTML = `<div class="d1"><span class="m"></span> <span class="day"></span></div><div class="d2"></div>`;
       row.appendChild(dateEl);
 
       H.forEach(h=>{
@@ -1647,3 +1697,19 @@ function setAnalyticsOffset(val){
   localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
   render();
 }
+
+
+// Keep date labels readable on resize
+(function(){
+  let ro;
+  function init(){
+    const m = document.querySelector(".matrix");
+    if(!m) return;
+    if(ro) ro.disconnect();
+    ro = new ResizeObserver(()=>applyMatrixDateAbbr(m));
+    ro.observe(m);
+    applyMatrixDateAbbr(m);
+  }
+  window.addEventListener("resize", ()=>init(), {passive:true});
+  document.addEventListener("DOMContentLoaded", ()=>init());
+})();
