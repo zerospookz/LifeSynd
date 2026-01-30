@@ -1836,3 +1836,55 @@ font-weight: 750;
   .arcReactor.heroArc{ width: 150px; height: 150px; }
   .arcReactor.heroArc .arcPct{ font-size: 36px !important; }
 }
+
+/* ===== v16: Remove black box behind tab icon ===== */
+.tabIcon,
+.tabIcon img,
+.tab img{
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.tab .tabIcon{
+  padding: 0 !important;
+}
+
+/* Ensure no wrapper adds background */
+.tab,
+.tabHeader,
+.tabTitle{
+  background: transparent;
+}
+
+/* ===== v17: TAB = ICON ONLY, HIGH VISIBILITY ===== */
+
+/* Hide tab text label, keep icon only */
+.tab .tabTitle,
+.tab .tabLabel,
+.tab span:not(.tabIcon){
+  display: none !important;
+}
+
+/* Make icon larger and clearer */
+.tabIcon,
+.tabIcon img{
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px;
+  min-height: 26px;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.25));
+}
+
+/* Center icon nicely */
+.tab{
+  gap: 0 !important;
+  padding: 8px 10px !important;
+}
+
+/* Active tab emphasis */
+.tab.active .tabIcon img{
+  filter:
+    drop-shadow(0 0 10px rgba(120,200,255,.45))
+    saturate(1.15);
+}

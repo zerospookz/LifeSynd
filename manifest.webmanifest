@@ -1,7 +1,7 @@
 {
   "name": "LifeSync",
   "short_name": "LifeSync",
-  "start_url": "index.html?v=15",
+  "start_url": "index.html?v=17",
   "display": "standalone",
   "background_color": "#0b0f1a",
   "theme_color": "#0b0f1a",
