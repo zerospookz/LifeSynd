@@ -1397,3 +1397,14 @@ input:focus,select:focus{
 @media (max-width:760px){
   .matrixHeaderRow{padding: 10px 0 12px;}
 }
+
+
+/* Adaptive labels */
+.adaptive-label {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
