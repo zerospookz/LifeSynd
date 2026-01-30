@@ -1417,40 +1417,11 @@ function renderHero(){
 }
 
 function renderFocusCard(){
+  // v10: avoid duplicate "Focus hint" cards. We keep the single compact hint tile.
   const el = document.getElementById("focusHint");
   if(!el) return;
-  const H = getFilteredHabits();
-  if(!H.length){
-    el.innerHTML = `<div class="cardHeader"><h3 class="cardTitle">Focus</h3></div><p class="small">Add a habit to see insights.</p>`;
-    return;
-  }
-  // reuse logic from insights (weakest habit over last 14 days)
-  const now=new Date(today()+"T00:00:00");
-  const days=14;
-  const window=[];
-  for(let i=days-1;i>=0;i--){
-    const d=new Date(now); d.setDate(now.getDate()-i);
-    window.push(d.toISOString().slice(0,10));
-  }
-  let weakest=null, weakestCount=Infinity, weakestDone=0;
-  for(const h of H){
-    const set=new Set(h.datesDone||[]);
-    const done=window.reduce((a,iso)=>a+(set.has(iso)?1:0),0);
-    if(done < weakestCount){
-      weakest=h; weakestCount=done; weakestDone=done;
-    }
-  }
-  const label = weakest ? weakest.name : "—";
-  el.innerHTML = `
-    <div class="focusRow">
-      <div class="focusIcon">🧠</div>
-      <div class="focusText">
-        <div class="focusTitle">Focus hint</div>
-        <div class="focusBody">Weakest habit: <b>${escapeHtml(label)}</b> — ${weakestDone}/${days} days in the last 2 weeks</div>
-      </div>
-      <button class="btn tertiary" onclick="jumpToHabit('${weakest?weakest.id:""}')">Jump →</button>
-    </div>
-  `;
+  el.innerHTML = "";
+  el.style.display = "none";
 }
 
 function syncSidePanels(){
