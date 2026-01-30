@@ -4,3 +4,23 @@
 @media (max-width: 780px){
   .habitsAddCard{ display:none !important; }
 }
+
+/* Habits icon (replaces 🔥) */
+.navIcon{
+  width: clamp(16px, 2.1vw, 20px);
+  height: clamp(16px, 2.1vw, 20px);
+  object-fit: contain;
+  vertical-align: -3px;
+  margin-right: 8px;
+}
+.navIconBottom{
+  width: clamp(16px, 2.0vw, 18px);
+  height: clamp(16px, 2.0vw, 18px);
+  object-fit: contain;
+  vertical-align: -3px;
+  margin-right: 6px;
+}
+@media (max-width: 520px){
+  .navIcon{ width: 14px; height: 14px; margin-right: 6px; }
+  .navIconBottom{ width: 15px; height: 15px; margin-right: 5px; }
+}
