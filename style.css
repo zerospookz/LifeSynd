@@ -434,7 +434,7 @@ input:focus,select:focus{
 .matrixDayHead .d1, .matrixDayHead .d2{ line-height: 1.05; }
 .matrixDayHead .m{
   display:inline-block;
-  max-width: 3ch;
+  max-width: 2ch;
   white-space: nowrap;
   overflow: hidden;
   font-weight: 850;

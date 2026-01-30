@@ -699,30 +699,31 @@ function renderAnalytics(){
     dates.forEach(iso=>{
       const d = document.createElement("div");
       d.className = "matrixDayHead";
-      // Mobile day chip: keep month/day/weekday INSIDE the chip.
-      // Requirement: month / day / weekday -> always in 2 rows.
-      // Row 1: month
-      // Row 2: day + weekday
+      // Mobile day chip (low resolution): show ONLY
+      // Row 1: month (2 letters)
+      // Row 2: day (2 digits)
       const dd = new Date(iso+"T00:00:00");
       let mon = "";
       let day = "";
       try{
         mon = new Intl.DateTimeFormat(undefined,{month:"short"}).format(dd);
-        day = new Intl.DateTimeFormat(undefined,{day:"numeric"}).format(dd);
+        day = new Intl.DateTimeFormat(undefined,{day:"2-digit"}).format(dd);
       }catch(e){
         mon = iso.slice(5,7);
         day = iso.slice(8,10);
       }
-      const wd = fmtWeekday(iso);
+      // Force month to 2 letters for low-res chips (e.g. "Jan", "Feb" -> "Ja", "Fe").
+      // Trim common trailing punctuation from some locales (e.g. "ян.").
+      const mon2 = (String(mon).replace(/\./g, "").trim()).slice(0, 2);
       d.innerHTML = `
-        <div class="d1"><span class="m" data-full="${mon}">${mon}</span></div>
-        <div class="d2"><span class="n">${day}</span><span class="w" data-full="${wd}">${wd}</span></div>
+        <div class="d1"><span class="m" data-full="${mon}">${mon2}</span></div>
+        <div class="d2"><span class="n">${day}</span></div>
       `;
       header.appendChild(d);
     });
 
     grid.appendChild(header);
-    requestAnimationFrame(()=>adaptDayLabels(header));
+    // No adaptive month/weekday shrinking here: low-res spec is fixed 2-letter month + 2-digit day.
 
     H.forEach(h=>{
       const row = document.createElement("div");
