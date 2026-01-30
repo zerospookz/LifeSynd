@@ -1420,3 +1420,28 @@ font-weight: 750;
   flex: 0 0 auto;
   opacity: .95;
 }
+
+/* --- LifeSync branding images (v2 responsive) --- */
+.logoMark{
+  width: clamp(36px, 3.2vw, 48px);
+  height: clamp(36px, 3.2vw, 48px);
+  border-radius: 12px;
+  display:block;
+}
+.topbarLogo{
+  width: clamp(22px, 2.2vw, 30px);
+  height: clamp(22px, 2.2vw, 30px);
+  border-radius: 9px;
+  flex: 0 0 auto;
+  opacity: .95;
+}
+.pageTitleRow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+/* Keep dashboard topbar layout stable */
+.topbar > div:first-child{
+  min-width: 0;
+}
