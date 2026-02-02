@@ -19,7 +19,14 @@ function savePlan(p){ localStorage.setItem(PLAN_KEY,JSON.stringify(p)); }
 let templates=loadTemplates();
 let plan=loadPlan();
 
+const tplName = document.getElementById("tplName");
+const tplList = document.getElementById("tplList");
+const weekList = document.getElementById("weekList");
+const weekSummary = document.getElementById("weekSummary");
+
+
 function saveTemplate(){
+  if(!tplName) return;
   if(!tplName.value) return;
   const name=tplName.value.trim();
   templates[name]={name, exercises:[]};
@@ -55,6 +62,7 @@ function toggleDone(dateIso){
 }
 
 function renderTemplates(){
+  if(!tplList) return;
   const names=Object.keys(templates).sort();
   tplList.innerHTML = names.map(n=>{
     const ex=(templates[n].exercises||[]).slice(0,3).join(", ");
@@ -69,6 +77,7 @@ function renderTemplates(){
 }
 
 function renderWeek(){
+  if(!weekList || !weekSummary) return;
   const now=new Date();
   const start=startOfWeek(now);
   const names=Object.keys(templates).sort();
@@ -108,9 +117,10 @@ window.setDayTemplate=setDayTemplate;
 window.toggleDone=toggleDone;
 
 function render(){
+  // planner.js is loaded on multiple pages; only render when containers exist
   templates=loadTemplates();
   plan=loadPlan();
   renderTemplates();
   renderWeek();
 }
-render();
+if (tplList || weekList || weekSummary || tplName) { render(); }
