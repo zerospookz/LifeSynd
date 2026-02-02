@@ -167,6 +167,7 @@ a{color:inherit}
 .content{
   padding: 34px 36px 60px;
   max-width: 1280px;
+  width: 100%;
 }
 
 /* Dashboard layout */
@@ -1844,4 +1845,16 @@ font-weight: 750;
 .nav a.active .navIcon,
 .bottomNav a.active .navIcon{
   filter: contrast(1.30) brightness(1.20) saturate(1.25) drop-shadow(0 0 10px rgba(64,255,255,0.35));
+}
+
+
+/* Wide-screen enhancement (desktop only): use more horizontal space for readability */
+@media (min-width: 1400px){
+  .content{
+    max-width: 1680px;
+    padding: 38px 52px 70px;
+  }
+  /* Make the habits matrix cells bigger on large screens */
+  .matrixGrid{ --cell: 64px; --dateCol: 220px; }
+  .analyticsTop{ grid-template-columns: 1.15fr .9fr; }
 }
