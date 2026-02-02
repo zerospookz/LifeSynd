@@ -132,125 +132,31 @@ a{color:inherit}
   color: rgba(255,255,255,.86);
 }
 
-/* --- Nav icon visibility + polish --- */
+/* --- Nav icon visibility (stable, no glow) --- */
 
 .nav a .iconWrap,
 .bottomNav a .iconWrap{
-  position: relative;
   width: 22px;
   height: 22px;
-  border-radius: 999px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
 }
+.bottomNav a .iconWrap{ width: 20px; height: 20px; }
+
 .nav a .iconWrap img,
 .bottomNav a .iconWrap img{
   width: 100%;
   height: 100%;
-  display:block;
+  display: block;
   object-fit: contain;
 }
 
-/* Active: lit circular chip + ring (wrap controls size, img fills it) */
-.nav a.active .iconWrap{
-  width: 34px;
-  height: 34px;
-  background:
-    radial-gradient(circle at 35% 30%, rgba(120,255,255,.28) 0%, rgba(30,120,180,.16) 46%, rgba(10,18,34,0) 72%),
-    radial-gradient(circle, rgba(64,255,255,.20) 0%, rgba(64,255,255,0) 70%);
-  border: 1px solid rgba(120,255,255,.24);
-  box-shadow:
-    inset 0 0 12px rgba(64,255,255,.18),
-    0 0 20px rgba(64,255,255,.20),
-    0 0 40px rgba(64,255,255,.12);
-}
-.nav a.active .iconWrap::after{
-  content:'';
-  position:absolute;
-  inset:-8px;
-  border-radius:999px;
-  border: 1px solid rgba(90,220,255,.22);
-  box-shadow:
-    0 0 10px rgba(90,220,255,.16),
-    0 0 22px rgba(90,220,255,.10);
-  pointer-events:none;
+/* Habits: larger icon for better visibility on big screens */
+@media (min-width: 1200px){
+  .nav a[href*="habits"] .iconWrap{ width: 30px; height: 30px; }
 }
 
-/* Bottom nav: compact but still visible */
-.bottomNav a .iconWrap{ width: 20px; height: 20px; }
-.bottomNav a.active .iconWrap{ width: 30px; height: 30px; }
-
-.nav a .navIcon,
-.nav a .navIconBottom{ opacity: .90; transform-origin: 50% 50%; }
-
-.nav a.active .navIcon,
-.nav a.active .navIconBottom{ opacity: 1; }
-
-
-
-
-.nav a.active .navIconBottom{
-  filter: contrast(1.34) brightness(1.20) saturate(1.25) drop-shadow(0 0 10px rgba(90,200,255,.22));
-}
-
-.navIcon.pulseOnce,
-.navIconBottom.pulseOnce{
-  animation: iconPulse 520ms cubic-bezier(.2,.9,.2,1) 1;
-}
-
-@keyframes iconPulse{
-  0%{ transform: scale(1); }
-  55%{ transform: scale(1.06); }
-  100%{ transform: scale(1); }
-}
-
-/* --- Active nav halo ring (desktop sidebar + mobile bottom nav) --- */
-.nav a,
-.bottomNav a{ position: relative; }
-
-/* keep text/icon above the halo */
-.nav a .left{ position: relative; z-index: 1; }
-.bottomNav a{ z-index: 1; }
-
-/* Sidebar: halo sits behind the icon area (left side) */
-.nav a.active::before{
-  content:'';
-  position:absolute;
-  left: 10px;
-  top: 50%;
-  width: 44px;
-  height: 44px;
-  transform: translateY(-50%);
-  border-radius: 999px;
-  /* Clearer ring + brighter core */
-  background:
-    radial-gradient(circle at 35% 30%, rgba(120,255,255,.30) 0%, rgba(30,120,180,.16) 42%, rgba(10,18,34,0) 70%),
-    radial-gradient(circle, rgba(64,255,255,.26) 0%, rgba(64,255,255,0) 68%);
-  border: 1px solid rgba(120,255,255,.26);
-  box-shadow:
-    0 0 18px rgba(64,255,255,.26),
-    0 0 38px rgba(64,255,255,.16);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Mobile bottom nav: centered halo behind the icon */
-.bottomNav a.active::before{
-  content:'';
-  position:absolute;
-  left: 50%;
-  top: 10px;
-  width: 42px;
-  height: 42px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(64,255,255,.30) 0%, rgba(64,255,255,.12) 45%, rgba(64,255,255,0) 74%);
-  border: 1px solid rgba(64,255,255,.14);
-  box-shadow: 0 0 18px rgba(64,255,255,.18);
-  pointer-events: none;
-  z-index: 0;
-}
 .pill{
   font-size:.75rem;
   color: var(--muted);
@@ -1948,10 +1854,9 @@ font-weight: 750;
   vertical-align: 0;
 }
 
+/* Active state: keep icons stable (no glow effects) */
 .nav a.active .navIcon,
-.bottomNav a.active .navIcon{
-  filter: contrast(1.30) brightness(1.20) saturate(1.25) drop-shadow(0 0 10px rgba(64,255,255,0.35));
-}
+.bottomNav a.active .navIcon{ filter: none; }
 
 
 /* Wide-screen enhancement (desktop only): use more horizontal space for readability */
@@ -1962,9 +1867,7 @@ font-weight: 750;
   .nav{ gap: 8px; }
   .nav a{ padding: 14px 14px; font-size: 15px; border-radius: 16px; }
   .nav a .iconWrap{ width: 24px; height: 24px; }
-  .nav a.active .iconWrap{ width: 42px; height: 42px; }
-  .nav a.active::before{ left: 10px; width: 54px; height: 54px; }
-  .content{
+.content{
     max-width: 1680px;
     padding: 38px 52px 70px;
   }
