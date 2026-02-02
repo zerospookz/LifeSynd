@@ -333,7 +333,8 @@
     const hist = getExerciseHistory(exerciseName, 5000);
     const maxWeightKg = hist.reduce((m, p) => Math.max(m, Number(p.topSetWeightKg || 0)), 0) || undefined;
     const maxVolumeKg = hist.reduce((m, p) => Math.max(m, Number(p.totalVolumeKg || 0)), 0) || undefined;
-    return { maxWeightKg, maxVolumeKg };
+    const maxReps = hist.reduce((m, p) => Math.max(m, Number(p.topSetReps || 0)), 0) || undefined;
+    return { maxWeightKg, maxReps, maxVolumeKg };
   }
 
   function validateWorkout(workoutId) {

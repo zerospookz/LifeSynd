@@ -17,6 +17,10 @@
     btnAddExerciseEmpty: $("#w3AddExerciseEmpty"),
     btnStart: $("#w3Start"),
     btnFinish: $("#w3Finish"),
+    btnRest60: $("#w3Rest60"),
+    restTimer: $("#w3RestTimer"),
+    restTime: $("#w3RestTime"),
+    restStop: $("#w3RestStop"),
   };
 
   // Increment 2: PR flash state
@@ -27,7 +31,77 @@
     prFlashSetId = setId;
     if (prFlashTimer) clearTimeout(prFlashTimer);
     render();
-    prFlashTimer = setTimeout(()=>{
+    prFlashTimer   // Increment 3: Rest timer (persisted)
+  const REST_KEY = "w3_restTimer_v1";
+  let restInterval = null;
+
+  function loadRest(){
+    try{
+      const raw = localStorage.getItem(REST_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || !obj.endAt) return null;
+      return obj;
+    }catch(_){ return null; }
+  }
+
+  function saveRest(state){
+    try{
+      if (!state) localStorage.removeItem(REST_KEY);
+      else localStorage.setItem(REST_KEY, JSON.stringify(state));
+    }catch(_){}
+  }
+
+  function fmtClock(sec){
+    const s = Math.max(0, sec|0);
+    const mm = String(Math.floor(s/60)).padStart(2,"0");
+    const ss = String(s%60).padStart(2,"0");
+    return `${mm}:${ss}`;
+  }
+
+  function startRest(seconds){
+    const now = Date.now();
+    const st = { running:true, endAt: now + Math.max(1, seconds|0)*1000 };
+    saveRest(st);
+    showRest();
+  }
+
+  function stopRest(){
+    saveRest(null);
+    hideRest();
+  }
+
+  function showRest(){
+    if (!el.restTimer) return;
+    el.restTimer.hidden = false;
+    tickRest();
+    if (restInterval) clearInterval(restInterval);
+    restInterval = setInterval(tickRest, 250);
+  }
+
+  function hideRest(){
+    if (!el.restTimer) return;
+    el.restTimer.hidden = true;
+    el.restTimer.classList.remove("w3-restDone");
+    if (restInterval) { clearInterval(restInterval); restInterval = null; }
+  }
+
+  function tickRest(){
+    const st = loadRest();
+    if (!st || !st.endAt) { hideRest(); return; }
+    const remaining = Math.max(0, Math.ceil((st.endAt - Date.now())/1000));
+    if (el.restTime) el.restTime.textContent = fmtClock(remaining);
+    if (remaining <= 0){
+      saveRest(null);
+      if (el.restTimer){
+        el.restTimer.classList.add("w3-restDone");
+        try{ if (navigator.vibrate) navigator.vibrate([40,40,40]); }catch(_){}
+      }
+      setTimeout(()=>hideRest(), 1200);
+    }
+  }
+
+= setTimeout(()=>{
       if (prFlashSetId === setId) {
         prFlashSetId = null;
         render();
@@ -153,7 +227,7 @@
         </div>
 
         <div class="w3-sets">
-          ${sets.map((s,i)=>setRowHtml(s,i, ex.id)).join("")}
+          ${sets.map((s,i)=>setRowHtml(s,i, ex.id, ex.name)).join("")}
         </div>
 
         <button class="w3-addSet" data-action="add-set">+ Add set</button>
@@ -163,18 +237,18 @@
     }
   }
 
-  function setRowHtml(s, index, exerciseId){
+  function setRowHtml(s, index, exerciseId, exerciseName){
     const done = !!s.completed;
     const w = (s.weightKg ?? "");
     const r = (s.reps ?? "");
     const isPR = (prFlashSetId && prFlashSetId === s.id);
 
     return `
-      <div class="w3-swipeWrap" data-set-id="${escAttr(s.id)}">
+      <div class="w3-swipeWrap" data-set-id="${escAttr(s.id)}" data-exercise-name="${escAttr(exerciseName||"")}">
         <div class="w3-swipeAction left" data-action="dup-set">Duplicate</div>
         <div class="w3-swipeAction right" data-action="del-set">Delete</div>
 
-        <div class="w3-setRow ${done ? "isDone" : ""} ${isPR ? "isPR" : ""}" data-set-id="${escAttr(s.id)}">
+        <div class="w3-setRow ${done ? "isDone" : ""} ${isPR ? "isPR" : ""}" data-set-id="${escAttr(s.id)}" data-exercise-name="${escAttr(exerciseName||"")}">
           <div class="w3-check ${done ? "isDone" : ""}" data-action="toggle-set" role="button" aria-label="Toggle set"></div>
           <div class="w3-setIndex">${index+1}</div>
           <input class="w3-input" data-field="weightKg" inputmode="decimal" value="${escAttr(String(w))}" placeholder="kg" />
@@ -228,11 +302,8 @@
     safe(()=>Workouts.removeSet(setId), null);
   }
 
-  function maybeFlashPR(setId, exerciseName){
+  function maybeFlashPR(setId, exerciseName, oldPR){
     if (!exerciseName) return;
-    // Only weight PR for now (most useful + reliable)
-    const pr = safe(()=>Workouts.getExercisePRs(exerciseName), null);
-    if (!pr || !pr.maxWeightKg) return;
 
     const ctx = findExerciseContextFromSetId(setId);
     const exerciseId = ctx.exerciseId;
@@ -243,10 +314,20 @@
     if (!s || !s.completed) return;
 
     const w = Number(s.weightKg || 0);
-    if (w > Number(pr.maxWeightKg || 0)) flashPR(setId);
+    const r = Number(s.reps || 0);
+    const v = w * r;
+
+    const before = oldPR || {};
+    const oldW = Number(before.maxWeightKg || 0);
+    const oldR = Number(before.maxReps || 0);
+    const oldV = Number(before.maxVolumeKg || 0);
+
+    if ((w > oldW && w > 0) || (r > oldR && r > 0) || (v > oldV && v > 0)) {
+      flashPR(setId);
+    }
   }
 
-  // Pointer swipe handling (Apple-style)
+// Pointer swipe handling (Apple-style)
   el.content.addEventListener("pointerdown", (e)=>{
     const row = e.target.closest(".w3-setRow");
     if (!row) return;
@@ -351,10 +432,25 @@
       const row = act.closest(".w3-setRow");
       const setId = row?.dataset.setId;
       if (!setId) return;
+
+      // Snapshot PRs BEFORE completion to detect improvements reliably
+      const oldPR = exerciseName ? safe(()=>Workouts.getExercisePRs(exerciseName), null) : null;
+
       safe(()=>Workouts.toggleSetCompleted(setId), null);
-      // PR flash when completing a heavier set than historical best
-      maybeFlashPR(setId, exerciseName);
+
+      // Auto start rest when completing a set
+      const ctx = findExerciseContextFromSetId(setId);
+      if (ctx.exerciseId){
+        const sets = safe(()=>Workouts.listSets(ctx.exerciseId), []);
+        const s = sets.find(x=>String(x.id)===String(setId));
+        if (s && s.completed){
+          startRest(Number(s.restSec || 60));
+          maybeFlashPR(setId, exerciseName, oldPR);
+        }
+      }
+
       render();
+      return;
     }
     if (action === "ex-menu") {
       // Increment 1 keeps it minimal
@@ -375,6 +471,9 @@
     if (!setId || !field) return;
 
     const raw = String(inp.value||"").trim();
+
+    // Snapshot PRs for this exercise (used if set is already completed)
+    const oldPRInline = exerciseName ? safe(()=>Workouts.getExercisePRs(exerciseName), null) : null;
     if (raw === "") {
       safe(()=>Workouts.updateSet(setId, { [field]: null }), null);
       render();
@@ -384,6 +483,16 @@
     if (Number.isNaN(num)) { render(); return; }
 
     safe(()=>Workouts.updateSet(setId, { [field]: num }), null);
+
+    // If this set is already completed, an edit can create a new PR
+    if (exerciseName) {
+      const ctx2 = findExerciseContextFromSetId(setId);
+      if (ctx2.exerciseId){
+        const sets2 = safe(()=>Workouts.listSets(ctx2.exerciseId), []);
+        const s2 = sets2.find(x=>String(x.id)===String(setId));
+        if (s2 && s2.completed) maybeFlashPR(setId, exerciseName, oldPRInline);
+      }
+    }
     if (field === "weightKg") {
       // If the set is already completed, we may have created a PR
       maybeFlashPR(setId, exerciseName);
@@ -440,4 +549,6 @@
   }
 
   render();
+  const st = loadRest();
+  if (st && st.endAt && st.endAt > Date.now()) showRest();
 })();
