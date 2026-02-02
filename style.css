@@ -105,24 +105,33 @@ a{color:inherit}
   padding: 12px 12px;
   border-radius: 14px;
   border: 1px solid transparent;
+  position: relative;
   transition: transform .15s ease, background .18s ease, border-color .18s ease, color .18s ease;
 }
 .nav a .left{display:flex;align-items:center;gap:10px}
 .nav a:hover{
-  background: rgba(99,102,241,.13);
-  border-color: rgba(99,102,241,.22);
+  background: rgba(99,102,241,.08);
+  border-color: rgba(99,102,241,.18);
   color: #fff;
-  transform: translateX(5px);
+  transform: translateX(2px);
 }
 .nav a.active{
-  background:
-    radial-gradient(900px 140px at 12% 50%, rgba(64,255,255,.10) 0%, transparent 55%),
-    linear-gradient(180deg, rgba(99,102,241,.26), rgba(255,255,255,.02));
-  border-color: rgba(99,102,241,.42);
+  background: rgba(99,102,241,.06);
+  border-color: rgba(99,102,241,.22);
   color: #fff;
-  box-shadow:
-    inset 0 0 0 1px rgba(64,255,255,.06),
-    0 10px 24px rgba(0,0,0,.35);
+  box-shadow: none;
+}
+
+/* Active indicator (sidebar): 2px accent line */
+.nav a.active::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:10px;
+  bottom:10px;
+  width:2px;
+  border-radius: 2px;
+  background: var(--accent);
 }
 
 /* Make the right-side badge feel "selected" too */
@@ -150,6 +159,21 @@ a{color:inherit}
   height: 100%;
   display: block;
   object-fit: contain;
+  opacity: .65;
+  transform: scale(1);
+  transition: transform .14s ease-out, opacity .14s ease-out, filter .14s ease-out;
+}
+
+.nav a.active .iconWrap img,
+.bottomNav a.active .iconWrap img{
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* Depth only for Habits icon when active */
+.nav a.active[href*="habits"] .iconWrap img,
+.bottomNav a.active[href*="habits"] .iconWrap img{
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.14));
 }
 
 /* Habits: larger icon for better visibility on big screens */
@@ -1385,10 +1409,9 @@ font-weight: 750;
     display:flex;
     position: fixed;
     left:0; right:0; bottom:0;
-  height: 96px;
-    background: rgba(8,10,20,0.92);
+    height: 64px;
+    background: rgba(8,10,20,0.96);
     border-top: 1px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(10px);
     z-index: 50;
   }
   .bottomNav a{
@@ -1397,13 +1420,27 @@ font-weight: 750;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:2px;
+    gap:4px;
     color: rgba(255,255,255,0.65);
     text-decoration:none;
     font-size: 12px;
+    position: relative;
   }
   .bottomNav a span{font-size: 10.5px; opacity:.85}
   .bottomNav a.active{color:#fff}
+
+  /* Active indicator (bottom nav): 14px underline */
+  .bottomNav a.active::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    transform: translateX(-50%);
+    bottom: 6px;
+    width: 14px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
 }
 
 /* On desktop show all panels (tabs are mobile-only) */
@@ -1857,6 +1894,16 @@ font-weight: 750;
 /* Active state: keep icons stable (no glow effects) */
 .nav a.active .navIcon,
 .bottomNav a.active .navIcon{ filter: none; }
+
+/* One-time micro interaction on tab open (triggered from app.js) */
+img.pulseOnce{
+  animation: navPulseOnce .14s ease-out 1;
+}
+@keyframes navPulseOnce{
+  0%{ transform: scale(1); }
+  40%{ transform: scale(.96); }
+  100%{ transform: scale(1.08); }
+}
 
 
 /* Wide-screen enhancement (desktop only): use more horizontal space for readability */
