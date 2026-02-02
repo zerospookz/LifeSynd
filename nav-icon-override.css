@@ -1,0 +1,9 @@
+
+/* FINAL tweak: Habits icon only, no background */
+.nav-item.active {
+  background: none !important;
+}
+
+.nav-item.active .icon-habit {
+  filter: brightness(1.08) saturate(1.04);
+}
