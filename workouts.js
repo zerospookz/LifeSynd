@@ -94,6 +94,21 @@
     return workouts.filter(w => w.date >= from && w.date <= to);
   }
 
+  function listExercises(workoutId) {
+    return exercises
+      .filter(e => e.workoutId === workoutId)
+      .slice()
+      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+
+  function listSets(exerciseId) {
+    return sets
+      .filter(s => s.exerciseId === exerciseId)
+      .slice()
+      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+
+
   function addExercise(workoutId, input = {}) {
     if (!getWorkout(workoutId)) throw new Error("Workout not found");
     const order = (typeof input.order === "number")
@@ -749,7 +764,7 @@
   // -------------------- Expose API to window --------------------
   window.Workouts = {
     // CRUD
-    createWorkout, updateWorkout, deleteWorkout, getWorkout, listWorkouts,
+    createWorkout, updateWorkout, deleteWorkout, getWorkout, listWorkouts, listExercises, listSets,
     addExercise, updateExercise, removeExercise, reorderExercises,
     addSet, updateSet, removeSet, reorderSets,
 

@@ -1,7 +1,8 @@
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Workouts</title>
-<link rel="stylesheet" href="style.css"></head>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="workouts_v3.css"></head>
 <body>
 <div class="layout">
   <aside class="sidebar">
@@ -26,57 +27,39 @@
   </aside>
 
   <main class="content">
-    <div class="topbar">
-      <div>
-        <div class="pageTitleRow"><img class="topbarLogo" src="icons/brand-mark-128.png" alt="LifeSync"><h1 class="pageTitle">Workouts</h1></div>
-        <p class="subtitle">Log sets, track PRs and build momentum.</p>
+  <div class="w3-page" id="w3Page">
+    <header class="w3-header">
+      <a class="w3-iconBtn" href="dashboard.html" aria-label="Back">←</a>
+      <div class="w3-headTitles">
+        <div class="w3-hPage" id="w3Title">Workout</div>
+        <div class="w3-muted" id="w3Subtitle">—</div>
       </div>
-      <div class="actionsRow">
-        <a class="btn secondary" href="dashboard.html">Home</a>
-      </div>
-    </div>
+      <button class="w3-btnPrimary" id="w3Finish">Finish</button>
+    </header>
 
-    
-<div class="card soft">
-  <div class="cardHeader"><h3 class="cardTitle">Log a set</h3><span class="badge">PR tracking</span></div>
-  <div class="actionsRow">
-    <input id="ex" placeholder="Exercise">
-    <input id="sets" type="number" placeholder="Sets">
-    <input id="reps" type="number" placeholder="Reps">
-    <input id="weight" type="number" placeholder="Weight">
-    <button onclick="logSet()">Log set</button>
+    <section class="w3-meta" id="w3Meta">
+      <div class="w3-chip"><span class="w3-num" id="w3MetaSets">0</span> sets</div>
+      <div class="w3-chip"><span class="w3-num" id="w3MetaVol">0</span> kg</div>
+      <div class="w3-chip"><span class="w3-num" id="w3MetaTime">--:--</span></div>
+    </section>
+
+    <section id="w3Content"></section>
+
+    <section class="w3-empty" id="w3Empty" hidden>
+      <div class="w3-emptyTitle">No exercises yet</div>
+      <div class="w3-muted">Add your first exercise to start tracking.</div>
+      <button class="w3-btnSecondary" id="w3AddExerciseEmpty">+ Add exercise</button>
+    </section>
+
+    <footer class="w3-bottomBar">
+      <button class="w3-btnSecondary" id="w3AddExercise">+ Exercise</button>
+      <button class="w3-btnSecondary" id="w3Start">Start</button>
+    </footer>
   </div>
-  <p class="small" style="margin:12px 0 0">Use Planner to schedule Push / Pull / Legs for the week.</p>
-</div>
-
-
-<div class="card soft" style="margin-top:18px">
-  <div class="cardHeader"><h3 class="cardTitle">Weekly Planner</h3><span class="badge">Push / Pull / Legs</span></div>
-  <div class="small">Assign a template to each day. Mark it done when completed.</div>
-  <div class="grid" style="margin-top:14px">
-    <div class="card soft">
-      <div class="cardHeader"><h3 class="cardTitle">Templates</h3><span class="badge">Defaults included</span></div>
-      <div class="actionsRow">
-        <input id="tplName" placeholder="Template name (e.g., Push)">
-        <button onclick="saveTemplate()">Save</button>
-      </div>
-      <div id="tplList" style="margin-top:12px"></div>
-    </div>
-    <div class="card soft">
-      <div class="cardHeader"><h3 class="cardTitle">This week</h3><span class="badge">Planned vs done</span></div>
-      <div id="weekList"></div>
-      <div class="hr"></div>
-      <div id="weekSummary"></div>
-    </div>
-  </div>
-</div>
-
-<div id="prBox" class="card"></div>
-<div id="workoutList" class="grid"></div>
-
-  </main>
+</main>
 </div>
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="workouts.js"></script>
 <script src="planner.js"></script>
+<script src="workouts_v3.js"></script>
 </body></html>
