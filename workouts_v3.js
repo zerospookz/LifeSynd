@@ -21,11 +21,19 @@
     restTimer: $("#w3RestTimer"),
     restTime: $("#w3RestTime"),
     restStop: $("#w3RestStop"),
+    tabs: $("#w3Tabs"),
+    modalOverlay: $("#w3ModalOverlay"),
+    modalInput: $("#w3ExerciseName"),
+    modalOk: $("#w3ModalOk"),
+    modalCancel: $("#w3ModalCancel"),
   };
 
   // Increment 2: PR flash state
   let prFlashSetId = null;
   let prFlashTimer = null;
+
+  // Tabs
+  let currentTab = "today";
 
   function flashPR(setId){
     prFlashSetId = setId;
@@ -176,6 +184,9 @@
   }
 
   function render(){
+    // Tabs
+    if (currentTab === "history") { renderHistory(); return; }
+    if (currentTab === "templates") { renderTemplates(); return; }
     if (!window.Workouts) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
       el.empty.hidden = true;
@@ -500,16 +511,62 @@
     render();
   });
 
+
+  // Modal (replaces native prompt)
+  function openAddExerciseModal(onSubmit){
+    if (!el.modalOverlay || !el.modalInput) return;
+    el.modalOverlay.hidden = false;
+    el.modalInput.value = "";
+    el.modalInput.focus();
+
+    const submit = () => {
+      const name = (el.modalInput.value || "").trim();
+      if (!name) return;
+      closeAddExerciseModal();
+      onSubmit(name);
+    };
+
+    const onKey = (ev) => {
+      if (ev.key === "Escape") { ev.preventDefault(); closeAddExerciseModal(); }
+      if (ev.key === "Enter") { ev.preventDefault(); submit(); }
+    };
+
+    const onBg = (ev) => {
+      if (ev.target === el.modalOverlay) closeAddExerciseModal();
+    };
+
+    // one-shot listeners
+    el.modalOk?.addEventListener("click", submit, { once:true });
+    el.modalCancel?.addEventListener("click", closeAddExerciseModal, { once:true });
+    el.modalInput.addEventListener("keydown", onKey, { once:true });
+    el.modalOverlay.addEventListener("click", onBg, { once:true });
+  }
+
+  function closeAddExerciseModal(){
+    if (!el.modalOverlay) return;
+    el.modalOverlay.hidden = true;
+  }
+
   function promptExerciseName(){
+    // fallback (should not be used)
     const name = prompt("Exercise name (e.g. Bench Press):");
     if (!name) return null;
-    const t = name.trim();
-    return t ? t : null;
+    const tt = name.trim();
+    return tt ? tt : null;
   }
 
   function addExercise(){
     const w = ensureWorkout();
     if (!w) return;
+    // open nice modal instead of prompt
+    if (el.modalOverlay && el.modalInput){
+      openAddExerciseModal((name)=>{
+        safe(()=>Workouts.addExercise(w.id, { name }), null);
+        render();
+      });
+      return;
+    }
+    // fallback
     const name = promptExerciseName();
     if (!name) return;
     safe(()=>Workouts.addExercise(w.id, { name }), null);
@@ -518,6 +575,16 @@
 
   el.btnAddExercise?.addEventListener("click", addExercise);
   el.btnAddExerciseEmpty?.addEventListener("click", addExercise);
+
+  // Tabs switching
+  el.tabs?.addEventListener("click", (e)=>{
+    const btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    currentTab = btn.dataset.tab || "today";
+    for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
+    btn.classList.add("is-active");
+    render();
+  });
 
   el.btnStart?.addEventListener("click", ()=>{
     const w = ensureWorkout();
