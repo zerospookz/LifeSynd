@@ -183,7 +183,296 @@
     return { totalSets:0, totalVolumeKg:0 };
   }
 
-  function render(){
+  
+  let isReadOnly = false;
+
+  // ===== Increment 4: History + Templates marketplace (v1) =====
+  let historyRange = "all"; // week | month | all
+  let templatesCat = "coach"; // coach | push | legs | home | all
+  let templatePreviewId = null;
+
+  const MARKET_KEY = "w3_market_templates_v1";
+  function seedMarket(){
+    try{
+      const raw = localStorage.getItem(MARKET_KEY);
+      if (raw) return;
+      const seed = [
+        {
+          id:"tpl_push_hyp_a",
+          title:"PUSH A — Hypertrophy",
+          coach:"Coach Ivan",
+          tags:["push","gym"],
+          weeks:6,
+          workouts:4,
+          rating:4.6,
+          reviews:128,
+          price:9.99,
+          currency:"USD",
+          description:"A balanced upper-body hypertrophy plan focused on progressive overload.",
+          preview:[
+            { name:"Push A", exercises:[
+              { name:"Bench Press", sets:[{weightKg:80,reps:8},{weightKg:80,reps:8},{weightKg:75,reps:10}] },
+              { name:"Incline DB Press", sets:[{weightKg:24,reps:10},{weightKg:24,reps:10}] },
+              { name:"Triceps Pushdown", sets:[{weightKg:30,reps:12},{weightKg:30,reps:12}] }
+            ] }
+          ]
+        },
+        {
+          id:"tpl_home_db",
+          title:"Home Dumbbell Plan",
+          coach:"FitLab",
+          tags:["home"],
+          weeks:4,
+          workouts:3,
+          rating:4.8,
+          reviews:76,
+          price:0,
+          currency:"USD",
+          description:"A simple 3x/week dumbbell plan for home workouts.",
+          preview:[
+            { name:"Full Body", exercises:[
+              { name:"DB Goblet Squat", sets:[{weightKg:20,reps:12},{weightKg:20,reps:12}] },
+              { name:"DB Floor Press", sets:[{weightKg:18,reps:10},{weightKg:18,reps:10}] }
+            ] }
+          ]
+        },
+        {
+          id:"tpl_legs_strength",
+          title:"Legs Strength Block",
+          coach:"Coach Maria",
+          tags:["legs","gym"],
+          weeks:5,
+          workouts:3,
+          rating:4.7,
+          reviews:92,
+          price:14.99,
+          currency:"USD",
+          description:"A squat-forward strength block with smart fatigue management.",
+          preview:[
+            { name:"Legs A", exercises:[
+              { name:"Back Squat", sets:[{weightKg:120,reps:5},{weightKg:120,reps:5},{weightKg:110,reps:6}] },
+              { name:"RDL", sets:[{weightKg:90,reps:8},{weightKg:90,reps:8}] }
+            ] }
+          ]
+        }
+      ];
+      localStorage.setItem(MARKET_KEY, JSON.stringify(seed));
+    }catch(_){}
+  }
+
+  function listMarket(){
+    seedMarket();
+    try{
+      const raw = localStorage.getItem(MARKET_KEY);
+      const arr = JSON.parse(raw||"[]");
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+
+  function withinRange(dateIso){
+    if (historyRange === "all") return true;
+    const d = new Date(dateIso+"T00:00:00");
+    const now = new Date();
+    const ms = now - d;
+    const days = ms / 86400000;
+    if (historyRange === "week") return days <= 7;
+    if (historyRange === "month") return days <= 31;
+    return true;
+  }
+
+  function renderHistory(){
+    const workoutId = getWorkoutId();
+    el.title.textContent = "History";
+    el.subtitle.textContent = "Completed workouts";
+    // Hide create/edit controls in history
+    el.btnAddExercise.style.display = "none";
+    el.btnRest60.style.display = "none";
+    el.btnStart.style.display = "none";
+    el.btnFinish.style.display = "none";
+    el.empty.hidden = true;
+
+    const all = safe(()=>Workouts.listWorkouts ? Workouts.listWorkouts() : [], []);
+    const done = (all||[]).filter(w => (w.status === "completed" || w.status === "skipped") && w.date && withinRange(w.date))
+                         .slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+
+    const groups = new Map();
+    for (const w of done){
+      const key = w.date;
+      if (!groups.has(key)) groups.set(key, []);
+      const summary = safe(()=>Workouts.computeWorkoutSummary ? Workouts.computeWorkoutSummary(w.id) : null, null) || {};
+      groups.get(key).push({
+        ...w,
+        totalSets: summary.totalSets || 0,
+        totalVolumeKg: summary.totalVolumeKg || 0,
+        durationSec: summary.durationSec || w.durationSec || null,
+        prs: summary.prs || []
+      });
+    }
+
+    const header = `
+      <div class="w4-range">
+        <button class="w4-pill ${historyRange==="week"?"is-active":""}" data-range="week" type="button">Week</button>
+        <button class="w4-pill ${historyRange==="month"?"is-active":""}" data-range="month" type="button">Month</button>
+        <button class="w4-pill ${historyRange==="all"?"is-active":""}" data-range="all" type="button">All</button>
+      </div>
+    `;
+
+    if (!done.length){
+      el.content.innerHTML = header + `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No completed workouts yet</div><div class="w3-muted">Finish a workout and it will appear here.</div></div>`;
+      return;
+    }
+
+    const blocks = [];
+    for (const [date, items] of groups.entries()){
+      blocks.push(`
+        <div class="w4-day">
+          <div class="w4-dayTitle">${esc(date)}</div>
+          <div class="w4-dayList">
+            ${items.map(w=>{
+              const prBadge = (w.prs && w.prs.length) ? `<span class="w4-prBadge">PR</span>` : ``;
+              const dur = w.durationSec ? ` · ${secondsToClock(w.durationSec)}` : ``;
+              return `
+                <div class="w4-hCard">
+                  <div class="w4-hTop">
+                    <div>
+                      <div class="w4-hTitle">${esc(w.name || "Workout")} ${prBadge}</div>
+                      <div class="w4-hSub">${esc(w.status || "completed")}${dur}</div>
+                    </div>
+                    <button class="w3-miniBtn" data-open-workout="${escAttr(w.id)}" type="button">Open</button>
+                  </div>
+                  <div class="w4-hMeta">${fmtInt(w.totalSets||0)} sets · ${fmtInt(Math.round(w.totalVolumeKg||0))} kg</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `);
+    }
+
+    el.content.innerHTML = header + blocks.join("");
+  }
+
+  function templatePrice(t){
+    if (t.price === 0) return "FREE";
+    const cur = t.currency || "USD";
+    const sym = (cur === "USD") ? "$" : cur + " ";
+    return `${sym}${Number(t.price).toFixed(2)}`;
+  }
+
+  function tagMatch(t){
+    if (templatesCat === "all") return true;
+    if (templatesCat === "coach") return true; // featured
+    const tags = (t.tags || []).map(x=>String(x).toLowerCase());
+    return tags.includes(templatesCat);
+  }
+
+  function renderTemplates(){
+    el.title.textContent = "Templates";
+    el.subtitle.textContent = "Coach plans & programs";
+    el.btnAddExercise.style.display = "none";
+    el.btnRest60.style.display = "none";
+    el.btnStart.style.display = "none";
+    el.btnFinish.style.display = "none";
+    el.empty.hidden = true;
+
+    const cats = `
+      <div class="w4-range">
+        <button class="w4-pill ${templatesCat==="coach"?"is-active":""}" data-cat="coach" type="button">Coach Picks</button>
+        <button class="w4-pill ${templatesCat==="push"?"is-active":""}" data-cat="push" type="button">Push</button>
+        <button class="w4-pill ${templatesCat==="legs"?"is-active":""}" data-cat="legs" type="button">Legs</button>
+        <button class="w4-pill ${templatesCat==="home"?"is-active":""}" data-cat="home" type="button">Home</button>
+        <button class="w4-pill ${templatesCat==="all"?"is-active":""}" data-cat="all" type="button">All</button>
+      </div>
+    `;
+
+    const list = listMarket().filter(tagMatch);
+
+    if (templatePreviewId){
+      const t = listMarket().find(x=>x.id===templatePreviewId);
+      if (!t){
+        templatePreviewId = null;
+        el.content.innerHTML = cats;
+        return;
+      }
+      el.content.innerHTML = cats + `
+        <div class="w4-preview">
+          <div class="w4-previewTop">
+            <button class="w3-miniBtn" data-action="tpl-back" type="button">← Back</button>
+            <div class="w4-previewTitle">${esc(t.title)}</div>
+            <div class="w4-previewPrice">${esc(templatePrice(t))}</div>
+          </div>
+          <div class="w4-previewSub">by ${esc(t.coach)} · ${esc(String(t.weeks||0))} weeks · ${esc(String(t.workouts||0))} workouts</div>
+          <div class="w4-previewDesc">${esc(t.description || "")}</div>
+
+          <div class="w4-previewList">
+            ${(t.preview||[]).map(w=>`
+              <div class="w4-prevWorkout">
+                <div class="w4-prevWTitle">${esc(w.name)}</div>
+                ${(w.exercises||[]).map(ex=>`
+                  <div class="w4-prevEx">
+                    <div class="w4-prevExTitle">${esc(ex.name)}</div>
+                    <div class="w4-prevExMeta">${(ex.sets||[]).map(s=>`${esc(String(s.weightKg||""))}×${esc(String(s.reps||""))}`).join(" · ")}</div>
+                  </div>
+                `).join("")}
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="w4-previewActions">
+            ${t.price === 0
+              ? `<button class="w3-btnPrimary" data-action="tpl-add" data-tpl-id="${escAttr(t.id)}" type="button">Add to my templates</button>`
+              : `<button class="w3-btnPrimary" data-action="tpl-buy" data-tpl-id="${escAttr(t.id)}" type="button">Buy (mock)</button>`
+            }
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (!list.length){
+      el.content.innerHTML = cats + `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No templates</div><div class="w3-muted">No templates match this category.</div></div>`;
+      return;
+    }
+
+    el.content.innerHTML = cats + `
+      <div class="w4-tplGrid">
+        ${list.map(t=>{
+          const rating = (t.rating!=null) ? `★ ${Number(t.rating).toFixed(1)}` : "";
+          const reviews = (t.reviews!=null) ? `(${fmtInt(t.reviews)})` : "";
+          const pill = (t.price===0) ? `<span class="w4-free">FREE</span>` : `<span class="w4-price">${esc(templatePrice(t))}</span>`;
+          const cta = (t.price===0) ? "Add" : "Preview";
+          return `
+            <div class="w4-tplCard">
+              <div class="w4-tplTop">
+                <div class="w4-tplTitle">${esc(t.title)}</div>
+                ${pill}
+              </div>
+              <div class="w4-tplSub">by ${esc(t.coach)}</div>
+              <div class="w4-tplMeta">${esc(String(t.workouts||0))} workouts · ${esc(String(t.weeks||0))} weeks</div>
+              <div class="w4-tplRating">${esc(rating)} <span class="w4-tplReviews">${esc(reviews)}</span></div>
+              <div class="w4-tplActions">
+                <button class="w3-btnSecondary" data-action="tpl-preview" data-tpl-id="${escAttr(t.id)}" type="button">${esc(cta)}</button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  // Add free template to user's templates store (simple v1)
+  const USER_TPL_KEY = "w3_user_templates_v1";
+  function addToUserTemplates(tpl){
+    try{
+      const raw = localStorage.getItem(USER_TPL_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(arr) ? arr : [];
+      if (!list.find(x=>x.id===tpl.id)) list.push(tpl);
+      localStorage.setItem(USER_TPL_KEY, JSON.stringify(list));
+    }catch(_){}
+  }
+
+function render(){
     // Tabs
     if (currentTab === "history") { renderHistory(); return; }
     if (currentTab === "templates") { renderTemplates(); return; }
@@ -202,6 +491,29 @@
 
     el.title.textContent = workout.name || "Workout";
     el.subtitle.textContent = `${workout.status || "planned"} · ${workout.date || "—"}`;
+
+
+    // Increment 4: contextual actions like Habits
+    const status = workout.status || "planned";
+    isReadOnly = (status === "completed" || status === "skipped");
+    // show workout controls only in Today tab
+    el.btnAddExercise.style.display = "";
+    el.btnRest60.style.display = "";
+    el.btnStart.style.display = "";
+    el.btnFinish.style.display = "";
+    // Primary: planned -> Start (bottom), in_progress -> Finish (top), done -> hide both
+    if (status === "in_progress"){
+      el.btnStart.style.display = "none";
+      el.btnFinish.style.display = "";
+    } else if (status === "planned"){
+      el.btnStart.style.display = "";
+      el.btnFinish.style.display = "none";
+    } else {
+      el.btnStart.style.display = "none";
+      el.btnFinish.style.display = "none";
+    }
+
+
 
     const meta = computeMeta(workout.id);
     el.metaSets.textContent = fmtInt(meta.totalSets || 0);
@@ -241,7 +553,7 @@
           ${sets.map((s,i)=>setRowHtml(s,i, ex.id, ex.name)).join("")}
         </div>
 
-        <button class="w3-addSet" data-action="add-set">+ Add set</button>
+        ${isReadOnly ? "" : `<button class="w3-addSet" data-action="add-set">+ Add set</button>`}
       `;
 
       el.content.appendChild(card);
@@ -262,8 +574,8 @@
         <div class="w3-setRow ${done ? "isDone" : ""} ${isPR ? "isPR" : ""}" data-set-id="${escAttr(s.id)}" data-exercise-name="${escAttr(exerciseName||"")}">
           <div class="w3-check ${done ? "isDone" : ""}" data-action="toggle-set" role="button" aria-label="Toggle set"></div>
           <div class="w3-setIndex">${index+1}</div>
-          <input class="w3-input" data-field="weightKg" inputmode="decimal" value="${escAttr(String(w))}" placeholder="kg" />
-          <input class="w3-input" data-field="reps" inputmode="numeric" value="${escAttr(String(r))}" placeholder="reps" />
+          <input class="w3-input" data-field="weightKg" inputmode="decimal" value="${escAttr(String(w))}" placeholder="kg" ${isReadOnly ? "disabled" : ""} />
+          <input class="w3-input" data-field="reps" inputmode="numeric" value="${escAttr(String(r))}" placeholder="reps" ${isReadOnly ? "disabled" : ""} />
 
           <div class="w3-hoverActions" aria-hidden="true">
             <button class="w3-miniBtn" data-action="dup-set" title="Duplicate">Dup</button>
@@ -409,9 +721,67 @@
   });
 
   el.content.addEventListener("click", (e)=>{
+    // Increment 4: History/Templates controls
+    const openBtn = e.target.closest("[data-open-workout]");
+    if (openBtn){
+      const id = openBtn.getAttribute("data-open-workout");
+      if (id){
+        setWorkoutId(id);
+        currentTab = "today";
+        if (el.tabs){
+          for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
+          el.tabs.querySelector('[data-tab="today"]')?.classList.add("is-active");
+        }
+        render();
+      }
+      return;
+    }
+    const rangeBtn = e.target.closest("[data-range]");
+    if (rangeBtn){
+      historyRange = rangeBtn.getAttribute("data-range") || "all";
+      renderHistory();
+      return;
+    }
+    const catBtn = e.target.closest("[data-cat]");
+    if (catBtn){
+      templatesCat = catBtn.getAttribute("data-cat") || "coach";
+      templatePreviewId = null;
+      renderTemplates();
+      return;
+    }
     const act = e.target.closest("[data-action]");
     if (!act) return;
     const action = act.dataset.action;
+
+    if (action === "tpl-preview") {
+      const id = act.getAttribute("data-tpl-id");
+      templatePreviewId = id || null;
+      renderTemplates();
+      return;
+    }
+    if (action === "tpl-back") {
+      templatePreviewId = null;
+      renderTemplates();
+      return;
+    }
+    if (action === "tpl-add") {
+      const id = act.getAttribute("data-tpl-id");
+      const tpl = listMarket().find(t=>t.id===id);
+      if (tpl){ addToUserTemplates(tpl); }
+      templatePreviewId = null;
+      renderTemplates();
+      return;
+    }
+    if (action === "tpl-buy") {
+      // mock purchase: unlock and add to user templates
+      const id = act.getAttribute("data-tpl-id");
+      const tpl = listMarket().find(t=>t.id===id);
+      if (tpl){ addToUserTemplates(tpl); }
+      alert("Purchased (mock). Template added to your library.");
+      templatePreviewId = null;
+      renderTemplates();
+      return;
+    }
 
     const card = act.closest(".w3-exCard");
     const exerciseId = card?.dataset.exerciseId;

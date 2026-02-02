@@ -556,3 +556,193 @@ body[data-theme="dark"]{
   font-weight: 800;
   margin-bottom: 6px;
 }
+
+/* ===== Increment 4 UI ===== */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:12px 0;
+}
+.tab{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  cursor:pointer;
+}
+.tab.active{
+  background:rgba(34,197,94,.35);
+}
+
+.template-card, .history-card{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:12px;
+}
+
+.tpl-title, .hist-title{
+  font-weight:700;
+  margin-bottom:4px;
+}
+.tpl-sub, .hist-sub{
+  font-size:13px;
+  opacity:.7;
+}
+.tpl-meta, .hist-meta{
+  font-size:13px;
+  margin:6px 0;
+  opacity:.8;
+}
+.tpl-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.tpl-price{
+  font-weight:700;
+}
+
+
+/* ===== Increment 4: History + Templates Marketplace styles ===== */
+.w4-range{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin: 6px 0 12px;
+}
+.w4-pill{
+  appearance:none;
+  border:1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92);
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:13px;
+  cursor:pointer;
+}
+.w4-pill.is-active{
+  background: rgba(34,197,94,0.22);
+  border-color: rgba(34,197,94,0.35);
+}
+
+.w4-day{ margin-top: 12px; }
+.w4-dayTitle{
+  font-weight:800;
+  letter-spacing:-0.01em;
+  margin: 12px 2px 8px;
+  color: rgba(255,255,255,0.78);
+}
+.w4-dayList{ display:flex; flex-direction:column; gap:10px; }
+
+.w4-hCard{
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius:16px;
+  padding:14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.w4-hTop{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.w4-hTitle{ font-weight:800; }
+.w4-hSub{ font-size:13px; opacity:.65; margin-top:2px; }
+.w4-hMeta{ font-size:13px; opacity:.85; margin-top:8px; }
+
+.w4-prBadge{
+  display:inline-block;
+  margin-left:8px;
+  font-size:12px;
+  padding:2px 8px;
+  border-radius:999px;
+  background: rgba(34,197,94,0.22);
+  border: 1px solid rgba(34,197,94,0.35);
+  color: rgba(255,255,255,0.92);
+}
+
+/* Templates grid */
+.w4-tplGrid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:12px;
+  margin-top: 10px;
+}
+.w4-tplCard{
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius:16px;
+  padding:14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.w4-tplTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.w4-tplTitle{ font-weight:900; letter-spacing:-0.01em; }
+.w4-tplSub{ font-size:13px; opacity:.65; margin-top:2px; }
+.w4-tplMeta{ font-size:13px; opacity:.85; margin-top:8px; }
+.w4-tplRating{ font-size:13px; opacity:.85; margin-top:8px; }
+.w4-tplReviews{ opacity:.65; }
+
+.w4-free{
+  font-weight:900;
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  background: rgba(34,197,94,0.22);
+  border: 1px solid rgba(34,197,94,0.35);
+}
+.w4-price{
+  font-weight:900;
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  background: rgba(59,130,246,0.18);
+  border: 1px solid rgba(59,130,246,0.28);
+}
+
+.w4-tplActions{ margin-top: 12px; }
+
+/* Template preview */
+.w4-preview{
+  margin-top: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius:18px;
+  padding:14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.w4-previewTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.w4-previewTitle{ font-weight:900; }
+.w4-previewPrice{ font-weight:900; opacity:.95; }
+.w4-previewSub{ font-size:13px; opacity:.65; margin-top:6px; }
+.w4-previewDesc{ font-size:13px; opacity:.85; margin-top:10px; line-height:1.35; }
+.w4-previewList{ margin-top: 12px; display:flex; flex-direction:column; gap:10px; }
+.w4-prevWorkout{
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.18);
+  border-radius:14px;
+  padding:12px;
+}
+.w4-prevWTitle{ font-weight:800; margin-bottom:8px; }
+.w4-prevEx{ margin-top:8px; }
+.w4-prevExTitle{ font-weight:700; font-size:13px; }
+.w4-prevExMeta{ font-size:13px; opacity:.75; margin-top:2px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.w4-previewActions{ margin-top: 14px; }
