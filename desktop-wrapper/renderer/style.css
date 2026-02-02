@@ -78,3 +78,14 @@
   box-shadow: 0 0 18px rgba(64,255,255,.18);
   pointer-events: none;
 }
+
+/* --- Large screens: slightly larger navigation --- */
+@media (min-width: 1400px){
+  .layout{ grid-template-columns: 320px 1fr; }
+  .sidebar{ padding: 26px 20px; }
+  .nav{ gap: 8px; }
+  .nav a{ padding: 14px 14px; font-size: 15px; }
+  .nav a .left{ gap: 12px; }
+  .pill{ font-size: 11px; padding: 6px 10px; }
+  .brand{ padding: 14px 14px; }
+}
