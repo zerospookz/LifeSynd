@@ -338,3 +338,91 @@
   35%{ box-shadow: 0 0 0 10px rgba(34,197,94,.35); }
   100%{ box-shadow: 0 0 0 rgba(34,197,94,0); }
 }
+
+
+/* ===== Increment 3a: Dark glass card theme for Workouts ===== */
+:root{
+  --glass-bg: rgba(255,255,255,0.08);
+  --glass-bg-2: rgba(255,255,255,0.12);
+  --glass-border: rgba(255,255,255,0.14);
+  --glass-shadow: 0 18px 40px rgba(0,0,0,.35);
+  --text-on-dark: rgba(255,255,255,0.92);
+  --muted-on-dark: rgba(255,255,255,0.55);
+}
+
+/* When your app background is dark/gradient, these look “native” */
+.workouts-page,
+body.dark,
+body[data-theme="dark"]{
+  color: var(--text-on-dark);
+}
+
+.workouts-page .muted{
+  color: var(--muted-on-dark);
+}
+
+.exercise-card{
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Set rows look like embedded pills */
+.set-row{
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.set-input{
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-on-dark);
+}
+
+.set-input::placeholder{
+  color: rgba(255,255,255,0.40);
+}
+
+.set-input:focus{
+  border-color: rgba(34,197,94,.75);
+  box-shadow: 0 0 0 4px rgba(34,197,94,.18);
+}
+
+.icon-btn, .btn-secondary{
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: var(--text-on-dark);
+}
+
+.meta-chip{
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text-on-dark);
+}
+
+.set-index, .set-labels{
+  color: rgba(255,255,255,0.55);
+}
+
+.set-check{
+  border-color: rgba(255,255,255,0.20);
+}
+
+.add-set{
+  color: var(--text-on-dark);
+  border-color: rgba(255,255,255,0.20);
+  background: rgba(255,255,255,0.05);
+}
+
+.bottom-bar{
+  background: linear-gradient(to top, rgba(0,0,0,0.35) 70%, rgba(0,0,0,0));
+}
+
+/* PR glow reads well on dark */
+@keyframes prGlow{
+  0% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+  30% { box-shadow: 0 0 0 7px rgba(34,197,94,.28); }
+  100% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
