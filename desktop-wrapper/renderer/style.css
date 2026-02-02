@@ -15,7 +15,7 @@
   margin-right: 8px;
 
   image-rendering: -webkit-optimize-contrast;
-  filter: contrast(1.25) brightness(1.15) saturate(1.20);
+  filter: none;
 }
 .navIconBottom{
   width: clamp(16px, 2.2vw, 22px);
@@ -25,7 +25,7 @@
   margin-right: 6px;
 
   image-rendering: -webkit-optimize-contrast;
-  filter: contrast(1.20) brightness(1.12) saturate(1.18);
+  filter: none;
 }
 @media (max-width: 520px){
   .navIcon{ width: 18px; height: 18px; margin-right: 6px; }
@@ -40,45 +40,6 @@
   vertical-align: 0;
 }
 
-.nav a.active .navIcon,
-.bottomNav a.active .navIcon{
-  filter: contrast(1.30) brightness(1.20) saturate(1.25) drop-shadow(0 0 10px rgba(64,255,255,0.35));
-}
-
-/* --- Active nav halo ring (desktop sidebar + mobile bottom nav) --- */
-.nav a,
-.bottomNav a{ position: relative; }
-
-.nav a.active::before{
-  content:'';
-  position:absolute;
-  left: 10px;
-  top: 50%;
-  width: 34px;
-  height: 34px;
-  transform: translateY(-50%);
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(64,255,255,.34) 0%, rgba(64,255,255,.14) 42%, rgba(64,255,255,0) 72%);
-  border: 1px solid rgba(64,255,255,.18);
-  box-shadow: 0 0 18px rgba(64,255,255,.20);
-  pointer-events: none;
-}
-
-.bottomNav a.active::before{
-  content:'';
-  position:absolute;
-  left: 50%;
-  top: 10px;
-  width: 42px;
-  height: 42px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(64,255,255,.30) 0%, rgba(64,255,255,.12) 45%, rgba(64,255,255,0) 74%);
-  border: 1px solid rgba(64,255,255,.14);
-  box-shadow: 0 0 18px rgba(64,255,255,.18);
-  pointer-events: none;
-}
-
 /* --- Large screens: slightly larger navigation --- */
 @media (min-width: 1400px){
   .layout{ grid-template-columns: 320px 1fr; }
@@ -88,4 +49,12 @@
   .nav a .left{ gap: 12px; }
   .pill{ font-size: 11px; padding: 6px 10px; }
   .brand{ padding: 14px 14px; }
+}
+
+/* Habits: force 64x64 icon (all screens), no glow */
+.nav a[href*="habits"] .navIcon,
+.bottomNav a[href*="habits"] .navIcon,
+.bottomNav a[href*="habits"] .navIconBottom{
+  width: 64px;
+  height: 64px;
 }

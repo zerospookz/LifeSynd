@@ -1240,7 +1240,7 @@ font-weight: 750;
   .habitsLayout{grid-template-columns: 1fr}
   .habitsRight{display:none}
   /* Reserve space for the fixed bottom nav so content doesn't sit underneath it */
-  .content{padding-bottom: 76px;}
+  .content{padding-bottom: 116px;}
 
   .habitsAppbar{
     display:block;
@@ -1385,7 +1385,7 @@ font-weight: 750;
     display:flex;
     position: fixed;
     left:0; right:0; bottom:0;
-    height: 56px;
+  height: 96px;
     background: rgba(8,10,20,0.92);
     border-top: 1px solid rgba(255,255,255,0.08);
     backdrop-filter: blur(10px);
