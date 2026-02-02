@@ -297,39 +297,94 @@
 }
 
 
-/* Increment 3: Rest timer floating pill */
-.w3-restTimer{
+/* Increment 3+: Rest timer as floating clock */
+.w3-restClock{
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 88px; /* above nav */
-  background: #111;
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 999px;
-  display: inline-flex;
+  right: 22px;
+  bottom: 92px; /* above bottom bar */
+  display: grid;
+  grid-template-columns: 92px auto;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 16px 40px rgba(0,0,0,.22);
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 20px;
+  background: rgba(10, 14, 26, 0.62);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 22px 60px rgba(0,0,0,.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   z-index: 9999;
+}
+
+.w3-restDial{
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.w3-restRing{
+  width: 92px;
+  height: 92px;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 14px rgba(99, 102, 241, 0.45));
+}
+
+.w3-restTrack{
+  fill: none;
+  stroke: rgba(255,255,255,0.14);
+  stroke-width: 8;
+}
+
+.w3-restProgress{
+  fill: none;
+  stroke: url(#w3RestGrad);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 251.2; /* 2πr where r=40 */
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset .2s linear;
+}
+
+.w3-restCenter{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  text-align: center;
 }
 
 .w3-restTime{
   font-size: 18px;
   line-height: 1;
+  letter-spacing: 0.5px;
+}
+
+.w3-restLabel{
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
 }
 
 .w3-restBtn{
-  border: 1px solid rgba(255,255,255,.18);
+  justify-self: end;
+  border: 1px solid rgba(255,255,255,.16);
   background: rgba(255,255,255,.08);
-  color: #fff;
-  padding: 6px 10px;
+  color: rgba(255,255,255,0.92);
+  padding: 8px 12px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
-.w3-restTimer.w3-restDone{
+.w3-restBtn:hover{ background: rgba(255,255,255,.12); }
+
+.w3-restClock.w3-restDone{
   animation: w3RestPulse .9s ease-out;
 }
 

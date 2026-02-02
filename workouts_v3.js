@@ -21,6 +21,7 @@
     restTimer: $("#w3RestTimer"),
     restTime: $("#w3RestTime"),
     restStop: $("#w3RestStop"),
+    restProgress: $("#w3RestProgress"),
     tabs: $("#w3Tabs"),
     modalOverlay: $("#w3ModalOverlay"),
     modalInput: $("#w3ExerciseName"),
@@ -50,6 +51,9 @@
   // Increment 3: Rest timer (persisted)
   const REST_KEY = "w3_restTimer_v1";
   let restInterval = null;
+  // SVG ring math (r=40 in workouts.html -> circumference ≈ 251.2)
+  const REST_RING_R = 40;
+  const REST_CIRC = 2 * Math.PI * REST_RING_R;
 
   function loadRest(){
     try{
@@ -77,7 +81,8 @@
 
   function startRest(seconds){
     const now = Date.now();
-    const st = { running:true, endAt: now + Math.max(1, seconds|0)*1000 };
+    const totalSec = Math.max(1, seconds|0);
+    const st = { running:true, startAt: now, totalSec, endAt: now + totalSec*1000 };
     saveRest(st);
     showRest();
   }
@@ -90,6 +95,11 @@
   function showRest(){
     if (!el.restTimer) return;
     el.restTimer.hidden = false;
+    // Prime ring values (in case first tick takes a moment)
+    if (el.restProgress){
+      el.restProgress.style.strokeDasharray = String(REST_CIRC);
+      el.restProgress.style.strokeDashoffset = "0";
+    }
     tickRest();
     if (restInterval) clearInterval(restInterval);
     restInterval = setInterval(tickRest, 250);
@@ -99,6 +109,9 @@
     if (!el.restTimer) return;
     el.restTimer.hidden = true;
     el.restTimer.classList.remove("w3-restDone");
+    if (el.restProgress){
+      el.restProgress.style.strokeDashoffset = "0";
+    }
     if (restInterval) { clearInterval(restInterval); restInterval = null; }
   }
 
@@ -107,6 +120,15 @@
     if (!st || !st.endAt) { hideRest(); return; }
     const remaining = Math.max(0, Math.ceil((st.endAt - Date.now())/1000));
     if (el.restTime) el.restTime.textContent = fmtClock(remaining);
+
+    // Update analog ring (1 = full remaining, 0 = done)
+    if (el.restProgress){
+      const totalSec = Math.max(1, (st.totalSec|0) || remaining || 60);
+      const frac = Math.min(1, Math.max(0, remaining / totalSec));
+      const dashOffset = REST_CIRC * (1 - frac);
+      el.restProgress.style.strokeDasharray = String(REST_CIRC);
+      el.restProgress.style.strokeDashoffset = String(dashOffset);
+    }
     if (remaining <= 0){
       saveRest(null);
       if (el.restTimer){

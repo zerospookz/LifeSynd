@@ -74,8 +74,26 @@
       <button class="w3-btnSecondary" id="w3Start">Start</button>
     </footer>
 
-    <div class="w3-restTimer" id="w3RestTimer" hidden>
-      <div class="w3-restTime num" id="w3RestTime">01:00</div>
+    <!-- Floating rest clock (timer + analog ring) -->
+    <div class="w3-restClock" id="w3RestTimer" hidden role="status" aria-live="polite">
+      <div class="w3-restDial">
+        <svg class="w3-restRing" viewBox="0 0 100 100" focusable="false" aria-hidden="true">
+          <defs>
+            <linearGradient id="w3RestGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#60a5fa" />
+              <stop offset="55%" stop-color="#a78bfa" />
+              <stop offset="100%" stop-color="#34d399" />
+            </linearGradient>
+          </defs>
+          <circle class="w3-restTrack" cx="50" cy="50" r="40" />
+          <circle class="w3-restProgress" id="w3RestProgress" cx="50" cy="50" r="40" />
+        </svg>
+        <div class="w3-restCenter">
+          <div class="w3-restTime num" id="w3RestTime">01:00</div>
+          <div class="w3-restLabel">REST</div>
+        </div>
+      </div>
+
       <button class="w3-restBtn" id="w3RestStop" aria-label="Stop rest">Stop</button>
     </div>
   </div>
