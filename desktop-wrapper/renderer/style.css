@@ -44,3 +44,37 @@
 .bottomNav a.active .navIcon{
   filter: contrast(1.30) brightness(1.20) saturate(1.25) drop-shadow(0 0 10px rgba(64,255,255,0.35));
 }
+
+/* --- Active nav halo ring (desktop sidebar + mobile bottom nav) --- */
+.nav a,
+.bottomNav a{ position: relative; }
+
+.nav a.active::before{
+  content:'';
+  position:absolute;
+  left: 10px;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(64,255,255,.34) 0%, rgba(64,255,255,.14) 42%, rgba(64,255,255,0) 72%);
+  border: 1px solid rgba(64,255,255,.18);
+  box-shadow: 0 0 18px rgba(64,255,255,.20);
+  pointer-events: none;
+}
+
+.bottomNav a.active::before{
+  content:'';
+  position:absolute;
+  left: 50%;
+  top: 10px;
+  width: 42px;
+  height: 42px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(64,255,255,.30) 0%, rgba(64,255,255,.12) 45%, rgba(64,255,255,0) 74%);
+  border: 1px solid rgba(64,255,255,.14);
+  box-shadow: 0 0 18px rgba(64,255,255,.18);
+  pointer-events: none;
+}

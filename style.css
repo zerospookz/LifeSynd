@@ -145,6 +145,48 @@ a{color:inherit}
   55%{ transform: scale(1.06); }
   100%{ transform: scale(1); }
 }
+
+/* --- Active nav halo ring (desktop sidebar + mobile bottom nav) --- */
+.nav a,
+.bottomNav a{ position: relative; }
+
+/* keep text/icon above the halo */
+.nav a .left{ position: relative; z-index: 1; }
+.bottomNav a{ z-index: 1; }
+
+/* Sidebar: halo sits behind the icon area (left side) */
+.nav a.active::before{
+  content:'';
+  position:absolute;
+  left: 10px;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(64,255,255,.34) 0%, rgba(64,255,255,.14) 42%, rgba(64,255,255,0) 72%);
+  border: 1px solid rgba(64,255,255,.18);
+  box-shadow: 0 0 18px rgba(64,255,255,.20);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Mobile bottom nav: centered halo behind the icon */
+.bottomNav a.active::before{
+  content:'';
+  position:absolute;
+  left: 50%;
+  top: 10px;
+  width: 42px;
+  height: 42px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(64,255,255,.30) 0%, rgba(64,255,255,.12) 45%, rgba(64,255,255,0) 74%);
+  border: 1px solid rgba(64,255,255,.14);
+  box-shadow: 0 0 18px rgba(64,255,255,.18);
+  pointer-events: none;
+  z-index: 0;
+}
 .pill{
   font-size:.75rem;
   color: var(--muted);
