@@ -18,6 +18,8 @@
     empty: $("#w3Empty"),
     todayDock: $("#w3TodayDock"),
     rpToday: $("#w3RpToday"),
+    rightPanel: $("#w3RightPanel"),
+    bottomBar: document.querySelector(".w3-bottomBar"),
     btnAddExercise: $("#w3AddExercise"),
     btnAddExerciseEmpty: $("#w3AddExerciseEmpty"),
     btnStart: $("#w3Start"),
@@ -52,6 +54,26 @@
     modalOk: $("#w3ModalOk"),
     modalCancel: $("#w3ModalCancel"),
   };
+
+  // Desktop layout: move the right panel stack into the right utility column.
+  // Mobile: keep it inside the bottom bar.
+  function dockRightPanel(){
+    const isDesktop = window.matchMedia("(min-width: 1100px)").matches;
+    if (isDesktop){
+      if (el.rightPanel && el.todayDock && !el.todayDock.contains(el.rightPanel)){
+        el.todayDock.appendChild(el.rightPanel);
+      }
+    } else {
+      if (!el.bottomBar) el.bottomBar = document.querySelector(".w3-bottomBar");
+      if (el.rightPanel && el.bottomBar && !el.bottomBar.contains(el.rightPanel)){
+        el.bottomBar.appendChild(el.rightPanel);
+      }
+    }
+  }
+  dockRightPanel();
+  window.addEventListener("resize", ()=>{ dockRightPanel(); });
+
+
 
   // Increment 2: PR flash state
   let prFlashSetId = null;

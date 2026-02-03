@@ -1094,6 +1094,9 @@ body[data-theme="dark"]{
     align-items: start;
   }
 
+  /* Desktop: bottom bar is a mobile affordance; hide it and use the right utility column instead */
+  .w3-bottomBar{ display:none !important; }
+
   /* Keep main content in left column */
   .w3-header,
   .w3-meta,
@@ -1778,4 +1781,18 @@ body[data-theme="dark"]{
 /* Ensure the desktop right panel is visible even if other rules hide the bottom bar */
 @media (min-width: 1100px){
   .w3-bottomBar{ display:flex !important; }
+}
+
+
+
+@media (min-width: 1400px){
+  /* Make Today summary more compact on wide screens */
+  #w3RpToday.w3-rpCard{
+    border-radius: 14px;
+  }
+  #w3RpToday .w3-rpCardTop{ margin-bottom: 8px; }
+  #w3RpToday .w3-rpTitle{ font-size: 13px; opacity: .9; }
+  #w3RpToday .w3-rpGrid{ gap: 8px 12px; }
+  #w3RpToday .w3-rpStatLabel{ font-size: 11px; opacity: .7; }
+  #w3RpToday .w3-rpStatVal{ font-size: 20px; }
 }
