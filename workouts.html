@@ -46,13 +46,24 @@
 <button class="w3-tabBtn" data-tab="templates" type="button">Templates</button>
 </nav>
 <section id="w3Content"></section>
-<section aria-label="Add exercise" class="w3-empty" hidden="" id="w3Empty" role="button" tabindex="0">
-  <div class="w3-emptyMain">
-    <div aria-hidden="true" class="w3-emptyIconBtn">+</div>
-    <div class="w3-emptyTitle">No exercises</div>
-    <div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
-  </div>
-</section>
+<!-- Empty state layout (desktop): Today summary sits to the LEFT of the empty hero card -->
+<div class="w3-emptyWrap" hidden="" id="w3EmptyWrap">
+  <aside class="w3-emptySide" id="w3EmptySide">
+    <!-- Today summary card will be moved here when empty (kept as a single source of truth) -->
+    <div class="w3-emptyQuick" aria-label="Quick actions">
+      <button class="w3-emptyQuickBtn" data-tab="templates" type="button">🧩 Templates</button>
+      <button class="w3-emptyQuickBtn" data-tab="history" type="button">📜 History</button>
+    </div>
+  </aside>
+
+  <section aria-label="Add exercise" class="w3-empty" id="w3Empty" role="button" tabindex="0">
+    <div class="w3-emptyMain">
+      <div aria-hidden="true" class="w3-emptyIconBtn">+</div>
+      <div class="w3-emptyTitle">No exercises</div>
+      <div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
+    </div>
+  </section>
+</div>
 
 <!-- Desktop utility column: Today Summary sits next to the workout canvas (and next to the empty add card when empty) -->
 <aside class="w3-todayDock" id="w3TodayDock">

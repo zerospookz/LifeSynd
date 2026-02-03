@@ -1099,6 +1099,7 @@ body[data-theme="dark"]{
   .w3-meta,
   .w3-tabs,
   #w3Content,
+  #w3EmptyWrap,
   #w3Empty{
     grid-column: 1;
   }
@@ -1112,6 +1113,51 @@ body[data-theme="dark"]{
     align-self: start;
   }
 
+  /* When empty: use a single wide column and place Today summary to the LEFT of the empty hero card */
+  .w3-page.is-empty{
+    grid-template-columns: 1fr;
+  }
+  .w3-page.is-empty .w3-todayDock{ display:none; }
+  .w3-emptyWrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 26px;
+    min-height: 72vh;
+    width: 100%;
+  }
+  .w3-emptySide{
+    width: 320px;
+    max-width: 320px;
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+  .w3-empty{ width: min(980px, 100%); }
+  .w3-emptyQuick{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .w3-emptyQuickBtn{
+    width: 100%;
+    text-align:left;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.90);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  }
+  .w3-emptyQuickBtn:hover{
+    transform: translateY(-1px);
+    border-color: rgba(129,140,248,0.55);
+    background: rgba(255,255,255,.07);
+  }
+  .w3-emptyQuickBtn:active{ transform: translateY(0px); }
 
   /* Desktop: remove the old right-side tiles/actions block (kept in DOM for JS, but hidden) */
   .w3-tabs{ display:none; }

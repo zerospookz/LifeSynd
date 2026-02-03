@@ -13,7 +13,11 @@
     metaVol: $("#w3MetaVol"),
     metaTime: $("#w3MetaTime"),
     content: $("#w3Content"),
+    emptyWrap: $("#w3EmptyWrap"),
+    emptySide: $("#w3EmptySide"),
     empty: $("#w3Empty"),
+    todayDock: $("#w3TodayDock"),
+    rpToday: $("#w3RpToday"),
     btnAddExercise: $("#w3AddExercise"),
     btnAddExerciseEmpty: $("#w3AddExerciseEmpty"),
     btnStart: $("#w3Start"),
@@ -82,16 +86,25 @@ let workoutClockInterval = null;
   let _emptyHideTimer = null;
   function showEmpty(){
     if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
-    if (el.empty) el.empty.hidden = false;
+    // Show wrapper
+    if (el.emptyWrap) el.emptyWrap.hidden = false;
+    // Move Today summary to the LEFT of the empty hero card
+    if (el.rpToday && el.emptySide && !el.emptySide.contains(el.rpToday)){
+      el.emptySide.insertBefore(el.rpToday, el.emptySide.firstChild);
+    }
     // next frame so transitions apply
     requestAnimationFrame(()=> el.page?.classList.add("is-empty"));
   }
   function hideEmptyAnimated(){
     el.page?.classList.remove("is-empty");
-    if (!el.empty || el.empty.hidden) return;
+    if (!el.emptyWrap || el.emptyWrap.hidden) return;
     if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
     _emptyHideTimer = setTimeout(()=>{
-      if (el.empty) el.empty.hidden = true;
+      // Move Today summary back to the right utility column
+      if (el.rpToday && el.todayDock && !el.todayDock.contains(el.rpToday)){
+        el.todayDock.appendChild(el.rpToday);
+      }
+      if (el.emptyWrap) el.emptyWrap.hidden = true;
     }, 280);
   }
 
@@ -371,7 +384,7 @@ let workoutClockInterval = null;
     el.btnRest60.style.display = "none";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
-    el.empty.hidden = true;
+    if (el.emptyWrap) el.emptyWrap.hidden = true;
 
     const all = safe(()=>Workouts.listWorkouts ? Workouts.listWorkouts() : [], []);
     const done = (all||[]).filter(w => (w.status === "completed" || w.status === "skipped") && w.date && withinRange(w.date))
@@ -455,7 +468,7 @@ let workoutClockInterval = null;
     el.btnRest60.style.display = "none";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
-    el.empty.hidden = true;
+    if (el.emptyWrap) el.emptyWrap.hidden = true;
 
     const cats = `
       <div class="w4-range">
@@ -704,18 +717,18 @@ let workoutClockInterval = null;
   }
 function render(){
     // Tabs
-    if (currentTab === "history") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderHistory(); return; }
-    if (currentTab === "templates") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderTemplates(); return; }
+    if (currentTab === "history") { hideEmptyAnimated(); if (el.emptyWrap) el.emptyWrap.hidden = true; renderHistory(); return; }
+    if (currentTab === "templates") { hideEmptyAnimated(); if (el.emptyWrap) el.emptyWrap.hidden = true; renderTemplates(); return; }
     if (!window.Workouts) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
-      el.empty.hidden = true;
+      if (el.emptyWrap) el.emptyWrap.hidden = true;
       return;
     }
 
     const workout = ensureWorkout();
     if (!workout) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">No workout</div><div class="w3-muted">Could not create or load a workout.</div></div>`;
-      el.empty.hidden = true;
+      if (el.emptyWrap) el.emptyWrap.hidden = true;
       return;
     }
 
@@ -1281,6 +1294,15 @@ for (const ex of exercises) {
 
   // Tabs switching
   el.tabs?.addEventListener("click", (e)=>{
+    const btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    currentTab = btn.dataset.tab || "today";
+    syncTabUI();
+    render();
+  });
+
+  // Empty-state quick actions (Templates / History)
+  el.emptySide?.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
     currentTab = btn.dataset.tab || "today";
