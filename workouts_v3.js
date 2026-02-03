@@ -599,6 +599,25 @@ for (const ex of exercises) {
 
       el.content.appendChild(card);
     }
+
+    // "Add another exercise" placeholder card (shows you can add more)
+    if (!isReadOnly) {
+      const addCard = document.createElement("section");
+      addCard.className = "w3-addExerciseCard";
+      addCard.setAttribute("role", "button");
+      addCard.setAttribute("tabindex", "0");
+      addCard.dataset.action = "add-exercise-card";
+      addCard.innerHTML = `
+        <div class="w3-addExerciseInner">
+          <div class="w3-addExerciseIcon">+</div>
+          <div class="w3-addExerciseText">
+            <div class="w3-addExerciseTitle">Add another exercise</div>
+            <div class="w3-addExerciseSub">Tap to add more to this workout.</div>
+          </div>
+        </div>
+      `;
+      el.content.appendChild(addCard);
+    }
   }
 
   function setRowHtml(s, index, exerciseId, exerciseName){
@@ -874,9 +893,29 @@ for (const ex of exercises) {
       render();
       return;
     }
+    if (action === "add-exercise-card") {
+      addExercise();
+      return;
+    }
+
     if (action === "ex-menu") {
-      // Increment 1 keeps it minimal
-      console.log("Exercise menu (next increment)");
+      if (!exerciseId) return;
+      const exName = (card?.dataset.exerciseName || "Exercise").trim() || "Exercise";
+      const ok = confirm(`Delete "${exName}"? This will remove all sets in it.`);
+      if (!ok) return;
+      safe(()=>Workouts.removeExercise(exerciseId), null);
+      render();
+      return;
+    }
+  });
+
+  // Keyboard support for clickable "add exercise" card
+  el.content.addEventListener("keydown", (e)=>{
+    const act = e.target.closest && e.target.closest("[data-action='add-exercise-card']");
+    if (!act) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      addExercise();
     }
   });
 

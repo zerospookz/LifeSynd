@@ -1130,3 +1130,67 @@ body[data-theme="dark"]{
     -webkit-backdrop-filter: none;
   }
 }
+
+
+/* ===== Add-another-exercise placeholder card ===== */
+.w3-addExerciseCard{
+  margin-top: 14px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.04);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  outline: none;
+}
+.w3-addExerciseCard:hover{
+  transform: translateY(-1px);
+  border-color: rgba(129,140,248,0.6);
+  box-shadow: 0 16px 38px rgba(99,102,241,.18), 0 10px 30px rgba(0,0,0,.25);
+}
+.w3-addExerciseCard:focus-visible{
+  border-color: rgba(129,140,248,0.75);
+  box-shadow: 0 0 0 4px rgba(99,102,241,.22), 0 16px 38px rgba(99,102,241,.18);
+}
+
+.w3-addExerciseInner{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding: 16px 16px;
+}
+
+.w3-addExerciseIcon{
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display:grid;
+  place-items:center;
+  font-size: 28px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  background: rgba(99,102,241,0.14);
+  border: 1px solid rgba(99,102,241,0.25);
+  box-shadow: 0 10px 26px rgba(99,102,241,.14);
+}
+
+.w3-addExerciseTitle{
+  color: rgba(255,255,255,0.92);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.w3-addExerciseSub{
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(203,213,225,0.85);
+}
+
+/* Larger feel on big screens */
+@media (min-width: 1024px){
+  .w3-addExerciseInner{ padding: 18px 18px; }
+  .w3-addExerciseIcon{ width: 54px; height: 54px; font-size: 32px; }
+  .w3-addExerciseTitle{ font-size: 16px; }
+  .w3-addExerciseSub{ font-size: 14px; }
+}
