@@ -6,6 +6,7 @@
   const $ = (sel) => document.querySelector(sel);
 
   const el = {
+    page: $("#w3Page"),
     title: $("#w3Title"),
     subtitle: $("#w3Subtitle"),
     metaSets: $("#w3MetaSets"),
@@ -547,9 +548,11 @@ function render(){
 
     if (!exercises.length) {
       el.empty.hidden = false;
+      el.page?.classList.add("is-empty");
       return;
     }
     el.empty.hidden = true;
+    el.page?.classList.remove("is-empty");
 
     for (const ex of exercises) {
       const sets = safe(()=>Workouts.listSets(ex.id), []);
@@ -967,6 +970,18 @@ function render(){
 
   el.btnAddExercise?.addEventListener("click", addExercise);
   el.btnAddExerciseEmpty?.addEventListener("click", addExercise);
+  // Empty state card is clickable
+  el.empty?.addEventListener("click", (e)=>{
+    // Allow button inside to work normally
+    if (e.target && e.target.closest && e.target.closest("button")) return;
+    addExercise();
+  });
+  el.empty?.addEventListener("keydown", (e)=>{
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      addExercise();
+    }
+  });
 
   // Tabs switching
   el.tabs?.addEventListener("click", (e)=>{

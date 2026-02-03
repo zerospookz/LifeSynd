@@ -805,3 +805,95 @@ body[data-theme="dark"]{
 
 /* Removed empty top meta panel */
 .w3-meta{display:none !important;}
+
+
+/* ===== Empty workout state (dark/glass) + centered + clickable ===== */
+@keyframes w3FadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* When empty, let the page use remaining height so the empty card can center */
+.w3-page.is-empty{
+  min-height: calc(100vh - 24px);
+  display:flex;
+  flex-direction: column;
+}
+
+/* Hide unused content container in empty state */
+.w3-page.is-empty #w3Content{
+  display:none;
+}
+
+/* Center the empty card vertically between tabs and footer */
+.w3-page.is-empty .w3-empty{
+  flex: 1;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding: 22px 16px;
+  animation: w3FadeUp .22s ease both;
+}
+
+.w3-empty{
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  user-select: none;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+}
+
+.w3-empty:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 18px 46px rgba(0,0,0,.42);
+  border-color: rgba(129, 140, 248, 0.35);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.w3-empty:focus{
+  outline: none;
+  border-color: rgba(129, 140, 248, 0.55);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.22), 0 18px 46px rgba(0,0,0,.42);
+}
+
+.w3-emptyIcon{
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 26px;
+  background: rgba(99,102,241,0.16);
+  border: 1px solid rgba(129,140,248,0.25);
+  margin-bottom: 10px;
+}
+
+.w3-emptyTitle{
+  color: #f9fafb;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.w3-empty .w3-muted{
+  color: rgba(226,232,240,0.88);
+  opacity: 1;
+}
+
+/* Button inside empty card */
+.w3-empty .w3-btnSecondary{
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 20px rgba(99,102,241,.35);
+}
+
+.w3-empty .w3-btnSecondary:hover{
+  filter: brightness(1.08);
+}
