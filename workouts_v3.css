@@ -1669,3 +1669,61 @@ body[data-theme="dark"]{
   background: radial-gradient(circle at 50% 50%, rgba(124,58,237,.35), transparent 60%);
   pointer-events:none;
 }
+
+
+/* ===== Right panel cards (Desktop) ===== */
+.w3-rpStack{ display:flex; flex-direction:column; gap:12px; }
+.w3-rpCard{
+  border:1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 14px 14px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.30);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.w3-rpCardTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 10px; }
+.w3-rpTitle{ font-weight: 800; letter-spacing:-0.01em; }
+.w3-rpHint{ font-size: 12px; color: rgba(255,255,255,0.68); }
+.w3-rpPill{
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(52,211,153,0.35);
+  color: rgba(167,243,208,0.95);
+  background: rgba(16,185,129,0.12);
+}
+.w3-rpGrid{ display:grid; grid-template-columns: 1fr; gap: 10px; }
+.w3-rpStat{ display:flex; align-items:baseline; justify-content:space-between; gap: 10px; }
+.w3-rpStatLabel{ font-size: 12px; color: rgba(255,255,255,0.68); }
+.w3-rpStatVal{ font-size: 22px; font-weight: 850; letter-spacing:-0.02em; }
+.w3-rpUnit{ font-size: 12px; color: rgba(255,255,255,0.68); margin-left: 4px; }
+
+.w3-rpNextName{ font-size: 18px; font-weight: 850; letter-spacing:-0.02em; margin: 2px 0 4px; }
+.w3-rpMuted{ font-size: 12px; color: rgba(255,255,255,0.68); }
+.w3-rpRow{ display:flex; gap:10px; margin-top: 12px; }
+.w3-rpBtn{
+  flex:1;
+  border:1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 850;
+  cursor:pointer;
+  transition: transform .14s ease, background .14s ease, border-color .14s ease;
+}
+.w3-rpBtn:hover{ transform: translateY(-1px); border-color: rgba(129,140,248,0.35); background: rgba(129,140,248,0.10); }
+.w3-rpBtn.ghost{ background: rgba(255,255,255,0.05); }
+.w3-rpSection{ margin-top: 8px; }
+.w3-rpSectionTitle{ font-size: 12px; font-weight: 900; letter-spacing: 0.02em; color: rgba(255,255,255,0.82); margin-bottom: 4px; }
+
+.w3-rpActions{ display:flex; flex-direction:column; gap: 12px; }
+
+/* Hide right panel cards on mobile; keep actions only */
+@media (max-width: 1099px){
+  #w3RightPanel .w3-rpCard{ display:none; }
+  #w3RightPanel .w3-sideTiles{ display:none; }
+}

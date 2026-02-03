@@ -1,120 +1,155 @@
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Workouts</title>
-  <link rel="icon" href="./favicon.ico" />
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="workouts_v3.css"></head>
+<link href="./favicon.ico" rel="icon"/>
+<link href="style.css" rel="stylesheet"/>
+<link href="workouts_v3.css" rel="stylesheet"/></head>
 <body>
 <div class="layout">
-  <aside class="sidebar">
-    <div class="brand">
-      <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
-      <div>
-        <div class="brandTitle">LifeSync</div>
-        <div class="brandSub">Command center</div>
-      </div>
-    </div>
-
-    <nav class="nav">
-      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
-      <a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
-      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
-      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
-      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
-      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
-    </nav>
-
-    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
-  </aside>
-
-  <main class="content">
-  <div class="w3-page" id="w3Page">
-    <header class="w3-header">
-      <a class="w3-iconBtn" href="dashboard.html" aria-label="Back">←</a>
-      <div class="w3-headTitles">
-        <div class="w3-hPage" id="w3Title">Workout</div>
-        <div class="w3-muted" id="w3Subtitle">—</div>
-      </div>
-      <button class="w3-btnPrimary" id="w3Finish">Finish</button>
-    </header>
-
-    <section class="w3-meta" id="w3Meta">
-      <div class="w3-chip"><span class="w3-num" id="w3MetaSets">0</span> sets</div>
-      <div class="w3-chip"><span class="w3-num" id="w3MetaVol">0</span> kg</div>
-      <div class="w3-chip"><span class="w3-num" id="w3MetaTime">--:--</span></div>
-    </section>
-
-
-    <nav class="w3-tabs" id="w3Tabs" aria-label="Workouts tabs">
-      <button class="w3-tabBtn is-active" data-tab="today" type="button">Today</button>
-      <button class="w3-tabBtn" data-tab="history" type="button">History</button>
-      <button class="w3-tabBtn" data-tab="templates" type="button">Templates</button>
-    </nav>
-
-    <section id="w3Content"></section>
-
-    <section class="w3-empty" id="w3Empty" hidden role="button" tabindex="0" aria-label="Add exercise">
-      <div class="w3-emptyIconBtn" aria-hidden="true">+</div>
-      <div class="w3-emptyTitle">No exercises</div>
-      <div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
-    </section>
-
-    <footer
- class="w3-bottomBar">
-      <div class="w3-sideTiles" id="w3SideTiles" aria-label="Desktop sections">
-        <button class="w3-sideTile" data-tab="today" type="button">🏋️ Today</button>
-        <button class="w3-sideTile" data-tab="history" type="button">📜 History</button>
-        <button class="w3-sideTile" data-tab="templates" type="button">🧩 Templates</button>
-      </div>
-
-      <button class="w3-btnSecondary" id="w3AddExercise">+ Exercise</button>
-      <button class="w3-btnSecondary" id="w3Rest60">Rest 60s</button>
-      <button class="w3-btnSecondary" id="w3Start">Start</button>
-    </footer>
-
-    <!-- Floating rest clock (timer + analog ring) -->
-    <div class="w3-restClock" id="w3RestTimer" hidden role="status" aria-live="polite">
-      <div class="w3-restDial">
-        <svg class="w3-restRing" viewBox="0 0 100 100" focusable="false" aria-hidden="true">
-          <defs>
-            <linearGradient id="w3RestGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#60a5fa" />
-              <stop offset="55%" stop-color="#a78bfa" />
-              <stop offset="100%" stop-color="#34d399" />
-            </linearGradient>
-          </defs>
-          <circle class="w3-restTrack" cx="50" cy="50" r="40" />
-          <circle class="w3-restProgress" id="w3RestProgress" cx="50" cy="50" r="40" />
-        </svg>
-        <div class="w3-restCenter">
-          <div class="w3-restTime num" id="w3RestTime">01:00</div>
-          <div class="w3-restLabel">REST</div>
-        </div>
-      </div>
-
-      <button class="w3-restBtn" id="w3RestStop" aria-label="Stop rest">Stop</button>
-    </div>
-  </div>
+<aside class="sidebar">
+<div class="brand">
+<img alt="LifeSync logo" class="logoMark" src="icons/brand-mark-128.png"/>
+<div>
+<div class="brandTitle">LifeSync</div>
+<div class="brandSub">Command center</div>
+</div>
+</div>
+<nav class="nav">
+<a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+<a href="habits.html"><span class="left"><span class="iconWrap"><img alt="Habits" class="navIcon" src="icons/habits.png?v=6"/></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
+<a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+<a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+<a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+<a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+</nav>
+<div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+</aside>
+<main class="content">
+<div class="w3-page" id="w3Page">
+<header class="w3-header">
+<a aria-label="Back" class="w3-iconBtn" href="dashboard.html">←</a>
+<div class="w3-headTitles">
+<div class="w3-hPage" id="w3Title">Workout</div>
+<div class="w3-muted" id="w3Subtitle">—</div>
+</div>
+<button class="w3-btnPrimary" id="w3Finish">Finish</button>
+</header>
+<section class="w3-meta" id="w3Meta">
+<div class="w3-chip"><span class="w3-num" id="w3MetaSets">0</span> sets</div>
+<div class="w3-chip"><span class="w3-num" id="w3MetaVol">0</span> kg</div>
+<div class="w3-chip"><span class="w3-num" id="w3MetaTime">--:--</span></div>
+</section>
+<nav aria-label="Workouts tabs" class="w3-tabs" id="w3Tabs">
+<button class="w3-tabBtn is-active" data-tab="today" type="button">Today</button>
+<button class="w3-tabBtn" data-tab="history" type="button">History</button>
+<button class="w3-tabBtn" data-tab="templates" type="button">Templates</button>
+</nav>
+<section id="w3Content"></section>
+<section aria-label="Add exercise" class="w3-empty" hidden="" id="w3Empty" role="button" tabindex="0">
+<div aria-hidden="true" class="w3-emptyIconBtn">+</div>
+<div class="w3-emptyTitle">No exercises</div>
+<div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
+</section>
+<footer class="w3-bottomBar">
+<div class="w3-rpStack" id="w3RightPanel">
+<section class="w3-rpCard" id="w3RpToday">
+<div class="w3-rpCardTop">
+<div class="w3-rpTitle">Today summary</div>
+<div class="w3-rpPill" hidden="" id="w3RpLivePill">LIVE</div>
+</div>
+<div class="w3-rpGrid">
+<div class="w3-rpStat">
+<div class="w3-rpStatLabel">Sets</div>
+<div class="w3-rpStatVal num" id="w3RpSets">0</div>
+</div>
+<div class="w3-rpStat">
+<div class="w3-rpStatLabel">Volume</div>
+<div class="w3-rpStatVal num"><span id="w3RpVol">0</span> <span class="w3-rpUnit">kg</span></div>
+</div>
+<div class="w3-rpStat">
+<div class="w3-rpStatLabel">Duration</div>
+<div class="w3-rpStatVal num" id="w3RpTime">--:--</div>
+</div>
+</div>
+</section>
+<section class="w3-rpCard" hidden="" id="w3RpNext">
+<div class="w3-rpCardTop">
+<div class="w3-rpTitle">Next suggested</div>
+<div class="w3-rpHint" id="w3RpNextSource"></div>
+</div>
+<div class="w3-rpNextName" id="w3RpNextName">—</div>
+<div class="w3-rpMuted" id="w3RpNextSub"> </div>
+<div class="w3-rpRow">
+<button class="w3-rpBtn" id="w3RpStartSuggested" type="button">Start</button>
+<button class="w3-rpBtn ghost" id="w3RpAddSuggested" type="button">Add to workout</button>
+</div>
+</section>
+<section class="w3-rpCard" hidden="" id="w3RpContext">
+<div class="w3-rpCardTop">
+<div class="w3-rpTitle">Exercise context</div>
+<div class="w3-rpHint" id="w3RpCtxName"></div>
+</div>
+<div class="w3-rpSection">
+<div class="w3-rpSectionTitle">Last session</div>
+<div class="w3-rpMuted" id="w3RpLastSession">—</div>
+</div>
+<div class="w3-rpSection">
+<div class="w3-rpSectionTitle">PRs</div>
+<div class="w3-rpMuted" id="w3RpPRs">—</div>
+</div>
+</section>
+<div aria-label="Desktop sections" class="w3-sideTiles" id="w3SideTiles">
+<button class="w3-sideTile" data-tab="today" type="button">🏋️ Today</button>
+<button class="w3-sideTile" data-tab="history" type="button">📜 History</button>
+<button class="w3-sideTile" data-tab="templates" type="button">🧩 Templates</button>
+</div>
+<div class="w3-rpActions">
+<button class="w3-btnSecondary" id="w3AddExercise">+ Exercise</button>
+<button class="w3-btnSecondary" id="w3Rest60">Rest 60s</button>
+<button class="w3-btnSecondary" data-action="start-workout" id="w3Start">Start</button>
+</div>
+</div>
+</footer>
+<!-- Floating rest clock (timer + analog ring) -->
+<div aria-live="polite" class="w3-restClock" hidden="" id="w3RestTimer" role="status">
+<div class="w3-restDial">
+<svg aria-hidden="true" class="w3-restRing" focusable="false" viewbox="0 0 100 100">
+<defs>
+<lineargradient id="w3RestGrad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#60a5fa"></stop>
+<stop offset="55%" stop-color="#a78bfa"></stop>
+<stop offset="100%" stop-color="#34d399"></stop>
+</lineargradient>
+</defs>
+<circle class="w3-restTrack" cx="50" cy="50" r="40"></circle>
+<circle class="w3-restProgress" cx="50" cy="50" id="w3RestProgress" r="40"></circle>
+</svg>
+<div class="w3-restCenter">
+<div class="w3-restTime num" id="w3RestTime">01:00</div>
+<div class="w3-restLabel">REST</div>
+</div>
+</div>
+<button aria-label="Stop rest" class="w3-restBtn" id="w3RestStop">Stop</button>
+</div>
+</div>
 </main>
 </div>
 <!-- Add exercise modal -->
-  <div class="w3-modalOverlay" id="w3ModalOverlay" hidden>
-    <div class="w3-modalCard" role="dialog" aria-modal="true" aria-labelledby="w3ModalTitle">
-      <div class="w3-modalTop">
-        <div class="w3-modalTitle" id="w3ModalTitle">Add exercise</div>
-        <button class="w3-modalClose" id="w3ModalClose" aria-label="Close">×</button>
-      </div>
-      <label class="w3-modalLabel" for="w3ExerciseName">Exercise name</label>
-      <input class="w3-modalInput" id="w3ExerciseName" placeholder="e.g., Bench Press" />
-      <div class="w3-modalActions">
-        <button class="w3-modalBtn" id="w3ModalCancel" type="button">Cancel</button>
-        <button class="w3-modalBtn primary" id="w3ModalOk" type="button">Add</button>
-      </div>
-    </div>
-  </div>
-
-
+<div class="w3-modalOverlay" hidden="" id="w3ModalOverlay">
+<div aria-labelledby="w3ModalTitle" aria-modal="true" class="w3-modalCard" role="dialog">
+<div class="w3-modalTop">
+<div class="w3-modalTitle" id="w3ModalTitle">Add exercise</div>
+<button aria-label="Close" class="w3-modalClose" id="w3ModalClose">×</button>
+</div>
+<label class="w3-modalLabel" for="w3ExerciseName">Exercise name</label>
+<input class="w3-modalInput" id="w3ExerciseName" placeholder="e.g., Bench Press"/>
+<div class="w3-modalActions">
+<button class="w3-modalBtn" id="w3ModalCancel" type="button">Cancel</button>
+<button class="w3-modalBtn primary" id="w3ModalOk" type="button">Add</button>
+</div>
+</div>
+</div>
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="workouts.js"></script><script src="workouts_v3.js"></script>
-
-  </body></html>
+</body></html>

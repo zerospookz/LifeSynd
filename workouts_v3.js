@@ -23,6 +23,24 @@
     restTime: $("#w3RestTime"),
     restStop: $("#w3RestStop"),
     restProgress: $("#w3RestProgress"),
+    // Right panel (desktop)
+    rpLivePill: $("#w3RpLivePill"),
+    rpSets: $("#w3RpSets"),
+    rpVol: $("#w3RpVol"),
+    rpTime: $("#w3RpTime"),
+
+    rpNextCard: $("#w3RpNext"),
+    rpNextSource: $("#w3RpNextSource"),
+    rpNextName: $("#w3RpNextName"),
+    rpNextSub: $("#w3RpNextSub"),
+    rpStartSuggested: $("#w3RpStartSuggested"),
+    rpAddSuggested: $("#w3RpAddSuggested"),
+
+    rpCtxCard: $("#w3RpContext"),
+    rpCtxName: $("#w3RpCtxName"),
+    rpLastSession: $("#w3RpLastSession"),
+    rpPRs: $("#w3RpPRs"),
+
     tabs: $("#w3Tabs"),
     sideTiles: $("#w3SideTiles"),
     modalOverlay: $("#w3ModalOverlay"),
@@ -37,6 +55,11 @@
 
     // Active exercise (for in-card actions)
   let activeExerciseId = null;
+
+// Right panel state
+let suggestedExerciseName = null;
+let workoutClockInterval = null;
+
 
 // Tabs
   let currentTab = "today";
@@ -531,6 +554,154 @@
     }catch(_){}
   }
 
+
+  function liveDurationSec(workout){
+    if (!workout) return null;
+    const st = workout.startedAt ? new Date(workout.startedAt).getTime() : null;
+    const fin = workout.finishedAt ? new Date(workout.finishedAt).getTime() : null;
+    if (st && !fin) return Math.max(0, Math.floor((Date.now() - st)/1000));
+    if (st && fin) return Math.max(0, Math.floor((fin - st)/1000));
+    return workout.durationSec || null;
+  }
+
+  function fmtKg(n){
+    const v = Number(n||0);
+    return fmtInt(Math.round(v));
+  }
+
+  function getCurrentExerciseName(workoutId){
+    if (!workoutId) return null;
+    const exs = safe(()=>Workouts.listExercises(workoutId), []) || [];
+    if (!exs.length) return null;
+    const active = activeExerciseId ? exs.find(e => e.id === activeExerciseId) : null;
+    return (active?.name || exs[0].name || "").trim() || null;
+  }
+
+  function pickSuggestedExercise(workout){
+    // Priority:
+    // 1) Template of current workout (if exists)
+    // 2) Any template (first)
+    // 3) Last completed workout's first exercise
+    // 4) Fallback: last exercise name from history (most recent)
+    const currentExNames = new Set((safe(()=>Workouts.listExercises(workout?.id), [])||[]).map(e => String(e.name||"").trim().toLowerCase()).filter(Boolean));
+
+    // 1) current workout template
+    const templates = safe(()=>Workouts.listTemplates(), []) || [];
+    if (workout?.templateId){
+      const tpl = templates.find(t => String(t.id) === String(workout.templateId));
+      if (tpl?.exercises?.length){
+        const next = tpl.exercises.map(x=>String(x.name||x).trim()).find(n => n && !currentExNames.has(n.toLowerCase()));
+        if (next) return { name: next, source: `Template: ${tpl.name || tpl.id}` };
+      }
+    }
+
+    // 2) any template (first with exercises)
+    const firstTpl = templates.find(t => (t.exercises||[]).length);
+    if (firstTpl){
+      const next = (firstTpl.exercises||[]).map(x=>String(x.name||x).trim()).find(n => n && !currentExNames.has(n.toLowerCase()));
+      if (next) return { name: next, source: `Template: ${firstTpl.name || firstTpl.id}` };
+    }
+
+    // 3) last completed workout
+    const all = safe(()=>Workouts.listWorkouts({}), []) || [];
+    const lastCompleted = (all||[]).filter(w => w.status === "completed").slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))[0];
+    if (lastCompleted?.id){
+      const exs = safe(()=>Workouts.listExercises(lastCompleted.id), []) || [];
+      const next = (exs[0]?.name || "").trim();
+      if (next && !currentExNames.has(next.toLowerCase())) return { name: next, source: "Last session" };
+    }
+
+    // 4) most recent exercise from history by scanning last completed workout exercises
+    if (lastCompleted?.id){
+      const exs = safe(()=>Workouts.listExercises(lastCompleted.id), []) || [];
+      for (const e of exs){
+        const n = String(e.name||"").trim();
+        if (n && !currentExNames.has(n.toLowerCase())) return { name: n, source: "History" };
+      }
+    }
+
+    return null;
+  }
+
+  function renderRightPanel(workout, meta){
+    // Today summary
+    const dur = liveDurationSec(workout);
+    const isLive = !!(workout?.startedAt && !workout?.finishedAt);
+
+    if (el.rpSets) el.rpSets.textContent = fmtInt(meta.totalSets || 0);
+    if (el.rpVol) el.rpVol.textContent = fmtKg(meta.totalVolumeKg || 0);
+    if (el.rpTime) el.rpTime.textContent = dur ? secondsToClock(dur) : "--:--";
+    if (el.rpLivePill) el.rpLivePill.hidden = !isLive;
+
+    // Next suggested
+    const sug = pickSuggestedExercise(workout);
+    suggestedExerciseName = sug?.name || null;
+
+    if (el.rpNextCard){
+      if (sug?.name){
+        el.rpNextCard.hidden = false;
+        if (el.rpNextName) el.rpNextName.textContent = sug.name;
+        if (el.rpNextSource) el.rpNextSource.textContent = sug.source || "";
+        // last used hint
+        const hist = safe(()=>Workouts.getExerciseHistory(sug.name, 1), []) || [];
+        if (el.rpNextSub){
+          if (hist[0]){
+            el.rpNextSub.textContent = `Last: ${fmtKg(hist[0].topSetWeightKg)} kg × ${fmtInt(hist[0].topSetReps)} reps • ${hist[0].date}`;
+          } else {
+            el.rpNextSub.textContent = "No history yet";
+          }
+        }
+      } else {
+        el.rpNextCard.hidden = true;
+      }
+    }
+
+    // Exercise context (current exercise)
+    const curName = getCurrentExerciseName(workout?.id);
+    if (el.rpCtxCard){
+      if (curName){
+        el.rpCtxCard.hidden = false;
+        if (el.rpCtxName) el.rpCtxName.textContent = curName;
+
+        const hist = safe(()=>Workouts.getExerciseHistory(curName, 1), []) || [];
+        if (el.rpLastSession){
+          if (hist[0]) el.rpLastSession.textContent = `${hist[0].date}: top set ${fmtKg(hist[0].topSetWeightKg)} kg × ${fmtInt(hist[0].topSetReps)} reps • volume ${fmtKg(hist[0].totalVolumeKg)} kg`;
+          else el.rpLastSession.textContent = "—";
+        }
+
+        const prs = safe(()=>Workouts.getExercisePRs(curName), null) || {};
+        if (el.rpPRs){
+          const parts = [];
+          if (prs.maxWeightKg) parts.push(`Max weight: ${fmtKg(prs.maxWeightKg)} kg`);
+          if (prs.maxReps) parts.push(`Max reps: ${fmtInt(prs.maxReps)}`);
+          if (prs.maxVolumeKg) parts.push(`Max volume: ${fmtKg(prs.maxVolumeKg)} kg`);
+          el.rpPRs.textContent = parts.length ? parts.join(" • ") : "—";
+        }
+      } else {
+        el.rpCtxCard.hidden = true;
+      }
+    }
+  }
+
+  function startWorkoutClock(){
+    if (workoutClockInterval) return;
+    workoutClockInterval = setInterval(()=>{
+      const w = safe(()=>Workouts.getWorkout(getWorkoutId()), null);
+      if (!w) return;
+      const dur = liveDurationSec(w);
+      if (el.metaTime) el.metaTime.textContent = dur ? secondsToClock(dur) : "--:--";
+
+    renderRightPanel(workout, meta);
+
+    if (workout.startedAt && !workout.finishedAt) startWorkoutClock(); else stopWorkoutClock();
+      if (el.rpTime) el.rpTime.textContent = dur ? secondsToClock(dur) : "--:--";
+      if (el.rpLivePill) el.rpLivePill.hidden = !(w.startedAt && !w.finishedAt);
+    }, 1000);
+  }
+
+  function stopWorkoutClock(){
+    if (workoutClockInterval) { clearInterval(workoutClockInterval); workoutClockInterval = null; }
+  }
 function render(){
     // Tabs
     if (currentTab === "history") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderHistory(); return; }
@@ -577,7 +748,8 @@ function render(){
     const meta = computeMeta(workout.id);
     el.metaSets.textContent = fmtInt(meta.totalSets || 0);
     el.metaVol.textContent = fmtInt(Math.round(meta.totalVolumeKg || 0));
-    el.metaTime.textContent = workout.durationSec ? secondsToClock(workout.durationSec) : "--:--";
+    const dur = liveDurationSec(workout);
+    el.metaTime.textContent = dur ? secondsToClock(dur) : "--:--";
 
     const exercises = safe(()=>Workouts.listExercises(workout.id), []);
 
@@ -1135,6 +1307,29 @@ for (const ex of exercises) {
     const w = ensureWorkout();
     if (!w) return;
     safe(()=>Workouts.finishWorkout(w.id), null);
+    render();
+  });
+
+  // Right panel actions
+  el.rpStartSuggested?.addEventListener("click", ()=>{
+    if (!suggestedExerciseName) return;
+    // Start implies: add exercise then start workout if not started
+    const w = ensureWorkout();
+    if (!w) return;
+    safe(()=>Workouts.addExercise(w.id, { name: suggestedExerciseName }), null);
+    safe(()=>Workouts.startWorkout(w.id), null);
+    // Focus the newly added exercise
+    const exs = safe(()=>Workouts.listExercises(w.id), []) || [];
+    const added = exs.slice().reverse().find(e => String(e.name||"").trim().toLowerCase() === String(suggestedExerciseName).trim().toLowerCase());
+    if (added?.id) activeExerciseId = added.id;
+    render();
+  });
+
+  el.rpAddSuggested?.addEventListener("click", ()=>{
+    if (!suggestedExerciseName) return;
+    const w = ensureWorkout();
+    if (!w) return;
+    safe(()=>Workouts.addExercise(w.id, { name: suggestedExerciseName }), null);
     render();
   });
 
