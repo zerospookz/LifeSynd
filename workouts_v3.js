@@ -1060,14 +1060,6 @@ for (const ex of exercises) {
     el.modalOverlay.hidden = true;
   }
 
-  function {
-    // fallback (should not be used)
-    const name = prompt("Exercise name (e.g. Bench Press):");
-    if (!name) return null;
-    const tt = name.trim();
-    return tt ? tt : null;
-  }
-
   function addExercise(){
     const w = ensureWorkout();
     if (!w) return;
@@ -1079,11 +1071,8 @@ for (const ex of exercises) {
       });
       return;
     }
-    // fallback
-    const name = 
-    if (!name) return;
-    safe(()=>Workouts.addExercise(w.id, { name }), null);
-    render();
+    // fallback: modal elements missing
+    return;
   }
 
   el.btnAddExercise?.addEventListener("click", addExercise);
