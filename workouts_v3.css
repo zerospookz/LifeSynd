@@ -801,3 +801,7 @@ body[data-theme="dark"]{
 .w4-prevExTitle{ font-weight:700; font-size:13px; }
 .w4-prevExMeta{ font-size:13px; opacity:.75; margin-top:2px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .w4-previewActions{ margin-top: 14px; }
+
+
+/* Removed empty top meta panel */
+.w3-meta{display:none !important;}
