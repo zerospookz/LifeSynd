@@ -41,6 +41,32 @@
 
 }
 
+/* Big-screen typography + spacing scale */
+@media (min-width: 1400px){
+  :root{
+    --h1-size: 2.35rem;
+    --section-size: 1.15rem;
+    --body-size: 1.02rem;
+    --label-size: .88rem;
+    --micro-size: .82rem;
+  }
+  .content{ padding: 44px 54px 74px; max-width: 1440px; }
+  .sidebar{ padding: 26px 22px; }
+  .nav a{ padding: 13px 14px; }
+  .pill{ font-size: .8rem; }
+}
+
+@media (min-width: 1700px){
+  :root{
+    --h1-size: 2.6rem;
+    --section-size: 1.22rem;
+    --body-size: 1.08rem;
+    --label-size: .92rem;
+    --micro-size: .86rem;
+  }
+  .content{ max-width: 1560px; }
+}
+
 
 *{box-sizing:border-box}
 html,body{height:100%}

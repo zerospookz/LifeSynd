@@ -1399,13 +1399,30 @@ body[data-theme="dark"]{
 
 /* ===== Desktop: make empty hero bigger and fill space with History/Templates tiles ===== */
 @media (min-width: 1100px){
-  .w3-page{
-    max-width: 1280px;
+  /* Big-screen type scale + breathing room */
+  :root{
+    --w3-text-xs: 13px;
+    --w3-text-sm: 15px;
+    --w3-text-md: 17px;
+    --w3-text-lg: 20px;
+    --w3-text-xxl: 34px;
   }
+
+  .w3-page{
+    max-width: 1320px;
+  }
+
+  .w3-header{ margin-bottom: 14px; }
+  .w3-meta{ margin: 12px 0 22px; }
+  .w3-chip{ padding: 8px 14px; }
+
+  .w3-exCard{ padding: 18px; margin-bottom: 16px; }
+  .w3-exHeader{ margin-bottom: 12px; }
+  .w3-setRow{ padding: 12px; border-radius: 14px; }
   /* Empty state: show Today summary next to the add-exercise box */
   .w3-empty{
     min-height: 72vh;
-    width: min(860px, 100%);
+    width: min(980px, 100%);
     display:flex;
     flex-direction: row;
     align-items: center;
@@ -1415,8 +1432,8 @@ body[data-theme="dark"]{
   }
   .w3-emptyMain{ flex: 1; }
   .w3-emptyAside{ flex: 0 0 320px; max-width: 320px; margin-top: 0; }
-  .w3-emptyTitle{ font-size: 24px; }
-  .w3-empty .w3-muted{ font-size: 15px; }
+  .w3-emptyTitle{ font-size: 28px; letter-spacing: -0.02em; }
+  .w3-empty .w3-muted{ font-size: 16px; }
   .w3-emptyIcon{ width: 72px; height: 72px; font-size: 34px; }
 
   /* Right panel (desktop): fixed sidebar */
@@ -1462,6 +1479,19 @@ body[data-theme="dark"]{
     border: none;
     box-shadow: none;
   }
+}
+
+@media (min-width: 1600px){
+  :root{
+    --w3-text-xs: 14px;
+    --w3-text-sm: 16px;
+    --w3-text-md: 18px;
+    --w3-text-lg: 22px;
+    --w3-text-xxl: 38px;
+  }
+  .w3-exCard{ padding: 18px; }
+  .w3-setRow{ padding: 12px; }
+  .w3-chip{ padding: 8px 14px; }
 }
 
 
