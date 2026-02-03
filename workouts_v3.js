@@ -1090,13 +1090,15 @@ for (const ex of exercises) {
   el.btnAddExerciseEmpty?.addEventListener("click", addExercise);
   // Empty state card is clickable
   el.empty?.addEventListener("click", (e)=>{
-    // Allow button inside to work normally
-    if (e.target && e.target.closest && e.target.closest("button")) return;
+    el.empty.classList.add("isPressed");
+    setTimeout(()=>el.empty && el.empty.classList.remove("isPressed"), 140);
     addExercise();
   });
   el.empty?.addEventListener("keydown", (e)=>{
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
+      el.empty.classList.add("isPressed");
+      setTimeout(()=>el.empty && el.empty.classList.remove("isPressed"), 140);
       addExercise();
     }
   });

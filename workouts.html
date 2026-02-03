@@ -54,10 +54,10 @@
     <section id="w3Content"></section>
 
     <section class="w3-empty" id="w3Empty" hidden role="button" tabindex="0" aria-label="Add exercise">
-      <div class="w3-emptyIcon" aria-hidden="true">➕</div>
-      <div class="w3-emptyTitle">No exercises yet</div>
-      <div class="w3-muted">Add your first exercise to start tracking.</div>
-      <button class="w3-btnSecondary" id="w3AddExerciseEmpty">+ Add exercise</button></section>
+      <div class="w3-emptyIconBtn" aria-hidden="true">+</div>
+      <div class="w3-emptyTitle">No exercises</div>
+      <div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
+    </section>
 
     <footer
  class="w3-bottomBar">
@@ -99,4 +99,21 @@
 </div>
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="workouts.js"></script><script src="workouts_v3.js"></script>
+
+  <!-- Add exercise modal -->
+  <div class="w3-modalOverlay" id="w3ModalOverlay" hidden>
+    <div class="w3-modalCard" role="dialog" aria-modal="true" aria-labelledby="w3ModalTitle">
+      <div class="w3-modalTop">
+        <div class="w3-modalTitle" id="w3ModalTitle">Add exercise</div>
+        <button class="w3-modalClose" id="w3ModalClose" aria-label="Close">×</button>
+      </div>
+      <label class="w3-modalLabel" for="w3ExerciseName">Exercise name</label>
+      <input class="w3-modalInput" id="w3ExerciseName" placeholder="e.g., Bench Press" />
+      <div class="w3-modalActions">
+        <button class="w3-modalBtn" id="w3ModalCancel" type="button">Cancel</button>
+        <button class="w3-modalBtn primary" id="w3ModalOk" type="button">Add</button>
+      </div>
+    </div>
+  </div>
+
 </body></html>
