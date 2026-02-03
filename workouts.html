@@ -51,23 +51,39 @@
       <button class="w3-tabBtn" data-tab="templates" type="button">Templates</button>
     </nav>
 
-    <section id="w3Content"></section>
+    <div class="w3-grid" id="w3Grid">
+      <div class="w3-leftCol">
+        <section id="w3Content"></section>
 
-    <section class="w3-empty" id="w3Empty" hidden role="button" tabindex="0" aria-label="Add exercise">
+        <section class="w3-empty id="w3Empty" hidden role="button" tabindex="0" aria-label="Add exercise">
       <div class="w3-emptyIconBtn" aria-hidden="true">+</div>
       <div class="w3-emptyTitle">No exercises</div>
       <div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
     </section>
+      </div>
+      <aside class="w3-rightCol">
+        <div class="w3-sideTiles" id="w3SideTiles" aria-label="Desktop sections">
+          <button class="w3-sideTile" data-tab="today" type="button">
+            <div class="w3-tileTitle">Today</div>
+            <div class="w3-tileSub">Active workout</div>
+          </button>
+          <button class="w3-sideTile" data-tab="history" type="button">
+            <div class="w3-tileTitle">History</div>
+            <div class="w3-tileSub">Past workouts</div>
+          </button>
+          <button class="w3-sideTile" data-tab="templates" type="button">
+            <div class="w3-tileTitle">Templates</div>
+            <div class="w3-tileSub">Saved routines</div>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+
 
     <footer
  class="w3-bottomBar">
-      <div class="w3-sideTiles" id="w3SideTiles" aria-label="Desktop sections">
-        <button class="w3-sideTile" data-tab="today" type="button">🏋️ Today</button>
-        <button class="w3-sideTile" data-tab="history" type="button">📜 History</button>
-        <button class="w3-sideTile" data-tab="templates" type="button">🧩 Templates</button>
-      </div>
-
-      <button class="w3-btnSecondary" id="w3AddExercise">+ Exercise</button>
+<button class="w3-btnSecondary" id="w3AddExercise">+ Exercise</button>
       <button class="w3-btnSecondary" id="w3Rest60">Rest 60s</button>
       <button class="w3-btnSecondary" id="w3Start">Start</button>
     </footer>
