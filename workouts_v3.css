@@ -1011,3 +1011,50 @@ body[data-theme="dark"]{
   border-top: none !important;
 }
 
+
+
+/* ===== Dark theme for exercise cards + inputs (keep style when adding exercise) ===== */
+.w3-exCard{
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.38) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.w3-exCard h3,
+.w3-exCard .w3-exHeader,
+.w3-exCard .w3-exSub{
+  color: rgba(255,255,255,.92) !important;
+}
+
+.w3-exCard label,
+.w3-exCard .w3-muted{
+  color: rgba(226,232,240,.78) !important;
+}
+
+.w3-input{
+  background: rgba(255,255,255,0.05) !important;
+  color: rgba(255,255,255,0.92) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+.w3-input::placeholder{
+  color: rgba(226,232,240,.55) !important;
+}
+
+/* Buttons in bottom bar + inside cards should stay dark (remove white pills) */
+.w3-btnSecondary{
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.88) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Ensure no light separators/lines appear at the bottom */
+.w3-bottomBar::before,
+.w3-bottomBar::after{
+  content:none !important;
+}
+
