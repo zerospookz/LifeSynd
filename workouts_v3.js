@@ -37,6 +37,24 @@
   // Tabs
   let currentTab = "today";
 
+  // Empty-state animation helpers (hero expand/collapse)
+  let _emptyHideTimer = null;
+  function showEmpty(){
+    if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
+    if (el.empty) el.empty.hidden = false;
+    // next frame so transitions apply
+    requestAnimationFrame(()=> el.page?.classList.add("is-empty"));
+  }
+  function hideEmptyAnimated(){
+    el.page?.classList.remove("is-empty");
+    if (!el.empty || el.empty.hidden) return;
+    if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
+    _emptyHideTimer = setTimeout(()=>{
+      if (el.empty) el.empty.hidden = true;
+    }, 280);
+  }
+
+
   function flashPR(setId){
     prFlashSetId = setId;
     if (prFlashTimer) clearTimeout(prFlashTimer);
@@ -497,8 +515,8 @@
 
 function render(){
     // Tabs
-    if (currentTab === "history") { renderHistory(); return; }
-    if (currentTab === "templates") { renderTemplates(); return; }
+    if (currentTab === "history") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderHistory(); return; }
+    if (currentTab === "templates") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderTemplates(); return; }
     if (!window.Workouts) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
       el.empty.hidden = true;
@@ -547,14 +565,12 @@ function render(){
     el.content.innerHTML = "";
 
     if (!exercises.length) {
-      el.empty.hidden = false;
-      el.page?.classList.add("is-empty");
+      showEmpty();
       return;
     }
-    el.empty.hidden = true;
-    el.page?.classList.remove("is-empty");
+    hideEmptyAnimated();
 
-    for (const ex of exercises) {
+for (const ex of exercises) {
       const sets = safe(()=>Workouts.listSets(ex.id), []);
       const card = document.createElement("section");
       card.className = "w3-exCard";
