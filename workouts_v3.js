@@ -59,7 +59,7 @@
   let _emptyHideTimer = null;
   function showEmpty(){
     if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
-    if (el.empty) el.empty.hidden = false;
+    if (el.empty) el.empty && (el.empty.hidden = false);
     // next frame so transitions apply
     requestAnimationFrame(()=> el.page?.classList.add("is-empty"));
   }
@@ -68,7 +68,7 @@
     if (!el.empty || el.empty.hidden) return;
     if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
     _emptyHideTimer = setTimeout(()=>{
-      if (el.empty) el.empty.hidden = true;
+      if (el.empty) el.empty && (el.empty.hidden = true);
     }, 280);
   }
 
@@ -348,7 +348,7 @@
     el.btnRest60.style.display = "none";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
-    el.empty.hidden = true;
+    el.empty && (el.empty.hidden = true);
 
     const all = safe(()=>Workouts.listWorkouts ? Workouts.listWorkouts() : [], []);
     const done = (all||[]).filter(w => (w.status === "completed" || w.status === "skipped") && w.date && withinRange(w.date))
@@ -432,7 +432,7 @@
     el.btnRest60.style.display = "none";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
-    el.empty.hidden = true;
+    el.empty && (el.empty.hidden = true);
 
     const cats = `
       <div class="w4-range">
@@ -533,18 +533,18 @@
 
 function render(){
     // Tabs
-    if (currentTab === "history") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderHistory(); return; }
-    if (currentTab === "templates") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderTemplates(); return; }
+    if (currentTab === "history") { hideEmptyAnimated(); if (el.empty) el.empty && (el.empty.hidden = true); renderHistory(); return; }
+    if (currentTab === "templates") { hideEmptyAnimated(); if (el.empty) el.empty && (el.empty.hidden = true); renderTemplates(); return; }
     if (!window.Workouts) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
-      el.empty.hidden = true;
+      el.empty && (el.empty.hidden = true);
       return;
     }
 
     const workout = ensureWorkout();
     if (!workout) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">No workout</div><div class="w3-muted">Could not create or load a workout.</div></div>`;
-      el.empty.hidden = true;
+      el.empty && (el.empty.hidden = true);
       return;
     }
 

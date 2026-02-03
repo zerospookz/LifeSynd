@@ -1763,3 +1763,9 @@ body[data-theme="dark"]{
   border: none !important;
   box-shadow: none !important;
 }
+
+
+/* ===== Small screens: hide right-side tiles (tabs already cover this) ===== */
+@media (max-width: 1099px){
+  .w3-rightCol{ display:none !important; }
+}
