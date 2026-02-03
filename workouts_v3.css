@@ -1260,8 +1260,11 @@ body[data-theme="dark"]{
   box-shadow: 0 10px 30px rgba(0,0,0,.45);
 }
 
-/* Hide global footer actions (we use in-card actions instead) */
-.w3-bottomBar{ display:none !important; background:none !important; border:0 !important; box-shadow:none !important; }
+/* Hide global footer bar on mobile (we use in-card actions instead).
+   NOTE: On desktop this same element becomes the right panel / sidebar. */
+@media (max-width: 1099px){
+  .w3-bottomBar{ display:none !important; background:none !important; border:0 !important; box-shadow:none !important; }
+}
 
 /* Dark glass exercise cards */
 .w3-exCard{
@@ -1726,4 +1729,9 @@ body[data-theme="dark"]{
 @media (max-width: 1099px){
   #w3RightPanel .w3-rpCard{ display:none; }
   #w3RightPanel .w3-sideTiles{ display:none; }
+}
+
+/* Ensure the desktop right panel is visible even if other rules hide the bottom bar */
+@media (min-width: 1100px){
+  .w3-bottomBar{ display:flex !important; }
 }
