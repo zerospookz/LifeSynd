@@ -1060,7 +1060,7 @@ for (const ex of exercises) {
     el.modalOverlay.hidden = true;
   }
 
-  function promptExerciseName(){
+  function {
     // fallback (should not be used)
     const name = prompt("Exercise name (e.g. Bench Press):");
     if (!name) return null;
@@ -1080,7 +1080,7 @@ for (const ex of exercises) {
       return;
     }
     // fallback
-    const name = promptExerciseName();
+    const name = 
     if (!name) return;
     safe(()=>Workouts.addExercise(w.id, { name }), null);
     render();
