@@ -35,7 +35,10 @@
   let prFlashSetId = null;
   let prFlashTimer = null;
 
-  // Tabs
+    // Active exercise (for in-card actions)
+  let activeExerciseId = null;
+
+// Tabs
   let currentTab = "today";
 
   function syncTabUI(){
@@ -577,6 +580,14 @@ function render(){
     el.metaTime.textContent = workout.durationSec ? secondsToClock(workout.durationSec) : "--:--";
 
     const exercises = safe(()=>Workouts.listExercises(workout.id), []);
+
+    // Keep a stable "active" exercise for in-card actions
+    if (exercises.length){
+      const exists = activeExerciseId && exercises.some(e=>String(e.id)===String(activeExerciseId));
+      if (!exists) activeExerciseId = exercises[0].id;
+    } else {
+      activeExerciseId = null;
+    }
     el.content.innerHTML = "";
 
     if (!exercises.length) {
@@ -588,7 +599,7 @@ function render(){
 for (const ex of exercises) {
       const sets = safe(()=>Workouts.listSets(ex.id), []);
       const card = document.createElement("section");
-      card.className = "w3-exCard";
+      card.className = "w3-exCard" + (String(ex.id)===String(activeExerciseId) ? " is-active" : "");
       card.dataset.exerciseId = ex.id;
       card.dataset.exerciseName = ex.name || "";
 
@@ -600,6 +611,11 @@ for (const ex of exercises) {
           </div>
           <button class="w3-iconBtn" data-action="ex-menu" aria-label="Exercise menu">⋮</button>
         </div>
+
+        ${isReadOnly ? "" : `<div class="w3-exActions" ${String(ex.id)!==String(activeExerciseId) ? "hidden" : ""}>
+          <button class="w3-btnPrimary w3-exAction" data-action="start-workout" ${workout.status==="in_progress" ? "disabled" : ""}>${workout.status==="in_progress" ? "Started" : "Start"}</button>
+          <button class="w3-btnSecondary w3-exAction" data-action="rest-60">Rest 60s</button>
+        </div>`}
 
         <div class="w3-setLabels" aria-hidden="true">
           <div></div><div>set</div><div>kg</div><div>reps</div>
@@ -821,6 +837,17 @@ for (const ex of exercises) {
       renderTemplates();
       return;
     }
+    // Set active exercise when clicking on a card surface (not on controls)
+    const clickedCard = e.target.closest(".w3-exCard");
+    if (clickedCard && !e.target.closest("[data-action]") && !e.target.closest("input,button,textarea,select")){
+      const exId = clickedCard.dataset.exerciseId;
+      if (exId && String(exId)!==String(activeExerciseId)){
+        activeExerciseId = exId;
+        render();
+      }
+      return;
+    }
+
     const act = e.target.closest("[data-action]");
     if (!act) return;
     const action = act.dataset.action;
@@ -861,6 +888,18 @@ for (const ex of exercises) {
     const setRow = act.closest(".w3-setRow");
     const setId = setRow?.dataset.setId;
     const exerciseName = card?.dataset.exerciseName || "";
+
+    if (action === "start-workout") {
+      const w = ensureWorkout();
+      if (!w) return;
+      safe(()=>Workouts.startWorkout(w.id), null);
+      render();
+      return;
+    }
+    if (action === "rest-60") {
+      startRest(60);
+      return;
+    }
 
     if (action === "dup-set") {
       if (!setId) return;

@@ -1231,3 +1231,42 @@ body[data-theme="dark"]{
   .w3-addExerciseTitle{ font-size: 16px; }
   .w3-addExerciseSub{ font-size: 14px; }
 }
+
+
+/* ===== In-card Start / Rest actions ===== */
+.w3-exActions{
+  display:flex;
+  gap:10px;
+  margin: 10px 0 6px;
+}
+.w3-exActions[hidden]{ display:none !important; }
+.w3-exAction{ flex: 0 0 auto; }
+
+.w3-exCard.is-active{
+  outline: 1px solid rgba(129,140,248,0.22);
+  box-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+
+/* Hide global footer actions (we use in-card actions instead) */
+.w3-bottomBar{ display:none !important; background:none !important; border:0 !important; box-shadow:none !important; }
+
+/* Dark glass exercise cards */
+.w3-exCard{
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: 0 14px 36px rgba(0,0,0,.45) !important;
+}
+.w3-hSection{ color: rgba(255,255,255,0.92); }
+.w3-exSub{ color: rgba(226,232,240,0.70); }
+.w3-setLabels{ color: rgba(226,232,240,0.55); }
+
+/* Make set rows match dark theme */
+.w3-setRow{
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+.w3-addSet{
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px dashed rgba(255,255,255,0.18) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
