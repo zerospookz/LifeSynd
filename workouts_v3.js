@@ -1027,8 +1027,25 @@ for (const ex of exercises) {
 
   // Modal (replaces native prompt)
   function openAddExerciseModal(onSubmit){
-    if (!el.modalOverlay || !el.modalInput) return;
+    // lazy query in case modal markup is after scripts
+    if (!el.modalOverlay) el.modalOverlay = document.getElementById("w3ModalOverlay");
+    if (!el.modalInput) el.modalInput = document.getElementById("w3ExerciseName");
+    if (!el.modalOk) el.modalOk = document.getElementById("w3ModalOk");
+    if (!el.modalCancel) el.modalCancel = document.getElementById("w3ModalCancel");
+    const closeBtn = document.getElementById("w3ModalClose");
+    if (!el.modalOverlay || !el.modalInput || !el.modalOk || !el.modalCancel) return;
     el.modalOverlay.hidden = false;
+    // wire close actions (idempotent)
+    if (!el.modalOverlay.__wired){
+      el.modalOverlay.__wired = true;
+      const doClose = ()=>{ el.modalOverlay.hidden = true; };
+      el.modalCancel.addEventListener("click", doClose);
+      const closeBtn = document.getElementById("w3ModalClose");
+      if (closeBtn) closeBtn.addEventListener("click", doClose);
+      el.modalOverlay.addEventListener("click", (e)=>{ if(e.target===el.modalOverlay) doClose(); });
+      window.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && !el.modalOverlay.hidden) doClose(); });
+    }
+
     el.modalInput.value = "";
     el.modalInput.focus();
 
@@ -1063,15 +1080,11 @@ for (const ex of exercises) {
   function addExercise(){
     const w = ensureWorkout();
     if (!w) return;
-    // open nice modal instead of prompt
-    if (el.modalOverlay && el.modalInput){
-      openAddExerciseModal((name)=>{
-        safe(()=>Workouts.addExercise(w.id, { name }), null);
-        render();
-      });
-      return;
-    }
-    // fallback: modal elements missing
+    // open add-exercise modal
+    openAddExerciseModal((name)=>{
+      safe(()=>Workouts.addExercise(w.id, { name }), null);
+      render();
+    });
     return;
   }
 
