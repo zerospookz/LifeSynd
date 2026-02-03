@@ -1005,6 +1005,11 @@ body[data-theme="dark"]{
 .w3-emptyTitle{ z-index:1; }
 .w3-empty .w3-muted{ z-index:1; }
 
+/* Empty state layout pieces (Add box + Today summary) */
+.w3-emptyMain{ z-index: 1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.w3-emptyAside{ z-index: 1; width: 100%; max-width: 340px; margin-top: 18px; pointer-events: none; }
+.w3-emptyAside .w3-rpCard{ width: 100%; }
+
 .w3-empty .w3-btnSecondary{ z-index:1; }
 
 /* Bigger on large screens */
@@ -1397,11 +1402,19 @@ body[data-theme="dark"]{
   .w3-page{
     max-width: 1280px;
   }
-  /* make empty card visually larger */
+  /* Empty state: show Today summary next to the add-exercise box */
   .w3-empty{
     min-height: 72vh;
-    width: min(640px, 100%);
+    width: min(860px, 100%);
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 26px;
+    text-align: left;
   }
+  .w3-emptyMain{ flex: 1; }
+  .w3-emptyAside{ flex: 0 0 320px; max-width: 320px; margin-top: 0; }
   .w3-emptyTitle{ font-size: 24px; }
   .w3-empty .w3-muted{ font-size: 15px; }
   .w3-emptyIcon{ width: 72px; height: 72px; font-size: 34px; }
@@ -1432,20 +1445,9 @@ body[data-theme="dark"]{
     z-index: 50;
   }
 
-  .w3-sideTiles{
-    position: static;
-    width: 100%;
-    display:flex;
-    flex-direction:column;
-    gap: 12px;
-    padding: 0;
-    background: none;
-    border: none;
-    box-shadow: none;
-  }
-
-  .w3-rpActions{ display:flex; flex-direction:column; gap:10px; }
-  .w3-bottomBar .w3-btnSecondary{ width: 100%; }
+  /* Remove the old tiles/buttons block from desktop right panel */
+  .w3-sideTiles,
+  .w3-rpActions{ display:none !important; }
 }
 
 /* Mobile/tablet: keep tiles in footer (or hidden if you prefer) */

@@ -1264,6 +1264,8 @@ for (const ex of exercises) {
   el.btnAddExerciseEmpty?.addEventListener("click", addExercise);
   // Empty state card is clickable
   el.empty?.addEventListener("click", (e)=>{
+    // If user clicks the Today summary card inside the empty state, don't open Add Exercise.
+    if (e.target && e.target.closest && e.target.closest("#w3RpToday")) return;
     el.empty.classList.add("isPressed");
     setTimeout(()=>el.empty && el.empty.classList.remove("isPressed"), 140);
     addExercise();
