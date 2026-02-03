@@ -1334,3 +1334,118 @@ body[data-theme="dark"]{
   }
 }
 
+
+
+/* ===== Swipe actions redesign (premium + unobtrusive) ===== */
+.w3-swipeWrap{
+  background: rgba(255,255,255,0.02); /* prevents action showing through as a 'bar' */
+}
+
+.w3-swipeAction{
+  width: 120px;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 16px;
+  margin: 8px;
+  opacity: 0;
+  transform: scale(.98);
+  transition: opacity .16s ease, transform .16s ease, filter .16s ease;
+}
+
+.w3-swipeIcon{
+  width: 28px;
+  height: 28px;
+  display:grid;
+  place-items:center;
+  border-radius: 10px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 6px 14px rgba(0,0,0,.22);
+  font-size: 14px;
+}
+
+.w3-swipeLabel{
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.w3-swipeWrap.isSwipeLeft .w3-swipeAction.left,
+.w3-swipeWrap.isSwipeRight .w3-swipeAction.right{
+  opacity: 1;
+  transform: scale(1);
+}
+
+.w3-swipeAction.left{
+  background: linear-gradient(135deg, rgba(99,102,241,.88), rgba(56,189,248,.65));
+}
+.w3-swipeAction.right{
+  background: linear-gradient(135deg, rgba(244,63,94,.88), rgba(239,68,68,.70));
+}
+
+.w3-setRow{
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+}
+
+/* ===== Desktop: make empty hero bigger and fill space with History/Templates tiles ===== */
+@media (min-width: 1100px){
+  .w3-page{
+    max-width: 1280px;
+  }
+  /* make empty card visually larger */
+  .w3-empty{
+    min-height: 72vh;
+    width: min(640px, 100%);
+  }
+  .w3-emptyTitle{ font-size: 24px; }
+  .w3-empty .w3-muted{ font-size: 15px; }
+  .w3-emptyIcon{ width: 72px; height: 72px; font-size: 34px; }
+
+  /* Move side tiles out of bottom bar into right empty space */
+  .w3-bottomBar{
+    background: none !important;
+    padding: 0 !important;
+  }
+  .w3-sideTiles{
+    position: fixed;
+    top: 156px; /* under header/tabs */
+    right: 32px;
+    width: 320px;
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.05);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 18px 50px rgba(0,0,0,.35);
+    z-index: 5;
+  }
+  .w3-sideTile{
+    text-align:left;
+    padding: 14px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.04);
+    color: rgba(255,255,255,.92);
+    font-weight: 750;
+    letter-spacing: -.01em;
+  }
+  .w3-sideTile:hover{ filter: brightness(1.06); }
+}
+
+/* Mobile/tablet: keep tiles in footer (or hidden if you prefer) */
+@media (max-width: 1099px){
+  .w3-sideTiles{
+    position: static;
+    width: auto;
+    display:flex;
+    gap:10px;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+}

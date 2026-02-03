@@ -659,8 +659,8 @@ for (const ex of exercises) {
 
     return `
       <div class="w3-swipeWrap" data-set-id="${escAttr(s.id)}" data-exercise-name="${escAttr(exerciseName||"")}">
-        <div class="w3-swipeAction left" data-action="dup-set">Duplicate</div>
-        <div class="w3-swipeAction right" data-action="del-set">Delete</div>
+        <div class="w3-swipeAction left" data-action="dup-set"><span class="w3-swipeIcon">⎘</span><span class="w3-swipeLabel">Duplicate</span></div>
+        <div class="w3-swipeAction right" data-action="del-set"><span class="w3-swipeIcon">🗑</span><span class="w3-swipeLabel">Delete</span></div>
 
         <div class="w3-setRow ${done ? "isDone" : ""} ${isPR ? "isPR" : ""}" data-set-id="${escAttr(s.id)}" data-exercise-name="${escAttr(exerciseName||"")}">
           <div class="w3-check ${done ? "isDone" : ""}" data-action="toggle-set" role="button" aria-label="Toggle set"></div>
@@ -763,6 +763,11 @@ for (const ex of exercises) {
     const dx = e.clientX - swipe.startX;
     swipe.dx = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, dx));
     swipe.row.style.transform = `translateX(${swipe.dx}px)`;
+    const wrap = swipe.row.parentElement;
+    if (wrap){
+      wrap.classList.toggle("isSwipeLeft", swipe.dx > 8);
+      wrap.classList.toggle("isSwipeRight", swipe.dx < -8);
+    }
   });
 
   el.content.addEventListener("pointerup", (e)=>{
@@ -776,6 +781,9 @@ for (const ex of exercises) {
 
     const reset = () => {
       row.style.transform = "translateX(0)";
+      const wrap = row.parentElement;
+      if (wrap){ wrap.classList.remove("isSwipeLeft","isSwipeRight"); }
+
       row.style.transition = "transform .22s ease";
       setTimeout(()=>{ if(row) row.style.transition = ""; }, 260);
     };
@@ -804,7 +812,11 @@ for (const ex of exercises) {
   });
 
   el.content.addEventListener("pointercancel", ()=>{
-    if (swipe.row) swipe.row.style.transform = "translateX(0)";
+    if (swipe.row) {
+      swipe.row.style.transform = "translateX(0)";
+      const wrap = swipe.row.parentElement;
+      if (wrap){ wrap.classList.remove("isSwipeLeft","isSwipeRight"); }
+    }
     swipe.active = false;
     swipe.row = null;
     swipe.pointerId = null;
