@@ -24,6 +24,7 @@
     restStop: $("#w3RestStop"),
     restProgress: $("#w3RestProgress"),
     tabs: $("#w3Tabs"),
+    sideTiles: $("#w3SideTiles"),
     modalOverlay: $("#w3ModalOverlay"),
     modalInput: $("#w3ExerciseName"),
     modalOk: $("#w3ModalOk"),
@@ -36,6 +37,38 @@
 
   // Tabs
   let currentTab = "today";
+
+  function syncTabUI(){
+    // Mobile tabs
+    if (el.tabs){
+      for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
+      el.tabs.querySelector(`[data-tab="${currentTab}"]`)?.classList.add("is-active");
+    }
+    // Desktop tiles
+    if (el.sideTiles){
+      for (const b of el.sideTiles.querySelectorAll(".w3-sideTile")) b.classList.remove("is-active");
+      el.sideTiles.querySelector(`[data-tab="${currentTab}"]`)?.classList.add("is-active");
+    }
+  }
+
+
+  // Empty-state animation helpers (hero expand/collapse)
+  let _emptyHideTimer = null;
+  function showEmpty(){
+    if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
+    if (el.empty) el.empty.hidden = false;
+    // next frame so transitions apply
+    requestAnimationFrame(()=> el.page?.classList.add("is-empty"));
+  }
+  function hideEmptyAnimated(){
+    el.page?.classList.remove("is-empty");
+    if (!el.empty || el.empty.hidden) return;
+    if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
+    _emptyHideTimer = setTimeout(()=>{
+      if (el.empty) el.empty.hidden = true;
+    }, 280);
+  }
+
 
   function flashPR(setId){
     prFlashSetId = setId;
@@ -497,8 +530,8 @@
 
 function render(){
     // Tabs
-    if (currentTab === "history") { renderHistory(); return; }
-    if (currentTab === "templates") { renderTemplates(); return; }
+    if (currentTab === "history") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderHistory(); return; }
+    if (currentTab === "templates") { hideEmptyAnimated(); if (el.empty) el.empty.hidden = true; renderTemplates(); return; }
     if (!window.Workouts) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
       el.empty.hidden = true;
@@ -547,14 +580,12 @@ function render(){
     el.content.innerHTML = "";
 
     if (!exercises.length) {
-      el.empty.hidden = false;
-      el.page?.classList.add("is-empty");
+      showEmpty();
       return;
     }
-    el.empty.hidden = true;
-    el.page?.classList.remove("is-empty");
+    hideEmptyAnimated();
 
-    for (const ex of exercises) {
+for (const ex of exercises) {
       const sets = safe(()=>Workouts.listSets(ex.id), []);
       const card = document.createElement("section");
       card.className = "w3-exCard";
@@ -582,6 +613,25 @@ function render(){
       `;
 
       el.content.appendChild(card);
+    }
+
+    // "Add another exercise" placeholder card (shows you can add more)
+    if (!isReadOnly) {
+      const addCard = document.createElement("section");
+      addCard.className = "w3-addExerciseCard";
+      addCard.setAttribute("role", "button");
+      addCard.setAttribute("tabindex", "0");
+      addCard.dataset.action = "add-exercise-card";
+      addCard.innerHTML = `
+        <div class="w3-addExerciseInner">
+          <div class="w3-addExerciseIcon">+</div>
+          <div class="w3-addExerciseText">
+            <div class="w3-addExerciseTitle">Add another exercise</div>
+            <div class="w3-addExerciseSub">Tap to add more to this workout.</div>
+          </div>
+        </div>
+      `;
+      el.content.appendChild(addCard);
     }
   }
 
@@ -753,10 +803,7 @@ function render(){
       if (id){
         setWorkoutId(id);
         currentTab = "today";
-        if (el.tabs){
-          for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
-          el.tabs.querySelector('[data-tab="today"]')?.classList.add("is-active");
-        }
+        syncTabUI();
         render();
       }
       return;
@@ -858,9 +905,29 @@ function render(){
       render();
       return;
     }
+    if (action === "add-exercise-card") {
+      addExercise();
+      return;
+    }
+
     if (action === "ex-menu") {
-      // Increment 1 keeps it minimal
-      console.log("Exercise menu (next increment)");
+      if (!exerciseId) return;
+      const exName = (card?.dataset.exerciseName || "Exercise").trim() || "Exercise";
+      const ok = confirm(`Delete "${exName}"? This will remove all sets in it.`);
+      if (!ok) return;
+      safe(()=>Workouts.removeExercise(exerciseId), null);
+      render();
+      return;
+    }
+  });
+
+  // Keyboard support for clickable "add exercise" card
+  el.content.addEventListener("keydown", (e)=>{
+    const act = e.target.closest && e.target.closest("[data-action='add-exercise-card']");
+    if (!act) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      addExercise();
     }
   });
 
@@ -988,10 +1055,19 @@ function render(){
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
     currentTab = btn.dataset.tab || "today";
-    for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
-    btn.classList.add("is-active");
+    syncTabUI();
     render();
   });
+
+  // Desktop tiles switching
+  el.sideTiles?.addEventListener("click", (e)=>{
+    const btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    currentTab = btn.dataset.tab || "today";
+    syncTabUI();
+    render();
+  });
+
 
   el.btnStart?.addEventListener("click", ()=>{
     const w = ensureWorkout();
@@ -1022,6 +1098,7 @@ function render(){
     return v.replace(/[^a-zA-Z0-9_-]/g, (ch)=>"\\\\" + ch);
   }
 
+  syncTabUI();
   render();
   const st = loadRest();
   if (st && st.endAt && st.endAt > Date.now()) showRest();

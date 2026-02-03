@@ -16,6 +16,8 @@
   --w3-text-xxl:28px;
 }
 
+.w3-sideTiles{display:none;}
+
 .w3-page{
   max-width: 860px;
   margin: 0 auto;
@@ -898,10 +900,334 @@ body[data-theme="dark"]{
   filter: brightness(1.08);
 }
 
-/* === REMOVE Exercise / Rest / Start buttons everywhere === */
-.w3-actionBox,
-.w3-bottomBar,
-.w3-actionPanel,
-.w3-mobileActions {
-  display: none !important;
+
+
+/* ===== Empty state: hero card with glow + subtle pattern ===== */
+.w3-empty{
+  position: relative;
+  margin: 18px 0;
+  border-radius: 20px;
+  padding: 36px 18px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 18px 50px rgba(0,0,0,.45);
+  backdrop-filter: blur(12px);
+  text-align: center;
+
+  /* animation (collapsed by default, expanded when page has .is-empty) */
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(10px) scale(.985);
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height .28s ease, opacity .22s ease, transform .28s ease;
+}
+
+/* Full-height hero feel (takes the available vertical space) */
+#w3Page.is-empty .w3-empty{
+  max-height: 1200px;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Use available viewport height when empty (reduces "too much empty space") */
+#w3Page.is-empty #w3Content{ display:none; }
+
+#w3Page.is-empty .w3-empty{
+  min-height: clamp(360px, 56vh, 720px);
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+}
+
+/* subtle background pattern */
+.w3-empty::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(129,140,248,.18) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 34%, rgba(99,102,241,.14) 0 2px, transparent 3px),
+    radial-gradient(circle at 42% 78%, rgba(99,102,241,.10) 0 2px, transparent 3px),
+    radial-gradient(circle at 85% 74%, rgba(129,140,248,.12) 0 2px, transparent 3px);
+  opacity: .55;
+  pointer-events:none;
+}
+
+/* outline glow */
+.w3-empty::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(99,102,241,.55), rgba(129,140,248,.20), rgba(34,197,94,.18));
+  opacity: .35;
+  filter: blur(10px);
+  pointer-events:none;
+}
+
+.w3-empty:focus-visible{
+  outline: 2px solid rgba(129,140,248,.55);
+  outline-offset: 3px;
+}
+
+.w3-emptyIcon{
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 28px;
+  background: rgba(129,140,248,.14);
+  border: 1px solid rgba(129,140,248,.25);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  margin-bottom: 14px;
+  z-index:1;
+}
+
+.w3-emptyTitle{ z-index:1; }
+.w3-empty .w3-muted{ z-index:1; }
+
+.w3-empty .w3-btnSecondary{ z-index:1; }
+
+/* Bigger on large screens */
+@media (min-width: 1024px) {
+  #w3Page.is-empty .w3-empty{
+    min-height: clamp(420px, 62vh, 820px);
+    padding: 56px 26px;
+  }
+  .w3-emptyTitle{ font-size: 22px; }
+  .w3-empty .w3-muted{ font-size: 15px; opacity:.92; }
+  .w3-emptyIcon{ width: 72px; height: 72px; font-size: 34px; border-radius: 18px; margin-bottom: 18px; }
+  .w3-empty .w3-btnSecondary{ padding: 12px 22px; font-size: 15px; }
+}
+
+/* Remove bottom gradient line (white line) */
+.w3-bottomBar{
+  background: none !important;
+  box-shadow: none !important;
+  border-top: none !important;
+}
+
+
+
+/* ===== Dark theme for exercise cards + inputs (keep style when adding exercise) ===== */
+.w3-exCard{
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.38) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.w3-exCard h3,
+.w3-exCard .w3-exHeader,
+.w3-exCard .w3-exSub{
+  color: rgba(255,255,255,.92) !important;
+}
+
+.w3-exCard label,
+.w3-exCard .w3-muted{
+  color: rgba(226,232,240,.78) !important;
+}
+
+.w3-input{
+  background: rgba(255,255,255,0.05) !important;
+  color: rgba(255,255,255,0.92) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+.w3-input::placeholder{
+  color: rgba(226,232,240,.55) !important;
+}
+
+/* Buttons in bottom bar + inside cards should stay dark (remove white pills) */
+.w3-btnSecondary{
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.88) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Ensure no light separators/lines appear at the bottom */
+.w3-bottomBar::before,
+.w3-bottomBar::after{
+  content:none !important;
+}
+
+
+
+/* ===== Desktop: move action buttons to right sidebar ===== */
+@media (min-width: 1100px){
+  .w3-page{
+    max-width: 1600px;
+    padding: 0 18px 24px;
+    display: grid;
+    grid-template-columns: minmax(760px, 1fr) 380px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* Keep main content in left column */
+  .w3-header,
+  .w3-meta,
+  .w3-tabs,
+  #w3Content,
+  #w3Empty{
+    grid-column: 1;
+  }
+
+
+  /* Desktop section tiles (replace tabs) */
+  .w3-tabs{ display:none; }
+
+  .w3-sideTiles{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom: 14px;
+  }
+  .w3-sideTile{
+    appearance:none;
+    border:1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.88);
+    border-radius: 16px;
+    padding: 14px 14px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    text-align:left;
+    cursor:pointer;
+    box-shadow: 0 10px 26px rgba(0,0,0,.25);
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease, background .14s ease;
+  }
+  .w3-sideTile:hover{
+    transform: translateY(-1px);
+    border-color: rgba(129,140,248,0.35);
+    box-shadow: 0 14px 34px rgba(0,0,0,.32);
+    background: rgba(129,140,248,0.10);
+  }
+  .w3-sideTile.is-active{
+    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(129,140,248,0.10));
+    border-color: rgba(129,140,248,0.45);
+    box-shadow: 0 16px 42px rgba(99,102,241,.18);
+  }
+  /* Action buttons become a sidebar card on the right */
+  .w3-bottomBar{
+    grid-column: 2;
+    position: sticky;
+    top: 110px;
+    bottom: auto;
+    align-self: start;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .w3-bottomBar .w3-btnSecondary{
+    width: 100%;
+    justify-content: center;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-weight: 750;
+  }
+
+  /* Give the left column cards a touch more breathing room */
+  .w3-exCard{ margin-bottom: 18px; }
+}
+
+/* ===== Mobile: keep bottom bar behavior ===== */
+@media (max-width: 1099px){
+  .w3-page{ display: block; padding: 0; }
+  .w3-bottomBar{
+    position: sticky;
+    bottom: 0;
+    top: auto;
+    grid-column: auto;
+    flex-direction: row;
+    padding: 12px 0 4px;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+
+/* ===== Add-another-exercise placeholder card ===== */
+.w3-addExerciseCard{
+  margin-top: 14px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.04);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  outline: none;
+}
+.w3-addExerciseCard:hover{
+  transform: translateY(-1px);
+  border-color: rgba(129,140,248,0.6);
+  box-shadow: 0 16px 38px rgba(99,102,241,.18), 0 10px 30px rgba(0,0,0,.25);
+}
+.w3-addExerciseCard:focus-visible{
+  border-color: rgba(129,140,248,0.75);
+  box-shadow: 0 0 0 4px rgba(99,102,241,.22), 0 16px 38px rgba(99,102,241,.18);
+}
+
+.w3-addExerciseInner{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding: 16px 16px;
+}
+
+.w3-addExerciseIcon{
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display:grid;
+  place-items:center;
+  font-size: 28px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  background: rgba(99,102,241,0.14);
+  border: 1px solid rgba(99,102,241,0.25);
+  box-shadow: 0 10px 26px rgba(99,102,241,.14);
+}
+
+.w3-addExerciseTitle{
+  color: rgba(255,255,255,0.92);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.w3-addExerciseSub{
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(203,213,225,0.85);
+}
+
+/* Larger feel on big screens */
+@media (min-width: 1024px){
+  .w3-addExerciseInner{ padding: 18px 18px; }
+  .w3-addExerciseIcon{ width: 54px; height: 54px; font-size: 32px; }
+  .w3-addExerciseTitle{ font-size: 16px; }
+  .w3-addExerciseSub{ font-size: 14px; }
 }
