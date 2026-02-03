@@ -525,6 +525,8 @@
 
   // -------------------- Minimal UI enhancements --------------------
   function ensureEnhancements() {
+  // Disabled legacy Today's workout panel injection
+  return;
     const main = document.querySelector("main.content");
     if (!main) return;
     if (document.getElementById("todayWorkoutCard")) return;
