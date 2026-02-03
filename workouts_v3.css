@@ -135,19 +135,32 @@
 .w3-swipeAction{
   position:absolute;
   top:0; bottom:0;
-  width:92px;
+  width:104px;
   display:flex;
   align-items:center;
   justify-content:center;
   color:#fff;
-  font-size:13px;
-  font-weight:700;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:-0.01em;
+  text-transform: uppercase;
   user-select:none;
-  pointer-events:none; /* actions are triggered by swipe/hover buttons */
+  pointer-events:none;
+  border-radius: 14px;
+  margin: 6px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(8px);
 }
 
-.w3-swipeAction.left{ left:0; background:#3b82f6; }
-.w3-swipeAction.right{ right:0; background:var(--w3-danger); }
+.w3-swipeAction.left{
+  left:0;
+  background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(59,130,246,.92));
+}
+.w3-swipeAction.right{
+  right:0;
+  background: linear-gradient(135deg, rgba(239,68,68,.95), rgba(244,63,94,.92));
+}
 
 .w3-setRow{
   touch-action: pan-y;
@@ -1270,3 +1283,54 @@ body[data-theme="dark"]{
   border: 1px dashed rgba(255,255,255,0.18) !important;
   color: rgba(255,255,255,0.85) !important;
 }
+
+
+/* ===== Desktop tiles sidebar layout ===== */
+@media (min-width: 1100px){
+  /* Make main area larger and reserve space for right sidebar tiles */
+  .w3-page{
+    max-width: 1160px;
+    padding-right: 320px;
+  }
+
+  /* Tabs become tiles on desktop */
+  #w3Tabs{ display:none !important; }
+
+  /* Show tiles and place them in the empty right space */
+  .w3-sideTiles{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    position: fixed;
+    top: 130px;
+    right: 46px;
+    width: 270px;
+    z-index: 6;
+  }
+
+  .w3-sideTile{
+    width: 100%;
+    text-align:left;
+    padding: 16px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.06);
+    box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    color: rgba(255,255,255,.92);
+    font-weight: 750;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .w3-sideTile:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+  .w3-sideTile.is-active{
+    border-color: rgba(129,140,248,.55);
+    box-shadow: 0 18px 46px rgba(99,102,241,.22);
+  }
+
+  /* Empty hero should feel big on desktop */
+  .w3-empty{
+    min-height: 72vh;
+  }
+}
+
