@@ -18,6 +18,9 @@
 
 .w3-sideTiles{display:none;}
 
+/* Desktop-only utility column container (Today Summary) */
+.w3-todayDock{ display:none; }
+
 .w3-page{
   max-width: 860px;
   margin: 0 auto;
@@ -1100,69 +1103,21 @@ body[data-theme="dark"]{
     grid-column: 1;
   }
 
-
-  /* Desktop section tiles (replace tabs) */
-  .w3-tabs{ display:none; }
-
-  .w3-sideTiles{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-bottom: 14px;
-  }
-  .w3-sideTile{
-    appearance:none;
-    border:1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.05);
-    color: rgba(255,255,255,0.88);
-    border-radius: 16px;
-    padding: 14px 14px;
-    font-weight: 650;
-    letter-spacing: -0.01em;
-    text-align:left;
-    cursor:pointer;
-    box-shadow: 0 10px 26px rgba(0,0,0,.25);
-    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease, background .14s ease;
-  }
-  .w3-sideTile:hover{
-    transform: translateY(-1px);
-    border-color: rgba(129,140,248,0.35);
-    box-shadow: 0 14px 34px rgba(0,0,0,.32);
-    background: rgba(129,140,248,0.10);
-  }
-  .w3-sideTile.is-active{
-    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(129,140,248,0.10));
-    border-color: rgba(129,140,248,0.45);
-    box-shadow: 0 16px 42px rgba(99,102,241,.18);
-  }
-  /* Action buttons become a sidebar card on the right */
-  .w3-bottomBar{
+  /* Today Summary sits in the right column, next to the workout canvas */
+  .w3-todayDock{
+    display:block;
     grid-column: 2;
     position: sticky;
     top: 110px;
-    bottom: auto;
     align-self: start;
-
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-
-    padding: 16px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.10) !important;
-    box-shadow: 0 18px 40px rgba(0,0,0,.35);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
   }
 
-  .w3-bottomBar .w3-btnSecondary{
-    width: 100%;
-    justify-content: center;
-    padding: 12px 14px;
-    border-radius: 14px;
-    font-weight: 750;
-  }
+
+  /* Desktop: remove the old right-side tiles/actions block (kept in DOM for JS, but hidden) */
+  .w3-tabs{ display:none; }
+  .w3-bottomBar{ display:none !important; }
+  .w3-sideTiles{ display:none !important; }
+  .w3-rpActions{ display:none !important; }
 
   /* Give the left column cards a touch more breathing room */
   .w3-exCard{ margin-bottom: 18px; }
