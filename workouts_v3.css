@@ -1113,7 +1113,7 @@ body[data-theme="dark"]{
     align-self: start;
   }
 
-  /* When empty: use a single wide column and place Today summary to the LEFT of the empty hero card */
+  /* When empty: use a single wide column and place Today summary to the RIGHT of the empty hero card */
   .w3-page.is-empty{
     grid-template-columns: 1fr;
   }
@@ -1133,7 +1133,9 @@ body[data-theme="dark"]{
     flex-direction:column;
     gap: 14px;
   }
-  .w3-empty{ width: min(980px, 100%); }
+  /* Order swap: keep empty hero as primary (left), utilities (Today summary + quick actions) on the right */
+  .w3-empty{ order: 1; width: min(1120px, 100%); }
+  .w3-emptySide{ order: 2; }
   .w3-emptyQuick{
     display:flex;
     flex-direction:column;
