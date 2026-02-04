@@ -54,6 +54,19 @@
   font-size:18px;
 }
 
+/* Exercise menu (⋮) — glassy to match background */
+.w3-exMenuBtn{
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.w3-exMenuBtn:hover{
+  background: rgba(15, 23, 42, 0.48);
+}
+
 .w3-hPage{
   font-size: var(--w3-text-xxl);
   font-weight: 700;
@@ -87,6 +100,42 @@
   box-shadow: var(--w3-shadow);
   margin-bottom: 14px;
   border: 1px solid rgba(0,0,0,0.03);
+}
+
+/* Reorder (drag & drop) */
+.w3-dragGhost{
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0.96;
+  transform: scale(1.02);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+}
+
+.w3-dragPlaceholder{
+  border-radius: var(--w3-r16);
+  border: 1px dashed rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+  margin-bottom: 14px;
+}
+
+body.w3-isReordering{
+  cursor: grabbing;
+}
+
+.w3-exCard.is-dragging{
+  /* class kept on the original node while detached */
+}
+
+/* Small hint when tapping the handle */
+.w3-exCard.w3-reorderHint{
+  outline: 1px solid rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.15);
+}
+
+/* Hold-to-delete feedback */
+.w3-exCard.w3-holdDelete{
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35), var(--w3-shadow);
 }
 
 .w3-exHeader{

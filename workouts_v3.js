@@ -86,6 +86,27 @@
 let suggestedExerciseName = null;
 let workoutClockInterval = null;
 
+// Exercise drag/reorder state
+let currentWorkoutId = null;
+const drag = {
+  active:false,
+  pointerId:null,
+  card:null,
+  ghost:null,
+  placeholder:null,
+  offsetX:0,
+  offsetY:0,
+};
+
+// Long-press delete state (2.5s)
+const holdDel = {
+  t:null,
+  pointerId:null,
+  card:null,
+  startX:0,
+  startY:0,
+};
+
 
 // Tabs
 // User request: remove tabs UI and keep a single "Today" experience.
@@ -302,6 +323,176 @@ let currentTab = "today";
   const SWIPE_MAX = 92;
   const SWIPE_THRESHOLD = 60;
   const swipe = { active:false, row:null, startX:0, dx:0, pointerId:null };
+
+
+  // ===== Increment 10: Exercise card drag & drop reorder (handle: ⋮) =====
+  function listExerciseCards(){
+    return Array.from(el.content?.querySelectorAll?.('.w3-exCard') || []);
+  }
+
+  function beginExerciseDrag(card, pointerId, clientX, clientY){
+    if (!card || drag.active) return;
+    const parent = card.parentElement;
+    if (!parent) return;
+
+    drag.active = true;
+    drag.pointerId = pointerId;
+    drag.card = card;
+
+    const rect = card.getBoundingClientRect();
+    drag.offsetX = clientX - rect.left;
+    drag.offsetY = clientY - rect.top;
+
+    // Placeholder keeps layout
+    const ph = document.createElement('div');
+    ph.className = 'w3-dragPlaceholder';
+    ph.style.height = `${rect.height}px`;
+    ph.style.width = `${rect.width}px`;
+    drag.placeholder = ph;
+
+    // Detach card and insert placeholder at its position
+    parent.insertBefore(ph, card);
+    parent.removeChild(card);
+
+    // Ghost clone follows the pointer
+    const ghost = card.cloneNode(true);
+    ghost.classList.add('w3-dragGhost');
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.left = `${rect.left}px`;
+    ghost.style.top = `${rect.top}px`;
+    drag.ghost = ghost;
+    document.body.appendChild(ghost);
+
+    // Visual hint
+    card.classList.add('is-dragging');
+
+    try{ document.body.classList.add('w3-isReordering'); }catch(_){ }
+  }
+
+  function moveExerciseDrag(clientY){
+    if (!drag.active || !drag.ghost || !drag.placeholder) return;
+    const y = clientY - drag.offsetY;
+    drag.ghost.style.top = `${y}px`;
+
+    const cards = listExerciseCards().filter(c => c !== drag.card);
+    const ph = drag.placeholder;
+    const parent = ph.parentElement;
+    if (!parent) return;
+
+    // Find insertion point based on vertical midpoint
+    let before = null;
+    for (const c of cards){
+      const r = c.getBoundingClientRect();
+      const mid = r.top + r.height/2;
+      if (clientY < mid){ before = c; break; }
+    }
+    if (before) parent.insertBefore(ph, before);
+    else parent.appendChild(ph);
+  }
+
+  function endExerciseDrag(){
+    if (!drag.active) return;
+    const ph = drag.placeholder;
+    const parent = ph?.parentElement;
+    const card = drag.card;
+
+    // Cleanup ghost
+    try{ drag.ghost?.remove?.(); }catch(_){ }
+
+    if (parent && ph && card){
+      parent.insertBefore(card, ph);
+      ph.remove();
+    }
+
+    // Persist order
+    if (currentWorkoutId){
+      const ordered = listExerciseCards().map(c => c.dataset.exerciseId).filter(Boolean);
+      try{ Workouts.reorderExercises(currentWorkoutId, ordered); }catch(_){ }
+    }
+
+    try{ document.body.classList.remove('w3-isReordering'); }catch(_){ }
+
+    drag.active = false;
+    drag.pointerId = null;
+    drag.card = null;
+    drag.ghost = null;
+    drag.placeholder = null;
+  }
+
+  // Start drag from the three-dots handle (tap or hold)
+  document.addEventListener('pointerdown', (e)=>{
+    const handle = e.target.closest && e.target.closest('[data-action="ex-menu"]');
+    if (!handle) return;
+    const card = handle.closest('.w3-exCard');
+    if (!card) return;
+    // Don't start reorder when user is selecting text or interacting with inputs
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    beginExerciseDrag(card, e.pointerId, e.clientX, e.clientY);
+  }, { passive:false });
+
+  document.addEventListener('pointermove', (e)=>{
+    if (!drag.active) return;
+    if (drag.pointerId !== null && e.pointerId !== drag.pointerId) return;
+    moveExerciseDrag(e.clientY);
+  });
+
+  document.addEventListener('pointerup', (e)=>{
+    if (!drag.active) return;
+    if (drag.pointerId !== null && e.pointerId !== drag.pointerId) return;
+    endExerciseDrag();
+  });
+
+  document.addEventListener('pointercancel', ()=>{ if (drag.active) endExerciseDrag(); });
+
+  // Long-press (2.5s) on an exercise card to delete it
+  function clearHoldDelete(){
+    if (holdDel.t) clearTimeout(holdDel.t);
+    holdDel.t = null;
+    if (holdDel.card) holdDel.card.classList.remove('w3-holdDelete');
+    holdDel.pointerId = null;
+    holdDel.card = null;
+  }
+
+  document.addEventListener('pointerdown', (e)=>{
+    const card = e.target.closest && e.target.closest('.w3-exCard');
+    if (!card) return;
+    // Ignore interactions that should not trigger delete hold
+    if (e.target.closest('input,button,a,textarea,select,[contenteditable]')) return;
+    if (e.target.closest('[data-action="ex-menu"]')) return;
+    if (drag.active) return;
+
+    holdDel.pointerId = e.pointerId;
+    holdDel.card = card;
+    holdDel.startX = e.clientX;
+    holdDel.startY = e.clientY;
+    card.classList.add('w3-holdDelete');
+
+    holdDel.t = setTimeout(()=>{
+      const id = card.dataset.exerciseId;
+      if (!id) return;
+      try{ if (navigator.vibrate) navigator.vibrate(35); }catch(_){ }
+      try{ Workouts.removeExercise(id); }catch(_){ }
+      clearHoldDelete();
+      render();
+    }, 2500);
+  }, { passive:true });
+
+  document.addEventListener('pointermove', (e)=>{
+    if (!holdDel.card) return;
+    if (holdDel.pointerId !== null && e.pointerId !== holdDel.pointerId) return;
+    const dx = Math.abs(e.clientX - holdDel.startX);
+    const dy = Math.abs(e.clientY - holdDel.startY);
+    if (dx > 10 || dy > 10) clearHoldDelete();
+  }, { passive:true });
+
+  document.addEventListener('pointerup', (e)=>{
+    if (holdDel.pointerId !== null && e.pointerId !== holdDel.pointerId) return;
+    clearHoldDelete();
+  }, { passive:true });
+
+  document.addEventListener('pointercancel', ()=>{ clearHoldDelete(); }, { passive:true });
 
 
 
@@ -846,6 +1037,8 @@ function render(){
     el.title.textContent = workout.name || "Workout";
     el.subtitle.textContent = `${workout.status || "planned"} · ${workout.date || "—"}`;
 
+    currentWorkoutId = workout.id || null;
+
 
     // Allow editing even if a workout is marked completed (prevents "can't type" on mobile)
     const status = workout.status || "planned";
@@ -906,7 +1099,7 @@ for (const ex of exercises) {
             <div class="w3-hSection">${esc(ex.name || "Exercise")}</div>
             ${ex.notes ? `<div class="w3-exSub">${esc(ex.notes)}</div>` : ``}
           </div>
-          <button class="w3-iconBtn" data-action="ex-menu" aria-label="Exercise menu">⋮</button>
+          <button class="w3-iconBtn w3-exMenuBtn" data-action="ex-menu" aria-label="Reorder exercise">⋮</button>
         </div>
 
         ${isReadOnly ? "" : `<div class="w3-exActions" ${String(ex.id)!==String(activeExerciseId) ? "hidden" : ""}>
@@ -1257,12 +1450,14 @@ for (const ex of exercises) {
     }
 
     if (action === "ex-menu") {
-      if (!exerciseId) return;
-      const exName = (card?.dataset.exerciseName || "Exercise").trim() || "Exercise";
-      const ok = confirm(`Delete "${exName}"? This will remove all sets in it.`);
-      if (!ok) return;
-      safe(()=>Workouts.removeExercise(exerciseId), null);
-      render();
+      // Reorder handle. Actual drag starts on pointerdown for this button.
+      // Keep click as a harmless hint for desktop users.
+      if (card){
+        card.classList.remove("w3-reorderHint");
+        void card.offsetWidth;
+        card.classList.add("w3-reorderHint");
+        setTimeout(()=>card.classList.remove("w3-reorderHint"), 700);
+      }
       return;
     }
   });
