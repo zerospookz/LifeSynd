@@ -130,25 +130,35 @@
 </footer>
 <!-- Floating rest clock (timer + analog ring) -->
 <div aria-live="polite" class="w3-restClock" hidden="" id="w3RestTimer" role="status">
-<div class="w3-restDial">
-<svg aria-hidden="true" class="w3-restRing" focusable="false" viewbox="0 0 100 100">
-<defs>
-<lineargradient id="w3RestGrad" x1="0" x2="1" y1="0" y2="1">
-<stop offset="0%" stop-color="#60a5fa"></stop>
-<stop offset="55%" stop-color="#a78bfa"></stop>
-<stop offset="100%" stop-color="#34d399"></stop>
-</lineargradient>
-</defs>
-<circle class="w3-restTrack" cx="50" cy="50" r="40"></circle>
-<circle class="w3-restProgress" cx="50" cy="50" id="w3RestProgress" r="40"></circle>
-</svg>
-<div class="w3-restCenter">
-<div class="w3-restTime num" id="w3RestTime">01:00</div>
-<div class="w3-restLabel">REST</div>
+  <div class="w3-restDial" aria-hidden="true">
+    <svg class="w3-restRing" focusable="false" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="w3RestGrad" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#60a5fa"></stop>
+          <stop offset="55%" stop-color="#a78bfa"></stop>
+          <stop offset="100%" stop-color="#34d399"></stop>
+        </linearGradient>
+      </defs>
+      <circle class="w3-restTrack" cx="50" cy="50" r="40"></circle>
+      <circle class="w3-restProgress" cx="50" cy="50" id="w3RestProgress" r="40"></circle>
+    </svg>
+    <div class="w3-restCenter">
+      <div class="w3-restTime num" id="w3RestTime">01:00</div>
+      <div class="w3-restLabel">REST</div>
+    </div>
+  </div>
+
+  <div class="w3-restMeta">
+    <div class="w3-restMetaTitle">Rest timer</div>
+    <div class="w3-restMetaHint">Tap Stop to end</div>
+  </div>
+
+  <button aria-label="Stop rest" class="w3-restBtn" id="w3RestStop" type="button">
+    <span class="w3-restStopIcon" aria-hidden="true">⏹</span>
+    <span class="w3-restStopText">Stop</span>
+  </button>
 </div>
-</div>
-<button aria-label="Stop rest" class="w3-restBtn" id="w3RestStop">Stop</button>
-</div>
+
 </div>
 </main>
 </div>

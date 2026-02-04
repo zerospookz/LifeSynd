@@ -164,8 +164,8 @@ body.w3-isReordering{
   position:absolute;
   top: 2px;
   right: 0;
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   display:grid;
   place-items:center;
   /* Hidden by default; shown on hover (desktop) or while holding (mobile/desktop) */
@@ -179,7 +179,7 @@ body.w3-isReordering{
 /* Glass blur background behind the ring (only becomes visible while holding). */
 .w3-delGlass{
   position: absolute;
-  inset: -6px;
+  inset: -8px;
   border-radius: 999px;
   background: rgba(255,255,255,0.08);
   opacity: 0;
@@ -190,7 +190,7 @@ body.w3-isReordering{
 
 .w3-exHoldZone:hover .w3-delHint,
 .w3-exHoldZone:focus-within .w3-delHint{
-  opacity: .78;
+  opacity: .9;
   transform: translateY(0);
   animation: w3DelHintPulse 10s ease-in-out infinite;
 }
@@ -205,7 +205,7 @@ body.w3-isReordering{
 }
 
 .w3-delIcon{
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1;
   filter: drop-shadow(0 2px 10px rgba(0,0,0,.25));
 }
@@ -218,17 +218,17 @@ body.w3-isReordering{
 .w3-delRingTrack{
   fill: none;
   stroke: rgba(255,255,255,.20);
-  stroke-width: 3;
+  stroke-width: 3.5;
 }
 
 .w3-delRingProg{
   fill: none;
   stroke: rgba(255,107,107,.92);
-  stroke-width: 3.6;
+  stroke-width: 6;
   stroke-linecap: round;
-  /* circumference for r=9 is ~56.55 */
-  stroke-dasharray: 56.55;
-  stroke-dashoffset: 56.55;
+  /* circumference for r=10.5 is ~65.97 */
+  stroke-dasharray: 65.97;
+  stroke-dashoffset: 65.97;
   transform: rotate(-90deg);
   transform-origin: 12px 12px;
 }
@@ -242,12 +242,12 @@ body.w3-isReordering{
 /* On hold: activate the glass blur + add a subtle glow so the affordance is obvious. */
 .w3-exCard.w3-holdDelete .w3-delGlass{
   opacity: 1;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .w3-exCard.w3-holdDelete .w3-delRingProg{
-  filter: drop-shadow(0 0 8px rgba(255,107,107,0.55));
+  filter: drop-shadow(0 0 10px rgba(255,107,107,0.7));
 }
 
 .w3-exCard.w3-holdDelete .w3-delRingProg{
@@ -255,7 +255,7 @@ body.w3-isReordering{
 }
 
 @keyframes w3DelRingFill{
-  from{ stroke-dashoffset: 56.55; }
+  from{ stroke-dashoffset: 65.97; }
   to{ stroke-dashoffset: 0; }
 }
 
@@ -480,26 +480,46 @@ body.w3-isReordering{
 }
 
 
-/* Increment 3+: Rest timer as floating clock */
+/* Increment 3+: Rest timer as floating clock (v18 redesign) */
 .w3-restClock{
   position: fixed;
-  right: 22px;
-  bottom: 92px; /* above bottom bar */
+  right: 18px;
+  bottom: 88px; /* above bottom nav */
   opacity: 0;
-  transform: translateY(12px) scale(0.98);
+  transform: translateY(14px) scale(0.98);
   transition: opacity .22s ease, transform .22s ease;
   display: grid;
-  grid-template-columns: 92px auto;
+  grid-template-columns: 72px 1fr auto;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 20px;
-  background: rgba(10, 14, 26, 0.62);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 22px 60px rgba(0,0,0,.45);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  padding: 12px 14px;
+  border-radius: 22px;
+
+  /* glass card */
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)),
+    rgba(8, 12, 22, 0.62);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 24px 70px rgba(0,0,0,.50);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   z-index: 9999;
+  overflow: hidden;
+}
+
+/* subtle moving sheen when active */
+.w3-restClock::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background: linear-gradient(120deg,
+    transparent 0%,
+    rgba(255,255,255,0.10) 35%,
+    rgba(255,255,255,0.05) 55%,
+    transparent 75%);
+  transform: translateX(-30%) rotate(8deg);
+  opacity: 0;
+  pointer-events:none;
 }
 
 .w3-restClock.is-on{
@@ -507,25 +527,38 @@ body.w3-isReordering{
   transform: translateY(0) scale(1);
 }
 
+.w3-restClock.is-on::before{
+  opacity: .9;
+  animation: w3Sheen 4.2s ease-in-out infinite;
+}
+
+@keyframes w3Sheen{
+  0%{ transform: translateX(-35%) rotate(8deg); }
+  55%{ transform: translateX(35%) rotate(8deg); }
+  100%{ transform: translateX(35%) rotate(8deg); }
+}
+
 .w3-restDial{
-  width: 92px;
-  height: 92px;
+  width: 72px;
+  height: 72px;
   border-radius: 999px;
   display: grid;
   place-items: center;
   position: relative;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
 }
 
 .w3-restRing{
-  width: 92px;
-  height: 92px;
+  width: 72px;
+  height: 72px;
   transform: rotate(-90deg);
-  filter: drop-shadow(0 0 14px rgba(99, 102, 241, 0.45));
+  filter: drop-shadow(0 0 14px rgba(99, 102, 241, 0.35));
 }
 
 .w3-restTrack{
   fill: none;
-  stroke: rgba(255,255,255,0.14);
+  stroke: rgba(255,255,255,0.16);
   stroke-width: 8;
 }
 
@@ -539,24 +572,6 @@ body.w3-isReordering{
   transition: stroke-dashoffset .2s linear;
 }
 
-/* Subtle breathing on last seconds */
-.w3-restClock.w3-restUrgent .w3-restRing{
-  animation: w3RestBreathe .7s ease-in-out infinite;
-}
-
-@keyframes w3RestBreathe{
-  0%,100%{ transform: rotate(-90deg) scale(1); }
-  50%{ transform: rotate(-90deg) scale(1.03); }
-}
-
-/* Little nudge when switching preset */
-.w3-bump{ animation: w3Bump .22s ease; }
-@keyframes w3Bump{
-  0%{ transform: translateY(0); }
-  45%{ transform: translateY(-2px); }
-  100%{ transform: translateY(0); }
-}
-
 .w3-restCenter{
   position: absolute;
   inset: 0;
@@ -567,53 +582,88 @@ body.w3-isReordering{
 }
 
 .w3-restTime{
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .w3-restLabel{
   margin-top: 4px;
-  font-size: 11px;
-  letter-spacing: 1.6px;
+  font-size: 9px;
+  letter-spacing: 2.0px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.62);
+}
+
+.w3-restMeta{
+  display:flex;
+  flex-direction:column;
+  gap: 2px;
+  min-width: 140px;
+}
+
+.w3-restMetaTitle{
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  color: rgba(255,255,255,0.92);
+}
+
+.w3-restMetaHint{
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
 }
 
 .w3-restBtn{
   justify-self: end;
+  display:flex;
+  align-items:center;
+  gap: 8px;
   border: 1px solid rgba(255,255,255,.16);
   background: rgba(255,255,255,.08);
   color: rgba(255,255,255,0.92);
-  padding: 8px 12px;
+  padding: 9px 12px;
   border-radius: 999px;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
+  transition: transform .14s ease, background .14s ease, border-color .14s ease;
 }
 
-.w3-restBtn:hover{ background: rgba(255,255,255,.12); }
-
-.w3-restClock.w3-restDone{
-  animation: w3RestPulse .9s ease-out;
+.w3-restBtn:hover{
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.22);
+  transform: translateY(-1px);
 }
 
+.w3-restStopIcon{ font-size: 13px; opacity: .9; }
+.w3-restStopText{ font-size: 12px; letter-spacing: 0.01em; }
+
+/* urgent last seconds */
 .w3-restClock.w3-restUrgent .w3-restRing{
   animation: w3RestUrgent 1s ease-in-out infinite;
 }
 
 @keyframes w3RestUrgent{
-  0%,100%{ transform: rotate(-90deg) scale(1); filter: drop-shadow(0 0 14px rgba(99,102,241,0.45)); }
-  50%{ transform: rotate(-90deg) scale(1.035); filter: drop-shadow(0 0 18px rgba(239,68,68,0.45)); }
+  0%,100%{ transform: rotate(-90deg) scale(1); filter: drop-shadow(0 0 14px rgba(99,102,241,0.35)); }
+  50%{ transform: rotate(-90deg) scale(1.035); filter: drop-shadow(0 0 20px rgba(239,68,68,0.45)); }
 }
 
-/* Little feedback when cycling the preset */
-.w3-btnSecondary.w3-bump{ animation: w3Bump .22s ease-out; }
-@keyframes w3Bump{ 0%{ transform: translateY(0); } 50%{ transform: translateY(-2px); } 100%{ transform: translateY(0); } }
+.w3-restClock.w3-restDone{
+  animation: w3RestPulse .9s ease-out;
+}
 
 @keyframes w3RestPulse{
   0%{ box-shadow: 0 0 0 rgba(34,197,94,0); }
-  35%{ box-shadow: 0 0 0 10px rgba(34,197,94,.35); }
+  35%{ box-shadow: 0 0 0 10px rgba(34,197,94,.30); }
   100%{ box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
+
+/* Small screens: keep it clear of the bottom bar */
+@media (max-width: 700px){
+  .w3-restClock{ right: 12px; bottom: 92px; padding: 12px; grid-template-columns: 68px 1fr auto; }
+  .w3-restDial, .w3-restRing{ width: 68px; height: 68px; }
+  .w3-restMeta{ min-width: 120px; }
+  .w3-restMetaHint{ display:none; }
 }
 
 

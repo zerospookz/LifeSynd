@@ -1120,8 +1120,8 @@ for (const ex of exercises) {
               <div class="w3-delGlass" aria-hidden="true"></div>
               <span class="w3-delIcon">🗑️</span>
               <svg class="w3-delRing" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <circle class="w3-delRingTrack" cx="12" cy="12" r="9"></circle>
-                <circle class="w3-delRingProg" cx="12" cy="12" r="9"></circle>
+                <circle class="w3-delRingTrack" cx="12" cy="12" r="10.5"></circle>
+                <circle class="w3-delRingProg" cx="12" cy="12" r="10.5"></circle>
               </svg>
             </div>
             ${ex.notes ? `<div class="w3-exSub">${esc(ex.notes)}</div>` : ``}
