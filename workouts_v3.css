@@ -1320,23 +1320,24 @@ body[data-theme="dark"]{
   .w3-bottomBar{ display:none !important; }
 }
 
-/* SMALL SCREEN: restore bottom action surface + avoid it overlapping inputs */
+/* SMALL SCREEN: remove the global bottom action bar (buttons are available in-card).
+   This prevents overlap on the empty state and when adding exercises/sets. */
 @media (max-width: 1099px){
-  .w3-bottomBar{
-    position: sticky;
-    bottom: 0;
-    padding: 12px 0 8px;
-    display:flex !important;
-    gap: 10px;
-    background: linear-gradient(to top, rgba(0,0,0,0.35) 70%, rgba(0,0,0,0));
-    z-index: 50;
-  }
-  /* Ensure action buttons are visible on mobile */
-  .w3-rpActions{ display:flex !important; flex-wrap: wrap; }
-  /* Hide duplicate Today/History/Templates tiles in the bottom bar (tabs are shown at the top) */
+  .w3-bottomBar{ display:none !important; }
+  .w3-rpActions{ display:none !important; }
   .w3-sideTiles{ display:none !important; }
-  /* Give the scroll area room so the bottom bar doesn't cover the last set */
-  #w3Content{ padding-bottom: 90px; }
+
+  /* Reserve space for the fixed bottom navigation (global app nav) + the rest timer widget */
+  #w3Content,
+  #w3EmptyWrap{ padding-bottom: 160px; }
+}
+
+/* On phone screens, keep the rest timer above the fixed bottom navigation */
+@media (max-width: 900px){
+  .w3-restClock{
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    right: 14px;
+  }
 }
 
 /* Dark glass exercise cards */
