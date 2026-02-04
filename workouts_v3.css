@@ -1094,6 +1094,13 @@ body[data-theme="dark"]{
     align-items: start;
   }
 
+  /* Keep both columns aligned: start the right dock on the same row as the workout canvas */
+  .w3-header{ grid-row: 1; }
+  .w3-meta{ grid-row: 2; }
+  .w3-tabs{ grid-row: 3; }
+  #w3Content,
+  #w3EmptyWrap{ grid-row: 4; }
+
   /* Desktop: bottom bar is a mobile affordance; hide it and use the right utility column instead */
   .w3-bottomBar{ display:none !important; }
 
@@ -1111,6 +1118,7 @@ body[data-theme="dark"]{
   .w3-todayDock{
     display:block;
     grid-column: 2;
+    grid-row: 4;
     position: sticky;
     top: 110px;
     align-self: start;
@@ -1136,11 +1144,13 @@ body[data-theme="dark"]{
     flex-direction:column;
     gap: 14px;
   }
+  /* Desktop: remove the big quick-action buttons (Templates/History) from the empty screen */
+  .w3-emptyQuick{ display:none; }
   /* Order swap: keep empty hero as primary (left), utilities (Today summary + quick actions) on the right */
   .w3-empty{ order: 1; width: min(1120px, 100%); }
   .w3-emptySide{ order: 2; }
   .w3-emptyQuick{
-    display:flex;
+    display:none;
     flex-direction:column;
     gap: 10px;
   }
