@@ -1021,6 +1021,20 @@ body[data-theme="dark"]{
 .w3-emptyAside{ z-index: 1; width: 100%; max-width: 340px; margin-top: 18px; pointer-events: none; }
 .w3-emptyAside .w3-rpCard{ width: 100%; }
 
+/* Today summary reveal (fade/slide-in on first set) */
+#w3RpToday{
+  transition: opacity .25s ease, transform .25s ease;
+  will-change: opacity, transform;
+}
+#w3RpToday.is-prehide{
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+#w3RpToday.no-anim{
+  transition: none !important;
+}
+
 .w3-empty .w3-btnSecondary{ z-index:1; }
 
 /* Bigger on large screens */

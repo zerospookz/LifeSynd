@@ -90,6 +90,7 @@ let workoutClockInterval = null;
 // Tabs
 // User request: remove tabs UI and keep a single "Today" experience.
 let currentTab = "today";
+  let _prevTotalSets = null; // for Today summary reveal animation
 
   function syncTabUI(){
     // Mobile tabs
@@ -663,6 +664,31 @@ let currentTab = "today";
     // Today summary
     const dur = liveDurationSec(workout);
     const isLive = !!(workout?.startedAt && !workout?.finishedAt);
+
+    // Reveal Today summary only after first set is logged
+    const totalSetsNow = Number(meta?.totalSets || 0);
+    if (el.rpToday){
+      if (_prevTotalSets === null){
+        // First render: show/hide without animation
+        if (totalSetsNow > 0){
+          el.rpToday.classList.remove("is-prehide");
+          el.rpToday.classList.add("no-anim");
+          requestAnimationFrame(()=> el.rpToday.classList.remove("no-anim"));
+        } else {
+          el.rpToday.classList.add("is-prehide");
+        }
+      } else {
+        if (_prevTotalSets === 0 && totalSetsNow > 0){
+          // First set added -> animate in
+          el.rpToday.classList.remove("no-anim");
+          el.rpToday.classList.remove("is-prehide");
+        } else if (totalSetsNow === 0){
+          // Back to zero -> hide (no animation requirement, but keep smooth)
+          el.rpToday.classList.add("is-prehide");
+        }
+      }
+    }
+    _prevTotalSets = totalSetsNow;
 
     if (el.rpSets) el.rpSets.textContent = fmtInt(meta.totalSets || 0);
     if (el.rpVol) el.rpVol.textContent = fmtKg(meta.totalVolumeKg || 0);
