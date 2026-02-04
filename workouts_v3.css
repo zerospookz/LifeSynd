@@ -127,6 +127,9 @@
   gap: 8px;
 }
 
+/* Hide empty-state quick buttons (Templates/History) on all sizes */
+.w3-emptyQuick{ display:none !important; }
+
 
 /* Increment 2: Swipe actions (Apple-style) */
 .w3-swipeWrap{
@@ -502,10 +505,9 @@ body[data-theme="dark"]{
 
 
 /* ===== Tabs (Today / History / Templates) ===== */
+/* Hide tabs entirely (user request) */
 .w3-tabs{
-  display:flex;
-  gap:10px;
-  margin: 6px 0 14px;
+  display:none !important;
 }
 .w3-tabBtn{
   flex:1;

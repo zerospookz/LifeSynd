@@ -88,7 +88,8 @@ let workoutClockInterval = null;
 
 
 // Tabs
-  let currentTab = "today";
+// User request: remove tabs UI and keep a single "Today" experience.
+let currentTab = "today";
 
   function syncTabUI(){
     // Mobile tabs
@@ -738,9 +739,8 @@ let workoutClockInterval = null;
     if (workoutClockInterval) { clearInterval(workoutClockInterval); workoutClockInterval = null; }
   }
 function render(){
-    // Tabs
-    if (currentTab === "history") { hideEmptyAnimated(); if (el.emptyWrap) el.emptyWrap.hidden = true; renderHistory(); return; }
-    if (currentTab === "templates") { hideEmptyAnimated(); if (el.emptyWrap) el.emptyWrap.hidden = true; renderTemplates(); return; }
+    // Force single-tab mode
+    currentTab = "today";
     if (!window.Workouts) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
       if (el.emptyWrap) el.emptyWrap.hidden = true;
@@ -758,9 +758,9 @@ function render(){
     el.subtitle.textContent = `${workout.status || "planned"} · ${workout.date || "—"}`;
 
 
-    // Increment 4: contextual actions like Habits
+    // Allow editing even if a workout is marked completed (prevents "can't type" on mobile)
     const status = workout.status || "planned";
-    isReadOnly = (status === "completed" || status === "skipped");
+    isReadOnly = false;
     // show workout controls only in Today tab
     el.btnAddExercise.style.display = "";
     el.btnRest60.style.display = "";
@@ -1318,27 +1318,22 @@ for (const ex of exercises) {
   el.tabs?.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
-    currentTab = btn.dataset.tab || "today";
-    syncTabUI();
-    render();
+    // Tabs are hidden; ignore.
+    currentTab = "today";
   });
 
   // Empty-state quick actions (Templates / History)
   el.emptySide?.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
-    currentTab = btn.dataset.tab || "today";
-    syncTabUI();
-    render();
+    currentTab = "today";
   });
 
   // Desktop tiles switching
   el.sideTiles?.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
-    currentTab = btn.dataset.tab || "today";
-    syncTabUI();
-    render();
+    currentTab = "today";
   });
 
 
