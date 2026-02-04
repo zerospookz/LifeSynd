@@ -458,6 +458,9 @@ let currentTab = "today";
   document.addEventListener('pointerdown', (e)=>{
     const card = e.target.closest && e.target.closest('.w3-exCard');
     if (!card) return;
+    // Only allow hold-to-delete from the "safe zone" (header/title area).
+    // This prevents conflicts with drag (⋮), inputs, buttons, and scrolling.
+    if (!e.target.closest('[data-hold-delete="1"]')) return;
     // Ignore interactions that should not trigger delete hold
     if (e.target.closest('input,button,a,textarea,select,[contenteditable]')) return;
     if (e.target.closest('[data-action="ex-menu"]')) return;
@@ -1095,7 +1098,7 @@ for (const ex of exercises) {
 
       card.innerHTML = `
         <div class="w3-exHeader">
-          <div>
+          <div class="w3-exHoldZone" data-hold-delete="1" title="Hold 2.5s to delete">
             <div class="w3-hSection">${esc(ex.name || "Exercise")}</div>
             ${ex.notes ? `<div class="w3-exSub">${esc(ex.notes)}</div>` : ``}
           </div>
