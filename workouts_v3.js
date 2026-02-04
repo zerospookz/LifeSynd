@@ -500,7 +500,9 @@ let currentTab = "today";
     if (holdDel.pointerId !== null && e.pointerId !== holdDel.pointerId) return;
     const dx = Math.abs(e.clientX - holdDel.startX);
     const dy = Math.abs(e.clientY - holdDel.startY);
-    if (dx > 10 || dy > 10) clearHoldDelete();
+    // Mobile finger jitter is real; use a larger threshold so holds can complete.
+    // If the user meaningfully drags/scrolls, we cancel.
+    if (dx > 24 || dy > 24) clearHoldDelete();
   }, { passive:false });
 
   document.addEventListener('pointerup', (e)=>{
@@ -509,6 +511,13 @@ let currentTab = "today";
   }, { passive:false });
 
   document.addEventListener('pointercancel', ()=>{ clearHoldDelete(); }, { passive:true });
+
+  // iOS/Safari can fire a context menu on long press which cancels pointer events.
+  // While we're in a hold-to-delete gesture, suppress it.
+  document.addEventListener('contextmenu', (e)=>{
+    if (!holdDel.card) return;
+    try{ e.preventDefault(); }catch(_){ }
+  }, { passive:false });
 
 
 
