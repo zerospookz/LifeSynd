@@ -575,8 +575,12 @@ body.w3-isReordering{
 .w3-restCenter{
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  /* Was a grid; multiple children overlapped in the same cell on mobile.
+     Use a flex column so time + label never overlap. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   text-align: center;
 }
@@ -665,6 +669,105 @@ body.w3-isReordering{
   .w3-restMeta{ min-width: 120px; }
   .w3-restMetaHint{ display:none; }
 }
+
+/* ===== Rest duration picker (1s .. 5m) ===== */
+.w3-restPicker{
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%) translateY(10px);
+  width: min(420px, calc(100vw - 28px));
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 18px 40px rgba(0,0,0,.38);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.w3-restPicker.is-open{
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.w3-restPickerTop{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.w3-restPickerTitle{
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: rgba(255,255,255,0.92);
+}
+
+.w3-restPickerValue{
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.w3-restPickerClose{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,0.9);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.w3-restPickerRow{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.w3-restPickerRange{
+  flex: 1;
+}
+
+.w3-restPickerSec{
+  width: 86px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.22);
+  color: rgba(255,255,255,0.92);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.w3-restPickerActions{
+  display:flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.w3-restPickerStart{
+  border: 1px solid rgba(34,197,94,.35);
+  background: rgba(34,197,94,.20);
+  color: rgba(255,255,255,0.95);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.w3-restPickerStart:hover{ filter: brightness(1.06); }
+
 
 
 /* ===== Increment 3a: Dark glass card theme for Workouts ===== */

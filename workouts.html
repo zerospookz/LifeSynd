@@ -123,8 +123,24 @@
 </div>
 <div class="w3-rpActions">
 <button class="w3-btnSecondary" id="w3AddExercise">+ Exercise</button>
-<button class="w3-btnSecondary" id="w3Rest60">Rest 60s</button>
+<button class="w3-btnSecondary" id="w3Rest60" aria-haspopup="dialog" aria-expanded="false">Rest 01:00</button>
 <button class="w3-btnSecondary" data-action="start-workout" id="w3Start">Start</button>
+</div>
+
+<!-- Rest duration picker (1s .. 5m) -->
+<div class="w3-restPicker" id="w3RestPicker" role="dialog" aria-modal="false" aria-label="Rest duration">
+  <div class="w3-restPickerTop">
+    <div class="w3-restPickerTitle">Rest duration</div>
+    <div class="w3-restPickerValue" id="w3RestPickerValue">01:00</div>
+    <button class="w3-restPickerClose" id="w3RestPickerClose" type="button" aria-label="Close">✕</button>
+  </div>
+  <div class="w3-restPickerRow">
+    <input class="w3-restPickerRange" id="w3RestPickerRange" type="range" min="1" max="300" value="60" />
+    <input class="w3-restPickerSec" id="w3RestPickerSec" type="number" min="1" max="300" value="60" />
+  </div>
+  <div class="w3-restPickerActions">
+    <button class="w3-restPickerStart" id="w3RestPickerStart" type="button">Start</button>
+  </div>
 </div>
 </div>
 </footer>

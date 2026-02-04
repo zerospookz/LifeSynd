@@ -181,8 +181,10 @@ let currentTab = "today";
 
   // Increment 3: Rest timer (persisted)
   const REST_KEY = "w3_restTimer_v1";
-  const REST_PRESET_KEY = "w3_restPresetSec_v1";
-  const REST_PRESETS = [30, 60, 90, 120, 180]; // up to 3 minutes
+  const REST_PRESET_KEY = "w3_restPresetSec_v2";
+  // User request: allow any rest duration from 0:01 to 5:00.
+  const REST_MIN = 1;
+  const REST_MAX = 300;
   let restInterval = null;
   // SVG ring math (r=40 in workouts.html -> circumference ≈ 251.2)
   const REST_RING_R = 40;
@@ -216,19 +218,18 @@ let currentTab = "today";
     try{
       const raw = localStorage.getItem(REST_PRESET_KEY);
       const n = parseInt(raw || "", 10);
-      if (!Number.isFinite(n) || n <= 0) return 60;
-      // Clamp to supported presets
-      const closest = REST_PRESETS.reduce((best, cur)=>{
-        return (Math.abs(cur - n) < Math.abs(best - n)) ? cur : best;
-      }, REST_PRESETS[0]);
-      return closest;
+      if (!Number.isFinite(n) || n < REST_MIN) return 60;
+      return Math.min(REST_MAX, Math.max(REST_MIN, n|0));
     }catch(_){
       return 60;
     }
   }
 
   function saveRestPreset(sec){
-    try{ localStorage.setItem(REST_PRESET_KEY, String(sec|0)); }catch(_){ }
+    try{
+      const v = Math.min(REST_MAX, Math.max(REST_MIN, sec|0));
+      localStorage.setItem(REST_PRESET_KEY, String(v));
+    }catch(_){ }
   }
 
   function labelRestButton(){
@@ -240,10 +241,47 @@ let currentTab = "today";
 
   function startRest(seconds){
     const now = Date.now();
-    const totalSec = Math.max(1, seconds|0);
+    const totalSec = Math.min(REST_MAX, Math.max(REST_MIN, seconds|0));
     const st = { running:true, startAt: now, totalSec, endAt: now + totalSec*1000 };
     saveRest(st);
     showRest();
+  }
+
+  // ===== Rest duration picker UI =====
+  const restUI = {
+    picker: document.getElementById('w3RestPicker'),
+    pickerValue: document.getElementById('w3RestPickerValue'),
+    pickerRange: document.getElementById('w3RestPickerRange'),
+    pickerSec: document.getElementById('w3RestPickerSec'),
+    pickerStart: document.getElementById('w3RestPickerStart'),
+    pickerClose: document.getElementById('w3RestPickerClose'),
+  };
+
+  function setPickerValue(sec){
+    const v = Math.min(REST_MAX, Math.max(REST_MIN, sec|0));
+    if (restUI.pickerRange) restUI.pickerRange.value = String(v);
+    if (restUI.pickerSec) restUI.pickerSec.value = String(v);
+    if (restUI.pickerValue) restUI.pickerValue.textContent = fmtClock(v);
+  }
+
+  function openRestPicker(){
+    if (!restUI.picker) return;
+    const v = loadRestPreset();
+    setPickerValue(v);
+    restUI.picker.classList.add('is-open');
+    if (el.btnRest60) el.btnRest60.setAttribute('aria-expanded','true');
+  }
+
+  function closeRestPicker(){
+    if (!restUI.picker) return;
+    restUI.picker.classList.remove('is-open');
+    if (el.btnRest60) el.btnRest60.setAttribute('aria-expanded','false');
+  }
+
+  function toggleRestPicker(){
+    if (!restUI.picker) return;
+    if (restUI.picker.classList.contains('is-open')) closeRestPicker();
+    else openRestPicker();
   }
 
   function stopRest(){
@@ -1661,44 +1699,47 @@ for (const ex of exercises) {
     render();
   });
 
-  // Rest timer: short tap -> start with preset; long press -> change preset (up to 3m)
+  // Rest timer: user can pick any duration from 0:01 to 5:00.
+  // Click the Rest button to open the picker; Start inside picker begins the timer.
   (function initRestButton(){
     if (!el.btnRest60) return;
     labelRestButton();
-    let holdT = null;
-    let held = false;
-    const HOLD_MS = 520;
 
-    const cyclePreset = ()=>{
-      const cur = loadRestPreset();
-      const idx = Math.max(0, REST_PRESETS.indexOf(cur));
-      const next = REST_PRESETS[(idx + 1) % REST_PRESETS.length];
-      saveRestPreset(next);
+    // Wire picker inputs
+    const syncFrom = (sec)=>{
+      const v = Math.min(REST_MAX, Math.max(REST_MIN, sec|0));
+      setPickerValue(v);
+      saveRestPreset(v);
       labelRestButton();
-      // small visual nudge
-      try{
-        el.btnRest60.classList.remove("w3-bump");
-        void el.btnRest60.offsetWidth;
-        el.btnRest60.classList.add("w3-bump");
-      }catch(_){ }
-      try{ if (navigator.vibrate) navigator.vibrate(15); }catch(_){ }
     };
 
-    el.btnRest60.addEventListener("pointerdown", ()=>{
-      held = false;
-      if (holdT) clearTimeout(holdT);
-      holdT = setTimeout(()=>{ held = true; cyclePreset(); }, HOLD_MS);
+    restUI.pickerRange?.addEventListener('input', (e)=>{
+      syncFrom(parseInt(e.target.value, 10));
     });
-    const clearHold = ()=>{ if (holdT) { clearTimeout(holdT); holdT = null; } };
-    el.btnRest60.addEventListener("pointerup", clearHold);
-    el.btnRest60.addEventListener("pointercancel", clearHold);
-    el.btnRest60.addEventListener("pointerleave", clearHold);
+    restUI.pickerSec?.addEventListener('input', (e)=>{
+      syncFrom(parseInt(e.target.value, 10));
+    });
 
-    el.btnRest60.addEventListener("click", (e)=>{
-      // If long-press already triggered, don't also start the timer
-      if (held) { e.preventDefault(); e.stopPropagation(); return; }
+    // Open/close
+    el.btnRest60.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      toggleRestPicker();
+    });
+    restUI.pickerClose?.addEventListener('click', closeRestPicker);
+
+    // Start rest from picker
+    restUI.pickerStart?.addEventListener('click', ()=>{
       const sec = loadRestPreset();
+      closeRestPicker();
       startRest(sec);
+    });
+
+    // Tap outside closes (but don't break other dialogs)
+    document.addEventListener('click', (e)=>{
+      if (!restUI.picker?.classList.contains('is-open')) return;
+      const within = e.target.closest('#w3RestPicker') || e.target.closest('#w3Rest60');
+      if (!within) closeRestPicker();
     });
 
     el.restStop?.addEventListener("click", stopRest);
