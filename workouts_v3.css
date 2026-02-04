@@ -1205,6 +1205,33 @@ body[data-theme="dark"]{
   flex-direction: column;
 }
 
+/* --- Dock cards: Templates / History (desktop) --- */
+.w3-dockNavCard{
+  cursor: pointer;
+  user-select: none;
+}
+.w3-dockNavCard:focus{
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(120, 120, 255, 0.35);
+}
+.w3-dockNavCard:hover{
+  transform: translateY(-1px);
+}
+.w3-dockBody{
+  padding-top: 10px;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+.w3-dockBig{
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+.w3-dockCta{
+  font-weight: 650;
+  opacity: 0.85;
+}
+
 /* Hide unused content container in empty state */
 .w3-page.is-empty #w3Content{
   display:none;
@@ -1511,6 +1538,13 @@ body[data-theme="dark"]{
     align-self: start;
   }
 
+  /* Stack the dock cards (Today summary + Templates + History) */
+  .w3-todayDock{
+    display:flex;
+    flex-direction:column;
+    gap: 16px;
+  }
+
   /* When empty, don't use sticky positioning (it creates a vertical offset vs the hero card).
      Keep it in normal flow so its top aligns with the empty card's top edge. */
   .w3-page.is-empty .w3-todayDock{
@@ -1578,6 +1612,33 @@ body[data-theme="dark"]{
 
   /* Give the left column cards a touch more breathing room */
   .w3-exCard{ margin-bottom: 18px; }
+}
+
+/* Dock navigation cards (desktop) */
+.w3-dockNavCard{
+  cursor: pointer;
+}
+.w3-dockNavCard:focus-visible{
+  outline: 2px solid rgba(255,255,255,0.35);
+  outline-offset: 2px;
+}
+.w3-dockBody{
+  padding-top: 8px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+.w3-dockBig{
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  opacity: 0.92;
+}
+.w3-dockCta{
+  font-weight: 600;
+  opacity: 0.65;
+}
+.w3-dockNavCard:hover .w3-dockCta{
+  opacity: 0.9;
 }
 
 /* ===== Mobile: keep bottom bar behavior ===== */

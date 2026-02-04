@@ -140,10 +140,20 @@ let currentTab = "today";
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
     // Only handle our workouts tab buttons / quick buttons
-    if (btn.classList.contains("w3-tabBtn") || btn.classList.contains("w3-emptyQuickBtn") || btn.classList.contains("w3-sideTile")){
+    if (btn.classList.contains("w3-tabBtn") || btn.classList.contains("w3-emptyQuickBtn") || btn.classList.contains("w3-sideTile") || btn.classList.contains("w3-dockNavCard")){
       const tab = btn.getAttribute("data-tab");
       if (tab) setTab(tab);
     }
+  });
+
+  // Keyboard accessibility for dock cards
+  document.addEventListener("keydown", (e)=>{
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const card = e.target?.closest?.(".w3-dockNavCard[data-tab]");
+    if (!card) return;
+    e.preventDefault();
+    const tab = card.getAttribute("data-tab");
+    if (tab) setTab(tab);
   });
 
   // Empty-state animation helpers (hero expand/collapse)
