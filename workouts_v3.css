@@ -1144,6 +1144,9 @@ body[data-theme="dark"]{
     position: sticky;
     top: 110px;
     align-self: start;
+  /* Align Today summary with the empty hero card top edge */
+  .w3-page.is-empty .w3-todayDock{ margin-top: 6px; }
+
   }
 
   /* When empty: keep the same 2-column layout so Today summary stays in the top-right,
@@ -1209,6 +1212,9 @@ body[data-theme="dark"]{
 
 /* ===== Mobile: keep bottom bar behavior ===== */
 @media (max-width: 1099px){
+  /* Mobile: nudge Today summary down a bit */
+  #w3RpToday{ margin-top: 10px; }
+
   .w3-page{ display: block; padding: 0; }
   .w3-bottomBar{
     position: sticky;

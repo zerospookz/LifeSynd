@@ -106,6 +106,25 @@ let currentTab = "today";
   }
 
 
+
+  function setTab(tab){
+    if (!tab) return;
+    currentTab = tab;
+    syncTabUI();
+    render();
+  }
+
+  // Tabs / quick-actions navigation
+  document.addEventListener("click", (e)=>{
+    const btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    // Only handle our workouts tab buttons / quick buttons
+    if (btn.classList.contains("w3-tabBtn") || btn.classList.contains("w3-emptyQuickBtn") || btn.classList.contains("w3-sideTile")){
+      const tab = btn.getAttribute("data-tab");
+      if (tab) setTab(tab);
+    }
+  });
+
   // Empty-state animation helpers (hero expand/collapse)
   let _emptyHideTimer = null;
   function showEmpty(){
@@ -765,8 +784,9 @@ let currentTab = "today";
     if (workoutClockInterval) { clearInterval(workoutClockInterval); workoutClockInterval = null; }
   }
 function render(){
-    // Force single-tab mode
-    currentTab = "today";
+    // Tab router (Today / History / Templates)
+    if (currentTab === "history"){ syncTabUI(); renderHistory(); return; }
+    if (currentTab === "templates"){ syncTabUI(); renderTemplates(); return; }
     if (!window.Workouts) {
       el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
       if (el.emptyWrap) el.emptyWrap.hidden = true;
@@ -1063,9 +1083,7 @@ for (const ex of exercises) {
       const id = openBtn.getAttribute("data-open-workout");
       if (id){
         setWorkoutId(id);
-        currentTab = "today";
-        syncTabUI();
-        render();
+        setTab("today");
       }
       return;
     }
