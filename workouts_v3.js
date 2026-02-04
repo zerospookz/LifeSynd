@@ -420,6 +420,8 @@ let currentTab = "today";
   }
 
   // Start drag from the three-dots handle (tap or hold)
+  // Hold-to-delete needs a non-passive listener so we can prevent default
+  // (avoids text selection / context menu on mobile) and capture the pointer.
   document.addEventListener('pointerdown', (e)=>{
     const handle = e.target.closest && e.target.closest('[data-action="ex-menu"]');
     if (!handle) return;
@@ -451,6 +453,10 @@ let currentTab = "today";
     if (holdDel.t) clearTimeout(holdDel.t);
     holdDel.t = null;
     if (holdDel.card) holdDel.card.classList.remove('w3-holdDelete');
+    // Release pointer capture if we took it.
+    try{
+      if (holdDel.card && holdDel.pointerId != null) holdDel.card.releasePointerCapture(holdDel.pointerId);
+    }catch(_){ }
     holdDel.pointerId = null;
     holdDel.card = null;
   }
@@ -466,11 +472,18 @@ let currentTab = "today";
     if (e.target.closest('[data-action="ex-menu"]')) return;
     if (drag.active) return;
 
+    // Prevent the browser from starting text selection or long-press menus.
+    // Also keep receiving pointer events even if the finger leaves the element.
+    try{ e.preventDefault(); }catch(_){ }
+    try{ e.stopPropagation(); }catch(_){ }
+
     holdDel.pointerId = e.pointerId;
     holdDel.card = card;
     holdDel.startX = e.clientX;
     holdDel.startY = e.clientY;
     card.classList.add('w3-holdDelete');
+
+    try{ card.setPointerCapture(e.pointerId); }catch(_){ }
 
     holdDel.t = setTimeout(()=>{
       const id = card.dataset.exerciseId;
@@ -480,7 +493,7 @@ let currentTab = "today";
       clearHoldDelete();
       render();
     }, 2500);
-  }, { passive:true });
+  }, { passive:false });
 
   document.addEventListener('pointermove', (e)=>{
     if (!holdDel.card) return;
@@ -488,12 +501,12 @@ let currentTab = "today";
     const dx = Math.abs(e.clientX - holdDel.startX);
     const dy = Math.abs(e.clientY - holdDel.startY);
     if (dx > 10 || dy > 10) clearHoldDelete();
-  }, { passive:true });
+  }, { passive:false });
 
   document.addEventListener('pointerup', (e)=>{
     if (holdDel.pointerId !== null && e.pointerId !== holdDel.pointerId) return;
     clearHoldDelete();
-  }, { passive:true });
+  }, { passive:false });
 
   document.addEventListener('pointercancel', ()=>{ clearHoldDelete(); }, { passive:true });
 
