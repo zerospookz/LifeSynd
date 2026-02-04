@@ -1132,18 +1132,19 @@ body[data-theme="dark"]{
     align-self: start;
   }
 
-  /* When empty: use a single wide column and place Today summary to the RIGHT of the empty hero card */
+  /* When empty: keep the same 2-column layout so Today summary stays in the top-right,
+     aligned with the empty state card (same as when there are exercises). */
   .w3-page.is-empty{
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(760px, 1fr) 380px;
   }
-  .w3-page.is-empty .w3-todayDock{ display:none; }
   .w3-emptyWrap{
     display:flex;
-    align-items:center;
-    justify-content:center;
+    align-items:flex-start;
+    justify-content:flex-start;
     gap: 26px;
-    min-height: 72vh;
+    min-height: auto;
     width: 100%;
+    padding-top: 6px;
   }
   .w3-emptySide{
     width: 320px;
@@ -1182,8 +1183,8 @@ body[data-theme="dark"]{
   }
   .w3-emptyQuickBtn:active{ transform: translateY(0px); }
 
-  /* Desktop: remove the old right-side tiles/actions block (kept in DOM for JS, but hidden) */
-  .w3-tabs{ display:none; }
+  /* Desktop: keep the top tabs as the only navigation between Today/History/Templates */
+  .w3-tabs{ display:flex; }
   .w3-bottomBar{ display:none !important; }
   .w3-sideTiles{ display:none !important; }
   .w3-rpActions{ display:none !important; }
@@ -1318,7 +1319,8 @@ body[data-theme="dark"]{
   }
   /* Ensure action buttons are visible on mobile */
   .w3-rpActions{ display:flex !important; flex-wrap: wrap; }
-  .w3-sideTiles{ display:flex !important; flex-wrap: wrap; }
+  /* Hide duplicate Today/History/Templates tiles in the bottom bar (tabs are shown at the top) */
+  .w3-sideTiles{ display:none !important; }
   /* Give the scroll area room so the bottom bar doesn't cover the last set */
   #w3Content{ padding-bottom: 90px; }
 }
