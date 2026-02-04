@@ -157,25 +157,83 @@ body.w3-isReordering{
   touch-action: pan-y;
 }
 
-/* Hold-to-delete progress (2.5s) shown only while holding in the safe zone */
-.w3-exCard.w3-holdDelete .w3-exHoldZone::after{
-  content:"";
+/* Subtle delete affordance (safe-zone only): trash icon + progress ring.
+   - visible but quiet (so the user discovers it)
+   - fills ONLY while holding (2.5s) */
+.w3-delHint{
   position:absolute;
-  left:0;
-  right:0;
-  bottom:-6px;
-  height:3px;
-  border-radius: 999px;
-  background: rgba(239,68,68,.55);
-  transform-origin:left center;
-  transform: scaleX(0);
-  animation: w3HoldDeleteFill 2.5s linear forwards;
-  filter: blur(.0px);
+  top: 2px;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  display:grid;
+  place-items:center;
+  /* Hidden by default; shown on hover (desktop) or while holding (mobile/desktop) */
+  opacity: 0;
+  transform: translateY(1px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events:none;
+  animation: none;
 }
 
-@keyframes w3HoldDeleteFill{
-  from{ transform: scaleX(0); opacity:.65; }
-  to{ transform: scaleX(1); opacity:1; }
+.w3-exHoldZone:hover .w3-delHint,
+.w3-exHoldZone:focus-within .w3-delHint{
+  opacity: .55;
+  transform: translateY(0);
+  animation: w3DelHintPulse 10s ease-in-out infinite;
+}
+
+@keyframes w3DelHintPulse{
+  0%, 86%, 100%{ opacity:.32; }
+  90%{ opacity:.62; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .w3-delHint{ animation: none; }
+}
+
+.w3-delIcon{
+  font-size: 12px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 10px rgba(0,0,0,.25));
+}
+
+.w3-delRing{
+  position:absolute;
+  inset: 0;
+}
+
+.w3-delRingTrack{
+  fill: none;
+  stroke: rgba(255,255,255,.14);
+  stroke-width: 2.2;
+}
+
+.w3-delRingProg{
+  fill: none;
+  stroke: rgba(239,68,68,.75);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  /* circumference for r=9 is ~56.55 */
+  stroke-dasharray: 56.55;
+  stroke-dashoffset: 56.55;
+  transform: rotate(-90deg);
+  transform-origin: 12px 12px;
+}
+
+/* While holding: make the affordance obvious + animate the ring fill */
+.w3-exCard.w3-holdDelete .w3-delHint{
+  opacity: .95;
+  transform: translateY(0) scale(1.03);
+}
+
+.w3-exCard.w3-holdDelete .w3-delRingProg{
+  animation: w3DelRingFill 2.5s linear forwards;
+}
+
+@keyframes w3DelRingFill{
+  from{ stroke-dashoffset: 56.55; }
+  to{ stroke-dashoffset: 0; }
 }
 
 .w3-hSection{
@@ -1238,8 +1296,8 @@ body[data-theme="dark"]{
 
   /* Desktop empty state: visually center Today summary alongside the large empty card */
   .w3-page.is-empty .w3-emptyWrap{
-    align-items: center;
-    padding-top: 0;
+    align-items: flex-start;
+    padding-top: 6px;
   }
 
   /* Keep both columns aligned: start the right dock on the same row as the workout canvas */
@@ -1270,10 +1328,10 @@ body[data-theme="dark"]{
     position: sticky;
     top: 110px;
     align-self: start;
+  }
+
   /* Align Today summary with the empty hero card top edge */
   .w3-page.is-empty .w3-todayDock{ margin-top: 6px; }
-
-  }
 
   /* When empty: keep the same 2-column layout so Today summary stays in the top-right,
      aligned with the empty state card (same as when there are exercises). */

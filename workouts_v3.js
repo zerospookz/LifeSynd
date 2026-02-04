@@ -152,10 +152,8 @@ let currentTab = "today";
     if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
     // Show wrapper
     if (el.emptyWrap) el.emptyWrap.hidden = false;
-    // Move Today summary to the LEFT of the empty hero card
-    if (el.rpToday && el.emptySide && !el.emptySide.contains(el.rpToday)){
-      el.emptySide.insertBefore(el.rpToday, el.emptySide.firstChild);
-    }
+    // Keep Today summary in the right dock on desktop (same placement as non-empty).
+    // This avoids layout jumps and keeps alignment consistent.
     // next frame so transitions apply
     requestAnimationFrame(()=> el.page?.classList.add("is-empty"));
   }
@@ -164,10 +162,6 @@ let currentTab = "today";
     if (!el.emptyWrap || el.emptyWrap.hidden) return;
     if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
     _emptyHideTimer = setTimeout(()=>{
-      // Move Today summary back to the right utility column
-      if (el.rpToday && el.todayDock && !el.todayDock.contains(el.rpToday)){
-        el.todayDock.appendChild(el.rpToday);
-      }
       if (el.emptyWrap) el.emptyWrap.hidden = true;
     }, 280);
   }
@@ -1122,6 +1116,13 @@ for (const ex of exercises) {
         <div class="w3-exHeader">
           <div class="w3-exHoldZone" data-hold-delete="1" title="Hold 2.5s to delete">
             <div class="w3-hSection">${esc(ex.name || "Exercise")}</div>
+            <div class="w3-delHint" aria-hidden="true">
+              <span class="w3-delIcon">🗑️</span>
+              <svg class="w3-delRing" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <circle class="w3-delRingTrack" cx="12" cy="12" r="9"></circle>
+                <circle class="w3-delRingProg" cx="12" cy="12" r="9"></circle>
+              </svg>
+            </div>
             ${ex.notes ? `<div class="w3-exSub">${esc(ex.notes)}</div>` : ``}
           </div>
           <button class="w3-iconBtn w3-exMenuBtn" data-action="ex-menu" aria-label="Reorder exercise">⋮</button>
