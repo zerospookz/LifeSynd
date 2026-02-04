@@ -507,8 +507,14 @@ body[data-theme="dark"]{
 /* ===== Tabs (Today / History / Templates) ===== */
 /* Hide tabs entirely (user request) */
 .w3-tabs{
-  display:none !important;
+  display:flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
 }
+
+/* Mobile: tabs are shown at the top; hide the duplicated bottom tiles */
+.w3-sideTiles{ display:none !important; }
 .w3-tabBtn{
   flex:1;
   border-radius: 999px;
