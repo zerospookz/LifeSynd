@@ -581,19 +581,21 @@ body.w3-isReordering{
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   pointer-events: none;
   text-align: center;
 }
 
 .w3-restTime{
   font-size: 16px;
-  line-height: 1;
+  line-height: 1.05;
   letter-spacing: 0.6px;
+  font-variant-numeric: tabular-nums;
 }
 
 .w3-restLabel{
-  margin-top: 4px;
   font-size: 9px;
+  line-height: 1;
   letter-spacing: 2.0px;
   text-transform: uppercase;
   color: rgba(255,255,255,0.62);
@@ -666,6 +668,9 @@ body.w3-isReordering{
 @media (max-width: 700px){
   .w3-restClock{ right: 12px; bottom: 92px; padding: 12px; grid-template-columns: 68px 1fr auto; }
   .w3-restDial, .w3-restRing{ width: 68px; height: 68px; }
+  .w3-restCenter{ gap: 2px; }
+  .w3-restTime{ font-size: 15px; }
+  .w3-restLabel{ font-size: 8px; }
   .w3-restMeta{ min-width: 120px; }
   .w3-restMetaHint{ display:none; }
 }

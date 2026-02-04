@@ -1169,7 +1169,7 @@ for (const ex of exercises) {
 
         ${isReadOnly ? "" : `<div class="w3-exActions" ${String(ex.id)!==String(activeExerciseId) ? "hidden" : ""}>
           <button class="w3-btnPrimary w3-exAction" data-action="start-workout" ${workout.status==="in_progress" ? "disabled" : ""}>${workout.status==="in_progress" ? "Started" : "Start"}</button>
-          <button class="w3-btnSecondary w3-exAction" data-action="rest-60">Rest 60s</button>
+          <button class="w3-btnSecondary w3-exAction" data-action="rest">Rest ${fmtClock(loadRestPreset())}</button>
         </div>`}
 
         <div class="w3-setLabels" aria-hidden="true">
@@ -1461,8 +1461,10 @@ for (const ex of exercises) {
       render();
       return;
     }
-    if (action === "rest-60") {
-      startRest(60);
+    if (action === "rest") {
+      // For in-card rest, open the picker so the user can pick 0:01..5:00.
+      // The Start button inside the picker will begin the timer.
+      openRestPicker();
       return;
     }
 
@@ -1711,6 +1713,12 @@ for (const ex of exercises) {
       setPickerValue(v);
       saveRestPreset(v);
       labelRestButton();
+      // Also update any in-card Rest buttons without forcing a full rerender.
+      try{
+        document.querySelectorAll('.w3-exAction[data-action="rest"]').forEach(b=>{
+          b.textContent = `Rest ${fmtClock(v)}`;
+        });
+      }catch(_){ }
     };
 
     restUI.pickerRange?.addEventListener('input', (e)=>{
