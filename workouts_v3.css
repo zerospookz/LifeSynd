@@ -164,8 +164,8 @@ body.w3-isReordering{
   position:absolute;
   top: 2px;
   right: 0;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   display:grid;
   place-items:center;
   /* Hidden by default; shown on hover (desktop) or while holding (mobile/desktop) */
@@ -176,9 +176,21 @@ body.w3-isReordering{
   animation: none;
 }
 
+/* Glass blur background behind the ring (only becomes visible while holding). */
+.w3-delGlass{
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  opacity: 0;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: opacity 180ms ease, backdrop-filter 420ms ease, -webkit-backdrop-filter 420ms ease;
+}
+
 .w3-exHoldZone:hover .w3-delHint,
 .w3-exHoldZone:focus-within .w3-delHint{
-  opacity: .55;
+  opacity: .78;
   transform: translateY(0);
   animation: w3DelHintPulse 10s ease-in-out infinite;
 }
@@ -193,7 +205,7 @@ body.w3-isReordering{
 }
 
 .w3-delIcon{
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1;
   filter: drop-shadow(0 2px 10px rgba(0,0,0,.25));
 }
@@ -205,14 +217,14 @@ body.w3-isReordering{
 
 .w3-delRingTrack{
   fill: none;
-  stroke: rgba(255,255,255,.14);
-  stroke-width: 2.2;
+  stroke: rgba(255,255,255,.20);
+  stroke-width: 3;
 }
 
 .w3-delRingProg{
   fill: none;
-  stroke: rgba(239,68,68,.75);
-  stroke-width: 2.2;
+  stroke: rgba(255,107,107,.92);
+  stroke-width: 3.6;
   stroke-linecap: round;
   /* circumference for r=9 is ~56.55 */
   stroke-dasharray: 56.55;
@@ -225,6 +237,17 @@ body.w3-isReordering{
 .w3-exCard.w3-holdDelete .w3-delHint{
   opacity: .95;
   transform: translateY(0) scale(1.03);
+}
+
+/* On hold: activate the glass blur + add a subtle glow so the affordance is obvious. */
+.w3-exCard.w3-holdDelete .w3-delGlass{
+  opacity: 1;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.w3-exCard.w3-holdDelete .w3-delRingProg{
+  filter: drop-shadow(0 0 8px rgba(255,107,107,0.55));
 }
 
 .w3-exCard.w3-holdDelete .w3-delRingProg{
@@ -1330,8 +1353,13 @@ body[data-theme="dark"]{
     align-self: start;
   }
 
-  /* Align Today summary with the empty hero card top edge */
-  .w3-page.is-empty .w3-todayDock{ margin-top: 6px; }
+  /* When empty, don't use sticky positioning (it creates a vertical offset vs the hero card).
+     Keep it in normal flow so its top aligns with the empty card's top edge. */
+  .w3-page.is-empty .w3-todayDock{
+    position: relative;
+    top: 0;
+    margin-top: 0;
+  }
 
   /* When empty: keep the same 2-column layout so Today summary stays in the top-right,
      aligned with the empty state card (same as when there are exercises). */

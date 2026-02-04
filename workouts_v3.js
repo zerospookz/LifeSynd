@@ -1117,6 +1117,7 @@ for (const ex of exercises) {
           <div class="w3-exHoldZone" data-hold-delete="1" title="Hold 2.5s to delete">
             <div class="w3-hSection">${esc(ex.name || "Exercise")}</div>
             <div class="w3-delHint" aria-hidden="true">
+              <div class="w3-delGlass" aria-hidden="true"></div>
               <span class="w3-delIcon">🗑️</span>
               <svg class="w3-delRing" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                 <circle class="w3-delRingTrack" cx="12" cy="12" r="9"></circle>
