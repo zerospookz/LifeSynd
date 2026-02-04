@@ -166,6 +166,8 @@ let currentTab = "today";
 
   // Increment 3: Rest timer (persisted)
   const REST_KEY = "w3_restTimer_v1";
+  const REST_PRESET_KEY = "w3_restPresetSec_v1";
+  const REST_PRESETS = [30, 60, 90, 120, 180]; // up to 3 minutes
   let restInterval = null;
   // SVG ring math (r=40 in workouts.html -> circumference ≈ 251.2)
   const REST_RING_R = 40;
@@ -195,6 +197,32 @@ let currentTab = "today";
     return `${mm}:${ss}`;
   }
 
+  function loadRestPreset(){
+    try{
+      const raw = localStorage.getItem(REST_PRESET_KEY);
+      const n = parseInt(raw || "", 10);
+      if (!Number.isFinite(n) || n <= 0) return 60;
+      // Clamp to supported presets
+      const closest = REST_PRESETS.reduce((best, cur)=>{
+        return (Math.abs(cur - n) < Math.abs(best - n)) ? cur : best;
+      }, REST_PRESETS[0]);
+      return closest;
+    }catch(_){
+      return 60;
+    }
+  }
+
+  function saveRestPreset(sec){
+    try{ localStorage.setItem(REST_PRESET_KEY, String(sec|0)); }catch(_){ }
+  }
+
+  function labelRestButton(){
+    if (!el.btnRest60) return;
+    const sec = loadRestPreset();
+    // Show as mm:ss but keep the compact "Rest" intent
+    el.btnRest60.textContent = `Rest ${fmtClock(sec)}`;
+  }
+
   function startRest(seconds){
     const now = Date.now();
     const totalSec = Math.max(1, seconds|0);
@@ -211,6 +239,10 @@ let currentTab = "today";
   function showRest(){
     if (!el.restTimer) return;
     el.restTimer.hidden = false;
+    // Smooth enter animation
+    el.restTimer.classList.remove("w3-restDone", "w3-restUrgent");
+    el.restTimer.classList.remove("is-on");
+    requestAnimationFrame(()=>{ try{ el.restTimer.classList.add("is-on"); }catch(_){ } });
     // Prime ring values (in case first tick takes a moment)
     if (el.restProgress){
       el.restProgress.style.strokeDasharray = String(REST_CIRC);
@@ -223,8 +255,13 @@ let currentTab = "today";
 
   function hideRest(){
     if (!el.restTimer) return;
-    el.restTimer.hidden = true;
-    el.restTimer.classList.remove("w3-restDone");
+    // Fade out
+    el.restTimer.classList.remove("is-on");
+    el.restTimer.classList.remove("w3-restDone", "w3-restUrgent");
+    setTimeout(()=>{
+      if (!el.restTimer) return;
+      el.restTimer.hidden = true;
+    }, 180);
     if (el.restProgress){
       el.restProgress.style.strokeDashoffset = "0";
     }
@@ -236,6 +273,12 @@ let currentTab = "today";
     if (!st || !st.endAt) { hideRest(); return; }
     const remaining = Math.max(0, Math.ceil((st.endAt - Date.now())/1000));
     if (el.restTime) el.restTime.textContent = fmtClock(remaining);
+
+    // Last-seconds urgency animation
+    if (el.restTimer){
+      if (remaining > 0 && remaining <= 5) el.restTimer.classList.add("w3-restUrgent");
+      else el.restTimer.classList.remove("w3-restUrgent");
+    }
 
     // Update analog ring (1 = full remaining, 0 = done)
     if (el.restProgress){
@@ -810,6 +853,7 @@ function render(){
     // show workout controls only in Today tab
     el.btnAddExercise.style.display = "";
     el.btnRest60.style.display = "";
+    labelRestButton();
     el.btnStart.style.display = "";
     el.btnFinish.style.display = "";
     // Primary: planned -> Start (bottom), in_progress -> Finish (top), done -> hide both
@@ -1394,6 +1438,49 @@ for (const ex of exercises) {
     safe(()=>Workouts.finishWorkout(w.id), null);
     render();
   });
+
+  // Rest timer: short tap -> start with preset; long press -> change preset (up to 3m)
+  (function initRestButton(){
+    if (!el.btnRest60) return;
+    labelRestButton();
+    let holdT = null;
+    let held = false;
+    const HOLD_MS = 520;
+
+    const cyclePreset = ()=>{
+      const cur = loadRestPreset();
+      const idx = Math.max(0, REST_PRESETS.indexOf(cur));
+      const next = REST_PRESETS[(idx + 1) % REST_PRESETS.length];
+      saveRestPreset(next);
+      labelRestButton();
+      // small visual nudge
+      try{
+        el.btnRest60.classList.remove("w3-bump");
+        void el.btnRest60.offsetWidth;
+        el.btnRest60.classList.add("w3-bump");
+      }catch(_){ }
+      try{ if (navigator.vibrate) navigator.vibrate(15); }catch(_){ }
+    };
+
+    el.btnRest60.addEventListener("pointerdown", ()=>{
+      held = false;
+      if (holdT) clearTimeout(holdT);
+      holdT = setTimeout(()=>{ held = true; cyclePreset(); }, HOLD_MS);
+    });
+    const clearHold = ()=>{ if (holdT) { clearTimeout(holdT); holdT = null; } };
+    el.btnRest60.addEventListener("pointerup", clearHold);
+    el.btnRest60.addEventListener("pointercancel", clearHold);
+    el.btnRest60.addEventListener("pointerleave", clearHold);
+
+    el.btnRest60.addEventListener("click", (e)=>{
+      // If long-press already triggered, don't also start the timer
+      if (held) { e.preventDefault(); e.stopPropagation(); return; }
+      const sec = loadRestPreset();
+      startRest(sec);
+    });
+
+    el.restStop?.addEventListener("click", stopRest);
+  })();
 
   // Right panel actions
   el.rpStartSuggested?.addEventListener("click", ()=>{
