@@ -164,10 +164,6 @@ let currentTab = "today";
 
   // Empty-state animation helpers (hero expand/collapse)
   let _emptyHideTimer = null;
-  // Track the RAF used to add .is-empty so we can cancel it if the user
-  // navigates away before it runs (otherwise the empty overlay can reappear
-  // and hide Templates/History until refresh).
-  let _emptyRAF = null;
   function showEmpty(){
     if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
     // Show wrapper
@@ -175,15 +171,9 @@ let currentTab = "today";
     // Keep Today summary in the right dock on desktop (same placement as non-empty).
     // This avoids layout jumps and keeps alignment consistent.
     // next frame so transitions apply
-    if (_emptyRAF) cancelAnimationFrame(_emptyRAF);
-    _emptyRAF = requestAnimationFrame(()=>{
-      _emptyRAF = null;
-      // Only apply the empty overlay if we're still on Today.
-      if (currentTab === "today") el.page?.classList.add("is-empty");
-    });
+    requestAnimationFrame(()=> el.page?.classList.add("is-empty"));
   }
   function hideEmptyAnimated(){
-    if (_emptyRAF){ cancelAnimationFrame(_emptyRAF); _emptyRAF = null; }
     el.page?.classList.remove("is-empty");
     if (!el.emptyWrap || el.emptyWrap.hidden) return;
     if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
@@ -263,6 +253,18 @@ let currentTab = "today";
     const sec = loadRestPreset();
     // Show as mm:ss but keep the compact "Rest" intent
     el.btnRest60.textContent = `Rest ${fmtClock(sec)}`;
+  }
+
+  // Start rest from the user's preset immediately.
+  // Use modifier keys (Shift/Alt/Ctrl/Meta) to open the picker instead.
+  function handleRestPrimaryClick(e){
+    try{
+      if (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey)){
+        openRestPicker();
+        return;
+      }
+    }catch(_){ }
+    startRest(loadRestPreset());
   }
 
   function startRest(seconds){
@@ -745,7 +747,6 @@ let currentTab = "today";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
     // Leaving Today should fully exit the empty-state visual mode.
-    if (_emptyRAF){ cancelAnimationFrame(_emptyRAF); _emptyRAF = null; }
     el.page?.classList.remove("is-empty");
     if (el.emptyWrap) el.emptyWrap.hidden = true;
 
@@ -832,7 +833,6 @@ let currentTab = "today";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
     // Leaving Today should fully exit the empty-state visual mode.
-    if (_emptyRAF){ cancelAnimationFrame(_emptyRAF); _emptyRAF = null; }
     el.page?.classList.remove("is-empty");
     if (el.emptyWrap) el.emptyWrap.hidden = true;
 
@@ -1500,9 +1500,9 @@ for (const ex of exercises) {
       return;
     }
     if (action === "rest") {
-      // For in-card rest, open the picker so the user can pick 0:01..5:00.
-      // The Start button inside the picker will begin the timer.
-      openRestPicker();
+      // In-card Rest should start immediately (users expect feedback).
+      // Hold a modifier key to open the picker and change duration.
+      handleRestPrimaryClick(null);
       return;
     }
 
@@ -1770,7 +1770,8 @@ for (const ex of exercises) {
     el.btnRest60.addEventListener('click', (e)=>{
       e.preventDefault();
       e.stopPropagation();
-      toggleRestPicker();
+      // Start immediately; use modifier keys to open picker.
+      handleRestPrimaryClick(e);
     });
     restUI.pickerClose?.addEventListener('click', closeRestPicker);
 
