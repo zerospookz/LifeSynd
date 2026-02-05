@@ -2177,3 +2177,58 @@ body[data-theme="dark"]{
   #w3RpToday .w3-rpStatLabel{ font-size: 11px; opacity: .7; }
   #w3RpToday .w3-rpStatVal{ font-size: 20px; }
 }
+
+/* =========================================================
+   Desktop dock layout should activate earlier.
+   The app has a persistent left sidebar, so many "big screen"
+   windows still end up below 900px viewport width.
+   Enable the 2-column (canvas + dock) layout from 760px up.
+   This overrides the mobile rules (max-width: 899px) below.
+   ========================================================= */
+@media (min-width: 760px){
+  .w3-page{
+    max-width: 1600px;
+    padding: 0 18px 24px;
+    display: grid;
+    grid-template-columns: minmax(520px, 1fr) 360px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* Keep both columns aligned */
+  .w3-header{ grid-row: 1; }
+  .w3-meta{ grid-row: 2; }
+  .w3-tabs{ grid-row: 3; }
+  #w3Content,
+  #w3EmptyWrap{ grid-row: 4; }
+
+  /* Left column */
+  .w3-header,
+  .w3-meta,
+  .w3-tabs,
+  #w3Content,
+  #w3EmptyWrap,
+  #w3Empty{ grid-column: 1; }
+
+  /* Hide the mobile bottom bar in dock mode */
+  .w3-bottomBar{ display:none !important; }
+
+  /* Right dock column */
+  .w3-todayDock{
+    display:flex;
+    flex-direction:column;
+    gap: 16px;
+    grid-column: 2;
+    grid-row: 4;
+    position: sticky;
+    top: 110px;
+    align-self: start;
+  }
+
+  /* Empty state: keep dock aligned with the hero card */
+  .w3-page.is-empty .w3-todayDock{
+    position: relative;
+    top: 0;
+    margin-top: 0;
+  }
+}
