@@ -154,7 +154,11 @@
 <div class="w3-restPicker" id="w3RestPicker" role="dialog" aria-modal="false" aria-label="Rest duration">
   <div class="w3-restPickerTop">
     <div class="w3-restPickerTitle">Rest duration</div>
-    <div class="w3-restPickerValue" id="w3RestPickerValue">01:00</div>
+    <div class="w3-restPickerStepper" role="group" aria-label="Adjust rest duration">
+      <button class="w3-restPickerStep" id="w3RestMinus" type="button" aria-label="Decrease rest">−</button>
+      <div class="w3-restPickerValue" id="w3RestPickerValue">01:00</div>
+      <button class="w3-restPickerStep" id="w3RestPlus" type="button" aria-label="Increase rest">+</button>
+    </div>
     <button class="w3-restPickerClose" id="w3RestPickerClose" type="button" aria-label="Close">✕</button>
   </div>
   <div class="w3-restPickerRow">

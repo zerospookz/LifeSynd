@@ -716,6 +716,30 @@ body.w3-isReordering{
   color: rgba(255,255,255,0.92);
 }
 
+.w3-restPickerStepper{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.w3-restPickerStep{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,0.95);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  display:grid;
+  place-items:center;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .12s ease, filter .12s ease;
+}
+
+.w3-restPickerStep:hover{ filter: brightness(1.06); }
+.w3-restPickerStep:active{ transform: translateY(1px) scale(.98); }
+
 .w3-restPickerValue{
   font-variant-numeric: tabular-nums;
   font-weight: 900;
@@ -1365,6 +1389,29 @@ body[data-theme="dark"]{
     radial-gradient(circle at 85% 74%, rgba(129,140,248,.12) 0 2px, transparent 3px);
   opacity: .55;
   pointer-events:none;
+}
+
+/* Empty state polish: a very subtle "living" background on capable devices */
+@media (prefers-reduced-motion: no-preference){
+  #w3Page.is-empty .w3-empty::before{
+    animation: w3EmptyDotsDrift 18s linear infinite;
+  }
+  #w3Page.is-empty .w3-empty::after{
+    background-size: 200% 200%;
+    animation: w3EmptyGlowShift 12s ease-in-out infinite;
+  }
+}
+
+@keyframes w3EmptyDotsDrift{
+  0%{ transform: translate3d(0,0,0); opacity: .52; }
+  50%{ transform: translate3d(6px,-4px,0); opacity: .58; }
+  100%{ transform: translate3d(0,0,0); opacity: .52; }
+}
+
+@keyframes w3EmptyGlowShift{
+  0%{ background-position: 0% 50%; opacity: .32; }
+  50%{ background-position: 100% 50%; opacity: .38; }
+  100%{ background-position: 0% 50%; opacity: .32; }
 }
 
 /* outline glow */
