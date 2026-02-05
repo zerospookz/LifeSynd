@@ -1255,6 +1255,7 @@ let currentTab = "today";
     // personal first, then purchased
     return a.concat(b.filter(function(t){ return !a.find(function(x){ return x.id === t.id; }); }));
   }
+  }
 
 
   function liveDurationSec(workout){
@@ -1877,14 +1878,18 @@ for (const ex of exercises) {
       renderTemplates();
       return;
     }
-
+      alert("Purchased (mock). Template added to your library.");
+      templatePreviewId = null;
+      renderTemplates();
+      return;
+    }
 
     const card = act.closest(".w3-exCard");
-    const exerciseId = (card==null?undefined:card.dataset).exerciseId;
+    const exerciseId = (card && card.dataset) ? card.dataset.exerciseId : null;
 
     const setRow = act.closest(".w3-setRow");
-      const setId = (setRow && setRow.dataset) ? setRow.dataset.setId : undefined;
-    const exerciseName = (card==null?undefined:card.dataset).exerciseName || "";
+    const setId = (setRow && setRow.dataset) ? setRow.dataset.setId : null;
+    const exerciseName = (card && card.dataset && card.dataset.exerciseName) ? card.dataset.exerciseName : "";
 
     if (action === "start-workout") {
       const w = ensureWorkout();
@@ -1979,7 +1984,7 @@ for (const ex of exercises) {
     const row = inp.closest(".w3-setRow");
       const setId = (row && row.dataset) ? row.dataset.setId : undefined;
     const card = inp.closest(".w3-exCard");
-    const exerciseName = (card==null?undefined:card.dataset).exerciseName || "";
+    const exerciseName = (card && card.dataset && card.dataset.exerciseName) ? card.dataset.exerciseName : "";
     const field = inp.dataset.field;
     if (!setId || !field) return;
 
