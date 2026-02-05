@@ -1255,7 +1255,6 @@ let currentTab = "today";
     // personal first, then purchased
     return a.concat(b.filter(function(t){ return !a.find(function(x){ return x.id === t.id; }); }));
   }
-  }
 
 
   function liveDurationSec(workout){
