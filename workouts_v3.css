@@ -1548,8 +1548,11 @@ body[data-theme="dark"]{
   .w3-page{
     max-width: 1600px;
     padding: 0 18px 24px;
+  }
+
+  /* Desktop canvas: 2 columns (content left, dock right). */
+  .w3-mainGrid{
     display: grid;
-    /* Allow the dock layout to fit comfortably in narrower desktop windows */
     grid-template-columns: minmax(520px, 1fr) 360px;
     gap: 28px;
     align-items: start;
@@ -1561,41 +1564,17 @@ body[data-theme="dark"]{
     padding-top: 6px;
   }
 
-  /* Keep both columns aligned: start the right dock on the same row as the workout canvas */
-  .w3-header{ grid-row: 1; }
-  .w3-meta{ grid-row: 2; }
-  .w3-tabs{ grid-row: 3; }
-  #w3Content,
-  #w3EmptyWrap{ grid-row: 4; }
-
   /* Desktop: bottom bar is a mobile affordance; hide it and use the right utility column instead */
   .w3-bottomBar{ display:none !important; }
 
-  /* Keep main content in left column */
-  .w3-header,
-  .w3-meta,
-  .w3-tabs,
-  #w3Content,
-  #w3EmptyWrap,
-  #w3Empty{
-    grid-column: 1;
-  }
-
   /* Today Summary sits in the right column, next to the workout canvas */
-  .w3-todayDock{
-    display:block;
-    grid-column: 2;
-    grid-row: 4;
-    position: sticky;
-    top: 110px;
-    align-self: start;
-  }
-
-  /* Stack the dock cards (Today summary + Templates + History) */
   .w3-todayDock{
     display:flex;
     flex-direction:column;
     gap: 16px;
+    position: sticky;
+    top: 110px;
+    align-self: start;
   }
 
   /* When empty, don't use sticky positioning (it creates a vertical offset vs the hero card).
@@ -1608,9 +1587,7 @@ body[data-theme="dark"]{
 
   /* When empty: keep the same 2-column layout so Today summary stays in the top-right,
      aligned with the empty state card (same as when there are exercises). */
-  .w3-page.is-empty{
-    grid-template-columns: minmax(520px, 1fr) 360px;
-  }
+  /* Same 2-column layout when empty (handled by .w3-mainGrid). */
   /* Empty state: keep the large hero card in the LEFT column.
      The summary/templates/history column is handled by .w3-todayDock (RIGHT column).
      So we hide the legacy empty-side container to prevent the hero from shrinking. */
@@ -1649,8 +1626,8 @@ body[data-theme="dark"]{
   }
   .w3-emptyQuickBtn:active{ transform: translateY(0px); }
 
-  /* Desktop: keep the top tabs as the only navigation between Today/History/Templates */
-  .w3-tabs{ display:flex; }
+  /* Desktop: tabs are a mobile-only affordance. Open History/Templates from the dock cards instead. */
+  .w3-tabs{ display:none; }
   .w3-bottomBar{ display:none !important; }
   .w3-sideTiles{ display:none !important; }
   .w3-rpActions{ display:none !important; }
@@ -2222,30 +2199,22 @@ body[data-theme="dark"]{
    Enable the 2-column (canvas + dock) layout from 760px up.
    This overrides the mobile rules (max-width: 899px) below.
    ========================================================= */
-@media (min-width: 760px){
+@media (min-width: 640px){
   .w3-page{
     max-width: 1600px;
     padding: 0 18px 24px;
+  }
+
+  /* Desktop canvas: content left, dock right (works for both empty + non-empty). */
+  .w3-mainGrid{
     display: grid;
     grid-template-columns: minmax(520px, 1fr) 360px;
     gap: 28px;
     align-items: start;
   }
 
-  /* Keep both columns aligned */
-  .w3-header{ grid-row: 1; }
-  .w3-meta{ grid-row: 2; }
-  .w3-tabs{ grid-row: 3; }
-  #w3Content,
-  #w3EmptyWrap{ grid-row: 4; }
-
-  /* Left column */
-  .w3-header,
-  .w3-meta,
-  .w3-tabs,
-  #w3Content,
-  #w3EmptyWrap,
-  #w3Empty{ grid-column: 1; }
+  /* Tabs are mobile-only. On desktop, navigation comes from the dock cards. */
+  .w3-tabs{ display:none !important; }
 
   /* Hide the mobile bottom bar in dock mode */
   .w3-bottomBar{ display:none !important; }
@@ -2256,10 +2225,9 @@ body[data-theme="dark"]{
     flex-direction:column;
     gap: 16px;
     grid-column: 2;
-    grid-row: 4;
+    align-self: start;
     position: sticky;
     top: 110px;
-    align-self: start;
   }
 
   /* Empty state: keep dock aligned with the hero card */

@@ -44,9 +44,14 @@
 <button class="w3-tabBtn" data-tab="history" type="button">History</button>
 <button class="w3-tabBtn" data-tab="templates" type="button">Templates</button>
 </nav>
-<section id="w3Content"></section>
-<!-- Empty state layout (desktop): Today summary sits to the LEFT of the empty hero card -->
-<div class="w3-emptyWrap" hidden="" id="w3EmptyWrap">
+
+<!-- Main 2-column canvas (desktop): workout content on the left, dock on the right -->
+<div class="w3-mainGrid" id="w3MainGrid">
+  <div class="w3-mainCol">
+    <section id="w3Content"></section>
+
+    <!-- Empty state layout: lives in the left column so the dock can remain on the right -->
+    <div class="w3-emptyWrap" hidden="" id="w3EmptyWrap">
   <aside class="w3-emptySide" id="w3EmptySide">
     <!-- Today summary card will be moved here when empty (kept as a single source of truth) -->
     <div class="w3-emptyQuick" aria-label="Quick actions">
@@ -62,10 +67,11 @@
       <div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
     </div>
   </section>
-</div>
+    </div>
+  </div>
 
-<!-- Desktop utility column: Today Summary sits next to the workout canvas (and next to the empty add card when empty) -->
-<aside class="w3-todayDock" id="w3TodayDock">
+  <!-- Desktop utility column: Today Summary + Templates/History cards -->
+  <aside class="w3-todayDock" id="w3TodayDock">
   <section class="w3-rpCard" id="w3RpToday">
     <div class="w3-rpCardTop">
       <div class="w3-rpTitle">Today summary</div>
@@ -110,6 +116,7 @@
     </div>
   </section>
 </aside>
+</div>
 <footer class="w3-bottomBar">
 <div class="w3-rpStack" id="w3RightPanel">
 <section class="w3-rpCard" hidden="" id="w3RpNext">
