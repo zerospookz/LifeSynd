@@ -1262,7 +1262,6 @@ for (const ex of exercises) {
           <input class="w3-input" data-field="reps" inputmode="numeric" value="${escAttr(String(r))}" placeholder="reps" ${isReadOnly ? "disabled" : ""} />
 
           <div class="w3-hoverActions" aria-hidden="true">
-            <button class="w3-miniBtn" data-action="dup-set" title="Duplicate">Dup</button>
             <button class="w3-miniBtn danger" data-action="del-set" title="Delete">Del</button>
           </div>
         </div>
