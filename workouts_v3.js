@@ -173,12 +173,18 @@ let currentTab = "today";
     // Mobile tabs
     if (el.tabs){
       for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
-      do{ const _tab = el.tabs.querySelector(`[data-tab="${currentTab}"]`); if(_tab) _tab.classList.add("is-active"); }
+      {
+        const _tab = el.tabs.querySelector(`[data-tab="${currentTab}"]`);
+        if (_tab) _tab.classList.add("is-active");
+      }
     }
     // Desktop tiles
     if (el.sideTiles){
       for (const b of el.sideTiles.querySelectorAll(".w3-sideTile")) b.classList.remove("is-active");
-      do{ const _tile = el.sideTiles.querySelector(`[data-tab="${currentTab}"]`); if(_tile) _tile.classList.add("is-active"); }
+      {
+        const _tile = el.sideTiles.querySelector(`[data-tab="${currentTab}"]`);
+        if (_tile) _tile.classList.add("is-active");
+      }
     }
   }
 
