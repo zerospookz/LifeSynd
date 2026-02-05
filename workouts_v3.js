@@ -25,8 +25,6 @@
     planModalClose: $("#w3PlanModalClose"),
     planModalDate: $("#w3PlanModalDate"),
     planTpl: $("#w3PlanTpl"),
-    planCustomRow: $("#w3PlanCustomRow"),
-    planCustomName: $("#w3PlanCustomName"),
     planDay: $("#w3PlanDay"),
     planSave: $("#w3PlanSave"),
     planCancel: $("#w3PlanCancel"),
@@ -237,26 +235,14 @@ let currentTab = "today";
     }
     if (closestEl(e.target,"#w3PlanSave")){
       if (!_planModalDateIso) { closePlanModal(); return; }
-      const tid = el.planTpl ? el.planTpl.value : "";
-      const plan = getPlan();
-
-      // Custom workout (user-defined)
-      if (String(tid) === CUSTOM_TPL_ID){
-        const name = (el.planCustomName ? String(el.planCustomName.value||"") : "").trim();
-        plan[_planModalDateIso] = { type: "custom", title: name || "Custom workout" };
-        setPlan(plan);
-        closePlanModal();
-        renderWeekPlan();
-        return;
-      }
-
-      // Template-based plan
       const list = listMarket();
+      const tid = el.planTpl ? el.planTpl.value : "";
       const t = list.find(x=>String(x.id)===String(tid));
       const dayIdx = el.planDay ? parseInt(el.planDay.value||"0",10) : 0;
       const day = (t && Array.isArray(t.days)) ? (t.days[dayIdx] || t.days[0]) : null;
       const title = t ? String(t.title||t.id) : "Planned";
-      plan[_planModalDateIso] = { type: "template", templateId: tid, dayIdx: dayIdx, title: title + (day ? (" · " + (day.name||("Day "+(dayIdx+1)))) : ""), templateTitle: title };
+      const plan = getPlan();
+      plan[_planModalDateIso] = { templateId: tid, dayIdx: dayIdx, title: title + (day ? (" · " + (day.name||("Day "+(dayIdx+1)))) : "") , templateTitle: title };
       setPlan(plan);
       closePlanModal();
       renderWeekPlan();
@@ -722,7 +708,6 @@ let currentTab = "today";
   }
 
   let _planModalDateIso = null;
-  const CUSTOM_TPL_ID = "__custom__";
 
   function openPlanModal(dateIso){
     _planModalDateIso = dateIso;
@@ -730,40 +715,18 @@ let currentTab = "today";
     const d = new Date(dateIso+"T00:00:00");
     if (el.planModalDate) el.planModalDate.textContent = `${fmtDow(d)} · ${fmtMd(d)} · ${dateIso}`;
 
-    // Populate templates from market + a custom workout option
-    const market = listMarket();
-    const list = [{ id: CUSTOM_TPL_ID, title: "Custom workout…", days: [] }].concat(market);
+    // Populate templates from market (simple & always available)
+    const list = listMarket();
     const plan = getPlan();
     const cur = plan[dateIso] || null;
 
     if (el.planTpl){
       el.planTpl.innerHTML = list.map(t=>`<option value="${esc(String(t.id))}">${esc(String(t.title||t.id))}</option>`).join("");
-      if (cur && cur.type === "custom"){
-        el.planTpl.value = CUSTOM_TPL_ID;
-      } else if ((cur==null?undefined:cur.templateId)) {
-        el.planTpl.value = String(cur.templateId);
-      }
-    }
-
-    // Custom workout name
-    if (el.planCustomName && cur && cur.type === "custom"){
-      el.planCustomName.value = String(cur.title || "");
-    } else if (el.planCustomName){
-      el.planCustomName.value = "";
+      if ((cur==null?undefined:cur.templateId)) el.planTpl.value = String(cur.templateId);
     }
 
     function fillDays(){
       const tid = el.planTpl ? el.planTpl.value : "";
-      const isCustom = String(tid) === CUSTOM_TPL_ID;
-      if (el.planCustomRow) el.planCustomRow.hidden = !isCustom;
-      if (el.planDay){
-        el.planDay.disabled = isCustom;
-      }
-      if (isCustom){
-        if (el.planDay) el.planDay.innerHTML = `<option value="">—</option>`;
-        return;
-      }
-
       const t = list.find(x=>String(x.id)===String(tid));
       const days = (t && Array.isArray(t.days)) ? t.days : [];
       if (!el.planDay) return;
@@ -1070,6 +1033,7 @@ let currentTab = "today";
 
     const cats = `
       <div class="w4-range">
+        <button class="w4-pill ${templatesCat==="mine"?"is-active":""}" data-cat="mine" type="button">My templates</button>
         <button class="w4-pill ${templatesCat==="coach"?"is-active":""}" data-cat="coach" type="button">Coach Picks</button>
         <button class="w4-pill ${templatesCat==="push"?"is-active":""}" data-cat="push" type="button">Push</button>
         <button class="w4-pill ${templatesCat==="legs"?"is-active":""}" data-cat="legs" type="button">Legs</button>
@@ -1078,7 +1042,13 @@ let currentTab = "today";
       </div>
     `;
 
+        if (templatesCat === "mine") {
+      renderMyTemplates(cats);
+      return;
+    }
+
     const list = listMarket().filter(tagMatch);
+
 
     if (templatePreviewId){
       const t = listMarket().find(x=>x.id===templatePreviewId);
@@ -1153,16 +1123,138 @@ let currentTab = "today";
     `;
   }
 
-  // Add free template to user's templates store (simple v1)
-  const USER_TPL_KEY = "w3_user_templates_v1";
-  function addToUserTemplates(tpl){
+  
+  function renderMyTemplates(catsHtml){
+    const personal = listPersonalTemplates();
+    const purchased = listPurchasedTemplates();
+
+    // Save current workout as personal template (simple v1)
+    const w = ensureWorkout();
+    const exs = w ? (safe(function(){ return Workouts.listExercises(w.id); }, []) || []) : [];
+    const canSave = exs && exs.length;
+
+    const saveBtn = canSave
+      ? `<button class="w3-btnPrimary" data-action="tpl-save-personal" type="button">Save current workout as template</button>`
+      : `<button class="w3-btnPrimary" disabled type="button" title="Add exercises first">Save current workout as template</button>`;
+
+    function cardTpl(t, src, extraActions){
+      const pill = src === "personal"
+        ? `<span class="w4-free">PERSONAL</span>`
+        : `<span class="w4-price">PURCHASED</span>`;
+      return `
+        <div class="w4-tplCard">
+          <div class="w4-tplTop">
+            <div class="w4-tplTitle">${esc(t.title || t.name || "Template")}</div>
+            ${pill}
+          </div>
+          <div class="w4-tplSub">${src === "personal" ? "Your template" : "Purchased template"}</div>
+          <div class="w4-tplActions">
+            <button class="w3-btnSecondary" data-action="tpl-use" data-tpl-src="${escAttr(src)}" data-tpl-id="${escAttr(t.id)}" type="button">Use (Day 1)</button>
+            ${extraActions || ""}
+          </div>
+        </div>
+      `;
+    }
+
+    const personalHtml = personal.length
+      ? `<div class="w4-tplGrid">${personal.map(function(t){
+          return cardTpl(t, "personal", `<button class="w3-miniBtn" data-action="tpl-del-personal" data-tpl-id="${escAttr(t.id)}" type="button">Delete</button>`);
+        }).join("")}</div>`
+      : `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No personal templates</div><div class="w3-muted">Save a workout as a template to see it here.</div></div>`;
+
+    const purchasedHtml = purchased.length
+      ? `<div class="w4-tplGrid">${purchased.map(function(t){
+          return cardTpl(t, "purchased", "");
+        }).join("")}</div>`
+      : `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No purchased templates</div><div class="w3-muted">Buy templates in Coach Picks to add them here.</div></div>`;
+
+    el.content.innerHTML = catsHtml + `
+      <div style="display:flex;gap:12px;align-items:center;margin-top:12px;">
+        <div style="flex:1;">
+          <div style="font-weight:700;">My templates</div>
+          <div class="w3-muted" style="margin-top:2px;">Personal and purchased routines</div>
+        </div>
+        ${saveBtn}
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="font-weight:700;margin-bottom:8px;">Personal</div>
+        ${personalHtml}
+      </div>
+
+      <div style="margin-top:18px;">
+        <div style="font-weight:700;margin-bottom:8px;">Purchased</div>
+        ${purchasedHtml}
+      </div>
+    `;
+  }
+
+  function instantiateTemplateDay1(tpl){
+    if (!tpl) return;
+    const today = isoDate();
+    const day0 = (tpl.preview && tpl.preview.length) ? tpl.preview[0] : null;
+    const workoutName = (day0 && day0.name) ? day0.name : (tpl.title || tpl.name || "Workout");
+    const w = safe(function(){ return Workouts.createWorkout({ name: workoutName, date: today, templateId: tpl.id }); }, null);
+    if (!w) return;
+    if (w.id) setWorkoutId(w.id);
+
+    const exs = (day0 && day0.exercises) ? day0.exercises : [];
+    for (let i=0;i<exs.length;i++){
+      const ex = exs[i] || {};
+      const exName = ex.name || ("Exercise " + (i+1));
+      const exObj = safe(function(){ return Workouts.addExercise(w.id, { name: exName, order: i }); }, null);
+      if (!exObj || !exObj.id) continue;
+      const sets = Array.isArray(ex.sets) ? ex.sets : [];
+      for (let j=0;j<sets.length;j++){
+        const s = sets[j] || {};
+        safe(function(){
+          return Workouts.addSet(exObj.id, { weightKg: Number(s.weightKg||0), reps: Number(s.reps||0), completed:false });
+        }, null);
+      }
+    }
+
+    // Navigate to Today / Workouts view
+    activeTab = "today";
+    templatePreviewId = null;
+    render();
+  }
+
+// Template stores (purchased vs personal)
+  const USER_TPL_PURCHASED_KEY = "w3_templates_purchased_v1";
+  const USER_TPL_PERSONAL_KEY  = "w3_templates_personal_v1";
+
+  function _loadTplKey(key){
     try{
-      const raw = localStorage.getItem(USER_TPL_KEY);
+      const raw = localStorage.getItem(key);
       const arr = raw ? JSON.parse(raw) : [];
-      const list = Array.isArray(arr) ? arr : [];
-      if (!list.find(x=>x.id===tpl.id)) list.push(tpl);
-      localStorage.setItem(USER_TPL_KEY, JSON.stringify(list));
-    }catch(_){}
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function _saveTplKey(key, list){
+    try{ localStorage.setItem(key, JSON.stringify(list||[])); }catch(_){}
+  }
+
+  function addToPurchasedTemplates(tpl){
+    const list = _loadTplKey(USER_TPL_PURCHASED_KEY);
+    if (!list.find(function(x){ return x && x.id === tpl.id; })) list.push(tpl);
+    _saveTplKey(USER_TPL_PURCHASED_KEY, list);
+  }
+
+  function addToPersonalTemplates(tpl){
+    const list = _loadTplKey(USER_TPL_PERSONAL_KEY);
+    if (!list.find(function(x){ return x && x.id === tpl.id; })) list.push(tpl);
+    _saveTplKey(USER_TPL_PERSONAL_KEY, list);
+  }
+
+  function listPurchasedTemplates(){ return _loadTplKey(USER_TPL_PURCHASED_KEY); }
+  function listPersonalTemplates(){ return _loadTplKey(USER_TPL_PERSONAL_KEY); }
+
+  function listMyTemplates(){
+    const a = listPersonalTemplates();
+    const b = listPurchasedTemplates();
+    // personal first, then purchased
+    return a.concat(b.filter(function(t){ return !a.find(function(x){ return x.id === t.id; }); }));
+  }
   }
 
 
@@ -1716,17 +1808,76 @@ for (const ex of exercises) {
     }
     if (action === "tpl-add") {
       const id = act.getAttribute("data-tpl-id");
-      const tpl = listMarket().find(t=>t.id===id);
-      if (tpl){ addToUserTemplates(tpl); }
+      const tpl = listMarket().find(function(t){ return t.id===id; });
+      if (tpl){ addToPurchasedTemplates(tpl); instantiateTemplateDay1(tpl); }
       templatePreviewId = null;
       renderTemplates();
       return;
     }
     if (action === "tpl-buy") {
-      // mock purchase: unlock and add to user templates
+      // mock purchase: unlock and add to purchased templates, then auto-load Day 1
       const id = act.getAttribute("data-tpl-id");
-      const tpl = listMarket().find(t=>t.id===id);
-      if (tpl){ addToUserTemplates(tpl); }
+      const tpl = listMarket().find(function(t){ return t.id===id; });
+      if (tpl){ addToPurchasedTemplates(tpl); instantiateTemplateDay1(tpl); }
+      alert("Purchased (mock). Loaded Day 1 in Workouts.");
+      templatePreviewId = null;
+      renderTemplates();
+      return;
+    }
+    if (action === "tpl-use") {
+      const id = act.getAttribute("data-tpl-id");
+      const src = act.getAttribute("data-tpl-src") || "";
+      let tpl = null;
+      if (src === "personal") tpl = listPersonalTemplates().find(function(t){ return t.id===id; }) || null;
+      else if (src === "purchased") tpl = listPurchasedTemplates().find(function(t){ return t.id===id; }) || null;
+      if (tpl) instantiateTemplateDay1(tpl);
+      return;
+    }
+    if (action === "tpl-del-personal") {
+      const id = act.getAttribute("data-tpl-id");
+      try{
+        const list = listPersonalTemplates().filter(function(t){ return t && t.id !== id; });
+        localStorage.setItem(USER_TPL_PERSONAL_KEY, JSON.stringify(list));
+      }catch(_){}
+      renderTemplates();
+      return;
+    }
+    if (action === "tpl-save-personal") {
+      const w = ensureWorkout();
+      if (!w) return;
+      const exs = safe(function(){ return Workouts.listExercises(w.id); }, []) || [];
+      if (!exs.length) return;
+      const name = prompt("Template name:", (w.name || "My template"));
+      if (!name) return;
+
+      // Build a simple 1-day routine based on current workout, including sets.
+      const day = { name: String(name), exercises: [] };
+      for (let i=0;i<exs.length;i++){
+        const ex = exs[i];
+        const sets = safe(function(){ return Workouts.listSets(ex.id); }, []) || [];
+        day.exercises.push({
+          name: ex.name || ("Exercise " + (i+1)),
+          sets: sets.map(function(s){ return { weightKg: Number(s.weightKg||0), reps: Number(s.reps||0) }; })
+        });
+      }
+
+      const tpl = {
+        id: "ptpl_" + Date.now(),
+        title: String(name),
+        coach: "You",
+        tags: ["personal"],
+        weeks: 1,
+        workouts: 1,
+        price: 0,
+        currency: "USD",
+        description: "Personal template",
+        preview: [day]
+      };
+      addToPersonalTemplates(tpl);
+      templatesCat = "mine";
+      renderTemplates();
+      return;
+    }
       alert("Purchased (mock). Template added to your library.");
       templatePreviewId = null;
       renderTemplates();
@@ -1737,7 +1888,7 @@ for (const ex of exercises) {
     const exerciseId = (card==null?undefined:card.dataset).exerciseId;
 
     const setRow = act.closest(".w3-setRow");
-    const setId = (setRow==null?undefined:setRow.dataset).setId;
+      const setId = (setRow && setRow.dataset) ? setRow.dataset.setId : undefined;
     const exerciseName = (card==null?undefined:card.dataset).exerciseName || "";
 
     if (action === "start-workout") {
@@ -1775,7 +1926,7 @@ for (const ex of exercises) {
     }
     if (action === "toggle-set") {
       const row = act.closest(".w3-setRow");
-      const setId = (row==null?undefined:row.dataset).setId;
+      const setId = (row && row.dataset) ? row.dataset.setId : undefined;
       if (!setId) return;
 
       // Snapshot PRs BEFORE completion to detect improvements reliably
@@ -1831,7 +1982,7 @@ for (const ex of exercises) {
     if (!inp) return;
 
     const row = inp.closest(".w3-setRow");
-    const setId = (row==null?undefined:row.dataset).setId;
+      const setId = (row && row.dataset) ? row.dataset.setId : undefined;
     const card = inp.closest(".w3-exCard");
     const exerciseName = (card==null?undefined:card.dataset).exerciseName || "";
     const field = inp.dataset.field;
