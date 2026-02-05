@@ -16,6 +16,26 @@
   --w3-text-xxl:28px;
 }
 
+/* Prefer dark native form controls (select popups) where supported */
+:root{ color-scheme: dark; }
+
+/* Week planner modal: dark native <select> + options (best-effort; some browsers limit option styling) */
+#w3PlanModal select.w3-modalInput{
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+}
+
+#w3PlanModal select.w3-modalInput option{
+  background: #0b1020;
+  color: #e9ecff;
+}
+
+#w3PlanModal select.w3-modalInput:disabled{
+  opacity: .65;
+}
+
 .w3-sideTiles{display:none;}
 
 /* Desktop-only utility column container (Today Summary) */
