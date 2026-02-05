@@ -164,6 +164,10 @@ let currentTab = "today";
 
   // Empty-state animation helpers (hero expand/collapse)
   let _emptyHideTimer = null;
+  // Track the RAF used to add .is-empty so we can cancel it if the user
+  // navigates away before it runs (otherwise the empty overlay can reappear
+  // and hide Templates/History until refresh).
+  let _emptyRAF = null;
   function showEmpty(){
     if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
     // Show wrapper
@@ -171,9 +175,15 @@ let currentTab = "today";
     // Keep Today summary in the right dock on desktop (same placement as non-empty).
     // This avoids layout jumps and keeps alignment consistent.
     // next frame so transitions apply
-    requestAnimationFrame(()=> el.page?.classList.add("is-empty"));
+    if (_emptyRAF) cancelAnimationFrame(_emptyRAF);
+    _emptyRAF = requestAnimationFrame(()=>{
+      _emptyRAF = null;
+      // Only apply the empty overlay if we're still on Today.
+      if (currentTab === "today") el.page?.classList.add("is-empty");
+    });
   }
   function hideEmptyAnimated(){
+    if (_emptyRAF){ cancelAnimationFrame(_emptyRAF); _emptyRAF = null; }
     el.page?.classList.remove("is-empty");
     if (!el.emptyWrap || el.emptyWrap.hidden) return;
     if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
@@ -735,6 +745,7 @@ let currentTab = "today";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
     // Leaving Today should fully exit the empty-state visual mode.
+    if (_emptyRAF){ cancelAnimationFrame(_emptyRAF); _emptyRAF = null; }
     el.page?.classList.remove("is-empty");
     if (el.emptyWrap) el.emptyWrap.hidden = true;
 
@@ -821,6 +832,7 @@ let currentTab = "today";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
     // Leaving Today should fully exit the empty-state visual mode.
+    if (_emptyRAF){ cancelAnimationFrame(_emptyRAF); _emptyRAF = null; }
     el.page?.classList.remove("is-empty");
     if (el.emptyWrap) el.emptyWrap.hidden = true;
 
