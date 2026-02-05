@@ -1162,24 +1162,28 @@ for (const ex of exercises) {
 
       card.innerHTML = `
         <div class="w3-exHeader">
-          <div class="w3-exHoldZone" data-hold-delete="1" title="Hold 2.5s to delete">
-            <div class="w3-hSection">${esc(ex.name || "Exercise")}</div>
-            ${ex.notes ? `<div class="w3-exSub">${esc(ex.notes)}</div>` : ``}
-          </div>
-          <div class="w3-exHeaderRight" aria-hidden="true">
-            <div class="w3-delHint">
+          <div class="w3-exHeaderLeft">
+            <div class="w3-delHint" title="Hold 2.5s to delete" aria-hidden="true">
               <div class="w3-delGlass" aria-hidden="true"></div>
-              <span class="w3-delIcon">🗑️</span>
+              <span class="w3-delIcon" aria-hidden="true">🗑️</span>
               <svg class="w3-delRing" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                 <circle class="w3-delRingTrack" cx="12" cy="12" r="10.5"></circle>
                 <circle class="w3-delRingProg" cx="12" cy="12" r="10.5"></circle>
               </svg>
             </div>
-            <button class="w3-iconBtn w3-exMenuBtn" data-action="ex-menu" aria-label="Reorder exercise">⋮</button>
+            <div class="w3-exHoldZone" data-hold-delete="1" title="Hold 2.5s to delete">
+              <div class="w3-hSection">${esc(ex.name || "Exercise")}</div>
+              ${ex.notes ? `<div class="w3-exSub">${esc(ex.notes)}</div>` : ``}
+            </div>
+          </div>
+          <div class="w3-exHeaderRight">
+            <button class="w3-iconBtn w3-exMenuBtn" data-action="ex-menu" aria-label="More options">
+              <span class="w3-dots" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
 
-        ${isReadOnly ? "" : `<div class="w3-exActions" ${String(ex.id)!==String(activeExerciseId) ? "hidden" : ""}>
+        ${(isReadOnly || sets.length===0) ? "" : `<div class="w3-exActions" ${String(ex.id)!==String(activeExerciseId) ? "hidden" : ""}>
           <button class="w3-btnPrimary w3-exAction" data-action="start-workout" ${workout.status==="in_progress" ? "disabled" : ""}>${workout.status==="in_progress" ? "Started" : "Start"}</button>
           <button class="w3-btnSecondary w3-exAction" data-action="rest">Rest ${fmtClock(loadRestPreset())}</button>
         </div>`}

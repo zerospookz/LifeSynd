@@ -67,6 +67,27 @@
   background: rgba(15, 23, 42, 0.48);
 }
 
+/* Three-dots glyph: consistent across platforms (no font-dependent ⋮) */
+.w3-dots{
+  display:block;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.90);
+  box-shadow:
+    0 -7px 0 rgba(255,255,255,0.75),
+    0  7px 0 rgba(255,255,255,0.75);
+}
+
+.w3-exMenuBtn:active .w3-dots{
+  background: rgba(255,255,255,0.95);
+  box-shadow:
+    0 -7px 0 rgba(255,255,255,0.82),
+    0  7px 0 rgba(255,255,255,0.82);
+}
+
+.w3-exMenuBtn:active{ transform: translateY(0.5px); }
+
 .w3-hPage{
   font-size: var(--w3-text-xxl);
   font-weight: 700;
@@ -146,6 +167,15 @@ body.w3-isReordering{
   margin-bottom: 10px;
 }
 
+/* Left side: delete affordance + title/notes */
+.w3-exHeaderLeft{
+  display:flex;
+  align-items:flex-start;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* Safe-zone for long-press delete (title area)
    - prevent text selection / callout
    - keep normal vertical scrolling elsewhere */
@@ -163,6 +193,16 @@ body.w3-isReordering{
   display:flex;
   align-items:center;
   gap: 10px;
+}
+
+/* Nicer three-dots icon (no font rendering differences across platforms) */
+.w3-dots{
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  display:block;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 -7px 0 rgba(255,255,255,0.92), 0 7px 0 rgba(255,255,255,0.92);
 }
 
 /* Subtle delete affordance (safe-zone only): trash icon + progress ring.
@@ -1501,7 +1541,10 @@ body[data-theme="dark"]{
 /* ===== Desktop: move action buttons to right sidebar =====
    Users often keep the app in a narrower desktop window.
    Use a lower breakpoint so the 2-column dock layout activates earlier. */
-@media (min-width: 900px){
+/* Desktop dock layout: activate earlier because the left sidebar reduces usable width.
+   This keeps Today summary/Templates/History to the RIGHT of the canvas even in a
+   "big screen" app window that isn't full-width. */
+@media (min-width: 720px){
   .w3-page{
     max-width: 1600px;
     padding: 0 18px 24px;
@@ -1568,27 +1611,19 @@ body[data-theme="dark"]{
   .w3-page.is-empty{
     grid-template-columns: minmax(520px, 1fr) 360px;
   }
+  /* Empty state: keep the large hero card in the LEFT column.
+     The summary/templates/history column is handled by .w3-todayDock (RIGHT column).
+     So we hide the legacy empty-side container to prevent the hero from shrinking. */
   .w3-emptyWrap{
-    display:flex;
-    align-items:flex-start;
-    justify-content:flex-start;
-    gap: 26px;
+    display:block;
     min-height: auto;
     width: 100%;
     padding-top: 6px;
   }
-  .w3-emptySide{
-    width: 320px;
-    max-width: 320px;
-    display:flex;
-    flex-direction:column;
-    gap: 14px;
-  }
+  .w3-emptySide{ display:none; }
   /* Desktop: remove the big quick-action buttons (Templates/History) from the empty screen */
   .w3-emptyQuick{ display:none; }
-  /* Order swap: keep empty hero as primary (left), utilities (Today summary + quick actions) on the right */
-  .w3-empty{ order: 1; width: min(1120px, 100%); }
-  .w3-emptySide{ order: 2; }
+  .w3-empty{ width: 100%; }
   .w3-emptyQuick{
     display:none;
     flex-direction:column;
