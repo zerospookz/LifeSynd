@@ -2249,3 +2249,14 @@ body[data-theme="dark"]{
     margin-top: 0;
   }
 }
+
+
+/* Weekly plan card */
+.w3-weekPlanList{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.w3-weekRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);cursor:pointer}
+.w3-weekRow:hover{background:rgba(255,255,255,0.08)}
+.w3-weekLeft{display:flex;flex-direction:column;gap:2px;min-width:0}
+.w3-weekDate{font-size:12px;opacity:.85}
+.w3-weekName{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w3-weekBadge{font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.10);white-space:nowrap}
+.w3-weekBadge.empty{opacity:.75}

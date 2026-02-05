@@ -96,6 +96,14 @@
       </div>
     </div>
   </section>
+  <section class="w3-rpCard" id="w3RpWeekPlan" aria-label="Weekly plan">
+    <div class="w3-rpCardTop">
+      <div class="w3-rpTitle">Week plan</div>
+      <div class="w3-rpHint">Pre-plan workouts</div>
+    </div>
+    <div class="w3-weekPlanList" id="w3WeekPlanList"></div>
+  </section>
+
 
   <!-- Desktop-only: quick access to Templates + History (same design as Today summary) -->
   <section class="w3-rpCard w3-dockNavCard" id="w3DockTemplates" data-tab="templates" role="button" tabindex="0" aria-label="Open templates">
@@ -232,6 +240,30 @@
 <button class="w3-modalBtn" id="w3ModalCancel" type="button">Cancel</button>
 <button class="w3-modalBtn primary" id="w3ModalOk" type="button">Add</button>
 </div>
+</div>
+</div>
+
+<div cl
+<div class="w3-modalOverlay" hidden id="w3PlanOverlay">
+  <div class="w3-modal" id="w3PlanModal" role="dialog" aria-modal="true" aria-labelledby="w3PlanModalTitle">
+    <div class="w3-modalTop">
+      <div class="w3-modalTitle" id="w3PlanModalTitle">Plan workout</div>
+      <button class="w3-modalClose" id="w3PlanModalClose" aria-label="Close">×</button>
+    </div>
+    <div class="w3-muted" id="w3PlanModalDate" style="margin-top:-4px;margin-bottom:10px;"></div>
+
+    <label class="w3-modalLabel" for="w3PlanTpl">Template</label>
+    <select class="w3-modalInput" id="w3PlanTpl"></select>
+
+    <label class="w3-modalLabel" for="w3PlanDay">Day</label>
+    <select class="w3-modalInput" id="w3PlanDay"></select>
+
+    <div class="w3-modalActions">
+      <button class="w3-modalBtn" id="w3PlanClear" type="button">Clear</button>
+      <button class="w3-modalBtn" id="w3PlanCancel" type="button">Cancel</button>
+      <button class="w3-modalBtn primary" id="w3PlanSave" type="button">Save</button>
+    </div>
+  </div>
 </div>
 </div>
 <script src="app.js"></script>

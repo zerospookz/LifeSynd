@@ -173,12 +173,12 @@ let currentTab = "today";
     // Mobile tabs
     if (el.tabs){
       for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
-      do{ const _tab = el.tabs.querySelector(`[data-tab="${currentTab}"]`); if(_tab) _tab.classList.add("is-active"); }
+      el.tabs.querySelector(`[data-tab="${currentTab}"]`)?.classList.add("is-active");
     }
     // Desktop tiles
     if (el.sideTiles){
       for (const b of el.sideTiles.querySelectorAll(".w3-sideTile")) b.classList.remove("is-active");
-      do{ const _tile = el.sideTiles.querySelector(`[data-tab="${currentTab}"]`); if(_tile) _tile.classList.add("is-active"); }
+      el.sideTiles.querySelector(`[data-tab="${currentTab}"]`)?.classList.add("is-active");
     }
   }
 
@@ -209,16 +209,16 @@ let currentTab = "today";
   });
   // Weekly plan interactions
   document.addEventListener("click", (e)=>{
-    const row = closestEl(e.target,'[data-action="plan-open"][data-date]');
+    const row = (e.target==null?undefined:e.target.closest)?.('[data-action="plan-open"][data-date]');
     if (row){
       const dateIso = row.getAttribute("data-date");
       if (dateIso) openPlanModal(dateIso);
       return;
     }
-    if (closestEl(e.target,"#w3PlanModalClose") || closestEl(e.target,"#w3PlanCancel")){
+    if ((e.target==null?undefined:e.target.closest)?.("#w3PlanModalClose") || (e.target==null?undefined:e.target.closest)?.("#w3PlanCancel")){
       closePlanModal(); return;
     }
-    if (closestEl(e.target,"#w3PlanClear")){
+    if ((e.target==null?undefined:e.target.closest)?.("#w3PlanClear")){
       if (!_planModalDateIso) { closePlanModal(); return; }
       const plan = getPlan();
       delete plan[_planModalDateIso];
@@ -227,7 +227,7 @@ let currentTab = "today";
       renderWeekPlan();
       return;
     }
-    if (closestEl(e.target,"#w3PlanSave")){
+    if ((e.target==null?undefined:e.target.closest)?.("#w3PlanSave")){
       if (!_planModalDateIso) { closePlanModal(); return; }
       const list = listMarket();
       const tid = el.planTpl ? el.planTpl.value : "";
@@ -246,7 +246,7 @@ let currentTab = "today";
 
   // Close plan modal on backdrop click
   document.addEventListener("pointerdown",(e)=>{
-    const ov = closestEl(e.target,"#w3PlanOverlay");
+    const ov = (e.target==null?undefined:e.target.closest)?.("#w3PlanOverlay");
     if (ov && e.target === ov) closePlanModal();
   });
 
@@ -254,7 +254,7 @@ let currentTab = "today";
   // Keyboard accessibility for dock cards
   document.addEventListener("keydown", (e)=>{
     if (e.key !== "Enter" && e.key !== " ") return;
-    const card = closestEl(e.target,".w3-dockNavCard[data-tab]");
+    const card = (e.target==null?undefined:e.target.closest)?.(".w3-dockNavCard[data-tab]");
     if (!card) return;
     e.preventDefault();
     const tab = card.getAttribute("data-tab");
@@ -487,7 +487,7 @@ let currentTab = "today";
 
   // ===== Increment 10: Exercise card drag & drop reorder (handle: ⋮) =====
   function listExerciseCards(){
-    return Array.from(el.content ? el.content.querySelectorAll('.w3-exCard') : []);
+    return Array.from((el.content==null?undefined:el.content.querySelectorAll)?.('.w3-exCard') || []);
   }
 
   function beginExerciseDrag(card, pointerId, clientX, clientY){
@@ -557,7 +557,7 @@ let currentTab = "today";
     const card = drag.card;
 
     // Cleanup ghost
-    try{ if(drag.ghost && drag.ghost.remove) drag.ghost.remove(); }catch(_){ }
+    try{ (drag.ghost==null?undefined:drag.ghost.remove)?.(); }catch(_){ }
 
     if (parent && ph && card){
       parent.insertBefore(card, ph);
@@ -782,14 +782,6 @@ let currentTab = "today";
 
   function safe(fn, fallback){
     try { return fn(); } catch(e){ console.warn(e); return fallback; }
-  }
-
-  function closestEl(t, sel){
-    return (t && t.closest) ? t.closest(sel) : null;
-  }
-
-  function closestEl(t, sel){
-    return (t && t.closest) ? t.closest(sel) : null;
   }
 
   function fmtInt(n){
@@ -1157,7 +1149,7 @@ let currentTab = "today";
     const templates = safe(()=>Workouts.listTemplates(), []) || [];
     if ((workout==null?undefined:workout.templateId)){
       const tpl = templates.find(t => String(t.id) === String(workout.templateId));
-      if (tpl && tpl.exercises && tpl.exercises.length){
+      if ((tpl==null?undefined:tpl.exercises)?.length){
         const next = tpl.exercises.map(x=>String(x.name||x).trim()).find(n => n && !currentExNames.has(n.toLowerCase()));
         if (next) return { name: next, source: `Template: ${tpl.name || tpl.id}` };
       }
@@ -1175,7 +1167,7 @@ let currentTab = "today";
     const lastCompleted = (all||[]).filter(w => w.status === "completed").slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))[0];
     if ((lastCompleted==null?undefined:lastCompleted.id)){
       const exs = safe(()=>Workouts.listExercises(lastCompleted.id), []) || [];
-      const next = (((exs[0] && exs[0].name)) || "").trim();
+      const next = (exs[0]?.name || "").trim();
       if (next && !currentExNames.has(next.toLowerCase())) return { name: next, source: "Last session" };
     }
 
