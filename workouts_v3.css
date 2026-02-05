@@ -151,6 +151,10 @@ body.w3-isReordering{
    - keep normal vertical scrolling elsewhere */
 .w3-exHoldZone{
   position: relative;
+  /* Fill the header width so the delete affordance can live in a consistent corner */
+  flex: 1 1 auto;
+  /* Reserve space for the delete icon so it never overlaps the exercise title */
+  padding-left: 42px;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -163,7 +167,8 @@ body.w3-isReordering{
 .w3-delHint{
   position:absolute;
   top: 2px;
-  right: 0;
+  left: 0;
+  right: auto;
   width: 34px;
   height: 34px;
   display:grid;
@@ -715,30 +720,6 @@ body.w3-isReordering{
   letter-spacing: 0.01em;
   color: rgba(255,255,255,0.92);
 }
-
-.w3-restPickerStepper{
-  display:flex;
-  align-items:center;
-  gap: 10px;
-}
-
-.w3-restPickerStep{
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,0.95);
-  border-radius: 999px;
-  width: 34px;
-  height: 34px;
-  display:grid;
-  place-items:center;
-  font-size: 18px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: transform .12s ease, filter .12s ease;
-}
-
-.w3-restPickerStep:hover{ filter: brightness(1.06); }
-.w3-restPickerStep:active{ transform: translateY(1px) scale(.98); }
 
 .w3-restPickerValue{
   font-variant-numeric: tabular-nums;
@@ -1391,29 +1372,6 @@ body[data-theme="dark"]{
   pointer-events:none;
 }
 
-/* Empty state polish: a very subtle "living" background on capable devices */
-@media (prefers-reduced-motion: no-preference){
-  #w3Page.is-empty .w3-empty::before{
-    animation: w3EmptyDotsDrift 18s linear infinite;
-  }
-  #w3Page.is-empty .w3-empty::after{
-    background-size: 200% 200%;
-    animation: w3EmptyGlowShift 12s ease-in-out infinite;
-  }
-}
-
-@keyframes w3EmptyDotsDrift{
-  0%{ transform: translate3d(0,0,0); opacity: .52; }
-  50%{ transform: translate3d(6px,-4px,0); opacity: .58; }
-  100%{ transform: translate3d(0,0,0); opacity: .52; }
-}
-
-@keyframes w3EmptyGlowShift{
-  0%{ background-position: 0% 50%; opacity: .32; }
-  50%{ background-position: 100% 50%; opacity: .38; }
-  100%{ background-position: 0% 50%; opacity: .32; }
-}
-
 /* outline glow */
 .w3-empty::after{
   content:"";
@@ -1538,13 +1496,16 @@ body[data-theme="dark"]{
 
 
 
-/* ===== Desktop: move action buttons to right sidebar ===== */
-@media (min-width: 1100px){
+/* ===== Desktop: move action buttons to right sidebar =====
+   Users often keep the app in a narrower desktop window.
+   Use a lower breakpoint so the 2-column dock layout activates earlier. */
+@media (min-width: 900px){
   .w3-page{
     max-width: 1600px;
     padding: 0 18px 24px;
     display: grid;
-    grid-template-columns: minmax(760px, 1fr) 380px;
+    /* Allow the dock layout to fit comfortably in narrower desktop windows */
+    grid-template-columns: minmax(520px, 1fr) 360px;
     gap: 28px;
     align-items: start;
   }
@@ -1603,7 +1564,7 @@ body[data-theme="dark"]{
   /* When empty: keep the same 2-column layout so Today summary stays in the top-right,
      aligned with the empty state card (same as when there are exercises). */
   .w3-page.is-empty{
-    grid-template-columns: minmax(760px, 1fr) 380px;
+    grid-template-columns: minmax(520px, 1fr) 360px;
   }
   .w3-emptyWrap{
     display:flex;
@@ -1689,7 +1650,7 @@ body[data-theme="dark"]{
 }
 
 /* ===== Mobile: keep bottom bar behavior ===== */
-@media (max-width: 1099px){
+@media (max-width: 899px){
   /* Mobile: nudge Today summary down a bit */
   #w3RpToday{ margin-top: 10px; }
 
@@ -1790,7 +1751,7 @@ body[data-theme="dark"]{
 
 /* Earlier iterations hid the global footer bar on mobile.
    Keep it available so users can always add exercises/sets on small screens. */
-@media (max-width: 1099px){
+@media (max-width: 899px){
   .w3-bottomBar{ display:flex !important; }
 }
 
@@ -1800,14 +1761,13 @@ body[data-theme="dark"]{
 
 /* BIG SCREEN: remove the empty top-right "pill" (an empty fixed bottomBar container)
    We use Today Summary dock instead. */
-@media (min-width: 1100px){
+@media (min-width: 900px){
   .w3-bottomBar{ display:none !important; }
 }
 
 /* SMALL SCREEN: remove the global bottom action bar (buttons are available in-card).
    This prevents overlap on the empty state and when adding exercises/sets. */
-@media (max-width: 1099px){
-  .w3-bottomBar{ display:none !important; }
+@media (max-width: 899px){
   .w3-rpActions{ display:none !important; }
   .w3-sideTiles{ display:none !important; }
 
@@ -1846,54 +1806,8 @@ body[data-theme="dark"]{
 }
 
 
-/* ===== Desktop tiles sidebar layout ===== */
-@media (min-width: 1100px){
-  /* Make main area larger and reserve space for right sidebar tiles */
-  .w3-page{
-    max-width: 1160px;
-    padding-right: 320px;
-  }
-
-  /* Tabs become tiles on desktop */
-  #w3Tabs{ display:none !important; }
-
-  /* Show tiles and place them in the empty right space */
-  .w3-sideTiles{
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    position: fixed;
-    top: 130px;
-    right: 46px;
-    width: 270px;
-    z-index: 6;
-  }
-
-  .w3-sideTile{
-    width: 100%;
-    text-align:left;
-    padding: 16px 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,.10);
-    background: rgba(255,255,255,.06);
-    box-shadow: 0 18px 40px rgba(0,0,0,.35);
-    color: rgba(255,255,255,.92);
-    font-weight: 750;
-    letter-spacing: -0.01em;
-    cursor: pointer;
-    transition: transform .12s ease, filter .12s ease;
-  }
-  .w3-sideTile:hover{ transform: translateY(-1px); filter: brightness(1.05); }
-  .w3-sideTile.is-active{
-    border-color: rgba(129,140,248,.55);
-    box-shadow: 0 18px 46px rgba(99,102,241,.22);
-  }
-
-  /* Empty hero should feel big on desktop */
-  .w3-empty{
-    min-height: 72vh;
-  }
-}
+/* (Deprecated) Desktop tiles sidebar layout removed.
+   The right-side dock (Today summary + Templates + History) replaces this. */
 
 
 
@@ -1950,89 +1864,8 @@ body[data-theme="dark"]{
   border-radius: 12px;
 }
 
-/* ===== Desktop: make empty hero bigger and fill space with History/Templates tiles ===== */
-@media (min-width: 1100px){
-  /* Big-screen type scale + breathing room */
-  :root{
-    --w3-text-xs: 13px;
-    --w3-text-sm: 15px;
-    --w3-text-md: 17px;
-    --w3-text-lg: 20px;
-    --w3-text-xxl: 34px;
-  }
-
-  .w3-page{
-    max-width: 1320px;
-  }
-
-  .w3-header{ margin-bottom: 14px; }
-  .w3-meta{ margin: 12px 0 22px; }
-  .w3-chip{ padding: 8px 14px; }
-
-  .w3-exCard{ padding: 18px; margin-bottom: 16px; }
-  .w3-exHeader{ margin-bottom: 12px; }
-  .w3-setRow{ padding: 12px; border-radius: 14px; }
-  /* Empty state: show Today summary next to the add-exercise box */
-  .w3-empty{
-    min-height: 72vh;
-    width: min(980px, 100%);
-    display:flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 26px;
-    text-align: left;
-  }
-  .w3-emptyMain{ flex: 1; }
-  .w3-emptyAside{ flex: 0 0 320px; max-width: 320px; margin-top: 0; }
-  .w3-emptyTitle{ font-size: 28px; letter-spacing: -0.02em; }
-  .w3-empty .w3-muted{ font-size: 16px; }
-  .w3-emptyIcon{ width: 72px; height: 72px; font-size: 34px; }
-
-  /* Right panel (desktop): fixed sidebar */
-  .w3-page{ padding-right: 360px; }
-
-  .w3-bottomBar{
-    position: fixed;
-    top: 130px;
-    right: 32px;
-    bottom: auto;
-    width: 320px;
-    max-height: calc(100vh - 160px);
-    overflow: auto;
-
-    display: flex !important;
-    flex-direction: column;
-    gap: 12px;
-
-    padding: 14px !important;
-    border-radius: 18px;
-    background: rgba(255,255,255,.06) !important;
-    border: 1px solid rgba(255,255,255,.10) !important;
-    box-shadow: 0 18px 50px rgba(0,0,0,.35);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    z-index: 50;
-  }
-
-  /* Remove the old tiles/buttons block from desktop right panel */
-  .w3-sideTiles,
-  .w3-rpActions{ display:none !important; }
-}
-
-/* Mobile/tablet: keep tiles in footer (or hidden if you prefer) */
-@media (max-width: 1099px){
-  .w3-sideTiles{
-    position: static;
-    width: auto;
-    display:flex;
-    gap:10px;
-    padding: 0;
-    background: none;
-    border: none;
-    box-shadow: none;
-  }
-}
+/* (Removed) Older desktop right-panel implementation that used a fixed bottomBar.
+   The current design uses the dedicated dock (w3-todayDock) on desktop. */
 
 @media (min-width: 1600px){
   :root{
@@ -2320,14 +2153,14 @@ body[data-theme="dark"]{
 .w3-rpActions{ display:flex; flex-direction:column; gap: 12px; }
 
 /* Hide right panel cards on mobile; keep actions only */
-@media (max-width: 1099px){
+@media (max-width: 899px){
   #w3RightPanel .w3-rpCard{ display:none; }
   #w3RightPanel .w3-sideTiles{ display:none; }
 }
 
 /* Desktop: do NOT show the legacy bottom bar container.
    Today summary lives in the dedicated dock (w3-todayDock). */
-@media (min-width: 1100px){
+@media (min-width: 900px){
   .w3-bottomBar{ display:none !important; }
 }
 

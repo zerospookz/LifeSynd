@@ -261,8 +261,6 @@ let currentTab = "today";
   const restUI = {
     picker: document.getElementById('w3RestPicker'),
     pickerValue: document.getElementById('w3RestPickerValue'),
-    pickerMinus: document.getElementById('w3RestMinus'),
-    pickerPlus: document.getElementById('w3RestPlus'),
     pickerRange: document.getElementById('w3RestPickerRange'),
     pickerSec: document.getElementById('w3RestPickerSec'),
     pickerStart: document.getElementById('w3RestPickerStart'),
@@ -1732,73 +1730,6 @@ for (const ex of exercises) {
         });
       }catch(_){ }
     };
-
-    // +/- UX: default step = 5s. Modifiers: Alt = 1s, Shift = 30s.
-    const stepForEvent = (e)=>{
-      if (e?.altKey) return 1;
-      if (e?.shiftKey) return 30;
-      return 5;
-    };
-
-    const getCurrentPickerSec = ()=>{
-      const v = parseInt(restUI.pickerRange?.value || restUI.pickerSec?.value || String(loadRestPreset()), 10);
-      return isFinite(v) ? v : loadRestPreset();
-    };
-
-    const nudge = (dir, e)=>{
-      const step = stepForEvent(e);
-      const cur = getCurrentPickerSec();
-      syncFrom(cur + (dir * step));
-    };
-
-    // Long-press repeat for +/- buttons
-    const attachHold = (btn, dir)=>{
-      if (!btn) return;
-      let holdT = null;
-      let repeatT = null;
-      let startedAt = 0;
-      let didRepeat = false;
-      const clear = ()=>{
-        if (holdT) { clearTimeout(holdT); holdT = null; }
-        if (repeatT) { clearInterval(repeatT); repeatT = null; }
-        // Reset repeat marker after interaction ends
-        setTimeout(()=>{ didRepeat = false; }, 0);
-      };
-      btn.addEventListener('click', (e)=>{
-        // Click still works even if pointer events are used.
-        e.preventDefault();
-        if (didRepeat) return;
-        nudge(dir, e);
-      });
-      btn.addEventListener('pointerdown', (e)=>{
-        // Prevent focus loss / text selection
-        e.preventDefault();
-        startedAt = Date.now();
-        didRepeat = false;
-        // Start repeating after a short delay
-        holdT = setTimeout(()=>{
-          // First repeat tick
-          nudge(dir, e);
-          didRepeat = true;
-          repeatT = setInterval(()=>{
-            // After ~1s, speed up a bit (still subtle)
-            const elapsed = Date.now() - startedAt;
-            const multiplier = elapsed > 1000 ? 2 : 1;
-            const synthetic = Object.assign({}, e, { shiftKey: e.shiftKey, altKey: e.altKey });
-            const step = stepForEvent(synthetic) * multiplier;
-            const cur = getCurrentPickerSec();
-            syncFrom(cur + (dir * step));
-          }, 140);
-        }, 260);
-        try{ btn.setPointerCapture(e.pointerId); }catch(_){ }
-      });
-      btn.addEventListener('pointerup', clear);
-      btn.addEventListener('pointercancel', clear);
-      btn.addEventListener('pointerleave', clear);
-    };
-
-    attachHold(restUI.pickerMinus, -1);
-    attachHold(restUI.pickerPlus, +1);
 
     restUI.pickerRange?.addEventListener('input', (e)=>{
       syncFrom(parseInt(e.target.value, 10));
