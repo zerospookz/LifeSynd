@@ -1877,11 +1877,7 @@ for (const ex of exercises) {
       renderTemplates();
       return;
     }
-      alert("Purchased (mock). Template added to your library.");
-      templatePreviewId = null;
-      renderTemplates();
-      return;
-    }
+
 
     const card = act.closest(".w3-exCard");
     const exerciseId = (card==null?undefined:card.dataset).exerciseId;
