@@ -1255,7 +1255,6 @@ let currentTab = "today";
     // personal first, then purchased
     return a.concat(b.filter(function(t){ return !a.find(function(x){ return x.id === t.id; }); }));
   }
-  }
 
 
   function liveDurationSec(workout){
@@ -1878,12 +1877,6 @@ for (const ex of exercises) {
       renderTemplates();
       return;
     }
-      alert("Purchased (mock). Template added to your library.");
-      templatePreviewId = null;
-      renderTemplates();
-      return;
-    }
-
     const card = act.closest(".w3-exCard");
     const exerciseId = (card && card.dataset) ? card.dataset.exerciseId : null;
 
