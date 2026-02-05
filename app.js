@@ -29,4 +29,33 @@
   } else {
     window.__swReady = Promise.resolve(null);
   }
+
+  // Keyboard-safe layout (mobile): keep inputs and bottom panels visible when the on-screen
+  // keyboard opens. We do this by setting a CSS var (--kb) to the keyboard height using
+  // VisualViewport (supported on iOS Safari / Chrome Android).
+  (function setupKeyboardSafeArea(){
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const setVar = ()=>{
+      // Keyboard height ≈ difference between layout viewport and visual viewport.
+      const kb = Math.max(0, (window.innerHeight - vv.height - vv.offsetTop) || 0);
+      document.documentElement.style.setProperty('--kb', kb ? `${Math.round(kb)}px` : '0px');
+    };
+
+    vv.addEventListener('resize', setVar);
+    vv.addEventListener('scroll', setVar);
+    window.addEventListener('orientationchange', ()=> setTimeout(setVar, 50));
+    setVar();
+
+    // When focusing an input, nudge it into view (prevents it from sitting behind the keyboard).
+    document.addEventListener('focusin', (e)=>{
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      if (!t.matches('input, textarea, select')) return;
+      setTimeout(()=>{
+        try{ t.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' }); }catch(_){ }
+      }, 60);
+    });
+  })();
 })();

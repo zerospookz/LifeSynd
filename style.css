@@ -227,7 +227,8 @@ a{color:inherit}
 }
 
 .content{
-  padding: 34px 36px 60px;
+  /* Add keyboard-safe bottom padding via --kb (set by app.js using VisualViewport) */
+  padding: 34px 36px calc(60px + var(--kb, 0px));
   max-width: 1280px;
   width: 100%;
 }
@@ -269,7 +270,7 @@ a{color:inherit}
 }
 @media (max-width: 760px){
   /* Mobile has a fixed bottom nav; keep interactive controls above it */
-  .content{padding: 28px 16px calc(92px + env(safe-area-inset-bottom))}
+  .content{padding: 28px 16px calc(92px + env(safe-area-inset-bottom) + var(--kb, 0px))}
   .layout{grid-template-columns: 1fr}
   .sidebar{position:relative;height:auto}
   .dashKpis{grid-template-columns: 1fr}

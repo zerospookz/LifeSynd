@@ -627,19 +627,16 @@ body.w3-isReordering{
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  /* Give the text a little breathing room from the ring stroke */
-  padding: 6px;
+  gap: 3px;
   pointer-events: none;
   text-align: center;
 }
 
 .w3-restTime{
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.05;
   letter-spacing: 0.6px;
   font-variant-numeric: tabular-nums;
-  transform: translateY(-1px);
 }
 
 .w3-restLabel{
@@ -718,7 +715,7 @@ body.w3-isReordering{
   .w3-restClock{ right: 12px; bottom: 92px; padding: 12px; grid-template-columns: 68px 1fr auto; }
   .w3-restDial, .w3-restRing{ width: 68px; height: 68px; }
   .w3-restCenter{ gap: 2px; }
-  .w3-restTime{ font-size: 13px; }
+  .w3-restTime{ font-size: 15px; }
   .w3-restLabel{ font-size: 8px; }
   .w3-restMeta{ min-width: 120px; }
   .w3-restMetaHint{ display:none; }
@@ -1593,18 +1590,6 @@ body[data-theme="dark"]{
     position: relative;
     top: 0;
     margin-top: 0;
-  }
-
-  /* Empty state: make the Today summary card match the hero height for a cleaner
-     two-column composition (requested). */
-  #w3Page.is-empty #w3RpToday{
-    min-height: clamp(360px, 56vh, 720px);
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-start;
-  }
-  #w3Page.is-empty #w3RpToday .w3-rpGrid{
-    margin-top: 10px;
   }
 
   /* When empty: keep the same 2-column layout so Today summary stays in the top-right,

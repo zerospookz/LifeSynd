@@ -65,23 +65,10 @@
 <div class="card soft">
   <div class="cardHeader"><h3 class="cardTitle">Data</h3><span class="badge">Backup</span></div>
   <p class="small">Everything is stored locally in your browser. Export before switching devices.</p>
-  <div class="actionsRow" style="flex-wrap:wrap">
-    <button onclick="exportData()">Export all (JSON)</button>
+  <div class="actionsRow">
+    <button onclick="exportData()">Export JSON</button>
     <input id="importFile" type="file" accept="application/json">
     <button class="btn secondary" onclick="importData()">Import</button>
-  </div>
-
-  <hr style="border:none; border-top:1px solid rgba(255,255,255,.08); margin:14px 0">
-
-  <div class="cardHeader" style="padding:0; margin-bottom:10px">
-    <h3 class="cardTitle" style="font-size:16px">Habits only</h3>
-    <span class="badge">Import / Export</span>
-  </div>
-  <p class="small" style="margin-top:-4px">Use this for large testing so you can restore your personal Habits later.</p>
-  <div class="actionsRow" style="flex-wrap:wrap">
-    <button onclick="exportHabits()">Export habits (JSON)</button>
-    <input id="habitsImportFile" type="file" accept="application/json">
-    <button class="btn secondary" onclick="importHabits()">Import habits</button>
   </div>
   <div class="badges" style="margin-top:12px">
     <span class="badge">Habits</span><span class="badge">Workouts</span><span class="badge">Planner</span><span class="badge">Nutrition</span><span class="badge">Finances</span>

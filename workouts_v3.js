@@ -34,6 +34,7 @@
     rpSets: $("#w3RpSets"),
     rpVol: $("#w3RpVol"),
     rpTime: $("#w3RpTime"),
+    rpPRsCount: $("#w3RpPRsCount"),
 
     rpNextCard: $("#w3RpNext"),
     rpNextSource: $("#w3RpNextSource"),
@@ -78,6 +79,50 @@
   // Increment 2: PR flash state
   let prFlashSetId = null;
   let prFlashTimer = null;
+
+  // Track NEW PRs achieved during the current workout so Today summary can update instantly
+  // and we can show them on completion.
+  const SESSION_PRS_KEY_PREFIX = "w3_sessionPRs_";
+  let sessionPRs = { workoutId: null, items: [] }; // items: [{setId, exerciseName, types:[] }]
+
+  function loadSessionPRs(workoutId){
+    sessionPRs = { workoutId: workoutId || null, items: [] };
+    if (!workoutId) return;
+    try{
+      const raw = localStorage.getItem(SESSION_PRS_KEY_PREFIX + String(workoutId));
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (obj && Array.isArray(obj.items)) sessionPRs.items = obj.items;
+    }catch(_){ }
+  }
+
+  function saveSessionPRs(){
+    if (!sessionPRs?.workoutId) return;
+    try{
+      localStorage.setItem(SESSION_PRS_KEY_PREFIX + String(sessionPRs.workoutId), JSON.stringify({ items: sessionPRs.items }));
+    }catch(_){ }
+  }
+
+  function recordSessionPR(setId, exerciseName, types){
+    if (!sessionPRs?.workoutId) return;
+    const sid = String(setId);
+    const ex = String(exerciseName||"").trim();
+    if (!sid || !ex) return;
+    const t = (types||[]).filter(Boolean);
+    const existing = (sessionPRs.items||[]).find(x=>String(x.setId)===sid);
+    if (existing){
+      // Merge types
+      const merged = new Set([...(existing.types||[]), ...t]);
+      existing.types = Array.from(merged);
+    } else {
+      sessionPRs.items.push({ setId: sid, exerciseName: ex, types: t });
+    }
+    saveSessionPRs();
+  }
+
+  function getSessionPRCount(){
+    return (sessionPRs.items||[]).length;
+  }
 
     // Active exercise (for in-card actions)
   let activeExerciseId = null;
@@ -1035,6 +1080,7 @@ let currentTab = "today";
     if (el.rpSets) el.rpSets.textContent = fmtInt(meta.totalSets || 0);
     if (el.rpVol) el.rpVol.textContent = fmtKg(meta.totalVolumeKg || 0);
     if (el.rpTime) el.rpTime.textContent = dur ? secondsToClock(dur) : "--:--";
+    if (el.rpPRsCount) el.rpPRsCount.textContent = String(getSessionPRCount());
     if (el.rpLivePill) el.rpLivePill.hidden = !isLive;
 
     // Next suggested
@@ -1127,6 +1173,11 @@ function render(){
     el.subtitle.textContent = `${workout.status || "planned"} · ${workout.date || "—"}`;
 
     currentWorkoutId = workout.id || null;
+
+    // Load per-workout PR session tracking (used for Today summary PR count and completion message)
+    if (String(sessionPRs.workoutId||"") !== String(currentWorkoutId||"")){
+      loadSessionPRs(currentWorkoutId);
+    }
 
 
     // Allow editing even if a workout is marked completed (prevents "can't type" on mobile)
@@ -1262,6 +1313,7 @@ for (const ex of exercises) {
           <input class="w3-input" data-field="reps" inputmode="numeric" value="${escAttr(String(r))}" placeholder="reps" ${isReadOnly ? "disabled" : ""} />
 
           <div class="w3-hoverActions" aria-hidden="true">
+            <button class="w3-miniBtn" data-action="dup-set" title="Duplicate">Dup</button>
             <button class="w3-miniBtn danger" data-action="del-set" title="Delete">Del</button>
           </div>
         </div>
@@ -1328,8 +1380,16 @@ for (const ex of exercises) {
     const oldR = Number(before.maxReps || 0);
     const oldV = Number(before.maxVolumeKg || 0);
 
-    if ((w > oldW && w > 0) || (r > oldR && r > 0) || (v > oldV && v > 0)) {
+    const types = [];
+    if (w > oldW && w > 0) types.push("weight");
+    if (r > oldR && r > 0) types.push("reps");
+    if (v > oldV && v > 0) types.push("volume");
+
+    if (types.length) {
       flashPR(setId);
+      recordSessionPR(setId, exerciseName, types);
+      // Update Today summary instantly without waiting for a full rerender.
+      if (el.rpPRsCount) el.rpPRsCount.textContent = String(getSessionPRCount());
     }
   }
 
@@ -1735,6 +1795,20 @@ for (const ex of exercises) {
     const w = ensureWorkout();
     if (!w) return;
     safe(()=>Workouts.finishWorkout(w.id), null);
+    const prCount = getSessionPRCount();
+    if (typeof showToast === "function"){
+      if (prCount > 0){
+        // Build a short list: "Bench (weight) • Squat (volume)"
+        const items = (sessionPRs.items||[]).slice(0,3).map(it=>{
+          const types = (it.types||[]).join(", ");
+          return types ? `${it.exerciseName} (${types})` : it.exerciseName;
+        });
+        const more = (sessionPRs.items||[]).length > 3 ? ` +${(sessionPRs.items||[]).length-3} more` : "";
+        showToast(`Workout completed — ${prCount} PR${prCount===1?"":"s"}: ${items.join(" • ")}${more}`);
+      } else {
+        showToast("Workout completed");
+      }
+    }
     render();
   });
 
