@@ -978,6 +978,53 @@ let currentTab = "today";
     }catch(_){}
   }
 
+  // Instantiate a purchased market template into a real workout session
+  // and navigate user to Workouts → Today with it loaded.
+  function loadMarketTemplateIntoWorkout(tpl){
+    if (!tpl) return null;
+    const today = isoDate();
+
+    // Prefer the first preview workout as the starting session.
+    const first = (tpl.preview && tpl.preview[0]) ? tpl.preview[0] : null;
+    const workoutName = (first && first.name) ? first.name : (tpl.title || "Workout");
+
+    const w = safe(()=>Workouts.createWorkout({ name: workoutName, date: today, templateId: tpl.id }), null);
+    if (!w || !w.id) return null;
+
+    const exercises = (first && Array.isArray(first.exercises)) ? first.exercises : [];
+    exercises.forEach((ex, idx)=>{
+      const exName = (ex && ex.name) ? String(ex.name) : "Exercise";
+      const exObj = safe(()=>Workouts.addExercise(w.id, { name: exName, order: idx }), null);
+      if (!exObj || !exObj.id) return;
+      const sets = (ex && Array.isArray(ex.sets)) ? ex.sets : [];
+      // If template provides sets, seed them. Otherwise, create 3 empty sets.
+      if (sets.length){
+        sets.forEach((s, sIdx)=>{
+          safe(()=>Workouts.addSet(exObj.id, {
+            kind: "work",
+            order: sIdx,
+            weightKg: (s && s.weightKg!=null) ? Number(s.weightKg) : undefined,
+            reps: (s && s.reps!=null) ? Number(s.reps) : undefined,
+            restSec: (s && s.restSec!=null) ? Number(s.restSec) : 90,
+            completed: false,
+          }), null);
+        });
+      }else{
+        safe(()=>Workouts.addSets(exObj.id, 3, { kind: "work", restSec: 90, completed: false }), null);
+      }
+    });
+
+    // Load it as the active workout for this page.
+    setWorkoutId(w.id);
+    currentWorkoutId = w.id;
+    // Ensure we are on Today and empty-state is not masking content.
+    currentTab = "today";
+    syncTabUI();
+    el.page?.classList.remove("is-empty");
+    if (el.emptyWrap) el.emptyWrap.hidden = true;
+    return w;
+  }
+
 
   function liveDurationSec(workout){
     if (!workout) return null;
@@ -1538,9 +1585,23 @@ for (const ex of exercises) {
       const id = act.getAttribute("data-tpl-id");
       const tpl = listMarket().find(t=>t.id===id);
       if (tpl){ addToUserTemplates(tpl); }
-      alert("Purchased (mock). Template added to your library.");
-      templatePreviewId = null;
-      renderTemplates();
+      // UX: after purchase, immediately load the first workout from the template
+      // into today's session and jump back to Today so user can start right away.
+      if (tpl){
+        loadMarketTemplateIntoWorkout(tpl);
+        templatePreviewId = null;
+        // Ensure URL hash/tab is Today so reload is consistent.
+        try{
+          const next = "#today";
+          if (location.hash !== next) history.replaceState(null, "", next);
+        }catch(_){ }
+        render();
+        if (typeof showToast === "function") showToast("Template purchased — workout loaded");
+      }else{
+        alert("Purchased (mock). Template added to your library.");
+        templatePreviewId = null;
+        renderTemplates();
+      }
       return;
     }
 
