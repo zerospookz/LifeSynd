@@ -2138,6 +2138,11 @@ body[data-theme="dark"]{
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
+
+/* Make Today summary feel like a shortcut */
+.w3-rpCard.is-clickable{ cursor:pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.w3-rpCard.is-clickable:hover{ transform: translateY(-1px); box-shadow: 0 18px 42px rgba(0,0,0,.34); }
+.w3-rpCard.is-clickable:active{ transform: translateY(0px); }
 .w3-rpCardTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 10px; }
 .w3-rpTitle{ font-weight: 800; letter-spacing:-0.01em; }
 .w3-rpHint{ font-size: 12px; color: rgba(255,255,255,0.68); }

@@ -1213,10 +1213,9 @@ let currentTab = "today";
       }
     }
 
-    // Navigate to Today / Workouts view
-    activeTab = "today";
+    // Navigate to Today / Workouts view (use the real tab state)
     templatePreviewId = null;
-    render();
+    setTab("today");
   }
 
 // Template stores (purchased vs personal)
@@ -2077,6 +2076,28 @@ for (const ex of exercises) {
 
   if (el.btnAddExercise != null) el.btnAddExercise.addEventListener("click", addExercise);
   if (el.btnAddExerciseEmpty != null) el.btnAddExerciseEmpty.addEventListener("click", addExercise);
+
+  // Today summary card should act as a shortcut back to the current (Today) workout.
+  // (Users expect clicking the summary to open the workout, not only show stats.)
+  if (el.rpToday != null){
+    try{
+      el.rpToday.setAttribute("role","button");
+      el.rpToday.setAttribute("tabindex","0");
+      el.rpToday.classList.add("is-clickable");
+    }catch(_){ }
+    el.rpToday.addEventListener("click", ()=>{
+      // Ensure an active workout is selected, then navigate to Today.
+      ensureWorkout();
+      setTab("today");
+    });
+    el.rpToday.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        ensureWorkout();
+        setTab("today");
+      }
+    });
+  }
   // Empty state card is clickable
   if (el.empty != null) el.empty.addEventListener("click", (e)=>{
     // If user clicks the Today summary card inside the empty state, don't open Add Exercise.
@@ -2098,22 +2119,24 @@ for (const ex of exercises) {
   if (el.tabs != null) el.tabs.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
-    // Tabs are hidden; ignore.
-    currentTab = "today";
+    const tab = btn.getAttribute("data-tab");
+    if (tab) setTab(tab);
   });
 
   // Empty-state quick actions (Templates / History)
   if (el.emptySide != null) el.emptySide.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
-    currentTab = "today";
+    const tab = btn.getAttribute("data-tab");
+    if (tab) setTab(tab);
   });
 
   // Desktop tiles switching
   if (el.sideTiles != null) el.sideTiles.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
-    currentTab = "today";
+    const tab = btn.getAttribute("data-tab");
+    if (tab) setTab(tab);
   });
 
 
