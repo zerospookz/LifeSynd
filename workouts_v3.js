@@ -131,6 +131,12 @@ let currentTab = "today";
   function setTab(tab){
     if (!tab) return;
     currentTab = tab;
+    // Make tab state feel like a "page" change and keep it shareable/reloadable.
+    // This also helps users who expect the right-side cards to "open" a section.
+    try{
+      const next = `#${tab}`;
+      if (location.hash !== next) history.replaceState(null, "", next);
+    }catch(_){ }
     syncTabUI();
     render();
   }
@@ -1806,6 +1812,18 @@ for (const ex of exercises) {
     if (window.CSS && typeof window.CSS.escape === "function") return window.CSS.escape(v);
     return v.replace(/[^a-zA-Z0-9_-]/g, (ch)=>"\\\\" + ch);
   }
+
+  // Init tab from hash (e.g. #templates, #history)
+  try{
+    const h = String(location.hash || "").replace(/^#/, "").trim();
+    if (h === "today" || h === "history" || h === "templates") currentTab = h;
+  }catch(_){ }
+
+  // Restore tab "page" from URL hash (e.g. #templates, #history)
+  try{
+    const h = String(location.hash || "").replace(/^#/, "").trim().toLowerCase();
+    if (h === "today" || h === "history" || h === "templates") currentTab = h;
+  }catch(_){ }
 
   syncTabUI();
   render();

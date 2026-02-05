@@ -1564,6 +1564,13 @@ body[data-theme="dark"]{
     padding-top: 6px;
   }
 
+  /* Align the right dock with the empty hero card.
+     The empty wrapper has a small top padding, so mirror it here to keep
+     the top edges of the hero + dock cards perfectly aligned. */
+  .w3-page.is-empty .w3-todayDock{
+    padding-top: 6px;
+  }
+
   /* Desktop: bottom bar is a mobile affordance; hide it and use the right utility column instead */
   .w3-bottomBar{ display:none !important; }
 
