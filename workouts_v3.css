@@ -1604,6 +1604,11 @@ body[data-theme="dark"]{
     width: 100%;
     padding-top: 6px;
   }
+  /* Respect the HTML hidden attribute (UA stylesheet sets display:none, but
+     our desktop rules above would otherwise override it). */
+  .w3-emptyWrap[hidden]{
+    display: none !important;
+  }
   .w3-emptySide{ display:none; }
   /* Desktop: remove the big quick-action buttons (Templates/History) from the empty screen */
   .w3-emptyQuick{ display:none; }

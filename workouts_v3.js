@@ -734,6 +734,8 @@ let currentTab = "today";
     el.btnRest60.style.display = "none";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
+    // Leaving Today should fully exit the empty-state visual mode.
+    el.page?.classList.remove("is-empty");
     if (el.emptyWrap) el.emptyWrap.hidden = true;
 
     const all = safe(()=>Workouts.listWorkouts ? Workouts.listWorkouts() : [], []);
@@ -818,6 +820,8 @@ let currentTab = "today";
     el.btnRest60.style.display = "none";
     el.btnStart.style.display = "none";
     el.btnFinish.style.display = "none";
+    // Leaving Today should fully exit the empty-state visual mode.
+    el.page?.classList.remove("is-empty");
     if (el.emptyWrap) el.emptyWrap.hidden = true;
 
     const cats = `
