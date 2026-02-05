@@ -34,7 +34,7 @@
 
 .w3-header{
   display:grid;
-  grid-template-columns: 40px 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items:center;
   gap:12px;
   margin-bottom: 12px;
@@ -150,25 +150,26 @@ body.w3-isReordering{
    - prevent text selection / callout
    - keep normal vertical scrolling elsewhere */
 .w3-exHoldZone{
-  position: relative;
-  /* Fill the header width so the delete affordance can live in a consistent corner */
+  /* Safe zone is ONLY the title/notes area (no buttons) */
   flex: 1 1 auto;
-  /* Reserve space for the delete icon so it never overlaps the exercise title */
-  padding-left: 42px;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: pan-y;
 }
 
+/* Right-side header controls (delete affordance + ⋮ menu) */
+.w3-exHeaderRight{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
 /* Subtle delete affordance (safe-zone only): trash icon + progress ring.
    - visible but quiet (so the user discovers it)
    - fills ONLY while holding (2.5s) */
 .w3-delHint{
-  position:absolute;
-  top: 2px;
-  left: 0;
-  right: auto;
+  position: relative;
   width: 34px;
   height: 34px;
   display:grid;
@@ -193,8 +194,8 @@ body.w3-isReordering{
   transition: opacity 180ms ease, backdrop-filter 420ms ease, -webkit-backdrop-filter 420ms ease;
 }
 
-.w3-exHoldZone:hover .w3-delHint,
-.w3-exHoldZone:focus-within .w3-delHint{
+.w3-exCard:hover .w3-delHint,
+.w3-exCard:focus-within .w3-delHint{
   opacity: .9;
   transform: translateY(0);
   animation: w3DelHintPulse 10s ease-in-out infinite;
@@ -875,6 +876,7 @@ body[data-theme="dark"]{
   gap: 12px;
   align-items: center;
   margin-top: 10px;
+  margin-bottom: 14px;
 }
 
 /* Mobile: tabs are shown at the top; hide the duplicated bottom tiles */
