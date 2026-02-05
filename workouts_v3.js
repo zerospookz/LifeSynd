@@ -25,6 +25,8 @@
     planModalClose: $("#w3PlanModalClose"),
     planModalDate: $("#w3PlanModalDate"),
     planTpl: $("#w3PlanTpl"),
+    planCustomRow: $("#w3PlanCustomRow"),
+    planCustomName: $("#w3PlanCustomName"),
     planDay: $("#w3PlanDay"),
     planSave: $("#w3PlanSave"),
     planCancel: $("#w3PlanCancel"),
@@ -235,14 +237,26 @@ let currentTab = "today";
     }
     if (closestEl(e.target,"#w3PlanSave")){
       if (!_planModalDateIso) { closePlanModal(); return; }
-      const list = listMarket();
       const tid = el.planTpl ? el.planTpl.value : "";
+      const plan = getPlan();
+
+      // Custom workout (user-defined)
+      if (String(tid) === CUSTOM_TPL_ID){
+        const name = (el.planCustomName ? String(el.planCustomName.value||"") : "").trim();
+        plan[_planModalDateIso] = { type: "custom", title: name || "Custom workout" };
+        setPlan(plan);
+        closePlanModal();
+        renderWeekPlan();
+        return;
+      }
+
+      // Template-based plan
+      const list = listMarket();
       const t = list.find(x=>String(x.id)===String(tid));
       const dayIdx = el.planDay ? parseInt(el.planDay.value||"0",10) : 0;
       const day = (t && Array.isArray(t.days)) ? (t.days[dayIdx] || t.days[0]) : null;
       const title = t ? String(t.title||t.id) : "Planned";
-      const plan = getPlan();
-      plan[_planModalDateIso] = { templateId: tid, dayIdx: dayIdx, title: title + (day ? (" · " + (day.name||("Day "+(dayIdx+1)))) : "") , templateTitle: title };
+      plan[_planModalDateIso] = { type: "template", templateId: tid, dayIdx: dayIdx, title: title + (day ? (" · " + (day.name||("Day "+(dayIdx+1)))) : ""), templateTitle: title };
       setPlan(plan);
       closePlanModal();
       renderWeekPlan();
@@ -708,6 +722,7 @@ let currentTab = "today";
   }
 
   let _planModalDateIso = null;
+  const CUSTOM_TPL_ID = "__custom__";
 
   function openPlanModal(dateIso){
     _planModalDateIso = dateIso;
@@ -715,18 +730,40 @@ let currentTab = "today";
     const d = new Date(dateIso+"T00:00:00");
     if (el.planModalDate) el.planModalDate.textContent = `${fmtDow(d)} · ${fmtMd(d)} · ${dateIso}`;
 
-    // Populate templates from market (simple & always available)
-    const list = listMarket();
+    // Populate templates from market + a custom workout option
+    const market = listMarket();
+    const list = [{ id: CUSTOM_TPL_ID, title: "Custom workout…", days: [] }].concat(market);
     const plan = getPlan();
     const cur = plan[dateIso] || null;
 
     if (el.planTpl){
       el.planTpl.innerHTML = list.map(t=>`<option value="${esc(String(t.id))}">${esc(String(t.title||t.id))}</option>`).join("");
-      if ((cur==null?undefined:cur.templateId)) el.planTpl.value = String(cur.templateId);
+      if (cur && cur.type === "custom"){
+        el.planTpl.value = CUSTOM_TPL_ID;
+      } else if ((cur==null?undefined:cur.templateId)) {
+        el.planTpl.value = String(cur.templateId);
+      }
+    }
+
+    // Custom workout name
+    if (el.planCustomName && cur && cur.type === "custom"){
+      el.planCustomName.value = String(cur.title || "");
+    } else if (el.planCustomName){
+      el.planCustomName.value = "";
     }
 
     function fillDays(){
       const tid = el.planTpl ? el.planTpl.value : "";
+      const isCustom = String(tid) === CUSTOM_TPL_ID;
+      if (el.planCustomRow) el.planCustomRow.hidden = !isCustom;
+      if (el.planDay){
+        el.planDay.disabled = isCustom;
+      }
+      if (isCustom){
+        if (el.planDay) el.planDay.innerHTML = `<option value="">—</option>`;
+        return;
+      }
+
       const t = list.find(x=>String(x.id)===String(tid));
       const days = (t && Array.isArray(t.days)) ? t.days : [];
       if (!el.planDay) return;
