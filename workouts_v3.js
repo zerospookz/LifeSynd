@@ -735,7 +735,7 @@ let currentTab = "today";
       el.planDay.value = String(Math.max(0, Math.min(idx, days.length-1)));
     }
     fillDays();
-    (el.planTpl==null?undefined:el.planTpl.addEventListener)("change", fillDays, { once:false });
+    if (el.planTpl != null) el.planTpl.addEventListener("change", fillDays, { once:false });
 
     if (el.planOverlay) el.planOverlay.hidden = false;
   }
@@ -1872,8 +1872,8 @@ for (const ex of exercises) {
     };
 
     // one-shot listeners
-    (el.modalOk==null?undefined:el.modalOk.addEventListener)("click", submit, { once:true });
-    (el.modalCancel==null?undefined:el.modalCancel.addEventListener)("click", closeAddExerciseModal, { once:true });
+    if (el.modalOk != null) el.modalOk.addEventListener("click", submit, { once:true });
+    if (el.modalCancel != null) el.modalCancel.addEventListener("click", closeAddExerciseModal, { once:true });
     el.modalInput.addEventListener("keydown", onKey, { once:true });
     el.modalOverlay.addEventListener("click", onBg, { once:true });
   }
@@ -1894,17 +1894,17 @@ for (const ex of exercises) {
     return;
   }
 
-  (el.btnAddExercise==null?undefined:el.btnAddExercise.addEventListener)("click", addExercise);
-  (el.btnAddExerciseEmpty==null?undefined:el.btnAddExerciseEmpty.addEventListener)("click", addExercise);
+  if (el.btnAddExercise != null) el.btnAddExercise.addEventListener("click", addExercise);
+  if (el.btnAddExerciseEmpty != null) el.btnAddExerciseEmpty.addEventListener("click", addExercise);
   // Empty state card is clickable
-  (el.empty==null?undefined:el.empty.addEventListener)("click", (e)=>{
+  if (el.empty != null) el.empty.addEventListener("click", (e)=>{
     // If user clicks the Today summary card inside the empty state, don't open Add Exercise.
     if (e.target && e.target.closest && e.target.closest("#w3RpToday")) return;
     el.empty.classList.add("isPressed");
     setTimeout(()=>el.empty && el.empty.classList.remove("isPressed"), 140);
     addExercise();
   });
-  (el.empty==null?undefined:el.empty.addEventListener)("keydown", (e)=>{
+  if (el.empty != null) el.empty.addEventListener("keydown", (e)=>{
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       el.empty.classList.add("isPressed");
@@ -1914,7 +1914,7 @@ for (const ex of exercises) {
   });
 
   // Tabs switching
-  (el.tabs==null?undefined:el.tabs.addEventListener)("click", (e)=>{
+  if (el.tabs != null) el.tabs.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
     // Tabs are hidden; ignore.
@@ -1922,28 +1922,28 @@ for (const ex of exercises) {
   });
 
   // Empty-state quick actions (Templates / History)
-  (el.emptySide==null?undefined:el.emptySide.addEventListener)("click", (e)=>{
+  if (el.emptySide != null) el.emptySide.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
     currentTab = "today";
   });
 
   // Desktop tiles switching
-  (el.sideTiles==null?undefined:el.sideTiles.addEventListener)("click", (e)=>{
+  if (el.sideTiles != null) el.sideTiles.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-tab]");
     if (!btn) return;
     currentTab = "today";
   });
 
 
-  (el.btnStart==null?undefined:el.btnStart.addEventListener)("click", ()=>{
+  if (el.btnStart != null) el.btnStart.addEventListener("click", ()=>{
     const w = ensureWorkout();
     if (!w) return;
     safe(()=>Workouts.startWorkout(w.id), null);
     render();
   });
 
-  (el.btnFinish==null?undefined:el.btnFinish.addEventListener)("click", ()=>{
+  if (el.btnFinish != null) el.btnFinish.addEventListener("click", ()=>{
     const w = ensureWorkout();
     if (!w) return;
     safe(()=>Workouts.finishWorkout(w.id), null);
@@ -1984,10 +1984,10 @@ for (const ex of exercises) {
       }catch(_){ }
     };
 
-    (restUI.pickerRange==null?undefined:restUI.pickerRange.addEventListener)('input', (e)=>{
+    if (restUI.pickerRange != null) restUI.pickerRange.addEventListener('input', (e)=>{
       syncFrom(parseInt(e.target.value, 10));
     });
-    (restUI.pickerSec==null?undefined:restUI.pickerSec.addEventListener)('input', (e)=>{
+    if (restUI.pickerSec != null) restUI.pickerSec.addEventListener('input', (e)=>{
       syncFrom(parseInt(e.target.value, 10));
     });
 
@@ -1998,10 +1998,10 @@ for (const ex of exercises) {
       // Start immediately; use modifier keys to open picker.
       handleRestPrimaryClick(e);
     });
-    (restUI.pickerClose==null?undefined:restUI.pickerClose.addEventListener)('click', closeRestPicker);
+    if (restUI.pickerClose != null) restUI.pickerClose.addEventListener('click', closeRestPicker);
 
     // Start rest from picker
-    (restUI.pickerStart==null?undefined:restUI.pickerStart.addEventListener)('click', ()=>{
+    if (restUI.pickerStart != null) restUI.pickerStart.addEventListener('click', ()=>{
       const sec = loadRestPreset();
       closeRestPicker();
       startRest(sec);
@@ -2014,11 +2014,11 @@ for (const ex of exercises) {
       if (!within) closeRestPicker();
     });
 
-    (el.restStop==null?undefined:el.restStop.addEventListener)("click", stopRest);
+    if (el.restStop != null) el.restStop.addEventListener("click", stopRest);
   })();
 
   // Right panel actions
-  (el.rpStartSuggested==null?undefined:el.rpStartSuggested.addEventListener)("click", ()=>{
+  if (el.rpStartSuggested != null) el.rpStartSuggested.addEventListener("click", ()=>{
     if (!suggestedExerciseName) return;
     // Start implies: add exercise then start workout if not started
     const w = ensureWorkout();
@@ -2032,7 +2032,7 @@ for (const ex of exercises) {
     render();
   });
 
-  (el.rpAddSuggested==null?undefined:el.rpAddSuggested.addEventListener)("click", ()=>{
+  if (el.rpAddSuggested != null) el.rpAddSuggested.addEventListener("click", ()=>{
     if (!suggestedExerciseName) return;
     const w = ensureWorkout();
     if (!w) return;
