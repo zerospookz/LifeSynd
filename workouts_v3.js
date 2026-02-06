@@ -396,6 +396,26 @@
   // --- controls ---
   if (todayBtn) todayBtn.addEventListener("click", gotoToday);
 
+  // Make the whole date "pill" clickable (not just the small native input).
+  // This fixes cases where users click the pill but the browser doesn't open the picker.
+  (function enablePillClickFocus(){
+    const pills = document.querySelectorAll('.workoutsDateControls .datePill');
+    pills.forEach((pill) => {
+      pill.addEventListener('click', (e) => {
+        // Don't steal clicks from the clear (×) button on the range pill.
+        if (e.target && e.target.closest && e.target.closest('.pillX')) return;
+        const input = pill.querySelector('input.dateInput');
+        if (!input) return;
+        // Focus first so screen readers / keyboard users also benefit.
+        try { input.focus({ preventScroll: true }); } catch { input.focus(); }
+        // Chrome/Edge support showPicker() for month/date inputs.
+        if (typeof input.showPicker === 'function') {
+          try { input.showPicker(); } catch (_) { /* ignore */ }
+        }
+      });
+    });
+  })();
+
   if (monthPicker){
     monthPicker.addEventListener("change", () => {
       const val = String(monthPicker.value || "");
