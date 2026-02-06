@@ -145,8 +145,22 @@
       list.className = "month-list";
 
       const items = (byDate.get(c.iso) || []);
-      for (const w of items){
+      // Show multiple workouts in the day cell (calendar summary)
+      // Keep it readable: render up to 3, then show a “+N more” indicator.
+      const visible = items.slice(0, 3);
+      for (const w of visible){
         list.appendChild(renderWorkoutCard(w));
+      }
+
+      if (items.length > visible.length){
+        const more = document.createElement('div');
+        more.className = 'month-more';
+        more.textContent = `+${items.length - visible.length} more`;
+        // Tapping the indicator should take you to the planning screen for that date.
+        more.addEventListener('click', () => {
+          location.href = `plan_workout.html?date=${encodeURIComponent(c.iso)}`;
+        });
+        list.appendChild(more);
       }
 
       const addBtn = document.createElement("button");
