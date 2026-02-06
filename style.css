@@ -1932,6 +1932,35 @@ img.pulseOnce{
   100%{ transform: scale(1.08); }
 }
 
+/* ---------------- Plan Workout: multiple workouts per day ---------------- */
+.pwWorkoutPicker{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+.pwIconBtn{
+  width:34px;
+  height:34px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  font-size:18px;
+  line-height: 1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+
+.pwIconBtn:active{ transform: scale(.96); }
+.pwIconBtn:hover{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.22); }
+
+
 
 /* Wide-screen enhancement (desktop only): use more horizontal space for readability */
 @media (min-width: 1400px){

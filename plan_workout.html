@@ -36,33 +36,88 @@
           <img class="topbarLogo" src="icons/brand-mark-128.png" alt="LifeSync">
           <h1 class="pageTitle">Plan workout</h1>
         </div>
-        <p class="subtitle">Schedule for · <span id="pwDateLabel">—</span></p>
+        <p class="subtitle" id="pwSubline">—</p>
       </div>
       <div class="actionsRow">
         <button class="btn secondary" id="pwBack">Back</button>
       </div>
     </div>
 
-    <section style="padding: 18px 20px 28px; max-width: 720px;">
-      <div class="card" style="background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px;">
-        <div style="display:flex; flex-direction:column; gap: 14px;">
-          <div>
-            <div style="font-size:12px; color: rgba(255,255,255,.65); margin-bottom:6px;">Template</div>
-            <select id="pwTemplate" class="input" style="width:100%;">
+    <section class="pwWrap">
+      <!-- What/When header -->
+      <div class="pwHeader">
+        <div class="pwDate" id="pwBigDate">—</div>
+
+        <!-- Multiple workouts per day: choose which workout you're editing -->
+        <div class="pwWorkoutPicker">
+          <span class="pwMetaLabel">Workout</span>
+          <select id="pwWorkoutSelect" class="pwSelect" aria-label="Select workout"></select>
+          <button class="pwIconBtn" id="pwNewWorkout" type="button" aria-label="New workout">+</button>
+        </div>
+
+        <div class="pwNameRow">
+          <input id="pwName" class="pwNameInput" type="text" placeholder="Workout name" autocomplete="off" />
+        </div>
+        <div class="pwMetaRow">
+          <div class="pwMeta">
+            <span class="pwMetaLabel">Template</span>
+            <select id="pwTemplate" class="pwSelect">
               <option value="">Loading…</option>
             </select>
+            <button class="btn secondary small" id="pwApplyTemplate" type="button">Apply</button>
           </div>
-
-          <div style="display:flex; gap: 10px; justify-content:flex-end; padding-top: 8px;">
-            <button class="btn secondary" id="pwCancel">Cancel</button>
-            <button class="btn" id="pwSave">Save</button>
-          </div>
+          <div class="pwSaved" id="pwSavedState">Saved</div>
         </div>
+      </div>
+
+      <!-- Exercises -->
+      <div class="pwSectionHead">
+        <h2 class="pwSectionTitle">Exercises</h2>
+        <button class="pwAddTile compact" id="pwAddExercise" type="button" aria-label="Add exercise">
+          <span class="pwPlus" aria-hidden="true">+</span>
+          <span class="pwAddLabel">Add exercise</span>
+        </button>
+      </div>
+
+      <div id="pwExercises" class="pwExercises"></div>
+
+      <div class="pwFooter">
+        <button class="btn secondary" id="pwCancel" type="button">Cancel</button>
+        <button class="btn" id="pwDone" type="button">Done</button>
       </div>
     </section>
   </main>
 </div>
 
+<!-- Exercise picker (bottom sheet / modal) -->
+<div class="sheetOverlay" id="exOverlay" hidden></div>
+<div class="sheet" id="exSheet" hidden role="dialog" aria-modal="true" aria-label="Add exercise">
+  <div class="sheetTop">
+    <div class="sheetTitle">Add exercise</div>
+    <button class="sheetClose" id="exClose" aria-label="Close">×</button>
+  </div>
+
+  <div class="sheetSearch">
+    <input id="exSearch" type="search" placeholder="Search exercises…" autocomplete="off" />
+  </div>
+
+  <div class="sheetChips" id="exChips">
+    <!-- JS fills chips -->
+  </div>
+
+  <div class="sheetList" id="exList" role="list"></div>
+</div>
+
+<nav class="bottomNav" aria-label="Primary">
+  <a href="dashboard.html">🏠<span>Dashboard</span></a>
+  <a href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>
+  <a class="active" href="workouts.html">🏋️<span>Workouts</span></a>
+  <a href="nutrition.html">🍎<span>Nutrition</span></a>
+  <a href="finances.html">💰<span>Finances</span></a>
+</nav>
+
+<script src="app.js"></script>
+<script src="ui.js"></script>
 <script src="workouts.js"></script>
 <script src="plan_workout.js"></script>
 </body>
