@@ -51,35 +51,11 @@
               <input class="dateInput" id="datePicker" type="date" aria-label="Pick date" />
             </div>
 
-            <div class="rangeWrap" aria-label="Filter by date range">
-              <!-- Desktop: date inputs. Mobile: a dual-thumb slider (same filter) -->
-              <div class="rangeDates">
-                <div class="datePill small" title="From">
-                  <span class="pillIcon" aria-hidden="true">↦</span>
-                  <span class="pillText">From</span>
-                  <input class="dateInput" id="fromPicker" type="date" aria-label="From date" />
-                </div>
-                <div class="datePill small" title="To">
-                  <span class="pillIcon" aria-hidden="true">↤</span>
-                  <span class="pillText">To</span>
-                  <input class="dateInput" id="toPicker" type="date" aria-label="To date" />
-                </div>
-              </div>
-
-              <div class="rangeSlider" aria-label="Date range slider">
-                <div class="rangeSliderTop">
-                  <span class="pillIcon" aria-hidden="true">⟷</span>
-                  <span class="rangeLabel" id="rangeLabel">Range</span>
-                  <span class="rangeValue" id="rangeValue">—</span>
-                </div>
-                <div class="dualRange" role="group" aria-label="Select start and end day">
-                  <input id="rangeStart" type="range" min="1" max="28" value="1" />
-                  <input id="rangeEnd" type="range" min="1" max="28" value="28" />
-                  <div class="dualTrack" aria-hidden="true"></div>
-                </div>
-              </div>
-
-              <button class="btn secondary mini" id="clearRangeBtn" type="button" title="Clear range">Clear</button>
+            <!-- Range selection is done directly in the calendar (press a day, drag to another day). -->
+            <div class="datePill rangePill" id="rangePill" title="Press a day and drag to select a period">
+              <span class="pillIcon" aria-hidden="true">⟷</span>
+              <span class="pillText" id="rangePillText">Drag to range</span>
+              <button class="pillX" id="clearRangeBtn" type="button" aria-label="Clear range" title="Clear range">×</button>
             </div>
           </div>
         </div>

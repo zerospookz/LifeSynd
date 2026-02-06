@@ -24,11 +24,7 @@
   const todayBtn = $("#todayBtn");
   const monthPicker = $("#monthPicker");
   const datePicker = $("#datePicker");
-  const fromPicker = $("#fromPicker");
-  const toPicker = $("#toPicker");
-  const rangeStart = $("#rangeStart");
-  const rangeEnd = $("#rangeEnd");
-  const rangeValueEl = $("#rangeValue");
+  const rangePillText = $("#rangePillText");
   const clearRangeBtn = $("#clearRangeBtn");
 
   // ---- Month model ----
@@ -94,58 +90,15 @@
     return `${left}–${right}${year}`;
   }
 
-  // --- Dual range slider helpers (mobile) ---
-  function daysInViewMonth(){
-    return endOfMonth(viewYear, viewMonth).getDate();
-  }
-
-  function setRangeValueText(){
-    if (!rangeValueEl) return;
-    if (rangeFromISO && rangeToISO){
-      rangeValueEl.textContent = friendlyRangeLabel(rangeFromISO, rangeToISO);
+  function updateRangePill(){
+    if (!rangePillText) return;
+    if (rangeFromISO && rangeToISO && rangeFromISO !== rangeToISO){
+      rangePillText.textContent = friendlyRangeLabel(rangeFromISO, rangeToISO);
+      document.getElementById('rangePill')?.classList?.remove('is-hidden');
     } else {
-      rangeValueEl.textContent = friendlyMonthLabel(viewYear, viewMonth);
+      rangePillText.textContent = "Drag to range";
+      document.getElementById('rangePill')?.classList?.add('is-hidden');
     }
-  }
-
-  function updateRangeSliderBounds(){
-    if (!rangeStart || !rangeEnd) return;
-    const max = daysInViewMonth();
-    rangeStart.min = "1";
-    rangeEnd.min = "1";
-    rangeStart.max = String(max);
-    rangeEnd.max = String(max);
-
-    // If we are currently in a range that matches the view month, reflect it; otherwise reset to full month.
-    const vm = `${viewYear}-${pad2(viewMonth+1)}`;
-    let s = 1;
-    let e = max;
-    if (rangeFromISO && rangeToISO && rangeFromISO.slice(0,7) === vm && rangeToISO.slice(0,7) === vm){
-      s = Math.max(1, Math.min(max, Number(rangeFromISO.slice(8,10))));
-      e = Math.max(1, Math.min(max, Number(rangeToISO.slice(8,10))));
-      if (s > e){ const t = s; s = e; e = t; }
-    }
-    rangeStart.value = String(s);
-    rangeEnd.value = String(e);
-    setRangeValueText();
-    updateDualTrack();
-  }
-
-  function updateDualTrack(){
-    const wrap = rangeStart?.closest?.('.rangeSlider')?.querySelector?.('.dualTrack');
-    if (!wrap || !rangeStart || !rangeEnd) return;
-    const max = Number(rangeStart.max || 28);
-    const s = Math.min(Number(rangeStart.value||1), Number(rangeEnd.value||max));
-    const e = Math.max(Number(rangeStart.value||1), Number(rangeEnd.value||max));
-    const left = ((s-1) / Math.max(1, (max-1))) * 100;
-    const right = ((e-1) / Math.max(1, (max-1))) * 100;
-    wrap.style.background = `linear-gradient(90deg,
-      rgba(255,255,255,0.06) 0%,
-      rgba(255,255,255,0.06) ${left}%,
-      rgba(125,130,255,0.35) ${left}%,
-      rgba(125,130,255,0.35) ${right}%,
-      rgba(255,255,255,0.06) ${right}%,
-      rgba(255,255,255,0.06) 100%)`;
   }
 
   // ---- DnD state ----
@@ -182,6 +135,15 @@
 
     // If user selected a valid date range, render only that period.
     const hasRange = !!(rangeFromISO && rangeToISO && rangeFromISO <= rangeToISO);
+
+    // Update range pill UI
+    if (rangePillText){
+      rangePillText.textContent = hasRange ? friendlyRangeLabel(rangeFromISO, rangeToISO) : "Drag to range";
+    }
+    const rangePill = clearRangeBtn?.closest?.('.rangePill');
+    if (rangePill){
+      rangePill.classList.toggle('is-hidden', !hasRange);
+    }
 
     const periodStart = hasRange ? dateFromISO(rangeFromISO) : startOfMonth(viewYear, viewMonth);
     const periodEnd = hasRange ? dateFromISO(rangeToISO) : endOfMonth(viewYear, viewMonth);
@@ -241,6 +203,13 @@
       if (c.iso === todayISO) cell.classList.add("today");
       if (selectedISO && c.iso === selectedISO) cell.classList.add("is-selected");
       if (selectedISO && c.iso === selectedISO) cell.classList.add("selected");
+
+      // Range highlight
+      if (hasRange && c.iso >= rangeFromISO && c.iso <= rangeToISO){
+        cell.classList.add('in-range');
+        if (c.iso === rangeFromISO) cell.classList.add('range-start');
+        if (c.iso === rangeToISO) cell.classList.add('range-end');
+      }
 
       // Head (day number + dow)
       const head = document.createElement("div");
@@ -333,7 +302,7 @@
       // Don't block drag/drop: only treat as click if not dragging.
       if (drag) return;
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
       const d = w.date || card.closest('.month-cell')?.dataset?.date;
       if (!d) return;
       location.href = `plan_workout.html?date=${encodeURIComponent(d)}&workoutId=${encodeURIComponent(w.id)}`;
@@ -421,13 +390,7 @@
     if (datePicker && selectedISO){
       datePicker.value = selectedISO;
     }
-    if (fromPicker){
-      fromPicker.value = rangeFromISO || "";
-    }
-    if (toPicker){
-      toPicker.value = rangeToISO || "";
-    }
-    updateRangeSliderBounds();
+    // Range pill is updated in render() (so it always reflects the active view).
   }
 
   // --- controls ---
@@ -471,77 +434,73 @@
     });
   }
 
-  function applyRangeFromInputs(){
-    const a = String(fromPicker?.value || "");
-    const b = String(toPicker?.value || "");
+  // --- Range selection inside the calendar ---
+  // Press a day cell, then drag to another day cell to set a visible period.
+  (function enableRangeSelect(){
+    if (!monthGrid) return;
+    let isSelecting = false;
+    let anchorISO = "";
+    let didDrag = false;
 
-    // Allow partial input without changing the view yet
-    if (!a || !b){
-      rangeFromISO = a;
-      rangeToISO = b;
+    const isInteractive = (el) => !!el?.closest?.('.wCard, .month-add, button, a, input, select, textarea');
+    const getCellISO = (el) => el?.closest?.('.month-cell')?.dataset?.date || "";
+
+    monthGrid.addEventListener('pointerdown', (e) => {
+      if (isInteractive(e.target)) return;
+      const iso = getCellISO(e.target);
+      if (!iso) return;
+      // Start selecting (prevents drag-pan)
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      isSelecting = true;
+      didDrag = false;
+      anchorISO = iso;
+      selectedISO = iso;
+      rangeFromISO = iso;
+      rangeToISO = iso;
+
+      // Keep month picker in sync with the pressed day
+      const d = dateFromISO(iso);
+      if (d){ viewYear = d.getFullYear(); viewMonth = d.getMonth(); }
       syncPickers();
       render();
-      return;
-    }
+      try { monthGrid.setPointerCapture(e.pointerId); } catch(_){ }
+      monthGrid.classList.add('is-selecting');
+    });
 
-    // Normalize (swap if user picked backwards)
-    let from = a;
-    let to = b;
-    if (from > to){
-      const tmp = from; from = to; to = tmp;
-    }
+    monthGrid.addEventListener('pointermove', (e) => {
+      if (!isSelecting) return;
+      // Prevent the drag-pan handler from running while selecting.
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      const iso = getCellISO(e.target) || (document.elementFromPoint(e.clientX, e.clientY)?.closest?.('.month-cell')?.dataset?.date || "");
+      if (!iso) return;
+      if (iso !== rangeToISO){
+        didDrag = didDrag || iso !== anchorISO;
+        // Normalize
+        rangeFromISO = (anchorISO <= iso) ? anchorISO : iso;
+        rangeToISO = (anchorISO <= iso) ? iso : anchorISO;
+        selectedISO = clampISOToRange(selectedISO, rangeFromISO, rangeToISO);
+        render();
+      }
+    });
 
-    rangeFromISO = from;
-    rangeToISO = to;
-    selectedISO = clampISOToRange(selectedISO, rangeFromISO, rangeToISO);
+    const endSelect = (e) => {
+      if (!isSelecting) return;
+      isSelecting = false;
+      try { monthGrid.releasePointerCapture(e.pointerId); } catch(_){ }
+      monthGrid.classList.remove('is-selecting');
 
-    // Keep the month picker in sync with the range start (visual anchor)
-    const d = dateFromISO(rangeFromISO);
-    if (d){
-      viewYear = d.getFullYear();
-      viewMonth = d.getMonth();
-    }
-
-    syncPickers();
-    render();
-
-    const el = monthGrid?.querySelector(`.month-cell[data-date="${selectedISO}"]`);
-    if (el) el.scrollIntoView({ behavior:"smooth", block:"center", inline:"center" });
-  }
-
-  if (fromPicker){
-    fromPicker.addEventListener("change", applyRangeFromInputs);
-  }
-  if (toPicker){
-    toPicker.addEventListener("change", applyRangeFromInputs);
-  }
-
-  // Mobile dual-thumb slider (range within current view month)
-  function applyRangeFromSlider(){
-    if (!rangeStart || !rangeEnd) return;
-    const max = daysInViewMonth();
-    let s = Math.max(1, Math.min(max, Number(rangeStart.value||1)));
-    let e = Math.max(1, Math.min(max, Number(rangeEnd.value||max)));
-    if (s > e){ const t = s; s = e; e = t; }
-
-    rangeFromISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(s)}`;
-    rangeToISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(e)}`;
-    selectedISO = clampISOToRange(selectedISO, rangeFromISO, rangeToISO);
-    // keep pickers consistent
-    syncPickers();
-    render();
-  }
-
-  if (rangeStart && rangeEnd){
-    const onInput = () => {
-      updateDualTrack();
-      setRangeValueText();
+      // Tap w/out dragging => just select the day (no range filter)
+      if (!didDrag){
+        rangeFromISO = "";
+        rangeToISO = "";
+      }
+      syncPickers();
+      render();
     };
-    rangeStart.addEventListener('input', onInput);
-    rangeEnd.addEventListener('input', onInput);
-    rangeStart.addEventListener('change', applyRangeFromSlider);
-    rangeEnd.addEventListener('change', applyRangeFromSlider);
-  }
+    monthGrid.addEventListener('pointerup', endSelect);
+    monthGrid.addEventListener('pointercancel', endSelect);
+  })();
   if (clearRangeBtn){
     clearRangeBtn.addEventListener("click", () => {
       rangeFromISO = "";
@@ -570,7 +529,8 @@
 
     const isInteractive = (el) => {
       if (!el) return false;
-      return !!el.closest('.wCard, button, a, input, select, textarea');
+      // Don't pan when interacting with cards/controls OR when pressing a day cell (range selection).
+      return !!el.closest('.wCard, .month-add, .month-cell[data-date], button, a, input, select, textarea');
     };
 
     monthGrid.addEventListener('pointerdown', (e) => {

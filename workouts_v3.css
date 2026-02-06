@@ -61,6 +61,33 @@
   gap:10px;
 }
 
+/* Range pill: range is selected directly inside the calendar (press a day, drag to another day). */
+.rangePill{ padding-right:10px; }
+.rangePill .pillText{ white-space:nowrap; }
+.rangePill .pillX{
+  margin-left:10px;
+  width:28px;
+  height:28px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.25);
+  color: rgba(255,255,255,0.9);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  cursor:pointer;
+}
+.rangePill .pillX:hover{ background: rgba(255,255,255,0.06); }
+.rangePill .pillX:active{ transform: translateY(1px); }
+.rangePill.is-hidden .pillX{ display:none; }
+
+@media (max-width: 520px){
+  .workoutsDateControls{ width:100%; }
+  .rangePill{ flex: 1 1 100%; }
+  .rangePill .pillText{ flex:1; }
+}
+
 /* Range filter: desktop uses date inputs; mobile uses dual-thumb slider */
 .rangeWrap{ display:flex; align-items:flex-end; gap:10px; }
 .rangeDates{ display:flex; align-items:flex-end; gap:10px; }
@@ -2824,6 +2851,17 @@ main.content h1{
 .month-cell.is-selected{
   border-color: rgba(164, 122, 255, 0.70);
   box-shadow: 0 0 0 2px rgba(164, 122, 255, 0.20);
+}
+
+/* Range highlight (selected period) */
+.month-cell.in-range{
+  background: rgba(125,130,255,0.10);
+  border-color: rgba(125,130,255,0.22);
+}
+.month-cell.range-start,
+.month-cell.range-end{
+  border-color: rgba(164, 122, 255, 0.75);
+  box-shadow: 0 0 0 2px rgba(164, 122, 255, 0.18);
 }
 
 .month-cell.is-dropTarget{
