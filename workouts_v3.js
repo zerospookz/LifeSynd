@@ -465,13 +465,17 @@
     const isInteractive = (el) => !!el?.closest?.('.wCard, .month-add, button, a, input, select, textarea');
     const getCellISO = (el) => el?.closest?.('.month-cell')?.dataset?.date || "";
 
+    // Use capture so a user can start a range drag even when pressing on
+    // nested non-interactive elements inside a cell. We still exclude cards/
+    // buttons/etc via isInteractive().
     monthGrid.addEventListener('pointerdown', (e) => {
       if (isInteractive(e.target)) return;
       const iso = getCellISO(e.target);
       if (!iso) return;
       // Start selecting (prevents drag-pan)
       e.preventDefault();
-      e.stopImmediatePropagation();
+      // Don't use stopImmediatePropagation here; it can interfere with other
+      // click/interaction handlers in some browsers after a re-render.
       isSelecting = true;
       didDrag = false;
       anchorISO = iso;
@@ -486,7 +490,7 @@
       render();
       try { monthGrid.setPointerCapture(e.pointerId); } catch(_){ }
       monthGrid.classList.add('is-selecting');
-    });
+    }, { capture: true });
 
     monthGrid.addEventListener('pointermove', (e) => {
       if (!isSelecting) return;
@@ -520,6 +524,10 @@
     };
     monthGrid.addEventListener('pointerup', endSelect);
     monthGrid.addEventListener('pointercancel', endSelect);
+    // Safety: if pointerup is missed for any reason, ensure we always release
+    // selection mode so header controls never become "dead".
+    window.addEventListener('pointerup', endSelect, { passive: true });
+    window.addEventListener('pointercancel', endSelect, { passive: true });
   })();
   if (clearRangeBtn){
     clearRangeBtn.addEventListener("click", () => {
