@@ -66,6 +66,81 @@
     modalOk: $("#w3ModalOk"),
     modalCancel: $("#w3ModalCancel"),
   };
+  // --- Custom dropdown for Plan Day (avoids white native select popup on some platforms) ---
+  function syncPlanDayCustomUI(){
+    const native = el.planDay;
+    const wrap = document.getElementById("w3PlanDaySelect");
+    const btn  = document.getElementById("w3PlanDayBtn");
+    const list = document.getElementById("w3PlanDayList");
+    if (!native || !wrap || !btn || !list) return;
+
+    // Build list from native options
+    const opts = Array.from(native.options || []);
+    list.innerHTML = "";
+    opts.forEach((o, i)=>{
+      const div = document.createElement("div");
+      div.className = "w3-appSelectOption";
+      div.setAttribute("role","option");
+      div.dataset.value = o.value;
+      div.textContent = o.textContent || "";
+      div.setAttribute("aria-selected", String(native.value) === String(o.value) ? "true" : "false");
+      div.addEventListener("click", ()=>{
+        native.value = String(o.value);
+        native.dispatchEvent(new Event("change", {bubbles:true}));
+        closePlanDayDropdown();
+      });
+      list.appendChild(div);
+    });
+
+    // Button label
+    const sel = opts.find(o=>String(o.value)===String(native.value)) || opts[0];
+    btn.textContent = sel ? (sel.textContent || "") : "Select day";
+
+    // Keep aria-selected in sync
+    Array.from(list.children).forEach(ch=>{
+      ch.setAttribute("aria-selected", String(ch.dataset.value)===String(native.value) ? "true" : "false");
+    });
+  }
+
+  function openPlanDayDropdown(){
+    const wrap = document.getElementById("w3PlanDaySelect");
+    const btn  = document.getElementById("w3PlanDayBtn");
+    if (!wrap || !btn) return;
+    wrap.classList.add("open");
+    btn.setAttribute("aria-expanded","true");
+  }
+  function closePlanDayDropdown(){
+    const wrap = document.getElementById("w3PlanDaySelect");
+    const btn  = document.getElementById("w3PlanDayBtn");
+    if (!wrap || !btn) return;
+    wrap.classList.remove("open");
+    btn.setAttribute("aria-expanded","false");
+  }
+
+  // Global handlers (outside click / esc)
+  (function wirePlanDayDropdown(){
+    const wrap = document.getElementById("w3PlanDaySelect");
+    const btn  = document.getElementById("w3PlanDayBtn");
+    const list = document.getElementById("w3PlanDayList");
+    if (!wrap || !btn || !list) return;
+
+    btn.addEventListener("click", ()=>{
+      const open = wrap.classList.contains("open");
+      if (open) closePlanDayDropdown(); else openPlanDayDropdown();
+    });
+
+    document.addEventListener("click", (e)=>{
+      if (!wrap.classList.contains("open")) return;
+      if (wrap.contains(e.target)) return;
+      closePlanDayDropdown();
+    });
+
+    document.addEventListener("keydown", (e)=>{
+      if (!wrap.classList.contains("open")) return;
+      if (e.key === "Escape") closePlanDayDropdown();
+    });
+  })();
+
 
   // Desktop layout: move the right panel stack into the right utility column.
   // Mobile: keep it inside the bottom bar.
@@ -730,12 +805,22 @@ let currentTab = "today";
       const t = list.find(x=>String(x.id)===String(tid));
       const days = (t && Array.isArray(t.days)) ? t.days : [];
       if (!el.planDay) return;
-      el.planDay.innerHTML = days.map((d,i)=>`<option value="${i}">${esc(String(d.name||("Day "+(i+1))))}</option>`).join("");
-      const idx = (typeof (cur==null?undefined:cur.dayIdx) === "number") ? cur.dayIdx : 0;
-      el.planDay.value = String(Math.max(0, Math.min(idx, days.length-1)));
+      // Always keep Day select usable and non-empty.
+      // If a template has no explicit days, default to Day 1.
+      const opts = (days && days.length) ? days.map((d,i)=>
+        `<option value="${i}">${esc(String(d.name||("Day "+(i+1))))}</option>`
+      ) : ["<option value=\"0\">Day 1</option>"];
+      el.planDay.innerHTML = opts.join("");
+      const rawIdx = (typeof (cur==null?undefined:cur.dayIdx) === "number") ? cur.dayIdx : 0;
+      const maxIdx = Math.max(0, ((days && days.length) ? (days.length-1) : 0));
+      const idx = Math.max(0, Math.min(rawIdx, maxIdx));
+      el.planDay.value = String(idx);
+      el.planDay.disabled = false;
     }
     fillDays();
-    if (el.planTpl != null) el.planTpl.addEventListener("change", fillDays, { once:false });
+    if (el.planDay) el.planDay.addEventListener("change", ()=>{ syncPlanDayCustomUI(); });
+    // Avoid stacking multiple listeners each time the modal opens.
+    if (el.planTpl != null) el.planTpl.onchange = fillDays;
 
     if (el.planOverlay) el.planOverlay.hidden = false;
   }

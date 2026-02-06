@@ -256,7 +256,11 @@
     <select class="w3-modalInput" id="w3PlanTpl"></select>
 
     <label class="w3-modalLabel" for="w3PlanDay">Day</label>
-    <select class="w3-modalInput" id="w3PlanDay"></select>
+    <div class="w3-appSelect" id="w3PlanDaySelect">
+      <button class="w3-appSelectBtn w3-modalInput" id="w3PlanDayBtn" type="button" aria-haspopup="listbox" aria-expanded="false"></button>
+      <div class="w3-appSelectList" id="w3PlanDayList" role="listbox" tabindex="-1"></div>
+    </div>
+    <select class="w3-modalInput w3-hiddenNative" id="w3PlanDay" aria-hidden="true" tabindex="-1"></select>
 
     <div class="w3-modalActions">
       <button class="w3-modalBtn" id="w3PlanClear" type="button">Clear</button>

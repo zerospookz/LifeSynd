@@ -25,6 +25,11 @@
   color: rgba(255,255,255,0.92);
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  background-clip: padding-box;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 #w3PlanModal select.w3-modalInput option{
@@ -34,6 +39,7 @@
 
 #w3PlanModal select.w3-modalInput:disabled{
   opacity: .65;
+  background: rgba(255,255,255,0.04);
 }
 
 .w3-sideTiles{display:none;}
@@ -2285,3 +2291,65 @@ body[data-theme="dark"]{
 .w3-weekName{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .w3-weekBadge{font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.10);white-space:nowrap}
 .w3-weekBadge.empty{opacity:.75}
+
+
+/* App-styled select (custom dropdown) for consistent dark UI */
+.w3-hiddenNative{
+  position:absolute!important;
+  left:-10000px!important;
+  width:1px!important;
+  height:1px!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+#w3PlanModal .w3-appSelect{ position: relative; }
+
+#w3PlanModal .w3-appSelectBtn{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+#w3PlanModal .w3-appSelectBtn::after{
+  content:"▾";
+  font-size: 12px;
+  opacity: .8;
+}
+
+#w3PlanModal .w3-appSelectList{
+  position:absolute;
+  left:0; right:0;
+  top: calc(100% + 8px);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(12,14,24,0.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  display:none;
+  z-index: 1000;
+  max-height: 240px;
+  overflow:auto;
+}
+
+#w3PlanModal .w3-appSelect.open .w3-appSelectList{ display:block; }
+
+#w3PlanModal .w3-appSelectOption{
+  padding: 10px 10px;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.92);
+  cursor:pointer;
+  user-select:none;
+}
+
+#w3PlanModal .w3-appSelectOption:hover{
+  background: rgba(255,255,255,0.07);
+}
+
+#w3PlanModal .w3-appSelectOption[aria-selected="true"]{
+  background: rgba(124,124,255,0.18);
+  border: 1px solid rgba(124,124,255,0.22);
+}
+
