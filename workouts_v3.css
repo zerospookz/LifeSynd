@@ -2753,3 +2753,380 @@ main.content h1{
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+
+/* =========================
+   Plan Workout (editor)
+   ========================= */
+.pwWrap{
+  padding: 18px 20px 90px;
+  max-width: 860px;
+}
+
+.pwHeader{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+}
+
+.pwDate{
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.pwNameRow{ margin-top: 10px; }
+
+.pwNameInput{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+.pwNameInput:focus{
+  border-color: rgba(124,124,255,.6);
+  box-shadow: 0 0 0 2px rgba(124,124,255,.22);
+}
+
+.pwMetaRow{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.pwMeta{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.pwMetaLabel{
+  font-size: 12px;
+  opacity: .7;
+}
+
+.pwSelect{
+  min-width: 220px;
+  max-width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  color: #fff;
+  outline: none;
+  appearance:none;
+}
+
+.btn.small{
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.btn.secondary.small{
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.pwSaved{
+  font-size: 12px;
+  opacity: .65;
+  user-select:none;
+}
+
+.pwSectionHead{
+  margin-top: 18px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pwSectionTitle{
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+  opacity: .92;
+}
+
+.pwExercises{
+  margin-top: 12px;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exCard{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 12px;
+  min-width: 0;
+}
+.exCard.dragOver{
+  border-color: rgba(124,124,255,.55);
+  box-shadow: 0 0 0 2px rgba(124,124,255,.16);
+}
+.exHead{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 0;
+}
+.exDrag{
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  cursor: grab;
+  user-select:none;
+  flex: 0 0 auto;
+}
+.exTitle{
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.exMenuBtn{
+  margin-left:auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.85);
+  cursor: pointer;
+}
+.exMenuBtn:active{ transform: scale(.96); }
+
+.exSets{
+  margin-top: 10px;
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setRow{
+  display:grid;
+  grid-template-columns: 22px 22px 1fr 1fr 1fr;
+  gap: 8px;
+  align-items:center;
+  min-width: 0;
+}
+.setNum{
+  font-size: 12px;
+  opacity: .6;
+  text-align:center;
+}
+.setInput{
+  width: 100%;
+  padding: 8px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  color: #fff;
+  outline: none;
+  font-size: 13px;
+  min-width: 0;
+}
+.setInput:focus{
+  border-color: rgba(124,124,255,.55);
+  box-shadow: 0 0 0 2px rgba(124,124,255,.14);
+}
+
+.exActions{
+  margin-top: 10px;
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chipBtn{
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.9);
+  font-size: 12px;
+  cursor: pointer;
+}
+.chipBtn:active{ transform: scale(.97); }
+
+.exNotes{
+  margin-top: 10px;
+}
+.exNotes textarea{
+  width: 100%;
+  min-height: 70px;
+  resize: vertical;
+  padding: 10px 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  color: #fff;
+  outline: none;
+  font-size: 13px;
+}
+
+.pwFooter{
+  margin-top: 16px;
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+}
+
+/* ---- Bottom sheet ---- */
+.sheetOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  z-index: 50;
+}
+.sheet{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  width: min(720px, calc(100vw - 24px));
+  max-height: min(78vh, 620px);
+  background: rgba(20,20,30,.82);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  box-shadow: 0 20px 70px rgba(0,0,0,.55);
+  z-index: 51;
+  display:flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sheetTop{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.sheetTitle{
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.sheetClose{
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.85);
+  cursor: pointer;
+}
+.sheetClose:active{ transform: scale(.96); }
+
+.sheetSearch{
+  padding: 12px 14px 10px;
+}
+.sheetSearch input{
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  color: #fff;
+  outline: none;
+  font-size: 14px;
+}
+.sheetChips{
+  padding: 0 14px 10px;
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sheetChip{
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.85);
+  font-size: 12px;
+  cursor: pointer;
+}
+.sheetChip.active{
+  border-color: rgba(124,124,255,.55);
+  background: rgba(124,124,255,.14);
+}
+.sheetList{
+  padding: 2px 8px 10px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.exRow{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  user-select:none;
+}
+.exRow:hover{ background: rgba(255,255,255,.04); }
+.exRow:active{ transform: scale(.99); }
+
+.exRowMain{ min-width:0; flex:1; }
+.exRowTitle{
+  font-size: 14px;
+  font-weight: 650;
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.exRowMeta{
+  margin-top: 2px;
+  font-size: 12px;
+  opacity: .65;
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.exStar{
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.85);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.exStar.on{
+  border-color: rgba(255,255,255,.25);
+  background: rgba(255,255,255,.10);
+}
+.exStar:active{ transform: scale(.96); }
+
+@media (max-width: 520px){
+  .pwWrap{ padding-bottom: 110px; }
+  .sheet{ bottom: 72px; } /* leave room for bottom nav */
+  .setRow{ grid-template-columns: 22px 18px 1fr 1fr 1fr; gap: 6px; }
+  .pwSelect{ min-width: 180px; }
+}
