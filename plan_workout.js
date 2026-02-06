@@ -393,9 +393,25 @@
 
     if (!exs.length){
       const empty = document.createElement("div");
-      empty.style.opacity = ".7";
-      empty.style.padding = "10px 2px";
-      empty.textContent = "No exercises yet. Tap “Add exercise” to start.";
+      empty.className = "pwEmpty";
+
+      const msg = document.createElement("div");
+      msg.className = "pwEmptyText";
+      msg.textContent = "No exercises yet";
+
+      const sub = document.createElement("div");
+      sub.className = "pwEmptySub";
+      sub.textContent = "Add your first exercise to start building this session.";
+
+      const cta = document.createElement("button");
+      cta.type = "button";
+      cta.className = "pwAddTile big";
+      cta.innerHTML = '<span class="pwPlus" aria-hidden="true">+</span><span class="pwAddLabel">Add exercise</span>';
+      cta.addEventListener("click", () => openSheet());
+
+      empty.appendChild(msg);
+      empty.appendChild(sub);
+      empty.appendChild(cta);
       exWrap.appendChild(empty);
       return;
     }
