@@ -150,9 +150,9 @@
       }
 
       const addBtn = document.createElement("button");
-      addBtn.className = "month-add";
+      addBtn.className = "month-add tap";
       addBtn.type = "button";
-      addBtn.textContent = "+ Plan workout";
+      addBtn.textContent = "Workouts";
       addBtn.addEventListener("click", () => {
         // Go to a dedicated screen for planning
         location.href = `plan_workout.html?date=${encodeURIComponent(c.iso)}`;
@@ -301,6 +301,53 @@
     viewYear = viewYear + 1; // Next year Feb
     render();
   });
+
+
+  // --- Drag-to-scroll (mobile & desktop) ---
+  // On small screens we disable page scrolling and let users pan the calendar by dragging.
+  (function enableDragPan(){
+    if (!monthGrid) return;
+
+    let isPanning = false;
+    let startX = 0, startY = 0;
+    let startScrollLeft = 0, startScrollTop = 0;
+
+    const isInteractive = (el) => {
+      if (!el) return false;
+      return !!el.closest('.wCard, button, a, input, select, textarea');
+    };
+
+    monthGrid.addEventListener('pointerdown', (e) => {
+      // Don't hijack interactions with cards/buttons/links
+      if (isInteractive(e.target)) return;
+      // Only pan on small screens OR when using mouse middle button? We'll allow always.
+      isPanning = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startScrollLeft = monthGrid.scrollLeft;
+      startScrollTop = monthGrid.scrollTop;
+      monthGrid.setPointerCapture(e.pointerId);
+      monthGrid.classList.add('is-panning');
+    });
+
+    monthGrid.addEventListener('pointermove', (e) => {
+      if (!isPanning) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      monthGrid.scrollLeft = startScrollLeft - dx;
+      monthGrid.scrollTop = startScrollTop - dy;
+    });
+
+    const endPan = (e) => {
+      if (!isPanning) return;
+      isPanning = false;
+      try { monthGrid.releasePointerCapture(e.pointerId); } catch(_){}
+      monthGrid.classList.remove('is-panning');
+    };
+    monthGrid.addEventListener('pointerup', endPan);
+    monthGrid.addEventListener('pointercancel', endPan);
+    monthGrid.addEventListener('pointerleave', endPan);
+  })();
 
   // initial render
   render();

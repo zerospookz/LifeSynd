@@ -2653,3 +2653,44 @@ main.content h1{
   border-color: rgba(124,124,255,0.45);
   background: rgba(124,124,255,0.08);
 }
+
+
+/* --- Month calendar: touch-friendly panning on small screens --- */
+@media (max-width: 900px){
+  body{ overflow:hidden; }
+  .content{ overflow:hidden; }
+  .month-grid{
+    overflow: auto;
+    height: calc(100vh - 140px - var(--kb, 0px)); /* topbar + padding estimate */
+    padding-bottom: calc(24px + 84px); /* make room for bottom nav */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    touch-action: pan-x pan-y;
+  }
+  .month-grid::-webkit-scrollbar{ display:none; }
+
+  /* Keep bottom nav always clickable */
+  .bottomNav{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+  }
+  .month-grid{ position: relative; z-index: 1; }
+}
+
+/* Tap / click micro-interaction (Notion-ish) */
+.tap{
+  transition: transform .12s ease-out, filter .12s ease-out;
+}
+.tap:active{
+  transform: scale(.97);
+  filter: brightness(1.05);
+}
+.month-add.tap{
+  width: 100%;
+}
+
+/* When panning, prevent accidental text selection */
+.month-grid.is-panning{ user-select:none; cursor: grabbing; }
