@@ -2694,3 +2694,62 @@ main.content h1{
 
 /* When panning, prevent accidental text selection */
 .month-grid.is-panning{ user-select:none; cursor: grabbing; }
+
+
+/* --- Calendar cell text safety (no bleed) --- */
+.month-cell{
+  height: 170px;          /* lock height so content can't expand the grid */
+  max-height: 170px;
+  overflow: hidden;       /* critical: prevents text/children from bleeding out */
+  box-sizing: border-box;
+}
+
+.month-cell *{ min-width: 0; box-sizing: border-box; }
+
+.month-list{
+  overflow: hidden;       /* clip extra cards inside the cell */
+  min-width: 0;
+}
+
+/* Workout cards inside month cells */
+.wCard{
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.wCard:hover{ border-color: rgba(124,124,255,0.28); }
+
+.wCard.is-dragging{ opacity: .65; }
+
+.wTitle,
+.wMeta{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;    /* single-line only in calendar cells */
+}
+
+.wTitle{
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.wMeta{
+  font-size: 12px;
+  opacity: .68;
+}
+
+/* Month action button should never wrap */
+.month-add{
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
