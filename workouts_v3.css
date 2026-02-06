@@ -2562,3 +2562,94 @@ main.content h1{
   }
 }
 
+
+
+/* ---------------- Month calendar (v3) ---------------- */
+.month-grid{
+  display:grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 18px 20px 28px;
+}
+
+@media (max-width: 1100px){
+  .month-grid{ grid-template-columns: repeat(7, minmax(130px, 1fr)); }
+}
+@media (max-width: 900px){
+  .month-grid{
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 16px 14px 24px;
+    overflow-x:auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+  }
+}
+
+.month-cell{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 10px 10px 12px;
+  min-height: 170px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  scroll-snap-align: start;
+}
+
+.month-cell.is-empty{
+  opacity: .45;
+}
+
+.month-cell.today{
+  border-color: rgba(124,124,255,0.55);
+  box-shadow: 0 0 0 1px rgba(124,124,255,0.35);
+}
+
+.month-cell.is-dropTarget{
+  border-color: rgba(124,124,255,0.55);
+  box-shadow: 0 0 0 2px rgba(124,124,255,0.18);
+}
+
+.month-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap: 8px;
+  padding: 2px 2px 0;
+}
+
+.month-daynum{
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.month-dow{
+  font-size: 12px;
+  color: rgba(255,255,255,.65);
+}
+
+.month-list{
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+  flex: 1;
+  min-height: 60px;
+}
+
+.month-add{
+  margin-top:auto;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,.18);
+  background: rgba(255,255,255,.02);
+  color: rgba(255,255,255,.85);
+  cursor:pointer;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.month-add:hover{
+  transform: translateY(-1px);
+  border-color: rgba(124,124,255,0.45);
+  background: rgba(124,124,255,0.08);
+}

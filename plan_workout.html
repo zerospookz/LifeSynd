@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Plan workout</title>
+<link rel="icon" href="./favicon.ico"/>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="workouts_v3.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync">
+      <div>
+        <div class="brandName">LifeSync</div>
+        <div class="brandSub">Personal OS</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="navItem" href="dashboard.html">Dashboard</a>
+      <a class="navItem" href="habits.html">Habits</a>
+      <a class="navItem" href="finances.html">Finances</a>
+      <a class="navItem active" href="workouts.html">Workouts</a>
+      <a class="navItem" href="analytics.html">Analytics</a>
+      <a class="navItem" href="settings.html">Settings</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <div class="pageTitleRow">
+          <img class="topbarLogo" src="icons/brand-mark-128.png" alt="LifeSync">
+          <h1 class="pageTitle">Plan workout</h1>
+        </div>
+        <p class="subtitle">Schedule for · <span id="pwDateLabel">—</span></p>
+      </div>
+      <div class="actionsRow">
+        <button class="btn secondary" id="pwBack">Back</button>
+      </div>
+    </div>
+
+    <section style="padding: 18px 20px 28px; max-width: 720px;">
+      <div class="card" style="background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px;">
+        <div style="display:flex; flex-direction:column; gap: 14px;">
+          <div>
+            <div style="font-size:12px; color: rgba(255,255,255,.65); margin-bottom:6px;">Template</div>
+            <select id="pwTemplate" class="input" style="width:100%;">
+              <option value="">Loading…</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap: 10px; justify-content:flex-end; padding-top: 8px;">
+            <button class="btn secondary" id="pwCancel">Cancel</button>
+            <button class="btn" id="pwSave">Save</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="workouts.js"></script>
+<script src="plan_workout.js"></script>
+</body>
+</html>
