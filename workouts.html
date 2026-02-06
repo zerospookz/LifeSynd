@@ -10,23 +10,44 @@
 </head>
 <body>
 <div class="layout">
-<main class="content">
-  <div class="workouts-header">
-    <div>
-      <h1>Workouts</h1>
-      <div class="subtle">Week plan</div>
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
+      </div>
     </div>
-    <div class="week-controls">
-      <button id="prevWeek">◀</button>
-      <button id="todayBtn">Today</button>
-      <button id="nextWeek">▶</button>
-    </div>
-  </div>
 
-  <section class="week-grid" id="weekGrid">
-    <!-- JS fills days -->
-  </section>
-</main>
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
+
+    <div class="sidebarFooter">Tip: Drag workouts between days to adjust your week.</div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <div class="pageTitleRow"><img class="topbarLogo" src="icons/brand-mark-128.png" alt="LifeSync"><h1 class="pageTitle">Workouts</h1></div>
+        <p class="subtitle">Week plan · <span id="wWeekLabel">—</span></p>
+      </div>
+      <div class="actionsRow">
+        <button class="btn secondary" id="prevWeek" aria-label="Previous week">◀</button>
+        <button class="btn secondary" id="todayBtn">Today</button>
+        <button class="btn secondary" id="nextWeek" aria-label="Next week">▶</button>
+      </div>
+    </div>
+
+    <section class="week-grid" id="weekGrid">
+      <!-- JS fills days -->
+    </section>
+  </main>
 </div>
 
 <script src="workouts.js"></script>

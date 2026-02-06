@@ -22,7 +22,7 @@
     prevWeek: document.getElementById("prevWeek"),
     nextWeek: document.getElementById("nextWeek"),
     todayBtn: document.getElementById("todayBtn"),
-    headerSubtle: document.querySelector(".workouts-header .subtle"),
+    weekLabel: document.getElementById("wWeekLabel"),
   };
   if (!el.weekGrid) return;
 
@@ -289,7 +289,7 @@
 
   function render(){
     const ws = startOfWeek(viewDate);
-    if (el.headerSubtle) el.headerSubtle.textContent = fmtWeekRange(ws);
+    if (el.weekLabel) el.weekLabel.textContent = fmtWeekRange(ws).replace(/^Week of\s+/i, "");
 
     const all = getWorkoutsForWeek(ws);
     const byDate = new Map();
