@@ -2140,6 +2140,27 @@ img.pulseOnce{
 .exRowTitle{ font-weight: 900; }
 .exRowMeta{ font-size: 12px; opacity: .75; }
 
+/* "Create custom exercise" row */
+.exRowCreate{
+  border-color: rgba(99,102,241,.28);
+  background: rgba(99,102,241,.10);
+}
+.exRowCreate:hover{
+  background: rgba(99,102,241,.14);
+  border-color: rgba(99,102,241,.40);
+}
+.exCreatePlus{
+  width: 42px;
+  height: 38px;
+  border-radius: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(148,163,184,.18);
+}
+
 .exStar{
   width: 42px;
   height: 38px;

@@ -456,11 +456,50 @@
     const favs = new Set(getFavs().map(x => String(x).toLowerCase()));
     listEl.innerHTML = "";
 
+    // Allow creating a custom exercise (not just from the catalog).
+    // When the user types a query that doesn't exactly match an existing item,
+    // offer a "Create \"X\"" row at the top.
+    const rawQ = (searchEl.value || "").trim();
+    const qLower = rawQ.toLowerCase();
+    const hasExact = !!rawQ && items.some(x => (x.name || "").trim().toLowerCase() === qLower);
+    if (rawQ && !hasExact){
+      const createRow = document.createElement("div");
+      createRow.className = "exRow exRowCreate";
+      createRow.setAttribute("role","listitem");
+
+      const main = document.createElement("div");
+      main.className = "exRowMain";
+
+      const t = document.createElement("div");
+      t.className = "exRowTitle";
+      t.textContent = `Create “${rawQ}”`;
+
+      const m = document.createElement("div");
+      m.className = "exRowMeta";
+      m.textContent = "Custom exercise";
+
+      main.appendChild(t);
+      main.appendChild(m);
+
+      const plus = document.createElement("div");
+      plus.className = "exCreatePlus";
+      plus.textContent = "+";
+
+      createRow.appendChild(main);
+      createRow.appendChild(plus);
+      createRow.addEventListener("click", () => {
+        addExerciseToWorkout(rawQ);
+        closeSheet();
+      });
+
+      listEl.appendChild(createRow);
+    }
+
     if (!items.length){
       const empty = document.createElement("div");
       empty.style.padding = "14px 12px";
       empty.style.opacity = ".7";
-      empty.textContent = "No results";
+      empty.textContent = rawQ ? "No matches — you can create it above" : "No results";
       listEl.appendChild(empty);
       return;
     }
@@ -524,6 +563,10 @@
     if (!workout) return;
     const exs = Workouts.listExercises(workout.id) || [];
     exWrap.innerHTML = "";
+
+    // Avoid duplicate CTAs: show the top primary CTA only once there are exercises.
+    // When empty, keep only the in-context empty-state tile (with helper text).
+    if (addExBtn) addExBtn.style.display = exs.length ? "" : "none";
 
     if (!exs.length){
       const empty = document.createElement("div");
