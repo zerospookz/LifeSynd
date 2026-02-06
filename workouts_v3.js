@@ -1,2385 +1,326 @@
-/* Workouts Page UI (Increment 1)
- * Uses window.Workouts from workouts.js
- * Adds app-like "Active workout" view: exercises + sets, inline edit, add set/exercise, start/finish.
+/* Workouts Week Planner (Layout v3)
+ * - Renders a 7-day week grid
+ * - Uses window.Workouts (workouts.js) as the single source of truth
+ * - Drag & drop to move/reorder workouts between days
+ *
+ * Data conventions:
+ * - workout.date is ISO YYYY-MM-DD
+ * - workout.dayOrder (optional) is used to order workouts within a day
  */
+
 (function(){
-  const $ = (sel) => document.querySelector(sel);
-
-  const el = {
-    page: $("#w3Page"),
-    title: $("#w3Title"),
-    subtitle: $("#w3Subtitle"),
-    metaSets: $("#w3MetaSets"),
-    metaVol: $("#w3MetaVol"),
-    metaTime: $("#w3MetaTime"),
-    content: $("#w3Content"),
-    emptyWrap: $("#w3EmptyWrap"),
-    emptySide: $("#w3EmptySide"),
-    empty: $("#w3Empty"),
-    todayDock: $("#w3TodayDock"),
-    rpToday: $("#w3RpToday"),
-    rpWeekPlan: $("#w3RpWeekPlan"),
-    weekPlanList: $("#w3WeekPlanList"),
-    planOverlay: $("#w3PlanOverlay"),
-    planModal: $("#w3PlanModal"),
-    planModalClose: $("#w3PlanModalClose"),
-    planModalDate: $("#w3PlanModalDate"),
-    planTpl: $("#w3PlanTpl"),
-    planDay: $("#w3PlanDay"),
-    planSave: $("#w3PlanSave"),
-    planCancel: $("#w3PlanCancel"),
-    planClear: $("#w3PlanClear"),
-    rightPanel: $("#w3RightPanel"),
-    bottomBar: document.querySelector(".w3-bottomBar"),
-    btnAddExercise: $("#w3AddExercise"),
-    btnAddExerciseEmpty: $("#w3AddExerciseEmpty"),
-    btnStart: $("#w3Start"),
-    btnFinish: $("#w3Finish"),
-    btnRest60: $("#w3Rest60"),
-    restTimer: $("#w3RestTimer"),
-    restTime: $("#w3RestTime"),
-    restStop: $("#w3RestStop"),
-    restProgress: $("#w3RestProgress"),
-    // Right panel (desktop)
-    rpLivePill: $("#w3RpLivePill"),
-    rpSets: $("#w3RpSets"),
-    rpVol: $("#w3RpVol"),
-    rpTime: $("#w3RpTime"),
-    rpPRsCount: $("#w3RpPRsCount"),
-
-    rpNextCard: $("#w3RpNext"),
-    rpNextSource: $("#w3RpNextSource"),
-    rpNextName: $("#w3RpNextName"),
-    rpNextSub: $("#w3RpNextSub"),
-    rpStartSuggested: $("#w3RpStartSuggested"),
-    rpAddSuggested: $("#w3RpAddSuggested"),
-
-    rpCtxCard: $("#w3RpContext"),
-    rpCtxName: $("#w3RpCtxName"),
-    rpLastSession: $("#w3RpLastSession"),
-    rpPRs: $("#w3RpPRs"),
-
-    tabs: $("#w3Tabs"),
-    sideTiles: $("#w3SideTiles"),
-    modalOverlay: $("#w3ModalOverlay"),
-    modalInput: $("#w3ExerciseName"),
-    modalOk: $("#w3ModalOk"),
-    modalCancel: $("#w3ModalCancel"),
-  };
-  // --- Custom dropdown for Plan Day (avoids white native select popup on some platforms) ---
-  function syncPlanDayCustomUI(){
-    const native = el.planDay;
-    const wrap = document.getElementById("w3PlanDaySelect");
-    const btn  = document.getElementById("w3PlanDayBtn");
-    const list = document.getElementById("w3PlanDayList");
-    if (!native || !wrap || !btn || !list) return;
-
-    // Build list from native options
-    const opts = Array.from(native.options || []);
-    list.innerHTML = "";
-    opts.forEach((o, i)=>{
-      const div = document.createElement("div");
-      div.className = "w3-appSelectOption";
-      div.setAttribute("role","option");
-      div.dataset.value = o.value;
-      div.textContent = o.textContent || "";
-      div.setAttribute("aria-selected", String(native.value) === String(o.value) ? "true" : "false");
-      div.addEventListener("click", ()=>{
-        native.value = String(o.value);
-        native.dispatchEvent(new Event("change", {bubbles:true}));
-        closePlanDayDropdown();
-      });
-      list.appendChild(div);
-    });
-
-    // Button label
-    const sel = opts.find(o=>String(o.value)===String(native.value)) || opts[0];
-    btn.textContent = sel ? (sel.textContent || "") : "Select day";
-
-    // Keep aria-selected in sync
-    Array.from(list.children).forEach(ch=>{
-      ch.setAttribute("aria-selected", String(ch.dataset.value)===String(native.value) ? "true" : "false");
-    });
-  }
-
-  function openPlanDayDropdown(){
-    const wrap = document.getElementById("w3PlanDaySelect");
-    const btn  = document.getElementById("w3PlanDayBtn");
-    if (!wrap || !btn) return;
-    wrap.classList.add("open");
-    btn.setAttribute("aria-expanded","true");
-  }
-  function closePlanDayDropdown(){
-    const wrap = document.getElementById("w3PlanDaySelect");
-    const btn  = document.getElementById("w3PlanDayBtn");
-    if (!wrap || !btn) return;
-    wrap.classList.remove("open");
-    btn.setAttribute("aria-expanded","false");
-  }
-
-  // Global handlers (outside click / esc)
-  (function wirePlanDayDropdown(){
-    const wrap = document.getElementById("w3PlanDaySelect");
-    const btn  = document.getElementById("w3PlanDayBtn");
-    const list = document.getElementById("w3PlanDayList");
-    if (!wrap || !btn || !list) return;
-
-    btn.addEventListener("click", ()=>{
-      const open = wrap.classList.contains("open");
-      if (open) closePlanDayDropdown(); else openPlanDayDropdown();
-    });
-
-    document.addEventListener("click", (e)=>{
-      if (!wrap.classList.contains("open")) return;
-      if (wrap.contains(e.target)) return;
-      closePlanDayDropdown();
-    });
-
-    document.addEventListener("keydown", (e)=>{
-      if (!wrap.classList.contains("open")) return;
-      if (e.key === "Escape") closePlanDayDropdown();
-    });
-  })();
-
-
-  // Desktop layout: move the right panel stack into the right utility column.
-  // Mobile: keep it inside the bottom bar.
-  function dockRightPanel(){
-    const isDesktop = window.matchMedia("(min-width: 1100px)").matches;
-    if (isDesktop){
-      if (el.rightPanel && el.todayDock && !el.todayDock.contains(el.rightPanel)){
-        el.todayDock.appendChild(el.rightPanel);
-      }
-    } else {
-      if (!el.bottomBar) el.bottomBar = document.querySelector(".w3-bottomBar");
-      if (el.rightPanel && el.bottomBar && !el.bottomBar.contains(el.rightPanel)){
-        el.bottomBar.appendChild(el.rightPanel);
-      }
-    }
-  }
-  dockRightPanel();
-  window.addEventListener("resize", ()=>{ dockRightPanel(); });
-
-
-
-  // Increment 2: PR flash state
-  let prFlashSetId = null;
-  let prFlashTimer = null;
-
-  // Track NEW PRs achieved during the current workout so Today summary can update instantly
-  // and we can show them on completion.
-  const SESSION_PRS_KEY_PREFIX = "w3_sessionPRs_";
-  let sessionPRs = { workoutId: null, items: [] }; // items: [{setId, exerciseName, types:[] }]
-
-  function loadSessionPRs(workoutId){
-    sessionPRs = { workoutId: workoutId || null, items: [] };
-    if (!workoutId) return;
-    try{
-      const raw = localStorage.getItem(SESSION_PRS_KEY_PREFIX + String(workoutId));
-      if (!raw) return;
-      const obj = JSON.parse(raw);
-      if (obj && Array.isArray(obj.items)) sessionPRs.items = obj.items;
-    }catch(_){ }
-  }
-
-  function saveSessionPRs(){
-    if (!(sessionPRs==null?undefined:sessionPRs.workoutId)) return;
-    try{
-      localStorage.setItem(SESSION_PRS_KEY_PREFIX + String(sessionPRs.workoutId), JSON.stringify({ items: sessionPRs.items }));
-    }catch(_){ }
-  }
-
-  function recordSessionPR(setId, exerciseName, types){
-    if (!(sessionPRs==null?undefined:sessionPRs.workoutId)) return;
-    const sid = String(setId);
-    const ex = String(exerciseName||"").trim();
-    if (!sid || !ex) return;
-    const t = (types||[]).filter(Boolean);
-    const existing = (sessionPRs.items||[]).find(x=>String(x.setId)===sid);
-    if (existing){
-      // Merge types
-      const merged = new Set([...(existing.types||[]), ...t]);
-      existing.types = Array.from(merged);
-    } else {
-      sessionPRs.items.push({ setId: sid, exerciseName: ex, types: t });
-    }
-    saveSessionPRs();
-  }
-
-  function getSessionPRCount(){
-    return (sessionPRs.items||[]).length;
-  }
-
-    // Active exercise (for in-card actions)
-  let activeExerciseId = null;
-
-// Right panel state
-let suggestedExerciseName = null;
-let workoutClockInterval = null;
-
-// Exercise drag/reorder state
-let currentWorkoutId = null;
-const drag = {
-  active:false,
-  pointerId:null,
-  card:null,
-  ghost:null,
-  placeholder:null,
-  offsetX:0,
-  offsetY:0,
-};
-
-// Long-press delete state (2.5s)
-const holdDel = {
-  t:null,
-  pointerId:null,
-  card:null,
-  startX:0,
-  startY:0,
-};
-
-
-// Tabs
-// User request: remove tabs UI and keep a single "Today" experience.
-let currentTab = "today";
-  let _prevTotalSets = null; // for Today summary reveal animation
-
-  function syncTabUI(){
-    // Mobile tabs
-    if (el.tabs){
-      for (const b of el.tabs.querySelectorAll(".w3-tabBtn")) b.classList.remove("is-active");
-      {
-        const _tab = el.tabs.querySelector(`[data-tab="${currentTab}"]`);
-        if (_tab) _tab.classList.add("is-active");
-      }
-    }
-    // Desktop tiles
-    if (el.sideTiles){
-      for (const b of el.sideTiles.querySelectorAll(".w3-sideTile")) b.classList.remove("is-active");
-      {
-        const _tile = el.sideTiles.querySelector(`[data-tab="${currentTab}"]`);
-        if (_tile) _tile.classList.add("is-active");
-      }
-    }
-  }
-
-
-
-  function setTab(tab){
-    if (!tab) return;
-    currentTab = tab;
-    // Make tab state feel like a "page" change and keep it shareable/reloadable.
-    // This also helps users who expect the right-side cards to "open" a section.
-    try{
-      const next = `#${tab}`;
-      if (location.hash !== next) history.replaceState(null, "", next);
-    }catch(_){ }
-    syncTabUI();
-    render();
-  }
-
-  // Tabs / quick-actions navigation
-  document.addEventListener("click", (e)=>{
-    const btn = e.target.closest("[data-tab]");
-    if (!btn) return;
-    // Only handle our workouts tab buttons / quick buttons
-    if (btn.classList.contains("w3-tabBtn") || btn.classList.contains("w3-emptyQuickBtn") || btn.classList.contains("w3-sideTile") || btn.classList.contains("w3-dockNavCard")){
-      const tab = btn.getAttribute("data-tab");
-      if (tab) setTab(tab);
-    }
-  });
-  // Weekly plan interactions
-  document.addEventListener("click", (e)=>{
-    const row = closestEl(e.target,'[data-action="plan-open"][data-date]');
-    if (row){
-      const dateIso = row.getAttribute("data-date");
-      if (dateIso) openPlanModal(dateIso);
-      return;
-    }
-    if (closestEl(e.target,"#w3PlanModalClose") || closestEl(e.target,"#w3PlanCancel")){
-      closePlanModal(); return;
-    }
-    if (closestEl(e.target,"#w3PlanClear")){
-      if (!_planModalDateIso) { closePlanModal(); return; }
-      const plan = getPlan();
-      delete plan[_planModalDateIso];
-      setPlan(plan);
-      closePlanModal();
-      renderWeekPlan();
-      return;
-    }
-    if (closestEl(e.target,"#w3PlanSave")){
-      if (!_planModalDateIso) { closePlanModal(); return; }
-      const list = listMarket();
-      const tid = el.planTpl ? el.planTpl.value : "";
-      const t = list.find(x=>String(x.id)===String(tid));
-      const title = t ? String(t.title||t.id) : "Planned";
-
-      // Selected schedule date (can move the plan to a different day)
-      const newDateIso = el.planDay ? String(el.planDay.value || _planModalDateIso) : String(_planModalDateIso);
-      const plan = getPlan();
-
-      // If the user changed the date, move existing entry (and overwrite target)
-      if (newDateIso !== _planModalDateIso){
-        if (plan[_planModalDateIso]) delete plan[_planModalDateIso];
-        _planModalDateIso = newDateIso;
-      }
-
-      plan[_planModalDateIso] = { templateId: tid, title: title, templateTitle: title };
-      setPlan(plan);
-      closePlanModal();
-      renderWeekPlan();
-      return;
-    }
-  });
-
-  // Close plan modal on backdrop click
-  document.addEventListener("pointerdown",(e)=>{
-    const ov = closestEl(e.target,"#w3PlanOverlay");
-    if (ov && e.target === ov) closePlanModal();
-  });
-
-
-  // Keyboard accessibility for dock cards
-  document.addEventListener("keydown", (e)=>{
-    if (e.key !== "Enter" && e.key !== " ") return;
-    const card = closestEl(e.target,".w3-dockNavCard[data-tab]");
-    if (!card) return;
-    e.preventDefault();
-    const tab = card.getAttribute("data-tab");
-    if (tab) setTab(tab);
-  });
-
-  // Empty-state animation helpers (hero expand/collapse)
-  let _emptyHideTimer = null;
-  function showEmpty(){
-    if (_emptyHideTimer){ clearTimeout(_emptyHideTimer); _emptyHideTimer = null; }
-    // Show wrapper
-    if (el.emptyWrap) el.emptyWrap.hidden = false;
-    // Keep Today summary in the right dock on desktop (same placement as non-empty).
-    // This avoids layout jumps and keeps alignment consistent.
-    // next frame so transitions apply
-    requestAnimationFrame(()=> (el.page==null?undefined:el.page.classList).add("is-empty"));
-  }
-  function hideEmptyAnimated(){
-    (el.page==null?undefined:el.page.classList).remove("is-empty");
-    if (!el.emptyWrap || el.emptyWrap.hidden) return;
-    if (_emptyHideTimer) clearTimeout(_emptyHideTimer);
-    _emptyHideTimer = setTimeout(()=>{
-      if (el.emptyWrap) el.emptyWrap.hidden = true;
-    }, 280);
-  }
-
-
-  function flashPR(setId){
-    prFlashSetId = setId;
-    if (prFlashTimer) clearTimeout(prFlashTimer);
-    render();
-    prFlashTimer = setTimeout(()=>{
-      if (prFlashSetId === setId){
-        prFlashSetId = null;
-        render();
-      }
-    }, 1450);
-  }
-
-  // Increment 3: Rest timer (persisted)
-  const REST_KEY = "w3_restTimer_v1";
-  const REST_PRESET_KEY = "w3_restPresetSec_v2";
-  const PLAN_KEY = "w3_planned_workouts_v1";
-  // User request: allow any rest duration from 0:01 to 5:00.
-  const REST_MIN = 1;
-  const REST_MAX = 300;
-  let restInterval = null;
-  // SVG ring math (r=40 in workouts.html -> circumference ≈ 251.2)
-  const REST_RING_R = 40;
-  const REST_CIRC = 2 * Math.PI * REST_RING_R;
-
-  function loadRest(){
-    try{
-      const raw = localStorage.getItem(REST_KEY);
-      if (!raw) return null;
-      const obj = JSON.parse(raw);
-      if (!obj || !obj.endAt) return null;
-      return obj;
-    }catch(_){ return null; }
-  }
-
-  function saveRest(state){
-    try{
-      if (!state) localStorage.removeItem(REST_KEY);
-      else localStorage.setItem(REST_KEY, JSON.stringify(state));
-    }catch(_){}
-  }
-
-  function fmtClock(sec){
-    const s = Math.max(0, sec|0);
-    const mm = String(Math.floor(s/60)).padStart(2,"0");
-    const ss = String(s%60).padStart(2,"0");
-    return `${mm}:${ss}`;
-  }
-
-  function loadRestPreset(){
-    try{
-      const raw = localStorage.getItem(REST_PRESET_KEY);
-      const n = parseInt(raw || "", 10);
-      if (!Number.isFinite(n) || n < REST_MIN) return 60;
-      return Math.min(REST_MAX, Math.max(REST_MIN, n|0));
-    }catch(_){
-      return 60;
-    }
-  }
-
-  function saveRestPreset(sec){
-    try{
-      const v = Math.min(REST_MAX, Math.max(REST_MIN, sec|0));
-      localStorage.setItem(REST_PRESET_KEY, String(v));
-    }catch(_){ }
-  }
-
-  function labelRestButton(){
-    if (!el.btnRest60) return;
-    const sec = loadRestPreset();
-    // Show as mm:ss but keep the compact "Rest" intent
-    el.btnRest60.textContent = `Rest ${fmtClock(sec)}`;
-  }
-
-  // Start rest from the user's preset immediately.
-  // Use modifier keys (Shift/Alt/Ctrl/Meta) to open the picker instead.
-  function handleRestPrimaryClick(e){
-    try{
-      if (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey)){
-        openRestPicker();
-        return;
-      }
-    }catch(_){ }
-    startRest(loadRestPreset());
-  }
-
-  function startRest(seconds){
-    const now = Date.now();
-    const totalSec = Math.min(REST_MAX, Math.max(REST_MIN, seconds|0));
-    const st = { running:true, startAt: now, totalSec, endAt: now + totalSec*1000 };
-    saveRest(st);
-    showRest();
-  }
-
-  // ===== Rest duration picker UI =====
-  const restUI = {
-    picker: document.getElementById('w3RestPicker'),
-    pickerValue: document.getElementById('w3RestPickerValue'),
-    pickerRange: document.getElementById('w3RestPickerRange'),
-    pickerSec: document.getElementById('w3RestPickerSec'),
-    pickerStart: document.getElementById('w3RestPickerStart'),
-    pickerClose: document.getElementById('w3RestPickerClose'),
-  };
-
-  function setPickerValue(sec){
-    const v = Math.min(REST_MAX, Math.max(REST_MIN, sec|0));
-    if (restUI.pickerRange) restUI.pickerRange.value = String(v);
-    if (restUI.pickerSec) restUI.pickerSec.value = String(v);
-    if (restUI.pickerValue) restUI.pickerValue.textContent = fmtClock(v);
-  }
-
-  function openRestPicker(){
-    if (!restUI.picker) return;
-    const v = loadRestPreset();
-    setPickerValue(v);
-    restUI.picker.classList.add('is-open');
-    if (el.btnRest60) el.btnRest60.setAttribute('aria-expanded','true');
-  }
-
-  function closeRestPicker(){
-    if (!restUI.picker) return;
-    restUI.picker.classList.remove('is-open');
-    if (el.btnRest60) el.btnRest60.setAttribute('aria-expanded','false');
-  }
-
-  function toggleRestPicker(){
-    if (!restUI.picker) return;
-    if (restUI.picker.classList.contains('is-open')) closeRestPicker();
-    else openRestPicker();
-  }
-
-  function stopRest(){
-    saveRest(null);
-    hideRest();
-  }
-
-  function showRest(){
-    if (!el.restTimer) return;
-    el.restTimer.hidden = false;
-    // Smooth enter animation
-    el.restTimer.classList.remove("w3-restDone", "w3-restUrgent");
-    el.restTimer.classList.remove("is-on");
-    requestAnimationFrame(()=>{ try{ el.restTimer.classList.add("is-on"); }catch(_){ } });
-    // Prime ring values (in case first tick takes a moment)
-    if (el.restProgress){
-      el.restProgress.style.strokeDasharray = String(REST_CIRC);
-      el.restProgress.style.strokeDashoffset = "0";
-    }
-    tickRest();
-    if (restInterval) clearInterval(restInterval);
-    restInterval = setInterval(tickRest, 250);
-  }
-
-  function hideRest(){
-    if (!el.restTimer) return;
-    // Fade out
-    el.restTimer.classList.remove("is-on");
-    el.restTimer.classList.remove("w3-restDone", "w3-restUrgent");
-    setTimeout(()=>{
-      if (!el.restTimer) return;
-      el.restTimer.hidden = true;
-    }, 180);
-    if (el.restProgress){
-      el.restProgress.style.strokeDashoffset = "0";
-    }
-    if (restInterval) { clearInterval(restInterval); restInterval = null; }
-  }
-
-  function tickRest(){
-    const st = loadRest();
-    if (!st || !st.endAt) { hideRest(); return; }
-    const remaining = Math.max(0, Math.ceil((st.endAt - Date.now())/1000));
-    if (el.restTime) el.restTime.textContent = fmtClock(remaining);
-
-    // Last-seconds urgency animation
-    if (el.restTimer){
-      if (remaining > 0 && remaining <= 5) el.restTimer.classList.add("w3-restUrgent");
-      else el.restTimer.classList.remove("w3-restUrgent");
-    }
-
-    // Update analog ring (1 = full remaining, 0 = done)
-    if (el.restProgress){
-      const totalSec = Math.max(1, (st.totalSec|0) || remaining || 60);
-      const frac = Math.min(1, Math.max(0, remaining / totalSec));
-      const dashOffset = REST_CIRC * (1 - frac);
-      el.restProgress.style.strokeDasharray = String(REST_CIRC);
-      el.restProgress.style.strokeDashoffset = String(dashOffset);
-    }
-    if (remaining <= 0){
-      saveRest(null);
-      if (el.restTimer){
-        el.restTimer.classList.add("w3-restDone");
-        try{ if (navigator.vibrate) navigator.vibrate([40,40,40]); }catch(_){}
-      }
-      setTimeout(()=>hideRest(), 1200);
-    }
-  }
-
-  // Swipe state (pointer-based, works on touch + mouse)
-  const SWIPE_MAX = 92;
-  const SWIPE_THRESHOLD = 60;
-  const swipe = { active:false, row:null, startX:0, dx:0, pointerId:null };
-
-
-  // ===== Increment 10: Exercise card drag & drop reorder (handle: ⋮) =====
-  function listExerciseCards(){
-    return Array.from(el.content ? el.content.querySelectorAll('.w3-exCard') : []);
-  }
-
-  function beginExerciseDrag(card, pointerId, clientX, clientY){
-    if (!card || drag.active) return;
-    const parent = card.parentElement;
-    if (!parent) return;
-
-    drag.active = true;
-    drag.pointerId = pointerId;
-    drag.card = card;
-
-    const rect = card.getBoundingClientRect();
-    drag.offsetX = clientX - rect.left;
-    drag.offsetY = clientY - rect.top;
-
-    // Placeholder keeps layout
-    const ph = document.createElement('div');
-    ph.className = 'w3-dragPlaceholder';
-    ph.style.height = `${rect.height}px`;
-    ph.style.width = `${rect.width}px`;
-    drag.placeholder = ph;
-
-    // Detach card and insert placeholder at its position
-    parent.insertBefore(ph, card);
-    parent.removeChild(card);
-
-    // Ghost clone follows the pointer
-    const ghost = card.cloneNode(true);
-    ghost.classList.add('w3-dragGhost');
-    ghost.style.width = `${rect.width}px`;
-    ghost.style.left = `${rect.left}px`;
-    ghost.style.top = `${rect.top}px`;
-    drag.ghost = ghost;
-    document.body.appendChild(ghost);
-
-    // Visual hint
-    card.classList.add('is-dragging');
-
-    try{ document.body.classList.add('w3-isReordering'); }catch(_){ }
-  }
-
-  function moveExerciseDrag(clientY){
-    if (!drag.active || !drag.ghost || !drag.placeholder) return;
-    const y = clientY - drag.offsetY;
-    drag.ghost.style.top = `${y}px`;
-
-    const cards = listExerciseCards().filter(c => c !== drag.card);
-    const ph = drag.placeholder;
-    const parent = ph.parentElement;
-    if (!parent) return;
-
-    // Find insertion point based on vertical midpoint
-    let before = null;
-    for (const c of cards){
-      const r = c.getBoundingClientRect();
-      const mid = r.top + r.height/2;
-      if (clientY < mid){ before = c; break; }
-    }
-    if (before) parent.insertBefore(ph, before);
-    else parent.appendChild(ph);
-  }
-
-  function endExerciseDrag(){
-    if (!drag.active) return;
-    const ph = drag.placeholder;
-    const parent = (ph==null?undefined:ph.parentElement);
-    const card = drag.card;
-
-    // Cleanup ghost
-    try{ if(drag.ghost && drag.ghost.remove) drag.ghost.remove(); }catch(_){ }
-
-    if (parent && ph && card){
-      parent.insertBefore(card, ph);
-      ph.remove();
-    }
-
-    // Persist order
-    if (currentWorkoutId){
-      const ordered = listExerciseCards().map(c => c.dataset.exerciseId).filter(Boolean);
-      try{ Workouts.reorderExercises(currentWorkoutId, ordered); }catch(_){ }
-    }
-
-    try{ document.body.classList.remove('w3-isReordering'); }catch(_){ }
-
-    drag.active = false;
-    drag.pointerId = null;
-    drag.card = null;
-    drag.ghost = null;
-    drag.placeholder = null;
-  }
-
-  // Start drag from the three-dots handle (tap or hold)
-  // Hold-to-delete needs a non-passive listener so we can prevent default
-  // (avoids text selection / context menu on mobile) and capture the pointer.
-  document.addEventListener('pointerdown', (e)=>{
-    const handle = e.target.closest && e.target.closest('[data-action="ex-menu"]');
-    if (!handle) return;
-    const card = handle.closest('.w3-exCard');
-    if (!card) return;
-    // Don't start reorder when user is selecting text or interacting with inputs
-    if (e.button !== undefined && e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    beginExerciseDrag(card, e.pointerId, e.clientX, e.clientY);
-  }, { passive:false });
-
-  document.addEventListener('pointermove', (e)=>{
-    if (!drag.active) return;
-    if (drag.pointerId !== null && e.pointerId !== drag.pointerId) return;
-    moveExerciseDrag(e.clientY);
-  });
-
-  document.addEventListener('pointerup', (e)=>{
-    if (!drag.active) return;
-    if (drag.pointerId !== null && e.pointerId !== drag.pointerId) return;
-    endExerciseDrag();
-  });
-
-  document.addEventListener('pointercancel', ()=>{ if (drag.active) endExerciseDrag(); });
-
-  // Long-press (2.5s) on an exercise card to delete it
-  function clearHoldDelete(){
-    if (holdDel.t) clearTimeout(holdDel.t);
-    holdDel.t = null;
-    if (holdDel.card) holdDel.card.classList.remove('w3-holdDelete');
-    // Release pointer capture if we took it.
-    try{
-      if (holdDel.card && holdDel.pointerId != null) holdDel.card.releasePointerCapture(holdDel.pointerId);
-    }catch(_){ }
-    holdDel.pointerId = null;
-    holdDel.card = null;
-  }
-
-  document.addEventListener('pointerdown', (e)=>{
-    const card = e.target.closest && e.target.closest('.w3-exCard');
-    if (!card) return;
-    // Only allow hold-to-delete from the "safe zone" (header/title area).
-    // This prevents conflicts with drag (⋮), inputs, buttons, and scrolling.
-    if (!e.target.closest('[data-hold-delete="1"]')) return;
-    // Ignore interactions that should not trigger delete hold
-    if (e.target.closest('input,button,a,textarea,select,[contenteditable]')) return;
-    if (e.target.closest('[data-action="ex-menu"]')) return;
-    if (drag.active) return;
-
-    // Prevent the browser from starting text selection or long-press menus.
-    // Also keep receiving pointer events even if the finger leaves the element.
-    try{ e.preventDefault(); }catch(_){ }
-    try{ e.stopPropagation(); }catch(_){ }
-
-    holdDel.pointerId = e.pointerId;
-    holdDel.card = card;
-    holdDel.startX = e.clientX;
-    holdDel.startY = e.clientY;
-    card.classList.add('w3-holdDelete');
-
-    try{ card.setPointerCapture(e.pointerId); }catch(_){ }
-
-    holdDel.t = setTimeout(()=>{
-      const id = card.dataset.exerciseId;
-      if (!id) return;
-      try{ if (navigator.vibrate) navigator.vibrate(35); }catch(_){ }
-      try{ Workouts.removeExercise(id); }catch(_){ }
-      clearHoldDelete();
-      render();
-    }, 2500);
-  }, { passive:false });
-
-  document.addEventListener('pointermove', (e)=>{
-    if (!holdDel.card) return;
-    if (holdDel.pointerId !== null && e.pointerId !== holdDel.pointerId) return;
-    const dx = Math.abs(e.clientX - holdDel.startX);
-    const dy = Math.abs(e.clientY - holdDel.startY);
-    // Mobile finger jitter is real; use a larger threshold so holds can complete.
-    // If the user meaningfully drags/scrolls, we cancel.
-    if (dx > 24 || dy > 24) clearHoldDelete();
-  }, { passive:false });
-
-  document.addEventListener('pointerup', (e)=>{
-    if (holdDel.pointerId !== null && e.pointerId !== holdDel.pointerId) return;
-    clearHoldDelete();
-  }, { passive:false });
-
-  document.addEventListener('pointercancel', ()=>{ clearHoldDelete(); }, { passive:true });
-
-  // iOS/Safari can fire a context menu on long press which cancels pointer events.
-  // While we're in a hold-to-delete gesture, suppress it.
-  document.addEventListener('contextmenu', (e)=>{
-    if (!holdDel.card) return;
-    try{ e.preventDefault(); }catch(_){ }
-  }, { passive:false });
-
-
-
-  function isoDate(d=new Date()){
-    const y=d.getFullYear();
-    const m=String(d.getMonth()+1).padStart(2,"0");
-    const da=String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${da}`;
-  }
-  // ===== Weekly plan (next 7 days) =====
-  function getPlan(){
-    try{ return JSON.parse(localStorage.getItem(PLAN_KEY) || "{}") || {}; }catch(_){ return {}; }
-  }
-  function setPlan(planObj){
-    localStorage.setItem(PLAN_KEY, JSON.stringify(planObj || {}));
-  }
-  function fmtDow(d){
-    return d.toLocaleDateString(undefined,{weekday:"short"});
-  }
-  function fmtMd(d){
-    return d.toLocaleDateString(undefined,{month:"short", day:"numeric"});
-  }
-
-  let _planModalDateIso = null;
-
-  function openPlanModal(dateIso){
-    _planModalDateIso = dateIso;
-    if (!el.planModal) return;
-    const d = new Date(dateIso+"T00:00:00");
-    if (el.planModalDate) el.planModalDate.textContent = `${fmtDow(d)} · ${fmtMd(d)} · ${dateIso}`;
-
-    // Populate templates from market (simple & always available)
-    const list = listMarket();
-    const plan = getPlan();
-    const cur = plan[dateIso] || null;
-
-    if (el.planTpl){
-      el.planTpl.innerHTML = list.map(t=>`<option value="${esc(String(t.id))}">${esc(String(t.title||t.id))}</option>`).join("");
-      if ((cur==null?undefined:cur.templateId)) el.planTpl.value = String(cur.templateId);
-    }
-
-    
-    // "Scheduled for" date selector (next ~2 weeks, centered on the opened date)
-    function fillScheduleDates(){
-      if (!el.planDay) return;
-      const baseIso = _planModalDateIso || dateIso;
-      const base = new Date(baseIso + "T00:00:00");
-      const start = new Date(base);
-      start.setDate(start.getDate() - 3);
-
-      const opts = [];
-      for (let i=0; i<14; i++){
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
-        const iso = d.toISOString().slice(0,10);
-        opts.push(`<option value="${esc(String(iso))}">${esc(String(fmtDow(d) + " · " + fmtMd(d)))}</option>`);
-      }
-
-      // Ensure base date is present even if timezone quirks occur
-      if (!opts.some(s => s.includes(`value="${baseIso}"`))){
-        opts.unshift(`<option value="${esc(String(baseIso))}">${esc(String(fmtDow(base) + " · " + fmtMd(base)))}</option>`);
-      }
-
-      el.planDay.innerHTML = opts.join("");
-      el.planDay.value = String(baseIso);
-
-      // Sync custom dropdown UI
-      syncPlanDayCustomUI();
-
-      // Avoid stacking multiple listeners each time the modal opens.
-      if (!el.planDay.dataset._wired){
-        el.planDay.addEventListener("change", ()=>{ syncPlanDayCustomUI(); });
-        el.planDay.dataset._wired = "1";
-      }
-    }
-    fillScheduleDates();
-
-if (el.planOverlay) el.planOverlay.hidden = false;
-  }
-
-  function closePlanModal(){
-    if (!el.planModal) return;
-    if (el.planOverlay) el.planOverlay.hidden = true;
-    _planModalDateIso = null;
-  }
-
-  function renderWeekPlan(){
-    if (!el.rpWeekPlan || !el.weekPlanList) return;
-    // Only visible on Today tab
-    el.rpWeekPlan.style.display = (currentTab === "today") ? "" : "none";
-    if (currentTab !== "today") return;
-
-    const plan = getPlan();
-    const now = new Date();
-    const rows = [];
-    for (let i=0;i<7;i++){
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate()+i);
-      const iso = isoDate(d);
-      const item = plan[iso] || null;
-      const name = item ? String(item.title || item.templateTitle || "Planned") : "Free day";
-      const badge = item ? "Planned" : "—";
-      rows.push(`
-        <div class="w3-weekRow" data-action="plan-open" data-date="${esc(iso)}" role="button" tabindex="0" aria-label="Plan ${esc(iso)}">
-          <div class="w3-weekLeft">
-            <div class="w3-weekDate">${esc(fmtDow(d))} · ${esc(fmtMd(d))}</div>
-            <div class="w3-weekName">${esc(name)}</div>
-          </div>
-          <div class="w3-weekBadge ${item?'':'empty'}">${esc(badge)}</div>
-        </div>
-      `);
-    }
-    el.weekPlanList.innerHTML = rows.join("");
-  }
-
-
-  function getWorkoutId(){
-    const p=new URLSearchParams(location.search);
-    return p.get("id") || p.get("workoutId") || null;
-  }
-
-  function setWorkoutId(id){
-    const url=new URL(location.href);
-    url.searchParams.set("id", id);
-    history.replaceState({}, "", url.toString());
-  }
-
-  function safe(fn, fallback){
-    try { return fn(); } catch(e){ console.warn(e); return fallback; }
-  }
-
-  function closestEl(t, sel){
-    return (t && t.closest) ? t.closest(sel) : null;
-  }
-
-  function closestEl(t, sel){
-    return (t && t.closest) ? t.closest(sel) : null;
-  }
-
-  function fmtInt(n){
-    const x = Number(n||0);
-    return x.toLocaleString("en-US");
-  }
-
-  function secondsToClock(sec){
-    const s = Math.max(0, Number(sec||0)|0);
-    const mm = String(Math.floor(s/60)).padStart(2,"0");
-    const ss = String(s%60).padStart(2,"0");
-    return `${mm}:${ss}`;
-  }
-
-  function ensureWorkout(){
-    let id = getWorkoutId();
-    if (id) {
-      const w = safe(()=>Workouts.getWorkout(id), null);
-      if (w) return w;
-    }
-
-    // No id: open today's planned/in_progress/completed workout if exists; else create.
-    const today = isoDate();
-    const todays = safe(()=>Workouts.listWorkouts({from: today, to: today}), []);
-    let w = (todays || []).slice().sort((a,b)=>String(b.updatedAt||"").localeCompare(String(a.updatedAt||"")))[0] || null;
-
-    if (!w) {
-      w = safe(()=>Workouts.createWorkout({name:"Workout", date: today}), null);
-    }
-    if ((w==null?undefined:w.id)) setWorkoutId(w.id);
-    return w;
-  }
-
-  function computeMeta(workoutId){
-    const s = safe(()=>Workouts.computeWorkoutSummary(workoutId), null);
-    if (s) return s;
-    return { totalSets:0, totalVolumeKg:0 };
-  }
-
-  
-  let isReadOnly = false;
-
-  // ===== Increment 4: History + Templates marketplace (v1) =====
-  let historyRange = "all"; // week | month | all
-  let templatesCat = "coach"; // coach | push | legs | home | all
-  let templatePreviewId = null;
-
-  const MARKET_KEY = "w3_market_templates_v1";
-  function seedMarket(){
-    try{
-      const raw = localStorage.getItem(MARKET_KEY);
-      if (raw) return;
-      const seed = [
-        {
-          id:"tpl_push_hyp_a",
-          title:"PUSH A — Hypertrophy",
-          coach:"Coach Ivan",
-          tags:["push","gym"],
-          weeks:6,
-          workouts:4,
-          rating:4.6,
-          reviews:128,
-          price:9.99,
-          currency:"USD",
-          description:"A balanced upper-body hypertrophy plan focused on progressive overload.",
-          preview:[
-            { name:"Push A", exercises:[
-              { name:"Bench Press", sets:[{weightKg:80,reps:8},{weightKg:80,reps:8},{weightKg:75,reps:10}] },
-              { name:"Incline DB Press", sets:[{weightKg:24,reps:10},{weightKg:24,reps:10}] },
-              { name:"Triceps Pushdown", sets:[{weightKg:30,reps:12},{weightKg:30,reps:12}] }
-            ] }
-          ]
-        },
-        {
-          id:"tpl_home_db",
-          title:"Home Dumbbell Plan",
-          coach:"FitLab",
-          tags:["home"],
-          weeks:4,
-          workouts:3,
-          rating:4.8,
-          reviews:76,
-          price:0,
-          currency:"USD",
-          description:"A simple 3x/week dumbbell plan for home workouts.",
-          preview:[
-            { name:"Full Body", exercises:[
-              { name:"DB Goblet Squat", sets:[{weightKg:20,reps:12},{weightKg:20,reps:12}] },
-              { name:"DB Floor Press", sets:[{weightKg:18,reps:10},{weightKg:18,reps:10}] }
-            ] }
-          ]
-        },
-        {
-          id:"tpl_legs_strength",
-          title:"Legs Strength Block",
-          coach:"Coach Maria",
-          tags:["legs","gym"],
-          weeks:5,
-          workouts:3,
-          rating:4.7,
-          reviews:92,
-          price:14.99,
-          currency:"USD",
-          description:"A squat-forward strength block with smart fatigue management.",
-          preview:[
-            { name:"Legs A", exercises:[
-              { name:"Back Squat", sets:[{weightKg:120,reps:5},{weightKg:120,reps:5},{weightKg:110,reps:6}] },
-              { name:"RDL", sets:[{weightKg:90,reps:8},{weightKg:90,reps:8}] }
-            ] }
-          ]
-        }
-      ];
-      localStorage.setItem(MARKET_KEY, JSON.stringify(seed));
-    }catch(_){}
-  }
-
-  function listMarket(){
-    seedMarket();
-    try{
-      const raw = localStorage.getItem(MARKET_KEY);
-      const arr = JSON.parse(raw||"[]");
-      return Array.isArray(arr) ? arr : [];
-    }catch(_){ return []; }
-  }
-
-  function withinRange(dateIso){
-    if (historyRange === "all") return true;
-    const d = new Date(dateIso+"T00:00:00");
-    const now = new Date();
-    const ms = now - d;
-    const days = ms / 86400000;
-    if (historyRange === "week") return days <= 7;
-    if (historyRange === "month") return days <= 31;
-    return true;
-  }
-
-  function renderHistory(){
-    const workoutId = getWorkoutId();
-    el.title.textContent = "History";
-    el.subtitle.textContent = "Completed workouts";
-    // Hide create/edit controls in history
-    el.btnAddExercise.style.display = "none";
-    el.btnRest60.style.display = "none";
-    el.btnStart.style.display = "none";
-    el.btnFinish.style.display = "none";
-    // Leaving Today should fully exit the empty-state visual mode.
-    (el.page==null?undefined:el.page.classList).remove("is-empty");
-    if (el.emptyWrap) el.emptyWrap.hidden = true;
-
-    const all = safe(()=>Workouts.listWorkouts ? Workouts.listWorkouts() : [], []);
-    const done = (all||[]).filter(w => (w.status === "completed" || w.status === "skipped") && w.date && withinRange(w.date))
-                         .slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-
-    const groups = new Map();
-    for (const w of done){
-      const key = w.date;
-      if (!groups.has(key)) groups.set(key, []);
-      const summary = safe(()=>Workouts.computeWorkoutSummary ? Workouts.computeWorkoutSummary(w.id) : null, null) || {};
-      groups.get(key).push({
-        ...w,
-        totalSets: summary.totalSets || 0,
-        totalVolumeKg: summary.totalVolumeKg || 0,
-        durationSec: summary.durationSec || w.durationSec || null,
-        prs: summary.prs || []
-      });
-    }
-
-    const header = `
-      <div class="w4-range">
-        <button class="w4-pill ${historyRange==="week"?"is-active":""}" data-range="week" type="button">Week</button>
-        <button class="w4-pill ${historyRange==="month"?"is-active":""}" data-range="month" type="button">Month</button>
-        <button class="w4-pill ${historyRange==="all"?"is-active":""}" data-range="all" type="button">All</button>
-      </div>
-    `;
-
-    if (!done.length){
-      el.content.innerHTML = header + `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No completed workouts yet</div><div class="w3-muted">Finish a workout and it will appear here.</div></div>`;
-      return;
-    }
-
-    const blocks = [];
-    for (const [date, items] of groups.entries()){
-      blocks.push(`
-        <div class="w4-day">
-          <div class="w4-dayTitle">${esc(date)}</div>
-          <div class="w4-dayList">
-            ${items.map(w=>{
-              const prBadge = (w.prs && w.prs.length) ? `<span class="w4-prBadge">PR</span>` : ``;
-              const dur = w.durationSec ? ` · ${secondsToClock(w.durationSec)}` : ``;
-              return `
-                <div class="w4-hCard">
-                  <div class="w4-hTop">
-                    <div>
-                      <div class="w4-hTitle">${esc(w.name || "Workout")} ${prBadge}</div>
-                      <div class="w4-hSub">${esc(w.status || "completed")}${dur}</div>
-                    </div>
-                    <button class="w3-miniBtn" data-open-workout="${escAttr(w.id)}" type="button">Open</button>
-                  </div>
-                  <div class="w4-hMeta">${fmtInt(w.totalSets||0)} sets · ${fmtInt(Math.round(w.totalVolumeKg||0))} kg</div>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        </div>
-      `);
-    }
-
-    el.content.innerHTML = header + blocks.join("");
-  }
-
-  function templatePrice(t){
-    if (t.price === 0) return "FREE";
-    const cur = t.currency || "USD";
-    const sym = (cur === "USD") ? "$" : cur + " ";
-    return `${sym}${Number(t.price).toFixed(2)}`;
-  }
-
-  function tagMatch(t){
-    if (templatesCat === "all") return true;
-    if (templatesCat === "coach") return true; // featured
-    const tags = (t.tags || []).map(x=>String(x).toLowerCase());
-    return tags.includes(templatesCat);
-  }
-
-  function renderTemplates(){
-    el.title.textContent = "Templates";
-    el.subtitle.textContent = "Coach plans & programs";
-    el.btnAddExercise.style.display = "none";
-    el.btnRest60.style.display = "none";
-    el.btnStart.style.display = "none";
-    el.btnFinish.style.display = "none";
-    // Leaving Today should fully exit the empty-state visual mode.
-    (el.page==null?undefined:el.page.classList).remove("is-empty");
-    if (el.emptyWrap) el.emptyWrap.hidden = true;
-
-    const cats = `
-      <div class="w4-range">
-        <button class="w4-pill ${templatesCat==="mine"?"is-active":""}" data-cat="mine" type="button">My templates</button>
-        <button class="w4-pill ${templatesCat==="coach"?"is-active":""}" data-cat="coach" type="button">Coach Picks</button>
-        <button class="w4-pill ${templatesCat==="push"?"is-active":""}" data-cat="push" type="button">Push</button>
-        <button class="w4-pill ${templatesCat==="legs"?"is-active":""}" data-cat="legs" type="button">Legs</button>
-        <button class="w4-pill ${templatesCat==="home"?"is-active":""}" data-cat="home" type="button">Home</button>
-        <button class="w4-pill ${templatesCat==="all"?"is-active":""}" data-cat="all" type="button">All</button>
-      </div>
-    `;
-
-        if (templatesCat === "mine") {
-      renderMyTemplates(cats);
-      return;
-    }
-
-    const list = listMarket().filter(tagMatch);
-
-
-    if (templatePreviewId){
-      const t = listMarket().find(x=>x.id===templatePreviewId);
-      if (!t){
-        templatePreviewId = null;
-        el.content.innerHTML = cats;
-        return;
-      }
-      el.content.innerHTML = cats + `
-        <div class="w4-preview">
-          <div class="w4-previewTop">
-            <button class="w3-miniBtn" data-action="tpl-back" type="button">← Back</button>
-            <div class="w4-previewTitle">${esc(t.title)}</div>
-            <div class="w4-previewPrice">${esc(templatePrice(t))}</div>
-          </div>
-          <div class="w4-previewSub">by ${esc(t.coach)} · ${esc(String(t.weeks||0))} weeks · ${esc(String(t.workouts||0))} workouts</div>
-          <div class="w4-previewDesc">${esc(t.description || "")}</div>
-
-          <div class="w4-previewList">
-            ${(t.preview||[]).map(w=>`
-              <div class="w4-prevWorkout">
-                <div class="w4-prevWTitle">${esc(w.name)}</div>
-                ${(w.exercises||[]).map(ex=>`
-                  <div class="w4-prevEx">
-                    <div class="w4-prevExTitle">${esc(ex.name)}</div>
-                    <div class="w4-prevExMeta">${(ex.sets||[]).map(s=>`${esc(String(s.weightKg||""))}×${esc(String(s.reps||""))}`).join(" · ")}</div>
-                  </div>
-                `).join("")}
-              </div>
-            `).join("")}
-          </div>
-
-          <div class="w4-previewActions">
-            ${t.price === 0
-              ? `<button class="w3-btnPrimary" data-action="tpl-add" data-tpl-id="${escAttr(t.id)}" type="button">Add to my templates</button>`
-              : `<button class="w3-btnPrimary" data-action="tpl-buy" data-tpl-id="${escAttr(t.id)}" type="button">Buy (mock)</button>`
-            }
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    if (!list.length){
-      el.content.innerHTML = cats + `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No templates</div><div class="w3-muted">No templates match this category.</div></div>`;
-      return;
-    }
-
-    el.content.innerHTML = cats + `
-      <div class="w4-tplGrid">
-        ${list.map(t=>{
-          const rating = (t.rating!=null) ? `★ ${Number(t.rating).toFixed(1)}` : "";
-          const reviews = (t.reviews!=null) ? `(${fmtInt(t.reviews)})` : "";
-          const pill = (t.price===0) ? `<span class="w4-free">FREE</span>` : `<span class="w4-price">${esc(templatePrice(t))}</span>`;
-          const cta = (t.price===0) ? "Add" : "Preview";
-          return `
-            <div class="w4-tplCard">
-              <div class="w4-tplTop">
-                <div class="w4-tplTitle">${esc(t.title)}</div>
-                ${pill}
-              </div>
-              <div class="w4-tplSub">by ${esc(t.coach)}</div>
-              <div class="w4-tplMeta">${esc(String(t.workouts||0))} workouts · ${esc(String(t.weeks||0))} weeks</div>
-              <div class="w4-tplRating">${esc(rating)} <span class="w4-tplReviews">${esc(reviews)}</span></div>
-              <div class="w4-tplActions">
-                <button class="w3-btnSecondary" data-action="tpl-preview" data-tpl-id="${escAttr(t.id)}" type="button">${esc(cta)}</button>
-              </div>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    `;
-  }
-
-  
-  function renderMyTemplates(catsHtml){
-    const personal = listPersonalTemplates();
-    const purchased = listPurchasedTemplates();
-
-    // Save current workout as personal template (simple v1)
-    const w = ensureWorkout();
-    const exs = w ? (safe(function(){ return Workouts.listExercises(w.id); }, []) || []) : [];
-    const canSave = exs && exs.length;
-
-    const saveBtn = canSave
-      ? `<button class="w3-btnPrimary" data-action="tpl-save-personal" type="button">Save current workout as template</button>`
-      : `<button class="w3-btnPrimary" disabled type="button" title="Add exercises first">Save current workout as template</button>`;
-
-    function cardTpl(t, src, extraActions){
-      const pill = src === "personal"
-        ? `<span class="w4-free">PERSONAL</span>`
-        : `<span class="w4-price">PURCHASED</span>`;
-      return `
-        <div class="w4-tplCard">
-          <div class="w4-tplTop">
-            <div class="w4-tplTitle">${esc(t.title || t.name || "Template")}</div>
-            ${pill}
-          </div>
-          <div class="w4-tplSub">${src === "personal" ? "Your template" : "Purchased template"}</div>
-          <div class="w4-tplActions">
-            <button class="w3-btnSecondary" data-action="tpl-use" data-tpl-src="${escAttr(src)}" data-tpl-id="${escAttr(t.id)}" type="button">Use (Day 1)</button>
-            ${extraActions || ""}
-          </div>
-        </div>
-      `;
-    }
-
-    const personalHtml = personal.length
-      ? `<div class="w4-tplGrid">${personal.map(function(t){
-          return cardTpl(t, "personal", `<button class="w3-miniBtn" data-action="tpl-del-personal" data-tpl-id="${escAttr(t.id)}" type="button">Delete</button>`);
-        }).join("")}</div>`
-      : `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No personal templates</div><div class="w3-muted">Save a workout as a template to see it here.</div></div>`;
-
-    const purchasedHtml = purchased.length
-      ? `<div class="w4-tplGrid">${purchased.map(function(t){
-          return cardTpl(t, "purchased", "");
-        }).join("")}</div>`
-      : `<div class="w3-empty" style="margin-top:12px;"><div class="w3-emptyTitle">No purchased templates</div><div class="w3-muted">Buy templates in Coach Picks to add them here.</div></div>`;
-
-    el.content.innerHTML = catsHtml + `
-      <div style="display:flex;gap:12px;align-items:center;margin-top:12px;">
-        <div style="flex:1;">
-          <div style="font-weight:700;">My templates</div>
-          <div class="w3-muted" style="margin-top:2px;">Personal and purchased routines</div>
-        </div>
-        ${saveBtn}
-      </div>
-
-      <div style="margin-top:14px;">
-        <div style="font-weight:700;margin-bottom:8px;">Personal</div>
-        ${personalHtml}
-      </div>
-
-      <div style="margin-top:18px;">
-        <div style="font-weight:700;margin-bottom:8px;">Purchased</div>
-        ${purchasedHtml}
-      </div>
-    `;
-  }
-
-  function instantiateTemplateDay1(tpl){
-    if (!tpl) return;
-    const today = isoDate();
-    const day0 = (tpl.preview && tpl.preview.length) ? tpl.preview[0] : null;
-    const workoutName = (day0 && day0.name) ? day0.name : (tpl.title || tpl.name || "Workout");
-    const w = safe(function(){ return Workouts.createWorkout({ name: workoutName, date: today, templateId: tpl.id }); }, null);
-    if (!w) return;
-    if (w.id) setWorkoutId(w.id);
-
-    const exs = (day0 && day0.exercises) ? day0.exercises : [];
-    for (let i=0;i<exs.length;i++){
-      const ex = exs[i] || {};
-      const exName = ex.name || ("Exercise " + (i+1));
-      const exObj = safe(function(){ return Workouts.addExercise(w.id, { name: exName, order: i }); }, null);
-      if (!exObj || !exObj.id) continue;
-      const sets = Array.isArray(ex.sets) ? ex.sets : [];
-      for (let j=0;j<sets.length;j++){
-        const s = sets[j] || {};
-        safe(function(){
-          return Workouts.addSet(exObj.id, { weightKg: Number(s.weightKg||0), reps: Number(s.reps||0), completed:false });
-        }, null);
-      }
-    }
-
-    // Navigate to Today / Workouts view (use the real tab state)
-    templatePreviewId = null;
-    setTab("today");
-  }
-
-// Template stores (purchased vs personal)
-  const USER_TPL_PURCHASED_KEY = "w3_templates_purchased_v1";
-  const USER_TPL_PERSONAL_KEY  = "w3_templates_personal_v1";
-
-  function _loadTplKey(key){
-    try{
-      const raw = localStorage.getItem(key);
-      const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
-    }catch(_){ return []; }
-  }
-  function _saveTplKey(key, list){
-    try{ localStorage.setItem(key, JSON.stringify(list||[])); }catch(_){}
-  }
-
-  function addToPurchasedTemplates(tpl){
-    const list = _loadTplKey(USER_TPL_PURCHASED_KEY);
-    if (!list.find(function(x){ return x && x.id === tpl.id; })) list.push(tpl);
-    _saveTplKey(USER_TPL_PURCHASED_KEY, list);
-  }
-
-  function addToPersonalTemplates(tpl){
-    const list = _loadTplKey(USER_TPL_PERSONAL_KEY);
-    if (!list.find(function(x){ return x && x.id === tpl.id; })) list.push(tpl);
-    _saveTplKey(USER_TPL_PERSONAL_KEY, list);
-  }
-
-  function listPurchasedTemplates(){ return _loadTplKey(USER_TPL_PURCHASED_KEY); }
-  function listPersonalTemplates(){ return _loadTplKey(USER_TPL_PERSONAL_KEY); }
-
-  function listMyTemplates(){
-    const a = listPersonalTemplates();
-    const b = listPurchasedTemplates();
-    // personal first, then purchased
-    return a.concat(b.filter(function(t){ return !a.find(function(x){ return x.id === t.id; }); }));
-  }
-
-
-  function liveDurationSec(workout){
-    if (!workout) return null;
-    const st = workout.startedAt ? new Date(workout.startedAt).getTime() : null;
-    const fin = workout.finishedAt ? new Date(workout.finishedAt).getTime() : null;
-    if (st && !fin) return Math.max(0, Math.floor((Date.now() - st)/1000));
-    if (st && fin) return Math.max(0, Math.floor((fin - st)/1000));
-    return workout.durationSec || null;
-  }
-
-  function fmtKg(n){
-    const v = Number(n||0);
-    return fmtInt(Math.round(v));
-  }
-
-  function getCurrentExerciseName(workoutId){
-    if (!workoutId) return null;
-    const exs = safe(()=>Workouts.listExercises(workoutId), []) || [];
-    if (!exs.length) return null;
-    const active = activeExerciseId ? exs.find(e => e.id === activeExerciseId) : null;
-    return ((active==null?undefined:active.name) || exs[0].name || "").trim() || null;
-  }
-
-  function pickSuggestedExercise(workout){
-    // Priority:
-    // 1) Template of current workout (if exists)
-    // 2) Any template (first)
-    // 3) Last completed workout's first exercise
-    // 4) Fallback: last exercise name from history (most recent)
-    const currentExNames = new Set((safe(()=>Workouts.listExercises((workout==null?undefined:workout.id)), [])||[]).map(e => String(e.name||"").trim().toLowerCase()).filter(Boolean));
-
-    // 1) current workout template
-    const templates = safe(()=>Workouts.listTemplates(), []) || [];
-    if ((workout==null?undefined:workout.templateId)){
-      const tpl = templates.find(t => String(t.id) === String(workout.templateId));
-      if (tpl && tpl.exercises && tpl.exercises.length){
-        const next = tpl.exercises.map(x=>String(x.name||x).trim()).find(n => n && !currentExNames.has(n.toLowerCase()));
-        if (next) return { name: next, source: `Template: ${tpl.name || tpl.id}` };
-      }
-    }
-
-    // 2) any template (first with exercises)
-    const firstTpl = templates.find(t => (t.exercises||[]).length);
-    if (firstTpl){
-      const next = (firstTpl.exercises||[]).map(x=>String(x.name||x).trim()).find(n => n && !currentExNames.has(n.toLowerCase()));
-      if (next) return { name: next, source: `Template: ${firstTpl.name || firstTpl.id}` };
-    }
-
-    // 3) last completed workout
-    const all = safe(()=>Workouts.listWorkouts({}), []) || [];
-    const lastCompleted = (all||[]).filter(w => w.status === "completed").slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))[0];
-    if ((lastCompleted==null?undefined:lastCompleted.id)){
-      const exs = safe(()=>Workouts.listExercises(lastCompleted.id), []) || [];
-      const next = (((exs[0] && exs[0].name)) || "").trim();
-      if (next && !currentExNames.has(next.toLowerCase())) return { name: next, source: "Last session" };
-    }
-
-    // 4) most recent exercise from history by scanning last completed workout exercises
-    if ((lastCompleted==null?undefined:lastCompleted.id)){
-      const exs = safe(()=>Workouts.listExercises(lastCompleted.id), []) || [];
-      for (const e of exs){
-        const n = String(e.name||"").trim();
-        if (n && !currentExNames.has(n.toLowerCase())) return { name: n, source: "History" };
-      }
-    }
-
-    return null;
-  }
-
-  function renderRightPanel(workout, meta){
-    // Today summary
-    const dur = liveDurationSec(workout);
-    const isLive = !!((workout==null?undefined:workout.startedAt) && !(workout==null?undefined:workout.finishedAt));
-
-    // Reveal Today summary only after first set is logged
-    const totalSetsNow = Number((meta==null?undefined:meta.totalSets) || 0);
-    if (el.rpToday){
-      if (_prevTotalSets === null){
-        // First render: show/hide without animation
-        if (totalSetsNow > 0){
-          el.rpToday.classList.remove("is-prehide");
-          el.rpToday.classList.add("no-anim");
-          requestAnimationFrame(()=> el.rpToday.classList.remove("no-anim"));
-        } else {
-          el.rpToday.classList.add("is-prehide");
-        }
-      } else {
-        if (_prevTotalSets === 0 && totalSetsNow > 0){
-          // First set added -> animate in
-          el.rpToday.classList.remove("no-anim");
-          el.rpToday.classList.remove("is-prehide");
-        } else if (totalSetsNow === 0){
-          // Back to zero -> hide (no animation requirement, but keep smooth)
-          el.rpToday.classList.add("is-prehide");
-        }
-      }
-    }
-    _prevTotalSets = totalSetsNow;
-
-    if (el.rpSets) el.rpSets.textContent = fmtInt(meta.totalSets || 0);
-    if (el.rpVol) el.rpVol.textContent = fmtKg(meta.totalVolumeKg || 0);
-    if (el.rpTime) el.rpTime.textContent = dur ? secondsToClock(dur) : "--:--";
-    if (el.rpPRsCount) el.rpPRsCount.textContent = String(getSessionPRCount());
-    if (el.rpLivePill) el.rpLivePill.hidden = !isLive;
-
-    // Next suggested
-    const sug = pickSuggestedExercise(workout);
-    suggestedExerciseName = (sug==null?undefined:sug.name) || null;
-
-    if (el.rpNextCard){
-      if ((sug==null?undefined:sug.name)){
-        el.rpNextCard.hidden = false;
-        if (el.rpNextName) el.rpNextName.textContent = sug.name;
-        if (el.rpNextSource) el.rpNextSource.textContent = sug.source || "";
-        // last used hint
-        const hist = safe(()=>Workouts.getExerciseHistory(sug.name, 1), []) || [];
-        if (el.rpNextSub){
-          if (hist[0]){
-            el.rpNextSub.textContent = `Last: ${fmtKg(hist[0].topSetWeightKg)} kg × ${fmtInt(hist[0].topSetReps)} reps • ${hist[0].date}`;
-          } else {
-            el.rpNextSub.textContent = "No history yet";
-          }
-        }
-      } else {
-        el.rpNextCard.hidden = true;
-      }
-    }
-
-    // Exercise context (current exercise)
-    const curName = getCurrentExerciseName((workout==null?undefined:workout.id));
-    if (el.rpCtxCard){
-      if (curName){
-        el.rpCtxCard.hidden = false;
-        if (el.rpCtxName) el.rpCtxName.textContent = curName;
-
-        const hist = safe(()=>Workouts.getExerciseHistory(curName, 1), []) || [];
-        if (el.rpLastSession){
-          if (hist[0]) el.rpLastSession.textContent = `${hist[0].date}: top set ${fmtKg(hist[0].topSetWeightKg)} kg × ${fmtInt(hist[0].topSetReps)} reps • volume ${fmtKg(hist[0].totalVolumeKg)} kg`;
-          else el.rpLastSession.textContent = "—";
-        }
-
-        const prs = safe(()=>Workouts.getExercisePRs(curName), null) || {};
-        if (el.rpPRs){
-          const parts = [];
-          if (prs.maxWeightKg) parts.push(`Max weight: ${fmtKg(prs.maxWeightKg)} kg`);
-          if (prs.maxReps) parts.push(`Max reps: ${fmtInt(prs.maxReps)}`);
-          if (prs.maxVolumeKg) parts.push(`Max volume: ${fmtKg(prs.maxVolumeKg)} kg`);
-          el.rpPRs.textContent = parts.length ? parts.join(" • ") : "—";
-        }
-      } else {
-        el.rpCtxCard.hidden = true;
-      }
-    }
-  }
-
-  function startWorkoutClock(){
-    if (workoutClockInterval) return;
-    workoutClockInterval = setInterval(()=>{
-      const w = safe(()=>Workouts.getWorkout(getWorkoutId()), null);
-      if (!w) return;
-      const dur = liveDurationSec(w);
-      if (el.metaTime) el.metaTime.textContent = dur ? secondsToClock(dur) : "--:--";
-
-    renderRightPanel(workout, meta);
-
-    if (workout.startedAt && !workout.finishedAt) startWorkoutClock(); else stopWorkoutClock();
-      if (el.rpTime) el.rpTime.textContent = dur ? secondsToClock(dur) : "--:--";
-      if (el.rpLivePill) el.rpLivePill.hidden = !(w.startedAt && !w.finishedAt);
-    }, 1000);
-  }
-
-  function stopWorkoutClock(){
-    if (workoutClockInterval) { clearInterval(workoutClockInterval); workoutClockInterval = null; }
-  }
-function render(){
-    // Tab router (Today / History / Templates)
-    if (currentTab === "history"){ syncTabUI(); renderHistory(); return; }
-    if (currentTab === "templates"){ syncTabUI(); renderTemplates(); return; }
-    syncTabUI();
-    renderWeekPlan();
-    if (!window.Workouts) {
-      el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">Workouts API missing</div><div class="w3-muted">window.Workouts not loaded.</div></div>`;
-      if (el.emptyWrap) el.emptyWrap.hidden = true;
-      return;
-    }
-
-    const workout = ensureWorkout();
-    if (!workout) {
-      el.content.innerHTML = `<div class="w3-empty"><div class="w3-emptyTitle">No workout</div><div class="w3-muted">Could not create or load a workout.</div></div>`;
-      if (el.emptyWrap) el.emptyWrap.hidden = true;
-      return;
-    }
-
-    el.title.textContent = workout.name || "Workout";
-    el.subtitle.textContent = `${workout.status || "planned"} · ${workout.date || "—"}`;
-
-    currentWorkoutId = workout.id || null;
-
-    // Load per-workout PR session tracking (used for Today summary PR count and completion message)
-    if (String(sessionPRs.workoutId||"") !== String(currentWorkoutId||"")){
-      loadSessionPRs(currentWorkoutId);
-    }
-
-
-    // Allow editing even if a workout is marked completed (prevents "can't type" on mobile)
-    const status = workout.status || "planned";
-    isReadOnly = false;
-    // show workout controls only in Today tab
-    el.btnAddExercise.style.display = "";
-    el.btnRest60.style.display = "";
-    labelRestButton();
-    el.btnStart.style.display = "";
-    el.btnFinish.style.display = "";
-    // Primary: planned -> Start (bottom), in_progress -> Finish (top), done -> hide both
-    if (status === "in_progress"){
-      el.btnStart.style.display = "none";
-      el.btnFinish.style.display = "";
-    } else if (status === "planned"){
-      el.btnStart.style.display = "";
-      el.btnFinish.style.display = "none";
-    } else {
-      el.btnStart.style.display = "none";
-      el.btnFinish.style.display = "none";
-    }
-
-
-
-    const meta = computeMeta(workout.id);
-    el.metaSets.textContent = fmtInt(meta.totalSets || 0);
-    el.metaVol.textContent = fmtInt(Math.round(meta.totalVolumeKg || 0));
-    const dur = liveDurationSec(workout);
-    el.metaTime.textContent = dur ? secondsToClock(dur) : "--:--";
-
-    const exercises = safe(()=>Workouts.listExercises(workout.id), []);
-
-    // Keep a stable "active" exercise for in-card actions
-    if (exercises.length){
-      const exists = activeExerciseId && exercises.some(e=>String(e.id)===String(activeExerciseId));
-      if (!exists) activeExerciseId = exercises[0].id;
-    } else {
-      activeExerciseId = null;
-    }
-    el.content.innerHTML = "";
-
-    if (!exercises.length) {
-      showEmpty();
-      return;
-    }
-    hideEmptyAnimated();
-
-for (const ex of exercises) {
-      const sets = safe(()=>Workouts.listSets(ex.id), []);
-      const card = document.createElement("section");
-      card.className = "w3-exCard" + (String(ex.id)===String(activeExerciseId) ? " is-active" : "");
-      card.dataset.exerciseId = ex.id;
-      card.dataset.exerciseName = ex.name || "";
-
-      card.innerHTML = `
-        <div class="w3-exHeader">
-          <div class="w3-exHeaderLeft">
-            <div class="w3-delHint" title="Hold 2.5s to delete" aria-hidden="true">
-              <div class="w3-delGlass" aria-hidden="true"></div>
-              <span class="w3-delIcon" aria-hidden="true">🗑️</span>
-              <svg class="w3-delRing" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <circle class="w3-delRingTrack" cx="12" cy="12" r="10.5"></circle>
-                <circle class="w3-delRingProg" cx="12" cy="12" r="10.5"></circle>
-              </svg>
-            </div>
-            <div class="w3-exHoldZone" data-hold-delete="1" title="Hold 2.5s to delete">
-              <div class="w3-hSection">${esc(ex.name || "Exercise")}</div>
-              ${ex.notes ? `<div class="w3-exSub">${esc(ex.notes)}</div>` : ``}
-            </div>
-          </div>
-          <div class="w3-exHeaderRight">
-            <button class="w3-iconBtn w3-exMenuBtn" data-action="ex-menu" aria-label="More options">
-              <span class="w3-dots" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-
-        ${(isReadOnly || sets.length===0) ? "" : `<div class="w3-exActions" ${String(ex.id)!==String(activeExerciseId) ? "hidden" : ""}>
-          <button class="w3-btnPrimary w3-exAction" data-action="start-workout" ${workout.status==="in_progress" ? "disabled" : ""}>${workout.status==="in_progress" ? "Started" : "Start"}</button>
-          <button class="w3-btnSecondary w3-exAction" data-action="rest">Rest ${fmtClock(loadRestPreset())}</button>
-        </div>`}
-
-        <div class="w3-setLabels" aria-hidden="true">
-          <div></div><div>set</div><div>kg</div><div>reps</div>
-        </div>
-
-        <div class="w3-sets">
-          ${sets.map((s,i)=>setRowHtml(s,i, ex.id, ex.name)).join("")}
-        </div>
-
-        ${isReadOnly ? "" : `<button class="w3-addSet" data-action="add-set">+ Add set</button>`}
-      `;
-
-      el.content.appendChild(card);
-    }
-
-    // "Add another exercise" placeholder card (shows you can add more)
-    if (!isReadOnly) {
-      const addCard = document.createElement("section");
-      addCard.className = "w3-addExerciseCard";
-      addCard.setAttribute("role", "button");
-      addCard.setAttribute("tabindex", "0");
-      addCard.dataset.action = "add-exercise-card";
-      addCard.innerHTML = `
-        <div class="w3-addExerciseInner">
-          <div class="w3-addExerciseIcon">+</div>
-          <div class="w3-addExerciseText">
-            <div class="w3-addExerciseTitle">Add another exercise</div>
-            <div class="w3-addExerciseSub">Tap to add more to this workout.</div>
-          </div>
-        </div>
-      `;
-      el.content.appendChild(addCard);
-    }
-  }
-
-  function setRowHtml(s, index, exerciseId, exerciseName){
-    const done = !!s.completed;
-    const w = (s.weightKg ?? "");
-    const r = (s.reps ?? "");
-    const isPR = (prFlashSetId && prFlashSetId === s.id);
-
-    return `
-      <div class="w3-swipeWrap" data-set-id="${escAttr(s.id)}" data-exercise-name="${escAttr(exerciseName||"")}">
-        <div class="w3-swipeAction left" data-action="dup-set"><span class="w3-swipeIcon">⎘</span><span class="w3-swipeLabel">Duplicate</span></div>
-        <div class="w3-swipeAction right" data-action="del-set"><span class="w3-swipeIcon">🗑</span><span class="w3-swipeLabel">Delete</span></div>
-
-        <div class="w3-setRow ${done ? "isDone" : ""} ${isPR ? "isPR" : ""}" data-set-id="${escAttr(s.id)}" data-exercise-name="${escAttr(exerciseName||"")}">
-          <div class="w3-check ${done ? "isDone" : ""}" data-action="toggle-set" role="button" aria-label="Toggle set"></div>
-          <div class="w3-setIndex">${index+1}</div>
-          <input class="w3-input" data-field="weightKg" inputmode="decimal" value="${escAttr(String(w))}" placeholder="kg" ${isReadOnly ? "disabled" : ""} />
-          <input class="w3-input" data-field="reps" inputmode="numeric" value="${escAttr(String(r))}" placeholder="reps" ${isReadOnly ? "disabled" : ""} />
-
-          <div class="w3-hoverActions" aria-hidden="true">
-            <button class="w3-miniBtn" data-action="dup-set" title="Duplicate">Dup</button>
-            <button class="w3-miniBtn danger" data-action="del-set" title="Delete">Del</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // Events: add set / toggle / menu
-
-  function findExerciseContextFromSetId(setId){
-    const row = el.content.querySelector(`.w3-setRow[data-set-id="${cssEsc(setId)}"]`);
-    const card = row ? row.closest(".w3-exCard") : null;
-    return {
-      row,
-      card,
-      exerciseId: card ? card.dataset.exerciseId : null,
-      exerciseName: card ? (card.dataset.exerciseName || "") : ""
-    };
-  }
-
-  function duplicateSet(setId){
-    const ctx = findExerciseContextFromSetId(setId);
-    if (!ctx.exerciseId) return;
-    const sets = safe(()=>Workouts.listSets(ctx.exerciseId), []);
-    const srcSet = sets.find(s => String(s.id) === String(setId));
-    if (!srcSet) return;
-
-    const cloneDefaults = {
-      weightKg: srcSet.weightKg ?? null,
-      reps: srcSet.reps ?? null,
-      completed: false
-    };
-    const newSet = safe(()=>Workouts.addSet(ctx.exerciseId, cloneDefaults), null);
-    if (!newSet) return;
-
-    // Reorder to place directly after original
-    const ordered = sets.slice().sort((a,b)=>Number(a.order||0)-Number(b.order||0)).map(s=>s.id);
-    const insertAt = Math.max(0, ordered.findIndex(id=>String(id)===String(setId))) + 1;
-    const next = ordered.slice(0, insertAt).concat([newSet.id]).concat(ordered.slice(insertAt));
-    safe(()=>Workouts.reorderSets(ctx.exerciseId, next), null);
-  }
-
-  function deleteSet(setId){
-    safe(()=>Workouts.removeSet(setId), null);
-  }
-
-  function maybeFlashPR(setId, exerciseName, oldPR){
-    if (!exerciseName) return;
-
-    const ctx = findExerciseContextFromSetId(setId);
-    const exerciseId = ctx.exerciseId;
-    if (!exerciseId) return;
-
-    const sets = safe(()=>Workouts.listSets(exerciseId), []);
-    const s = sets.find(x=>String(x.id)===String(setId));
-    if (!s || !s.completed) return;
-
-    const w = Number(s.weightKg || 0);
-    const r = Number(s.reps || 0);
-    const v = w * r;
-
-    const before = oldPR || {};
-    const oldW = Number(before.maxWeightKg || 0);
-    const oldR = Number(before.maxReps || 0);
-    const oldV = Number(before.maxVolumeKg || 0);
-
-    const types = [];
-    if (w > oldW && w > 0) types.push("weight");
-    if (r > oldR && r > 0) types.push("reps");
-    if (v > oldV && v > 0) types.push("volume");
-
-    if (types.length) {
-      flashPR(setId);
-      recordSessionPR(setId, exerciseName, types);
-      // Update Today summary instantly without waiting for a full rerender.
-      if (el.rpPRsCount) el.rpPRsCount.textContent = String(getSessionPRCount());
-    }
-  }
-
-// Pointer swipe handling (Apple-style)
-  el.content.addEventListener("pointerdown", (e)=>{
-    const row = e.target.closest(".w3-setRow");
-    if (!row) return;
-
-    // don't start swipe when editing inputs
-    if (e.target.closest("input")) return;
-
-    swipe.active = true;
-    swipe.row = row;
-    swipe.startX = e.clientX;
-    swipe.dx = 0;
-    swipe.pointerId = e.pointerId;
-
-    try { row.setPointerCapture(e.pointerId); } catch(_) {}
-  });
-
-  el.content.addEventListener("pointermove", (e)=>{
-    if (!swipe.active || !swipe.row || e.pointerId !== swipe.pointerId) return;
-    const dx = e.clientX - swipe.startX;
-    swipe.dx = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, dx));
-    swipe.row.style.transform = `translateX(${swipe.dx}px)`;
-    const wrap = swipe.row.parentElement;
-    if (wrap){
-      wrap.classList.toggle("isSwipeLeft", swipe.dx > 8);
-      wrap.classList.toggle("isSwipeRight", swipe.dx < -8);
-    }
-  });
-
-  el.content.addEventListener("pointerup", (e)=>{
-    if (!swipe.active || !swipe.row || e.pointerId !== swipe.pointerId) return;
-    const row = swipe.row;
-    const dx = swipe.dx;
-
-    const setId = row.dataset.setId;
-    const card = row.closest(".w3-exCard");
-    const exerciseName = card ? (card.dataset.exerciseName || "") : "";
-
-    const reset = () => {
-      row.style.transform = "translateX(0)";
-      const wrap = row.parentElement;
-      if (wrap){ wrap.classList.remove("isSwipeLeft","isSwipeRight"); }
-
-      row.style.transition = "transform .22s ease";
-      setTimeout(()=>{ if(row) row.style.transition = ""; }, 260);
-    };
-
-    if (dx > SWIPE_THRESHOLD) {
-      row.style.transform = `translateX(${SWIPE_MAX}px)`;
-      setTimeout(()=>{
-        duplicateSet(setId);
-        reset();
-        render();
-      }, 120);
-    } else if (dx < -SWIPE_THRESHOLD) {
-      row.style.transform = `translateX(-${SWIPE_MAX}px)`;
-      setTimeout(()=>{
-        deleteSet(setId);
-        render();
-      }, 120);
-    } else {
-      reset();
-    }
-
-    swipe.active = false;
-    swipe.row = null;
-    swipe.pointerId = null;
-    swipe.dx = 0;
-  });
-
-  el.content.addEventListener("pointercancel", ()=>{
-    if (swipe.row) {
-      swipe.row.style.transform = "translateX(0)";
-      const wrap = swipe.row.parentElement;
-      if (wrap){ wrap.classList.remove("isSwipeLeft","isSwipeRight"); }
-    }
-    swipe.active = false;
-    swipe.row = null;
-    swipe.pointerId = null;
-    swipe.dx = 0;
-  });
-
-  el.content.addEventListener("click", (e)=>{
-    // Increment 4: History/Templates controls
-    const openBtn = e.target.closest("[data-open-workout]");
-    if (openBtn){
-      const id = openBtn.getAttribute("data-open-workout");
-      if (id){
-        setWorkoutId(id);
-        setTab("today");
-      }
-      return;
-    }
-    const rangeBtn = e.target.closest("[data-range]");
-    if (rangeBtn){
-      historyRange = rangeBtn.getAttribute("data-range") || "all";
-      renderHistory();
-      return;
-    }
-    const catBtn = e.target.closest("[data-cat]");
-    if (catBtn){
-      templatesCat = catBtn.getAttribute("data-cat") || "coach";
-      templatePreviewId = null;
-      renderTemplates();
-      return;
-    }
-    // Set active exercise when clicking on a card surface (not on controls)
-    const clickedCard = e.target.closest(".w3-exCard");
-    if (clickedCard && !e.target.closest("[data-action]") && !e.target.closest("input,button,textarea,select")){
-      const exId = clickedCard.dataset.exerciseId;
-      if (exId && String(exId)!==String(activeExerciseId)){
-        activeExerciseId = exId;
-        render();
-      }
-      return;
-    }
-
-    const act = e.target.closest("[data-action]");
-    if (!act) return;
-    const action = act.dataset.action;
-
-    if (action === "tpl-preview") {
-      const id = act.getAttribute("data-tpl-id");
-      templatePreviewId = id || null;
-      renderTemplates();
-      return;
-    }
-    if (action === "tpl-back") {
-      templatePreviewId = null;
-      renderTemplates();
-      return;
-    }
-    if (action === "tpl-add") {
-      const id = act.getAttribute("data-tpl-id");
-      const tpl = listMarket().find(function(t){ return t.id===id; });
-      if (tpl){ addToPurchasedTemplates(tpl); instantiateTemplateDay1(tpl); }
-      templatePreviewId = null;
-      renderTemplates();
-      return;
-    }
-    if (action === "tpl-buy") {
-      // mock purchase: unlock and add to purchased templates, then auto-load Day 1
-      const id = act.getAttribute("data-tpl-id");
-      const tpl = listMarket().find(function(t){ return t.id===id; });
-      if (tpl){ addToPurchasedTemplates(tpl); instantiateTemplateDay1(tpl); }
-      alert("Purchased (mock). Loaded Day 1 in Workouts.");
-      templatePreviewId = null;
-      renderTemplates();
-      return;
-    }
-    if (action === "tpl-use") {
-      const id = act.getAttribute("data-tpl-id");
-      const src = act.getAttribute("data-tpl-src") || "";
-      let tpl = null;
-      if (src === "personal") tpl = listPersonalTemplates().find(function(t){ return t.id===id; }) || null;
-      else if (src === "purchased") tpl = listPurchasedTemplates().find(function(t){ return t.id===id; }) || null;
-      if (tpl) instantiateTemplateDay1(tpl);
-      return;
-    }
-    if (action === "tpl-del-personal") {
-      const id = act.getAttribute("data-tpl-id");
-      try{
-        const list = listPersonalTemplates().filter(function(t){ return t && t.id !== id; });
-        localStorage.setItem(USER_TPL_PERSONAL_KEY, JSON.stringify(list));
-      }catch(_){}
-      renderTemplates();
-      return;
-    }
-    if (action === "tpl-save-personal") {
-      const w = ensureWorkout();
-      if (!w) return;
-      const exs = safe(function(){ return Workouts.listExercises(w.id); }, []) || [];
-      if (!exs.length) return;
-      const name = prompt("Template name:", (w.name || "My template"));
-      if (!name) return;
-
-      // Build a simple 1-day routine based on current workout, including sets.
-      const day = { name: String(name), exercises: [] };
-      for (let i=0;i<exs.length;i++){
-        const ex = exs[i];
-        const sets = safe(function(){ return Workouts.listSets(ex.id); }, []) || [];
-        day.exercises.push({
-          name: ex.name || ("Exercise " + (i+1)),
-          sets: sets.map(function(s){ return { weightKg: Number(s.weightKg||0), reps: Number(s.reps||0) }; })
-        });
-      }
-
-      const tpl = {
-        id: "ptpl_" + Date.now(),
-        title: String(name),
-        coach: "You",
-        tags: ["personal"],
-        weeks: 1,
-        workouts: 1,
-        price: 0,
-        currency: "USD",
-        description: "Personal template",
-        preview: [day]
-      };
-      addToPersonalTemplates(tpl);
-      templatesCat = "mine";
-      renderTemplates();
-      return;
-    }
-    const card = act.closest(".w3-exCard");
-    const exerciseId = (card && card.dataset) ? card.dataset.exerciseId : null;
-
-    const setRow = act.closest(".w3-setRow");
-    const setId = (setRow && setRow.dataset) ? setRow.dataset.setId : null;
-    const exerciseName = (card && card.dataset && card.dataset.exerciseName) ? card.dataset.exerciseName : "";
-
-    if (action === "start-workout") {
-      const w = ensureWorkout();
-      if (!w) return;
-      safe(()=>Workouts.startWorkout(w.id), null);
-      render();
-      return;
-    }
-    if (action === "rest") {
-      // In-card Rest should start immediately (users expect feedback).
-      // Hold a modifier key to open the picker and change duration.
-      handleRestPrimaryClick(null);
-      return;
-    }
-
-    if (action === "dup-set") {
-      if (!setId) return;
-      duplicateSet(setId);
-      render();
-      return;
-    }
-
-    if (action === "del-set") {
-      if (!setId) return;
-      deleteSet(setId);
-      render();
-      return;
-    }
-
-    if (action === "add-set") {
-      if (!exerciseId) return;
-      safe(()=>Workouts.addSet(exerciseId, { completed:false }), null);
-      render();
-    }
-    if (action === "toggle-set") {
-      const row = act.closest(".w3-setRow");
-      const setId = (row && row.dataset) ? row.dataset.setId : undefined;
-      if (!setId) return;
-
-      // Snapshot PRs BEFORE completion to detect improvements reliably
-      const oldPR = exerciseName ? safe(()=>Workouts.getExercisePRs(exerciseName), null) : null;
-
-      safe(()=>Workouts.toggleSetCompleted(setId), null);
-
-      // Auto start rest when completing a set
-      const ctx = findExerciseContextFromSetId(setId);
-      if (ctx.exerciseId){
-        const sets = safe(()=>Workouts.listSets(ctx.exerciseId), []);
-        const s = sets.find(x=>String(x.id)===String(setId));
-        if (s && s.completed){
-          startRest(Number(s.restSec || 60));
-          maybeFlashPR(setId, exerciseName, oldPR);
-        }
-      }
-
-      render();
-      return;
-    }
-    if (action === "add-exercise-card") {
-      addExercise();
-      return;
-    }
-
-    if (action === "ex-menu") {
-      // Reorder handle. Actual drag starts on pointerdown for this button.
-      // Keep click as a harmless hint for desktop users.
-      if (card){
-        card.classList.remove("w3-reorderHint");
-        void card.offsetWidth;
-        card.classList.add("w3-reorderHint");
-        setTimeout(()=>card.classList.remove("w3-reorderHint"), 700);
-      }
-      return;
-    }
-  });
-
-  // Keyboard support for clickable "add exercise" card
-  el.content.addEventListener("keydown", (e)=>{
-    const act = e.target.closest && e.target.closest("[data-action='add-exercise-card']");
-    if (!act) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      addExercise();
-    }
-  });
-
-  // Inline edit
-  el.content.addEventListener("change", (e)=>{
-    const inp = e.target.closest(".w3-input");
-    if (!inp) return;
-
-    const row = inp.closest(".w3-setRow");
-      const setId = (row && row.dataset) ? row.dataset.setId : undefined;
-    const card = inp.closest(".w3-exCard");
-    const exerciseName = (card && card.dataset && card.dataset.exerciseName) ? card.dataset.exerciseName : "";
-    const field = inp.dataset.field;
-    if (!setId || !field) return;
-
-    const raw = String(inp.value||"").trim();
-
-    // Snapshot PRs for this exercise (used if set is already completed)
-    const oldPRInline = exerciseName ? safe(()=>Workouts.getExercisePRs(exerciseName), null) : null;
-    if (raw === "") {
-      safe(()=>Workouts.updateSet(setId, { [field]: null }), null);
-      render();
-      return;
-    }
-    const num = Number(raw.replace(",", "."));
-    if (Number.isNaN(num)) { render(); return; }
-
-    safe(()=>Workouts.updateSet(setId, { [field]: num }), null);
-
-    // If this set is already completed, an edit can create a new PR
-    if (exerciseName) {
-      const ctx2 = findExerciseContextFromSetId(setId);
-      if (ctx2.exerciseId){
-        const sets2 = safe(()=>Workouts.listSets(ctx2.exerciseId), []);
-        const s2 = sets2.find(x=>String(x.id)===String(setId));
-        if (s2 && s2.completed) maybeFlashPR(setId, exerciseName, oldPRInline);
-      }
-    }
-    if (field === "weightKg") {
-      // If the set is already completed, we may have created a PR
-      maybeFlashPR(setId, exerciseName);
-    }
-    render();
-  });
-
-
-  // Modal (replaces native prompt)
-  function openAddExerciseModal(onSubmit){
-    // lazy query in case modal markup is after scripts
-    if (!el.modalOverlay) el.modalOverlay = document.getElementById("w3ModalOverlay");
-    if (!el.modalInput) el.modalInput = document.getElementById("w3ExerciseName");
-    if (!el.modalOk) el.modalOk = document.getElementById("w3ModalOk");
-    if (!el.modalCancel) el.modalCancel = document.getElementById("w3ModalCancel");
-    const closeBtn = document.getElementById("w3ModalClose");
-    if (!el.modalOverlay || !el.modalInput || !el.modalOk || !el.modalCancel) return;
-    el.modalOverlay.hidden = false;
-    // wire close actions (idempotent)
-    if (!el.modalOverlay.__wired){
-      el.modalOverlay.__wired = true;
-      const doClose = ()=>{ el.modalOverlay.hidden = true; };
-      el.modalCancel.addEventListener("click", doClose);
-      const closeBtn = document.getElementById("w3ModalClose");
-      if (closeBtn) closeBtn.addEventListener("click", doClose);
-      el.modalOverlay.addEventListener("click", (e)=>{ if(e.target===el.modalOverlay) doClose(); });
-      window.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && !el.modalOverlay.hidden) doClose(); });
-    }
-
-    el.modalInput.value = "";
-    el.modalInput.focus();
-
-    const submit = () => {
-      const name = (el.modalInput.value || "").trim();
-      if (!name) return;
-      closeAddExerciseModal();
-      onSubmit(name);
-    };
-
-    const onKey = (ev) => {
-      if (ev.key === "Escape") { ev.preventDefault(); closeAddExerciseModal(); }
-      if (ev.key === "Enter") { ev.preventDefault(); submit(); }
-    };
-
-    const onBg = (ev) => {
-      if (ev.target === el.modalOverlay) closeAddExerciseModal();
-    };
-
-    // one-shot listeners
-    if (el.modalOk != null) el.modalOk.addEventListener("click", submit, { once:true });
-    if (el.modalCancel != null) el.modalCancel.addEventListener("click", closeAddExerciseModal, { once:true });
-    el.modalInput.addEventListener("keydown", onKey, { once:true });
-    el.modalOverlay.addEventListener("click", onBg, { once:true });
-  }
-
-  function closeAddExerciseModal(){
-    if (!el.modalOverlay) return;
-    el.modalOverlay.hidden = true;
-  }
-
-  function addExercise(){
-    const w = ensureWorkout();
-    if (!w) return;
-    // open add-exercise modal
-    openAddExerciseModal((name)=>{
-      safe(()=>Workouts.addExercise(w.id, { name }), null);
-      render();
-    });
+  "use strict";
+
+  const Workouts = window.Workouts;
+  if (!Workouts){
+    console.error("Workouts API not found. Ensure workouts.js is loaded before workouts_v3.js");
     return;
   }
 
-  if (el.btnAddExercise != null) el.btnAddExercise.addEventListener("click", addExercise);
-  if (el.btnAddExerciseEmpty != null) el.btnAddExerciseEmpty.addEventListener("click", addExercise);
+  const el = {
+    weekGrid: document.getElementById("weekGrid"),
+    prevWeek: document.getElementById("prevWeek"),
+    nextWeek: document.getElementById("nextWeek"),
+    todayBtn: document.getElementById("todayBtn"),
+    headerSubtle: document.querySelector(".workouts-header .subtle"),
+  };
+  if (!el.weekGrid) return;
 
-  // Today summary card should act as a shortcut back to the current (Today) workout.
-  // (Users expect clicking the summary to open the workout, not only show stats.)
-  if (el.rpToday != null){
-    try{
-      el.rpToday.setAttribute("role","button");
-      el.rpToday.setAttribute("tabindex","0");
-      el.rpToday.classList.add("is-clickable");
-    }catch(_){ }
-    el.rpToday.addEventListener("click", ()=>{
-      // Ensure an active workout is selected, then navigate to Today.
-      ensureWorkout();
-      setTab("today");
-    });
-    el.rpToday.addEventListener("keydown", (e)=>{
-      if (e.key === "Enter" || e.key === " "){
-        e.preventDefault();
-        ensureWorkout();
-        setTab("today");
-      }
+  const dayNames = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]; // Monday-first
+  const monthShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; 
+
+  const iso = (d) => {
+    const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    return dt.toISOString().slice(0,10);
+  };
+
+  const parseIso = (s) => {
+    const [y,m,d] = String(s||"").split("-").map(Number);
+    if (!y||!m||!d) return new Date();
+    return new Date(y, m-1, d);
+  };
+
+  function startOfWeek(date){
+    // Monday start
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dow = (d.getDay()+6)%7; // Mon=0..Sun=6
+    d.setDate(d.getDate() - dow);
+    return d;
+  }
+
+  function addDays(date, n){
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+
+  function fmtDay(date){
+    return `${monthShort[date.getMonth()]} ${date.getDate()}`;
+  }
+
+  function fmtWeekRange(weekStart){
+    const a = weekStart;
+    const b = addDays(weekStart, 6);
+    const sameMonth = a.getMonth() === b.getMonth();
+    const sameYear = a.getFullYear() === b.getFullYear();
+    const left = `${monthShort[a.getMonth()]} ${a.getDate()}`;
+    const right = `${sameMonth ? "" : (monthShort[b.getMonth()] + " ")}${b.getDate()}${sameYear ? "" : (", " + b.getFullYear())}`;
+    return `Week of ${left} – ${right}`;
+  }
+
+  const todayIso = iso(new Date());
+  let viewDate = new Date(); // any day within the viewed week
+
+  // DnD state
+  const dnd = {
+    draggingId: null,
+    placeholder: null,
+    overColumn: null,
+  };
+
+  function ensurePlaceholder(){
+    if (dnd.placeholder) return dnd.placeholder;
+    const p = document.createElement("div");
+    p.className = "drop-placeholder";
+    dnd.placeholder = p;
+    return p;
+  }
+
+  function getWeekRange(weekStart){
+    return { from: iso(weekStart), to: iso(addDays(weekStart, 6)) };
+  }
+
+  function getWorkoutsForWeek(weekStart){
+    const {from,to} = getWeekRange(weekStart);
+    // listWorkouts returns inclusive range
+    const list = Workouts.listWorkouts({from, to}) || [];
+    return list;
+  }
+
+  function sortForDay(list){
+    return list.slice().sort((a,b)=>{
+      const ao = (typeof a.dayOrder === "number") ? a.dayOrder : 1e9;
+      const bo = (typeof b.dayOrder === "number") ? b.dayOrder : 1e9;
+      if (ao !== bo) return ao - bo;
+      // stable-ish fallback
+      const at = String(a.createdAt||"");
+      const bt = String(b.createdAt||"");
+      if (at && bt && at !== bt) return at < bt ? -1 : 1;
+      return String(a.id).localeCompare(String(b.id));
     });
   }
-  // Empty state card is clickable
-  if (el.empty != null) el.empty.addEventListener("click", (e)=>{
-    // If user clicks the Today summary card inside the empty state, don't open Add Exercise.
-    if (e.target && e.target.closest && e.target.closest("#w3RpToday")) return;
-    el.empty.classList.add("isPressed");
-    setTimeout(()=>el.empty && el.empty.classList.remove("isPressed"), 140);
-    addExercise();
-  });
-  if (el.empty != null) el.empty.addEventListener("keydown", (e)=>{
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      el.empty.classList.add("isPressed");
-      setTimeout(()=>el.empty && el.empty.classList.remove("isPressed"), 140);
-      addExercise();
-    }
-  });
 
-  // Tabs switching
-  if (el.tabs != null) el.tabs.addEventListener("click", (e)=>{
-    const btn = e.target.closest("[data-tab]");
-    if (!btn) return;
-    const tab = btn.getAttribute("data-tab");
-    if (tab) setTab(tab);
-  });
+  function normalizeDayOrder(dateIso, orderedIds){
+    (orderedIds||[]).forEach((id, idx)=>{
+      try{ Workouts.updateWorkout(id, { date: dateIso, dayOrder: idx }); }catch(_){ }
+    });
+  }
 
-  // Empty-state quick actions (Templates / History)
-  if (el.emptySide != null) el.emptySide.addEventListener("click", (e)=>{
-    const btn = e.target.closest("[data-tab]");
-    if (!btn) return;
-    const tab = btn.getAttribute("data-tab");
-    if (tab) setTab(tab);
-  });
+  function buildCard(w){
+    const card = document.createElement("div");
+    card.className = "workout-card";
+    if (w.status === "completed") card.classList.add("is-completed");
+    card.draggable = true;
+    card.dataset.workoutId = w.id;
 
-  // Desktop tiles switching
-  if (el.sideTiles != null) el.sideTiles.addEventListener("click", (e)=>{
-    const btn = e.target.closest("[data-tab]");
-    if (!btn) return;
-    const tab = btn.getAttribute("data-tab");
-    if (tab) setTab(tab);
-  });
+    const title = document.createElement("div");
+    title.className = "workout-title";
+    title.textContent = w.name || "Workout";
 
+    const sub = document.createElement("div");
+    sub.className = "workout-sub";
+    sub.textContent = w.status === "completed" ? "Completed" : (w.status === "in_progress" ? "In progress" : "Planned");
 
-  if (el.btnStart != null) el.btnStart.addEventListener("click", ()=>{
-    const w = ensureWorkout();
-    if (!w) return;
-    safe(()=>Workouts.startWorkout(w.id), null);
-    render();
-  });
+    card.appendChild(title);
+    card.appendChild(sub);
 
-  if (el.btnFinish != null) el.btnFinish.addEventListener("click", ()=>{
-    const w = ensureWorkout();
-    if (!w) return;
-    safe(()=>Workouts.finishWorkout(w.id), null);
-    const prCount = getSessionPRCount();
-    if (typeof showToast === "function"){
-      if (prCount > 0){
-        // Build a short list: "Bench (weight) • Squat (volume)"
-        const items = (sessionPRs.items||[]).slice(0,3).map(it=>{
-          const types = (it.types||[]).join(", ");
-          return types ? `${it.exerciseName} (${types})` : it.exerciseName;
-        });
-        const more = (sessionPRs.items||[]).length > 3 ? ` +${(sessionPRs.items||[]).length-3} more` : "";
-        showToast(`Workout completed — ${prCount} PR${prCount===1?"":"s"}: ${items.join(" • ")}${more}`);
-      } else {
-        showToast("Workout completed");
-      }
-    }
-    render();
-  });
-
-  // Rest timer: user can pick any duration from 0:01 to 5:00.
-  // Click the Rest button to open the picker; Start inside picker begins the timer.
-  (function initRestButton(){
-    if (!el.btnRest60) return;
-    labelRestButton();
-
-    // Wire picker inputs
-    const syncFrom = (sec)=>{
-      const v = Math.min(REST_MAX, Math.max(REST_MIN, sec|0));
-      setPickerValue(v);
-      saveRestPreset(v);
-      labelRestButton();
-      // Also update any in-card Rest buttons without forcing a full rerender.
+    // Quick open: navigate to active workout view if your app supports it
+    // For now, toggle status with a double click (small quality-of-life).
+    card.addEventListener("dblclick", ()=>{
       try{
-        document.querySelectorAll('.w3-exAction[data-action="rest"]').forEach(b=>{
-          b.textContent = `Rest ${fmtClock(v)}`;
-        });
+        const next = (w.status === "completed") ? "planned" : "completed";
+        Workouts.updateWorkout(w.id, { status: next });
+        render();
       }catch(_){ }
-    };
-
-    if (restUI.pickerRange != null) restUI.pickerRange.addEventListener('input', (e)=>{
-      syncFrom(parseInt(e.target.value, 10));
-    });
-    if (restUI.pickerSec != null) restUI.pickerSec.addEventListener('input', (e)=>{
-      syncFrom(parseInt(e.target.value, 10));
     });
 
-    // Open/close
-    el.btnRest60.addEventListener('click', (e)=>{
+    // Drag events
+    card.addEventListener("dragstart", (e)=>{
+      dnd.draggingId = w.id;
+      try{
+        e.dataTransfer.setData("text/plain", w.id);
+        e.dataTransfer.effectAllowed = "move";
+      }catch(_){ }
+      card.classList.add("is-dragging");
+    });
+    card.addEventListener("dragend", ()=>{
+      dnd.draggingId = null;
+      card.classList.remove("is-dragging");
+      cleanupPlaceholder();
+      clearDropHighlights();
+    });
+
+    // Allow drop positioning relative to cards
+    card.addEventListener("dragover", (e)=>{
       e.preventDefault();
-      e.stopPropagation();
-      // Start immediately; use modifier keys to open picker.
-      handleRestPrimaryClick(e);
-    });
-    if (restUI.pickerClose != null) restUI.pickerClose.addEventListener('click', closeRestPicker);
-
-    // Start rest from picker
-    if (restUI.pickerStart != null) restUI.pickerStart.addEventListener('click', ()=>{
-      const sec = loadRestPreset();
-      closeRestPicker();
-      startRest(sec);
+      const col = card.closest(".day-column");
+      if (!col) return;
+      positionPlaceholder(col, e.clientY);
     });
 
-    // Tap outside closes (but don't break other dialogs)
-    document.addEventListener('click', (e)=>{
-      if (!(restUI.picker==null?undefined:restUI.picker.classList).contains('is-open')) return;
-      const within = e.target.closest('#w3RestPicker') || e.target.closest('#w3Rest60');
-      if (!within) closeRestPicker();
-    });
-
-    if (el.restStop != null) el.restStop.addEventListener("click", stopRest);
-  })();
-
-  // Right panel actions
-  if (el.rpStartSuggested != null) el.rpStartSuggested.addEventListener("click", ()=>{
-    if (!suggestedExerciseName) return;
-    // Start implies: add exercise then start workout if not started
-    const w = ensureWorkout();
-    if (!w) return;
-    safe(()=>Workouts.addExercise(w.id, { name: suggestedExerciseName }), null);
-    safe(()=>Workouts.startWorkout(w.id), null);
-    // Focus the newly added exercise
-    const exs = safe(()=>Workouts.listExercises(w.id), []) || [];
-    const added = exs.slice().reverse().find(e => String(e.name||"").trim().toLowerCase() === String(suggestedExerciseName).trim().toLowerCase());
-    if ((added==null?undefined:added.id)) activeExerciseId = added.id;
-    render();
-  });
-
-  if (el.rpAddSuggested != null) el.rpAddSuggested.addEventListener("click", ()=>{
-    if (!suggestedExerciseName) return;
-    const w = ensureWorkout();
-    if (!w) return;
-    safe(()=>Workouts.addExercise(w.id, { name: suggestedExerciseName }), null);
-    render();
-  });
-
-  function esc(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-  function escAttr(s){ return esc(s).replaceAll("\n"," "); }
-  function cssEsc(s){
-    const v = String(s);
-    if (window.CSS && typeof window.CSS.escape === "function") return window.CSS.escape(v);
-    return v.replace(/[^a-zA-Z0-9_-]/g, (ch)=>"\\\\" + ch);
+    return card;
   }
 
-  // Init tab from hash (e.g. #templates, #history)
-  try{
-    const h = String(location.hash || "").replace(/^#/, "").trim();
-    if (h === "today" || h === "history" || h === "templates") currentTab = h;
-  }catch(_){ }
+  function cleanupPlaceholder(){
+    if (dnd.placeholder && dnd.placeholder.parentElement){
+      dnd.placeholder.parentElement.removeChild(dnd.placeholder);
+    }
+  }
 
-  // Restore tab "page" from URL hash (e.g. #templates, #history)
-  try{
-    const h = String(location.hash || "").replace(/^#/, "").trim().toLowerCase();
-    if (h === "today" || h === "history" || h === "templates") currentTab = h;
-  }catch(_){ }
+  function clearDropHighlights(){
+    document.querySelectorAll(".day-column.is-dropTarget").forEach(n=>n.classList.remove("is-dropTarget"));
+  }
 
-  syncTabUI();
+  function positionPlaceholder(columnEl, pointerY){
+    const p = ensurePlaceholder();
+    const list = Array.from(columnEl.querySelectorAll(".workout-card:not(.is-dragging)"));
+    // Find insertion point
+    let inserted = false;
+    for (const card of list){
+      const r = card.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      if (pointerY < mid){
+        if (card.previousSibling !== p) columnEl.insertBefore(p, card);
+        inserted = true;
+        break;
+      }
+    }
+    if (!inserted){
+      // Before the add button if exists, else at end
+      const add = columnEl.querySelector(".add-workout");
+      if (add) columnEl.insertBefore(p, add);
+      else columnEl.appendChild(p);
+    }
+  }
+
+  function wireColumnDnD(columnEl){
+    columnEl.addEventListener("dragover", (e)=>{
+      e.preventDefault();
+      columnEl.classList.add("is-dropTarget");
+      positionPlaceholder(columnEl, e.clientY);
+    });
+    columnEl.addEventListener("dragleave", (e)=>{
+      // If leaving to a child, ignore
+      if (columnEl.contains(e.relatedTarget)) return;
+      columnEl.classList.remove("is-dropTarget");
+    });
+    columnEl.addEventListener("drop", (e)=>{
+      e.preventDefault();
+      const dateIso = columnEl.dataset.date;
+      const id = dnd.draggingId || (function(){
+        try{ return e.dataTransfer.getData("text/plain"); }catch(_){ return null; }
+      })();
+      if (!id || !dateIso) return;
+
+      // Collect intended order for this day based on DOM (placeholder position)
+      const ids = [];
+      const kids = Array.from(columnEl.children);
+      for (const k of kids){
+        if (k.classList.contains("workout-card") && !k.classList.contains("is-dragging")) ids.push(k.dataset.workoutId);
+        if (k.classList.contains("drop-placeholder")) ids.push(id);
+      }
+      // If placeholder wasn't used (rare), append
+      if (!ids.includes(id)) ids.push(id);
+
+      // Persist: move + reorder
+      normalizeDayOrder(dateIso, ids);
+
+      cleanupPlaceholder();
+      clearDropHighlights();
+      render();
+    });
+  }
+
+  function createDayColumn(date, workoutsForDay){
+    const dateIso = iso(date);
+
+    const col = document.createElement("div");
+    col.className = "day-column";
+    col.dataset.date = dateIso;
+    if (dateIso === todayIso) col.classList.add("today");
+
+    const head = document.createElement("div");
+    head.className = "day-head";
+    const dn = document.createElement("div");
+    dn.className = "day-name";
+    dn.textContent = dayNames[(date.getDay()+6)%7];
+    const dd = document.createElement("div");
+    dd.className = "day-date";
+    dd.textContent = fmtDay(date);
+    head.appendChild(dn);
+    head.appendChild(dd);
+    col.appendChild(head);
+
+    const list = sortForDay(workoutsForDay);
+    list.forEach(w=> col.appendChild(buildCard(w)));
+
+    const add = document.createElement("div");
+    add.className = "add-workout";
+    add.textContent = "+ Plan workout";
+    add.addEventListener("click", ()=>{
+      const name = prompt("Workout name", "Workout");
+      if (name === null) return;
+      try{
+        const w = Workouts.createWorkout({ name: String(name||"Workout").trim() || "Workout", date: dateIso, status: "planned" });
+        // Put at end of day
+        const dayWs = (Workouts.listWorkouts({from: dateIso, to: dateIso})||[]).filter(x=>x.date===dateIso);
+        const maxOrder = dayWs.reduce((m,x)=> Math.max(m, (typeof x.dayOrder === "number") ? x.dayOrder : -1), -1);
+        Workouts.updateWorkout(w.id, { dayOrder: maxOrder + 1 });
+        render();
+      }catch(err){
+        console.error(err);
+      }
+    });
+    col.appendChild(add);
+
+    wireColumnDnD(col);
+    return col;
+  }
+
+  function render(){
+    const ws = startOfWeek(viewDate);
+    if (el.headerSubtle) el.headerSubtle.textContent = fmtWeekRange(ws);
+
+    const all = getWorkoutsForWeek(ws);
+    const byDate = new Map();
+    all.forEach(w=>{
+      const d = String(w.date||"");
+      if (!byDate.has(d)) byDate.set(d, []);
+      byDate.get(d).push(w);
+    });
+
+    el.weekGrid.innerHTML = "";
+    for (let i=0;i<7;i++){
+      const d = addDays(ws, i);
+      const dIso = iso(d);
+      const col = createDayColumn(d, byDate.get(dIso) || []);
+      el.weekGrid.appendChild(col);
+    }
+  }
+
+  function shiftWeek(delta){
+    viewDate = addDays(startOfWeek(viewDate), delta*7);
+    render();
+  }
+
+  // Controls
+  el.prevWeek && el.prevWeek.addEventListener("click", ()=>shiftWeek(-1));
+  el.nextWeek && el.nextWeek.addEventListener("click", ()=>shiftWeek(1));
+  el.todayBtn && el.todayBtn.addEventListener("click", ()=>{ viewDate = new Date(); render(); });
+
+  // Re-render when returning to the tab (common after editing elsewhere)
+  document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) render(); });
+
+  // Initial
   render();
-  const st = loadRest();
-  if (st && st.endAt && st.endAt > Date.now()) showRest();
 })();

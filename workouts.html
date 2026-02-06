@@ -7,50 +7,6 @@
 <link rel="icon" href="./favicon.ico"/>
 <link rel="stylesheet" href="style.css"/>
 <link rel="stylesheet" href="workouts_v3.css"/>
-<style>
-.workouts-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08)
-}
-.week-grid{
-  display:grid;grid-template-columns:repeat(7,1fr);
-  gap:12px;padding:20px
-}
-.day-column{
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:14px;
-  padding:12px;
-  display:flex;flex-direction:column;
-  min-height:320px
-}
-.day-column.today{
-  border-color:#7c7cff;
-  box-shadow:0 0 0 1px rgba(124,124,255,.4)
-}
-.day-head{
-  text-align:center;margin-bottom:8px
-}
-.day-name{font-weight:600}
-.day-date{opacity:.6;font-size:12px}
-.workout-card{
-  background:rgba(255,255,255,.06);
-  border-radius:10px;
-  padding:10px;
-  margin-bottom:8px;
-  cursor:grab
-}
-.add-workout{
-  margin-top:auto;
-  padding:10px;
-  border:1px dashed rgba(255,255,255,.2);
-  border-radius:10px;
-  text-align:center;
-  opacity:.7;
-  cursor:pointer
-}
-.add-workout:hover{opacity:1}
-</style>
 </head>
 <body>
 <div class="layout">
@@ -73,6 +29,7 @@
 </main>
 </div>
 
+<script src="workouts.js"></script>
 <script src="workouts_v3.js"></script>
 </body>
 </html>
