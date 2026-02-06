@@ -1933,6 +1933,230 @@ img.pulseOnce{
 }
 
 /* ---------------- Plan Workout: multiple workouts per day ---------------- */
+.pwWrap{ max-width: 880px; margin: 0 auto; padding-bottom: calc(24px + var(--kb, 0px)); }
+
+.pwHeader{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 20px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.35);
+}
+
+.pwHeaderTop{ display:flex; align-items:center; justify-content:space-between; gap: 10px; margin-bottom: 10px; }
+.pwBackInline{ padding: 9px 12px; border-radius: 14px; font-weight: 800; }
+
+.pwSaved{ font-size: 12px; color: rgba(255,255,255,.70); }
+
+.pwDate{
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: rgba(255,255,255,.96);
+}
+
+.pwNameRow{ margin-top: 12px; }
+.pwNameInput{
+  width: 100%;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border-radius: 18px;
+  padding: 14px 14px;
+}
+
+.pwSubRow{ display:flex; flex-wrap:wrap; gap: 12px; margin-top: 12px; }
+.pwSubItem{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(2,6,23,.35);
+}
+.pwMetaLabel{ font-size: 12px; font-weight: 700; color: rgba(255,255,255,.68); }
+.pwSelect{ min-width: 160px; padding: 10px 12px; border-radius: 14px; }
+
+.btn.small{ padding: 9px 11px; border-radius: 14px; font-size: 13px; }
+
+.pwPrimaryAdd{
+  width: 100%;
+  margin: 14px 0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
+  padding: 14px 14px;
+  border-radius: 18px;
+}
+.pwPlus{ font-size: 20px; font-weight: 900; }
+.pwAddLabel{ font-weight: 900; }
+
+.pwExercises{ display:flex; flex-direction:column; gap: 12px; margin-top: 10px; }
+
+.pwEmpty{
+  border: 1px dashed rgba(148,163,184,.28);
+  border-radius: 20px;
+  padding: 18px;
+  text-align:center;
+  background: rgba(255,255,255,.02);
+}
+.pwEmptyText{ font-weight: 800; font-size: 16px; }
+.pwEmptySub{ margin-top: 6px; opacity:.75; font-size: 13px; }
+.pwAddTile{ margin-top: 12px; }
+.pwAddTile.big{ width: 100%; justify-content:center; }
+
+/* Exercise card */
+.exCard{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 16px 44px rgba(0,0,0,.35);
+}
+.exCard.dragOver{ outline: 2px solid rgba(99,102,241,.35); }
+
+.exHead{ display:flex; align-items:center; gap: 10px; }
+.exDrag{ cursor: grab; user-select:none; opacity:.75; }
+.exTitle{ flex: 1; font-weight: 900; letter-spacing: -0.01em; }
+
+.exMenuBtn{
+  width: 42px;
+  height: 38px;
+  border-radius: 14px;
+  padding: 0;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(148,163,184,.20);
+  color: rgba(255,255,255,.92);
+}
+.exMenuBtn:hover{ background: rgba(255,255,255,.09); }
+
+.exSets{ margin-top: 10px; display:flex; flex-direction:column; gap: 8px; }
+.setRow{ display:grid; grid-template-columns: 20px 26px 1fr 1fr 1fr; gap: 8px; align-items:center; }
+.setNum{ font-size: 12px; opacity:.75; text-align:center; }
+.setInput{ width: 100%; padding: 10px 10px; border-radius: 14px; }
+
+.exActions{ display:flex; gap: 10px; margin-top: 10px; flex-wrap:wrap; }
+.chipBtn{
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(148,163,184,.18);
+  color: rgba(255,255,255,.92);
+  border-radius: 999px;
+  padding: 10px 12px;
+  box-shadow: none;
+}
+.chipBtn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); }
+
+.exNotes{ margin-top: 10px; }
+.exNotes textarea{ width: 100%; min-height: 72px; resize: vertical; }
+
+/* Exercise menu popover */
+.exMenuPopover{
+  position: fixed;
+  z-index: 1002;
+  min-width: 180px;
+  border-radius: 16px;
+  background: rgba(2,6,23,.90);
+  border: 1px solid rgba(148,163,184,.22);
+  box-shadow: 0 22px 60px rgba(0,0,0,.55);
+  padding: 8px;
+  backdrop-filter: blur(16px);
+}
+.exMenuItem{
+  width: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255,255,255,.92);
+  box-shadow: none;
+}
+.exMenuItem:hover{ background: rgba(255,255,255,.06); border-color: rgba(148,163,184,.16); transform:none; }
+.exMenuDanger{ color: rgba(239,68,68,.95); }
+
+/* Bottom sheet / modal */
+.sheetOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+}
+.sheet{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 18px;
+  width: min(640px, calc(100vw - 18px));
+  max-height: min(74vh, calc(100vh - 120px));
+  overflow: hidden;
+  z-index: 1001;
+  border-radius: 22px;
+  background: rgba(2,6,23,.92);
+  border: 1px solid rgba(148,163,184,.22);
+  box-shadow: 0 30px 80px rgba(0,0,0,.65);
+  backdrop-filter: blur(18px);
+}
+.sheetTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding: 14px 14px 10px; }
+.sheetTitle{ font-weight: 900; letter-spacing: -0.01em; }
+.sheetClose{ width: 42px; height: 38px; border-radius: 14px; padding:0; box-shadow:none; background: rgba(255,255,255,.06); border: 1px solid rgba(148,163,184,.20); }
+
+.sheetSearch{ padding: 0 14px 12px; }
+.sheetSearch input{ width: 100%; border-radius: 16px; }
+
+.sheetChips{ display:flex; gap: 8px; padding: 0 14px 10px; overflow:auto; -webkit-overflow-scrolling: touch; }
+.sheetChip{
+  white-space: nowrap;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(148,163,184,.18);
+  color: rgba(255,255,255,.92);
+  border-radius: 999px;
+  padding: 9px 12px;
+  box-shadow:none;
+}
+.sheetChip.active{ background: rgba(99,102,241,.22); border-color: rgba(99,102,241,.40); }
+.sheetChip:hover{ transform:none; background: rgba(255,255,255,.08); }
+
+.sheetList{ overflow:auto; max-height: calc(min(74vh, 100vh - 120px) - 150px); padding: 0 8px 10px; }
+
+.exRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.exRow:hover{ background: rgba(255,255,255,.05); border-color: rgba(148,163,184,.14); }
+.exRowMain{ display:flex; flex-direction:column; gap: 3px; }
+.exRowTitle{ font-weight: 900; }
+.exRowMeta{ font-size: 12px; opacity: .75; }
+
+.exStar{
+  width: 42px;
+  height: 38px;
+  border-radius: 14px;
+  padding:0;
+  box-shadow:none;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(148,163,184,.18);
+}
+.exStar.on{ border-color: rgba(250,204,21,.45); }
+
+@media (max-width: 520px){
+  .pwHeader{ padding: 14px; }
+  .pwSelect{ min-width: 140px; }
+  .sheet{ left: 0; transform: none; width: 100vw; bottom: 0; border-radius: 22px 22px 0 0; }
+}
+
 .pwWorkoutPicker{
   display:flex;
   align-items:center;

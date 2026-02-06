@@ -46,39 +46,40 @@
     <section class="pwWrap">
       <!-- What/When header -->
       <div class="pwHeader">
-        <div class="pwDate" id="pwBigDate">—</div>
-
-        <!-- Multiple workouts per day: choose which workout you're editing -->
-        <div class="pwWorkoutPicker">
-          <span class="pwMetaLabel">Workout</span>
-          <select id="pwWorkoutSelect" class="pwSelect" aria-label="Select workout"></select>
-          <button class="pwIconBtn" id="pwNewWorkout" type="button" aria-label="New workout">+</button>
+        <div class="pwHeaderTop">
+          <button class="btn secondary pwBackInline" id="pwBackInline" type="button">Back</button>
+          <div class="pwSaved" id="pwSavedState">Saved</div>
         </div>
+
+        <div class="pwDate" id="pwBigDate">—</div>
 
         <div class="pwNameRow">
           <input id="pwName" class="pwNameInput" type="text" placeholder="Workout name" autocomplete="off" />
         </div>
-        <div class="pwMetaRow">
-          <div class="pwMeta">
-            <span class="pwMetaLabel">Template</span>
-            <select id="pwTemplate" class="pwSelect">
+
+        <div class="pwSubRow" id="pwSubRow">
+          <div class="pwSubItem">
+            <span class="pwMetaLabel">From</span>
+            <select id="pwTemplate" class="pwSelect" aria-label="Template">
               <option value="">Loading…</option>
             </select>
             <button class="btn secondary small" id="pwApplyTemplate" type="button">Apply</button>
           </div>
-          <div class="pwSaved" id="pwSavedState">Saved</div>
+          <div class="pwSubItem">
+            <span class="pwMetaLabel">Session</span>
+            <select id="pwWorkoutSelect" class="pwSelect" aria-label="Select workout"></select>
+            <button class="pwIconBtn" id="pwNewWorkout" type="button" aria-label="New workout">+</button>
+          </div>
         </div>
       </div>
 
-      <!-- Exercises -->
-      <div class="pwSectionHead">
-        <h2 class="pwSectionTitle">Exercises</h2>
-        <button class="pwAddTile compact" id="pwAddExercise" type="button" aria-label="Add exercise">
-          <span class="pwPlus" aria-hidden="true">+</span>
-          <span class="pwAddLabel">Add exercise</span>
-        </button>
-      </div>
+      <!-- Add Exercises: 1-tap primary CTA -->
+      <button class="pwPrimaryAdd" id="pwAddExercise" type="button" aria-label="Add exercise">
+        <span class="pwPlus" aria-hidden="true">+</span>
+        <span class="pwAddLabel">Add exercise</span>
+      </button>
 
+      <!-- Exercises -->
       <div id="pwExercises" class="pwExercises"></div>
 
       <div class="pwFooter">

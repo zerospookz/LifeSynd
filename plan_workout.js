@@ -24,6 +24,7 @@
   const newWorkoutBtn = $("#pwNewWorkout");
 
   const backBtn = $("#pwBack");
+  const backInlineBtn = $("#pwBackInline");
   const cancelBtn = $("#pwCancel");
   const doneBtn = $("#pwDone");
   const addExBtn = $("#pwAddExercise");
@@ -41,13 +42,15 @@
   let saveTimer = null;
   let activeChip = "Recent";
   let draggingId = null;
+  let openMenuEl = null;
 
   // --- Utils ---
   function pretty(iso){
+    // Header format: "Fri, Feb 6" (no year)
     try{
       const [y,m,d] = iso.split("-").map(Number);
       const dt = new Date(y, m-1, d);
-      return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric", year:"numeric" });
+      return new Intl.DateTimeFormat("en-US", { weekday:"short", month:"short", day:"numeric" }).format(dt);
     }catch(e){ return iso || "—"; }
   }
 
@@ -305,6 +308,79 @@
   function closeSheet(){
     overlay.hidden = true;
     sheet.hidden = true;
+  }
+
+  function closeExMenu(){
+    if (openMenuEl){
+      openMenuEl.remove();
+      openMenuEl = null;
+    }
+    document.removeEventListener("mousedown", handleOutsideMenu);
+    document.removeEventListener("keydown", handleMenuEsc);
+  }
+
+  function handleOutsideMenu(e){
+    if (!openMenuEl) return;
+    if (openMenuEl.contains(e.target)) return;
+    closeExMenu();
+  }
+
+  function handleMenuEsc(e){
+    if (e.key === "Escape") closeExMenu();
+  }
+
+  function openExMenu(anchorBtn, ex, notesWrap, ta){
+    closeExMenu();
+    const pop = document.createElement("div");
+    pop.className = "exMenuPopover";
+
+    function item(label, onClick, danger=false){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "exMenuItem" + (danger ? " exMenuDanger" : "");
+      b.textContent = label;
+      b.addEventListener("click", () => { closeExMenu(); onClick(); });
+      return b;
+    }
+
+    pop.appendChild(item("Replace", () => {
+      sheet.dataset.replaceExId = ex.id;
+      openSheet();
+    }));
+
+    pop.appendChild(item(notesWrap.hidden ? "Add notes" : "Hide notes", () => {
+      notesWrap.hidden = !notesWrap.hidden;
+      if (!notesWrap.hidden) ta.focus();
+    }));
+
+    pop.appendChild(item("Delete", () => {
+      if (confirm("Delete this exercise?")){
+        Workouts.removeExercise(ex.id);
+        renderExercises();
+        setSavedState("Saved");
+      }
+    }, true));
+
+    document.body.appendChild(pop);
+    openMenuEl = pop;
+
+    // Position near the button
+    const r = anchorBtn.getBoundingClientRect();
+    const pad = 10;
+    const w = pop.offsetWidth;
+    const h = pop.offsetHeight;
+    let left = Math.min(window.innerWidth - w - pad, Math.max(pad, r.right - w));
+    let top = Math.min(window.innerHeight - h - pad, r.bottom + 8);
+    // If it would go off-screen at the bottom, open upward
+    if (top + h > window.innerHeight - pad) top = Math.max(pad, r.top - h - 8);
+    pop.style.left = `${Math.round(left)}px`;
+    pop.style.top = `${Math.round(top)}px`;
+
+    // Close interactions
+    setTimeout(() => {
+      document.addEventListener("mousedown", handleOutsideMenu);
+      document.addEventListener("keydown", handleMenuEsc);
+    }, 0);
   }
 
   function renderChips(){
@@ -591,27 +667,10 @@
       ta.addEventListener("input", () => debounceSave(() => Workouts.updateExercise(ex.id, { notes: ta.value })));
       notesWrap.appendChild(ta);
 
-      // Menu behavior (simple inline menu via prompt)
-      menu.addEventListener("click", () => {
-        const choice = prompt("Type: delete / replace / notes", "");
-        if (!choice) return;
-        const c = choice.trim().toLowerCase();
-        if (c === "delete"){
-          if (confirm("Delete this exercise?")){
-            Workouts.removeExercise(ex.id);
-            renderExercises();
-            setSavedState("Saved");
-          }
-        }else if (c === "replace"){
-          // open picker and replace name on select (temporary mode)
-          openSheet();
-          const oldAdd = addExerciseToWorkout;
-          // override one-time selection by hijacking click handler through a flag
-          sheet.dataset.replaceExId = ex.id;
-        }else if (c === "notes"){
-          notesWrap.hidden = !notesWrap.hidden;
-          if (!notesWrap.hidden) ta.focus();
-        }
+      // Menu behavior: compact popover (replace / delete / notes)
+      menu.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openExMenu(menu, ex, notesWrap, ta);
       });
 
       card.appendChild(head);
@@ -724,6 +783,7 @@
 
   // Buttons / navigation
   if (backBtn) backBtn.addEventListener("click", goBack);
+  if (backInlineBtn) backInlineBtn.addEventListener("click", goBack);
   if (cancelBtn) cancelBtn.addEventListener("click", goBack);
   if (doneBtn) doneBtn.addEventListener("click", goBack);
 
