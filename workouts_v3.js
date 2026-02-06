@@ -21,34 +21,36 @@
 
   const monthGrid = $("#monthGrid");
   const monthLabel = $("#wMonthLabel");
-  const prevBtn = $("#prevMonth");
-  const nextBtn = $("#nextMonth");
   const todayBtn = $("#todayBtn");
+  const monthPicker = $("#monthPicker");
+  const datePicker = $("#datePicker");
 
-  // ---- Month model: February 1..28 (as requested) ----
-  // We keep it deterministic: February of the current year.
-  // If you later want full month navigation, we already support prev/next.
-  let viewYear = new Date().getFullYear();
-  let viewMonth = 1; // 0=Jan, 1=Feb
+  // ---- Month model ----
+  // Month view is controlled by the Month + Date pickers in the header.
+  const now = new Date();
+  let viewYear = now.getFullYear();
+  let viewMonth = now.getMonth(); // 0=Jan
+  let selectedISO = null;
 
   function pad2(n){ return String(n).padStart(2,"0"); }
   function isoFromDate(d){
     return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
   }
 
+  // default selected date: today
+  selectedISO = isoFromDate(now);
+
   function startOfMonth(year, month){ return new Date(year, month, 1); }
 
-  function clampToFebDays(d){
-    // Ensures we only show 1..28 for Feb, per user requirement
-    const day = d.getDate();
-    if (day < 1) d.setDate(1);
-    if (day > 28) d.setDate(28);
-    return d;
+  function endOfMonth(year, month){
+    // day 0 of next month = last day of current month
+    return new Date(year, month + 1, 0);
   }
 
   function friendlyMonthLabel(year, month){
     const m = new Date(year, month, 1).toLocaleString(undefined, { month: "long" });
-    return `${m} ${year} · 1–28`;
+    const days = endOfMonth(year, month).getDate();
+    return `${m} ${year} · 1–${days}`;
   }
 
   // ---- DnD state ----
@@ -83,11 +85,10 @@
   function render(){
     if (!monthGrid) return;
 
-    const monthStart = startOfMonth(viewYear, viewMonth); // Feb 1
-    const febStart = new Date(viewYear, 1, 1);
-    const febEnd = new Date(viewYear, 1, 28);
-    const fromISO = isoFromDate(febStart);
-    const toISO = isoFromDate(febEnd);
+    const monthStart = startOfMonth(viewYear, viewMonth);
+    const monthEnd = endOfMonth(viewYear, viewMonth);
+    const fromISO = isoFromDate(monthStart);
+    const toISO = isoFromDate(monthEnd);
 
     if (monthLabel) monthLabel.textContent = friendlyMonthLabel(viewYear, viewMonth);
 
@@ -96,13 +97,13 @@
     // Clear
     monthGrid.innerHTML = "";
 
-    // Calendar alignment: add leading blanks so Feb 1 lands on correct weekday
-    const leading = febStart.getDay(); // 0 Sun ... 6 Sat
-    const totalDays = 28;
+    // Calendar alignment: add leading blanks so the 1st lands on correct weekday
+    const leading = monthStart.getDay(); // 0 Sun ... 6 Sat
+    const totalDays = monthEnd.getDate();
     const cells = [];
     for (let i=0;i<leading;i++) cells.push({ empty:true });
     for (let day=1; day<=totalDays; day++){
-      const d = new Date(viewYear, 1, day);
+      const d = new Date(viewYear, viewMonth, day);
       const iso = isoFromDate(d);
       cells.push({ empty:false, day, iso, dow: d.getDay() });
     }
@@ -125,6 +126,8 @@
 
       cell.dataset.date = c.iso;
       if (c.iso === todayISO) cell.classList.add("today");
+      if (selectedISO && c.iso === selectedISO) cell.classList.add("is-selected");
+      if (selectedISO && c.iso === selectedISO) cell.classList.add("selected");
 
       // Head (day number + dow)
       const head = document.createElement("div");
@@ -286,28 +289,63 @@
   }
 
   function gotoToday(){
-    viewYear = new Date().getFullYear();
-    viewMonth = 1; // Feb
+    const t = new Date();
+    viewYear = t.getFullYear();
+    viewMonth = t.getMonth();
+    selectedISO = isoFromDate(t);
+    syncPickers();
     render();
     // try to scroll the today cell into view
-    const todayISO = isoFromDate(new Date());
+    const todayISO = selectedISO;
     const el = monthGrid?.querySelector(`.month-cell[data-date="${todayISO}"]`);
     if (el) el.scrollIntoView({ behavior:"smooth", block:"center", inline:"center" });
+  }
+
+  function syncPickers(){
+    if (monthPicker){
+      monthPicker.value = `${viewYear}-${pad2(viewMonth+1)}`;
+    }
+    if (datePicker && selectedISO){
+      datePicker.value = selectedISO;
+    }
   }
 
   // --- controls ---
   if (todayBtn) todayBtn.addEventListener("click", gotoToday);
 
-  if (prevBtn) prevBtn.addEventListener("click", () => {
-    // month nav (kept even though we show only Feb 1..28)
-    viewYear = viewYear - 1; // Previous year Feb
-    render();
-  });
+  if (monthPicker){
+    monthPicker.addEventListener("change", () => {
+      const val = String(monthPicker.value || "");
+      const m = val.match(/^(\d{4})-(\d{2})$/);
+      if (!m) return;
+      viewYear = Number(m[1]);
+      viewMonth = Math.max(0, Math.min(11, Number(m[2]) - 1));
+      // keep selected day if it is within the new month; otherwise select 1st
+      const keepDay = selectedISO ? Number(selectedISO.slice(8,10)) : 1;
+      const maxDay = endOfMonth(viewYear, viewMonth).getDate();
+      const day = Math.max(1, Math.min(maxDay, keepDay));
+      selectedISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(day)}`;
+      syncPickers();
+      render();
+    });
+  }
 
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    viewYear = viewYear + 1; // Next year Feb
-    render();
-  });
+  if (datePicker){
+    datePicker.addEventListener("change", () => {
+      const val = String(datePicker.value || "");
+      if (!val) return;
+      selectedISO = val;
+      const parts = val.split("-").map(Number);
+      if (parts.length === 3){
+        viewYear = parts[0];
+        viewMonth = parts[1] - 1;
+      }
+      syncPickers();
+      render();
+      const el = monthGrid?.querySelector(`.month-cell[data-date="${selectedISO}"]`);
+      if (el) el.scrollIntoView({ behavior:"smooth", block:"center", inline:"center" });
+    });
+  }
 
 
   // --- Drag-to-scroll (mobile & desktop) ---
@@ -357,5 +395,6 @@
   })();
 
   // initial render
+  syncPickers();
   render();
 })();
