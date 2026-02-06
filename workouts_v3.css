@@ -2712,9 +2712,18 @@ main.content h1{
 .month-cell *{ min-width: 0; box-sizing: border-box; }
 
 .month-list{
-  overflow: hidden;       /* clip extra cards inside the cell */
+  overflow: auto;         /* allow scrolling when there are many workouts */
   min-width: 0;
+  padding-right: 6px;     /* breathing room for scrollbar */
+  scrollbar-width: thin;
 }
+
+.month-list::-webkit-scrollbar{ width: 6px; }
+.month-list::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,.18);
+  border-radius: 999px;
+}
+.month-list::-webkit-scrollbar-track{ background: transparent; }
 
 /* “+N more” indicator inside a day cell */
 .month-more{

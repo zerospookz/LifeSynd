@@ -145,22 +145,9 @@
       list.className = "month-list";
 
       const items = (byDate.get(c.iso) || []);
-      // Show multiple workouts in the day cell (calendar summary)
-      // Keep it readable: render up to 3, then show a “+N more” indicator.
-      const visible = items.slice(0, 3);
-      for (const w of visible){
+      // Show *all* workouts for the day. If there are many, the list becomes scrollable.
+      for (const w of items){
         list.appendChild(renderWorkoutCard(w));
-      }
-
-      if (items.length > visible.length){
-        const more = document.createElement('div');
-        more.className = 'month-more';
-        more.textContent = `+${items.length - visible.length} more`;
-        // Tapping the indicator should take you to the planning screen for that date.
-        more.addEventListener('click', () => {
-          location.href = `plan_workout.html?date=${encodeURIComponent(c.iso)}`;
-        });
-        list.appendChild(more);
       }
 
       const addBtn = document.createElement("button");
@@ -224,10 +211,16 @@
       drag = null;
     });
 
-    // click opens workout details if available (fallback: no-op)
-    card.addEventListener("click", () => {
-      // If you have a workout detail page, route there:
-      // location.href = `workout_session.html?id=${encodeURIComponent(w.id)}`;
+    // Click: open this exact workout inside the day's planner.
+    card.style.cursor = "pointer";
+    card.addEventListener("click", (e) => {
+      // Don't block drag/drop: only treat as click if not dragging.
+      if (drag) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const d = w.date || card.closest('.month-cell')?.dataset?.date;
+      if (!d) return;
+      location.href = `plan_workout.html?date=${encodeURIComponent(d)}&workoutId=${encodeURIComponent(w.id)}`;
     });
 
     return card;
