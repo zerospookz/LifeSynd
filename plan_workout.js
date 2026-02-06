@@ -38,12 +38,27 @@
   const chipsEl = $("#exChips");
   const listEl = $("#exList");
 
+  // Rest clock HUD
+  const REST_DEFAULT_KEY = "workoutRestDefaultSecV1";
+  const REST_TIMER_KEY = "workoutRestTimerV2"; // shared with workouts.js
+  const restClock = $("#pwRestClock");
+  const restTimeEl = $("#pwRestTime");
+  const restProgEl = $(".pwRestProg", restClock || document);
+  const restStopBtn = $("#pwRestClockStop");
+  const restSettingsBtn = $("#pwRestClockSettings");
+  const restModal = $("#pwRestModal");
+  const restCustomEl = $("#pwRestCustom");
+  const restSaveBtn = $("#pwRestSave");
+
   // State
   let workout = null;
   let saveTimer = null;
   let activeChip = "Recent";
   let draggingId = null;
   let openMenuEl = null;
+
+  let restDefaultSec = 90;
+  let restClockTimer = null;
 
   // Keyboard quality-of-life in the picker.
   // - Enter: add the first matching exercise, or create the typed one.
@@ -101,6 +116,118 @@
       try { fn(); setSavedState("Saved"); }
       catch(e){ console.error(e); setSavedState("Error"); }
     }, ms);
+  }
+
+  // --- Rest default + floating clock ---
+  function clamp(n, min, max){
+    n = Number(n);
+    if (Number.isNaN(n)) return min;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function getRestDefault(){
+    const v = Number(localStorage.getItem(REST_DEFAULT_KEY));
+    return clamp(v || 90, 5, 3600);
+  }
+
+  function setRestDefault(sec){
+    const v = clamp(sec, 5, 3600);
+    localStorage.setItem(REST_DEFAULT_KEY, String(v));
+    restDefaultSec = v;
+  }
+
+  function fmtMMSS(totalSec){
+    const s = Math.max(0, totalSec | 0);
+    const mm = String(Math.floor(s / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+  }
+
+  function readRestTimerState(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(REST_TIMER_KEY) || "null");
+      if (!raw) return { running:false, remainingSec:0, totalSec:0 };
+      return {
+        running: !!raw.running,
+        remainingSec: Number(raw.remainingSec || 0),
+        totalSec: Number(raw.totalSec || raw.remainingSec || 0)
+      };
+    }catch{
+      return { running:false, remainingSec:0, totalSec:0 };
+    }
+  }
+
+  function updateRestClock(){
+    if (!restClock || !restTimeEl) return;
+    const state = readRestTimerState();
+
+    // Show the HUD when running, otherwise keep it hidden.
+    if (!state.running){
+      restClock.hidden = true;
+      return;
+    }
+
+    restClock.hidden = false;
+    restTimeEl.textContent = fmtMMSS(state.remainingSec);
+
+    if (restProgEl){
+      const total = Math.max(1, state.totalSec || state.remainingSec || 1);
+      const progress = clamp(state.remainingSec / total, 0, 1);
+      const C = 2 * Math.PI * 18; // r=18
+      restProgEl.style.strokeDasharray = String(C);
+      restProgEl.style.strokeDashoffset = String(C * (1 - progress));
+    }
+  }
+
+  function openRestModal(){
+    if (!restModal) return;
+    restModal.hidden = false;
+    if (restCustomEl){
+      restCustomEl.value = String(restDefaultSec);
+      setTimeout(() => { try{ restCustomEl.focus(); restCustomEl.select?.(); }catch{} }, 50);
+    }
+  }
+  function closeRestModal(){
+    if (!restModal) return;
+    restModal.hidden = true;
+  }
+
+  function initRestUX(){
+    restDefaultSec = getRestDefault();
+
+    // Stop timer
+    if (restStopBtn) restStopBtn.addEventListener("click", () => {
+      try{ Workouts.stopRestTimer(); }catch(e){ console.error(e); }
+      updateRestClock();
+    });
+
+    // Settings
+    if (restSettingsBtn) restSettingsBtn.addEventListener("click", () => openRestModal());
+
+    if (restModal){
+      restModal.addEventListener("click", (e) => {
+        const t = e.target;
+        if (t && t.dataset && t.dataset.close) closeRestModal();
+        if (t && t.matches && t.matches("[data-rest]")){
+          const sec = Number(t.getAttribute("data-rest"));
+          if (!Number.isNaN(sec)){
+            setRestDefault(sec);
+            closeRestModal();
+          }
+        }
+      });
+    }
+
+    if (restSaveBtn) restSaveBtn.addEventListener("click", () => {
+      const sec = Number(restCustomEl?.value || restDefaultSec);
+      setRestDefault(sec);
+      closeRestModal();
+    });
+
+    // Keep the HUD in sync (workouts.js also ticks the timer every second)
+    if (restClockTimer) clearInterval(restClockTimer);
+    restClockTimer = setInterval(updateRestClock, 300);
+    updateRestClock();
   }
 
   function ensureWorkout(){
@@ -766,7 +893,8 @@
       restBtn.textContent = "Rest";
       restBtn.addEventListener("click", () => {
         try{
-          Workouts.startRestTimer(90);
+          Workouts.startRestTimer(restDefaultSec || getRestDefault());
+          updateRestClock();
         }catch(e){ console.error(e); }
       });
 
@@ -920,6 +1048,9 @@
       debounceSave(() => Workouts.updateWorkout(workout.id, { templateId: tplSel.value || undefined }));
     });
   }
+
+  // Rest clock HUD
+  initRestUX();
 
   renderExercises();
   setSavedState("Saved");

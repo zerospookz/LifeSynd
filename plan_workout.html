@@ -112,6 +112,48 @@
   <div class="sheetList" id="exList" role="list"></div>
 </div>
 
+<!-- Floating rest timer (matches dark/glass vibe) -->
+<div id="pwRestClock" class="pwRestClock" hidden>
+  <button class="pwRestClockClose" id="pwRestClockStop" type="button" aria-label="Stop rest">✕</button>
+  <div class="pwRestRing" aria-hidden="true">
+    <svg viewBox="0 0 44 44" class="pwRestSvg">
+      <circle class="pwRestTrack" cx="22" cy="22" r="18"></circle>
+      <circle class="pwRestProg" cx="22" cy="22" r="18"></circle>
+    </svg>
+  </div>
+  <div class="pwRestText">
+    <div class="pwRestLabel">Rest</div>
+    <div class="pwRestTime" id="pwRestTime">00:00</div>
+  </div>
+  <button class="pwRestClockGear" id="pwRestClockSettings" type="button" aria-label="Rest settings">⚙</button>
+</div>
+
+<!-- Rest duration picker -->
+<div class="pwModal" id="pwRestModal" hidden>
+  <div class="pwModalBackdrop" data-close="1"></div>
+  <div class="pwModalCard" role="dialog" aria-modal="true" aria-labelledby="pwRestModalTitle">
+    <div class="pwModalHead">
+      <div class="pwModalTitle" id="pwRestModalTitle">Rest duration</div>
+      <button class="pwIconBtn" type="button" data-close="1" aria-label="Close">✕</button>
+    </div>
+    <div class="pwModalBody">
+      <div class="pwRestQuick">
+        <button type="button" class="chipBtn" data-rest="30">30s</button>
+        <button type="button" class="chipBtn" data-rest="60">60s</button>
+        <button type="button" class="chipBtn" data-rest="90">90s</button>
+        <button type="button" class="chipBtn" data-rest="120">120s</button>
+        <button type="button" class="chipBtn" data-rest="180">180s</button>
+      </div>
+      <div class="pwRestCustomRow">
+        <label class="pwMetaLabel" for="pwRestCustom">Custom (sec)</label>
+        <input id="pwRestCustom" class="pwRestInput" type="number" min="5" max="3600" step="5" inputmode="numeric" />
+        <button type="button" class="btn secondary" id="pwRestSave">Save</button>
+      </div>
+      <div class="pwHint">Tip: press <strong>Rest</strong> and it will start with this duration.</div>
+    </div>
+  </div>
+</div>
+
 <nav class="bottomNav" aria-label="Primary">
   <a href="dashboard.html">🏠<span>Dashboard</span></a>
   <a href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>

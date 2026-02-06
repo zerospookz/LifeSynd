@@ -42,7 +42,7 @@
   let workouts = jget(W_KEY, []);
   let exercises = jget(EX_KEY, []);
   let sets = jget(SET_KEY, []);
-  let restTimer = jget(TIMER_KEY, { running: false, remainingSec: 0 });
+  let restTimer = jget(TIMER_KEY, { running: false, remainingSec: 0, totalSec: 0 });
 
   function saveAll() {
     jset(LEGACY_KEY, legacyLog);
@@ -405,14 +405,14 @@
   function startRestTimer(seconds) {
     const sec = clamp(seconds, 0, 60 * 60);
     const end = new Date(Date.now() + sec * 1000).toISOString();
-    restTimer = { running: true, endAt: end, remainingSec: sec };
+    restTimer = { running: true, endAt: end, remainingSec: sec, totalSec: sec };
     saveAll();
     renderRestTimer();
     return restTimer;
   }
 
   function stopRestTimer() {
-    restTimer = { running: false, remainingSec: 0 };
+    restTimer = { running: false, remainingSec: 0, totalSec: 0 };
     saveAll();
     renderRestTimer();
     return restTimer;
@@ -424,6 +424,7 @@
     const end = new Date(restTimer.endAt);
     const remaining = Math.max(0, Math.round((end - now) / 1000));
     restTimer.remainingSec = remaining;
+    if (!restTimer.totalSec || restTimer.totalSec < remaining) restTimer.totalSec = remaining;
     if (remaining <= 0) {
       restTimer.running = false;
       restTimer.endAt = undefined;
@@ -753,7 +754,7 @@
     workouts = jget(W_KEY, []);
     exercises = jget(EX_KEY, []);
     sets = jget(SET_KEY, []);
-    restTimer = jget(TIMER_KEY, { running: false, remainingSec: 0 });
+    restTimer = jget(TIMER_KEY, { running: false, remainingSec: 0, totalSec: 0 });
 
     const workoutList = document.getElementById("workoutList");
     if (workoutList) workoutList.innerHTML = "";
