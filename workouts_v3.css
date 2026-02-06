@@ -61,12 +61,88 @@
   gap:10px;
 }
 
+/* Range filter: desktop uses date inputs; mobile uses dual-thumb slider */
+.rangeWrap{ display:flex; align-items:flex-end; gap:10px; }
+.rangeDates{ display:flex; align-items:flex-end; gap:10px; }
+.rangeSlider{ display:none; }
+
+.rangeSliderTop{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+
+.rangeLabel{ font-size:12px; opacity:0.85; }
+.rangeValue{ font-size:12px; opacity:0.9; margin-left:auto; }
+
+.dualRange{
+  position:relative;
+  height:34px;
+  margin-top:8px;
+  border-radius:14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow:hidden;
+}
+
+.dualRange input[type="range"]{
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:34px;
+  margin:0;
+  background:transparent;
+  pointer-events:none; /* thumbs handle pointer events */
+  -webkit-appearance:none;
+}
+
+.dualRange input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+  border: 1px solid rgba(0,0,0,0.25);
+  pointer-events:auto;
+}
+
+.dualRange input[type="range"]::-moz-range-thumb{
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.25);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+  pointer-events:auto;
+}
+
+.dualTrack{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  opacity:0.7;
+}
+
 .workoutsDateControls .controlGroup{ margin:0; }
 
 @media (max-width: 700px){
-  .workoutsDateControls{ width:100%; }
-  .workoutsDateControls .controlGroup{ flex:1; }
-  .workoutsDateControls input{ width:100%; }
+  .workoutsDateControls{ width:100%; flex-wrap:wrap; align-items:stretch; }
+  .workoutsDateControls .datePill{ flex:1; min-width: 150px; }
+  .rangeWrap{ width:100%; }
+  .rangeDates{ display:none; }
+  .rangeSlider{ display:block; width:100%; }
+  #clearRangeBtn{ height:44px; }
 }
 
 .w3-page{

@@ -26,6 +26,9 @@
   const datePicker = $("#datePicker");
   const fromPicker = $("#fromPicker");
   const toPicker = $("#toPicker");
+  const rangeStart = $("#rangeStart");
+  const rangeEnd = $("#rangeEnd");
+  const rangeValueEl = $("#rangeValue");
   const clearRangeBtn = $("#clearRangeBtn");
 
   // ---- Month model ----
@@ -89,6 +92,60 @@
     const right = b.toLocaleDateString(undefined, optsB);
     const year = sameYear ? ` ${a.getFullYear()}` : ` ${a.getFullYear()}–${b.getFullYear()}`;
     return `${left}–${right}${year}`;
+  }
+
+  // --- Dual range slider helpers (mobile) ---
+  function daysInViewMonth(){
+    return endOfMonth(viewYear, viewMonth).getDate();
+  }
+
+  function setRangeValueText(){
+    if (!rangeValueEl) return;
+    if (rangeFromISO && rangeToISO){
+      rangeValueEl.textContent = friendlyRangeLabel(rangeFromISO, rangeToISO);
+    } else {
+      rangeValueEl.textContent = friendlyMonthLabel(viewYear, viewMonth);
+    }
+  }
+
+  function updateRangeSliderBounds(){
+    if (!rangeStart || !rangeEnd) return;
+    const max = daysInViewMonth();
+    rangeStart.min = "1";
+    rangeEnd.min = "1";
+    rangeStart.max = String(max);
+    rangeEnd.max = String(max);
+
+    // If we are currently in a range that matches the view month, reflect it; otherwise reset to full month.
+    const vm = `${viewYear}-${pad2(viewMonth+1)}`;
+    let s = 1;
+    let e = max;
+    if (rangeFromISO && rangeToISO && rangeFromISO.slice(0,7) === vm && rangeToISO.slice(0,7) === vm){
+      s = Math.max(1, Math.min(max, Number(rangeFromISO.slice(8,10))));
+      e = Math.max(1, Math.min(max, Number(rangeToISO.slice(8,10))));
+      if (s > e){ const t = s; s = e; e = t; }
+    }
+    rangeStart.value = String(s);
+    rangeEnd.value = String(e);
+    setRangeValueText();
+    updateDualTrack();
+  }
+
+  function updateDualTrack(){
+    const wrap = rangeStart?.closest?.('.rangeSlider')?.querySelector?.('.dualTrack');
+    if (!wrap || !rangeStart || !rangeEnd) return;
+    const max = Number(rangeStart.max || 28);
+    const s = Math.min(Number(rangeStart.value||1), Number(rangeEnd.value||max));
+    const e = Math.max(Number(rangeStart.value||1), Number(rangeEnd.value||max));
+    const left = ((s-1) / Math.max(1, (max-1))) * 100;
+    const right = ((e-1) / Math.max(1, (max-1))) * 100;
+    wrap.style.background = `linear-gradient(90deg,
+      rgba(255,255,255,0.06) 0%,
+      rgba(255,255,255,0.06) ${left}%,
+      rgba(125,130,255,0.35) ${left}%,
+      rgba(125,130,255,0.35) ${right}%,
+      rgba(255,255,255,0.06) ${right}%,
+      rgba(255,255,255,0.06) 100%)`;
   }
 
   // ---- DnD state ----
@@ -370,6 +427,7 @@
     if (toPicker){
       toPicker.value = rangeToISO || "";
     }
+    updateRangeSliderBounds();
   }
 
   // --- controls ---
@@ -456,6 +514,33 @@
   }
   if (toPicker){
     toPicker.addEventListener("change", applyRangeFromInputs);
+  }
+
+  // Mobile dual-thumb slider (range within current view month)
+  function applyRangeFromSlider(){
+    if (!rangeStart || !rangeEnd) return;
+    const max = daysInViewMonth();
+    let s = Math.max(1, Math.min(max, Number(rangeStart.value||1)));
+    let e = Math.max(1, Math.min(max, Number(rangeEnd.value||max)));
+    if (s > e){ const t = s; s = e; e = t; }
+
+    rangeFromISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(s)}`;
+    rangeToISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(e)}`;
+    selectedISO = clampISOToRange(selectedISO, rangeFromISO, rangeToISO);
+    // keep pickers consistent
+    syncPickers();
+    render();
+  }
+
+  if (rangeStart && rangeEnd){
+    const onInput = () => {
+      updateDualTrack();
+      setRangeValueText();
+    };
+    rangeStart.addEventListener('input', onInput);
+    rangeEnd.addEventListener('input', onInput);
+    rangeStart.addEventListener('change', applyRangeFromSlider);
+    rangeEnd.addEventListener('change', applyRangeFromSlider);
   }
   if (clearRangeBtn){
     clearRangeBtn.addEventListener("click", () => {

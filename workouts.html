@@ -52,16 +52,33 @@
             </div>
 
             <div class="rangeWrap" aria-label="Filter by date range">
-              <div class="datePill small" title="From">
-                <span class="pillIcon" aria-hidden="true">↦</span>
-                <span class="pillText">From</span>
-                <input class="dateInput" id="fromPicker" type="date" aria-label="From date" />
+              <!-- Desktop: date inputs. Mobile: a dual-thumb slider (same filter) -->
+              <div class="rangeDates">
+                <div class="datePill small" title="From">
+                  <span class="pillIcon" aria-hidden="true">↦</span>
+                  <span class="pillText">From</span>
+                  <input class="dateInput" id="fromPicker" type="date" aria-label="From date" />
+                </div>
+                <div class="datePill small" title="To">
+                  <span class="pillIcon" aria-hidden="true">↤</span>
+                  <span class="pillText">To</span>
+                  <input class="dateInput" id="toPicker" type="date" aria-label="To date" />
+                </div>
               </div>
-              <div class="datePill small" title="To">
-                <span class="pillIcon" aria-hidden="true">↤</span>
-                <span class="pillText">To</span>
-                <input class="dateInput" id="toPicker" type="date" aria-label="To date" />
+
+              <div class="rangeSlider" aria-label="Date range slider">
+                <div class="rangeSliderTop">
+                  <span class="pillIcon" aria-hidden="true">⟷</span>
+                  <span class="rangeLabel" id="rangeLabel">Range</span>
+                  <span class="rangeValue" id="rangeValue">—</span>
+                </div>
+                <div class="dualRange" role="group" aria-label="Select start and end day">
+                  <input id="rangeStart" type="range" min="1" max="28" value="1" />
+                  <input id="rangeEnd" type="range" min="1" max="28" value="28" />
+                  <div class="dualTrack" aria-hidden="true"></div>
+                </div>
               </div>
+
               <button class="btn secondary mini" id="clearRangeBtn" type="button" title="Clear range">Clear</button>
             </div>
           </div>
