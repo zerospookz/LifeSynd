@@ -313,11 +313,19 @@ let currentTab = "today";
       const list = listMarket();
       const tid = el.planTpl ? el.planTpl.value : "";
       const t = list.find(x=>String(x.id)===String(tid));
-      const dayIdx = el.planDay ? parseInt(el.planDay.value||"0",10) : 0;
-      const day = (t && Array.isArray(t.days)) ? (t.days[dayIdx] || t.days[0]) : null;
       const title = t ? String(t.title||t.id) : "Planned";
+
+      // Selected schedule date (can move the plan to a different day)
+      const newDateIso = el.planDay ? String(el.planDay.value || _planModalDateIso) : String(_planModalDateIso);
       const plan = getPlan();
-      plan[_planModalDateIso] = { templateId: tid, dayIdx: dayIdx, title: title + (day ? (" · " + (day.name||("Day "+(dayIdx+1)))) : "") , templateTitle: title };
+
+      // If the user changed the date, move existing entry (and overwrite target)
+      if (newDateIso !== _planModalDateIso){
+        if (plan[_planModalDateIso]) delete plan[_planModalDateIso];
+        _planModalDateIso = newDateIso;
+      }
+
+      plan[_planModalDateIso] = { templateId: tid, title: title, templateTitle: title };
       setPlan(plan);
       closePlanModal();
       renderWeekPlan();
@@ -800,29 +808,43 @@ let currentTab = "today";
       if ((cur==null?undefined:cur.templateId)) el.planTpl.value = String(cur.templateId);
     }
 
-    function fillDays(){
-      const tid = el.planTpl ? el.planTpl.value : "";
-      const t = list.find(x=>String(x.id)===String(tid));
-      const days = (t && Array.isArray(t.days)) ? t.days : [];
+    
+    // "Scheduled for" date selector (next ~2 weeks, centered on the opened date)
+    function fillScheduleDates(){
       if (!el.planDay) return;
-      // Always keep Day select usable and non-empty.
-      // If a template has no explicit days, default to Day 1.
-      const opts = (days && days.length) ? days.map((d,i)=>
-        `<option value="${i}">${esc(String(d.name||("Day "+(i+1))))}</option>`
-      ) : ["<option value=\"0\">Day 1</option>"];
-      el.planDay.innerHTML = opts.join("");
-      const rawIdx = (typeof (cur==null?undefined:cur.dayIdx) === "number") ? cur.dayIdx : 0;
-      const maxIdx = Math.max(0, ((days && days.length) ? (days.length-1) : 0));
-      const idx = Math.max(0, Math.min(rawIdx, maxIdx));
-      el.planDay.value = String(idx);
-      el.planDay.disabled = false;
-    }
-    fillDays();
-    if (el.planDay) el.planDay.addEventListener("change", ()=>{ syncPlanDayCustomUI(); });
-    // Avoid stacking multiple listeners each time the modal opens.
-    if (el.planTpl != null) el.planTpl.onchange = fillDays;
+      const baseIso = _planModalDateIso || dateIso;
+      const base = new Date(baseIso + "T00:00:00");
+      const start = new Date(base);
+      start.setDate(start.getDate() - 3);
 
-    if (el.planOverlay) el.planOverlay.hidden = false;
+      const opts = [];
+      for (let i=0; i<14; i++){
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const iso = d.toISOString().slice(0,10);
+        opts.push(`<option value="${esc(String(iso))}">${esc(String(fmtDow(d) + " · " + fmtMd(d)))}</option>`);
+      }
+
+      // Ensure base date is present even if timezone quirks occur
+      if (!opts.some(s => s.includes(`value="${baseIso}"`))){
+        opts.unshift(`<option value="${esc(String(baseIso))}">${esc(String(fmtDow(base) + " · " + fmtMd(base)))}</option>`);
+      }
+
+      el.planDay.innerHTML = opts.join("");
+      el.planDay.value = String(baseIso);
+
+      // Sync custom dropdown UI
+      syncPlanDayCustomUI();
+
+      // Avoid stacking multiple listeners each time the modal opens.
+      if (!el.planDay.dataset._wired){
+        el.planDay.addEventListener("change", ()=>{ syncPlanDayCustomUI(); });
+        el.planDay.dataset._wired = "1";
+      }
+    }
+    fillScheduleDates();
+
+if (el.planOverlay) el.planOverlay.hidden = false;
   }
 
   function closePlanModal(){

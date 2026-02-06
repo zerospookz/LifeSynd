@@ -2029,6 +2029,7 @@ body[data-theme="dark"]{
 }
 
 .w3-modalTop{
+  position: relative;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -2044,13 +2045,29 @@ body[data-theme="dark"]{
 .w3-modalClose{
   width: 34px;
   height: 34px;
+  padding: 0;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.06);
   color: rgba(255,255,255,.92);
-  font-size: 18px;
+  font-size: 20px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
   cursor:pointer;
+  flex: 0 0 auto;
 }
+.w3-modalClose:hover{
+  background: rgba(255,255,255,.10);
+}
+.w3-modalClose:active{
+  transform: translateY(1px);
+}
+.w3-modalClose:focus{
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(124,124,255,0.35);
+}
+
 
 .w3-modalLabel{
   display:block;
