@@ -1,275 +1,78 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Workouts</title>
-<link href="./favicon.ico" rel="icon"/>
-<link href="style.css" rel="stylesheet"/>
-<link href="workouts_v3.css" rel="stylesheet"/></head>
+<link rel="icon" href="./favicon.ico"/>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="workouts_v3.css"/>
+<style>
+.workouts-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08)
+}
+.week-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:12px;padding:20px
+}
+.day-column{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:12px;
+  display:flex;flex-direction:column;
+  min-height:320px
+}
+.day-column.today{
+  border-color:#7c7cff;
+  box-shadow:0 0 0 1px rgba(124,124,255,.4)
+}
+.day-head{
+  text-align:center;margin-bottom:8px
+}
+.day-name{font-weight:600}
+.day-date{opacity:.6;font-size:12px}
+.workout-card{
+  background:rgba(255,255,255,.06);
+  border-radius:10px;
+  padding:10px;
+  margin-bottom:8px;
+  cursor:grab
+}
+.add-workout{
+  margin-top:auto;
+  padding:10px;
+  border:1px dashed rgba(255,255,255,.2);
+  border-radius:10px;
+  text-align:center;
+  opacity:.7;
+  cursor:pointer
+}
+.add-workout:hover{opacity:1}
+</style>
+</head>
 <body>
 <div class="layout">
-<aside class="sidebar">
-<div class="brand">
-<img alt="LifeSync logo" class="logoMark" src="icons/brand-mark-128.png"/>
-<div>
-<div class="brandTitle">LifeSync</div>
-<div class="brandSub">Command center</div>
-</div>
-</div>
-<nav class="nav">
-<a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
-<a href="habits.html"><span class="left"><span class="iconWrap"><img alt="Habits" class="navIcon" src="icons/habits.png?v=6"/></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
-<a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
-<a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
-<a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
-<a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
-</nav>
-<div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
-</aside>
 <main class="content">
-<div class="w3-page" id="w3Page">
-<header class="w3-header">
-<div class="w3-headTitles">
-<div class="w3-hPage" id="w3Title">Workout</div>
-<div class="w3-muted" id="w3Subtitle">—</div>
-</div>
-<button class="w3-btnPrimary" id="w3Finish">Finish</button>
-</header>
-<section class="w3-meta" id="w3Meta">
-<div class="w3-chip"><span class="w3-num" id="w3MetaSets">0</span> sets</div>
-<div class="w3-chip"><span class="w3-num" id="w3MetaVol">0</span> kg</div>
-<div class="w3-chip"><span class="w3-num" id="w3MetaTime">--:--</span></div>
-</section>
-<nav aria-label="Workouts tabs" class="w3-tabs" id="w3Tabs">
-<button class="w3-tabBtn is-active" data-tab="today" type="button">Today</button>
-<button class="w3-tabBtn" data-tab="history" type="button">History</button>
-<button class="w3-tabBtn" data-tab="templates" type="button">Templates</button>
-</nav>
-
-<!-- Main 2-column canvas (desktop): workout content on the left, dock on the right -->
-<div class="w3-mainGrid" id="w3MainGrid">
-  <div class="w3-mainCol">
-    <section id="w3Content"></section>
-
-    <!-- Empty state layout: lives in the left column so the dock can remain on the right -->
-    <div class="w3-emptyWrap" hidden="" id="w3EmptyWrap">
-  <aside class="w3-emptySide" id="w3EmptySide">
-    <!-- Today summary card will be moved here when empty (kept as a single source of truth) -->
-    <div class="w3-emptyQuick" aria-label="Quick actions">
-      <button class="w3-emptyQuickBtn" data-tab="templates" type="button">🧩 Templates</button>
-      <button class="w3-emptyQuickBtn" data-tab="history" type="button">📜 History</button>
+  <div class="workouts-header">
+    <div>
+      <h1>Workouts</h1>
+      <div class="subtle">Week plan</div>
     </div>
-  </aside>
-
-  <section aria-label="Add exercise" class="w3-empty" id="w3Empty" role="button" tabindex="0">
-    <div class="w3-emptyMain">
-      <div aria-hidden="true" class="w3-emptyIconBtn">+</div>
-      <div class="w3-emptyTitle">No exercises</div>
-      <div class="w3-muted">Press <span class="w3-kbdPlus">+</span> to add exercise.</div>
+    <div class="week-controls">
+      <button id="prevWeek">◀</button>
+      <button id="todayBtn">Today</button>
+      <button id="nextWeek">▶</button>
     </div>
+  </div>
+
+  <section class="week-grid" id="weekGrid">
+    <!-- JS fills days -->
   </section>
-    </div>
-  </div>
-
-  <!-- Desktop utility column: Today Summary + Templates/History cards -->
-  <aside class="w3-todayDock" id="w3TodayDock">
-  <section class="w3-rpCard" id="w3RpToday">
-    <div class="w3-rpCardTop">
-      <div class="w3-rpTitle">Today summary</div>
-      <div class="w3-rpPill" hidden="" id="w3RpLivePill">LIVE</div>
-    </div>
-    <div class="w3-rpGrid">
-      <div class="w3-rpStat">
-        <div class="w3-rpStatLabel">Sets</div>
-        <div class="w3-rpStatVal num" id="w3RpSets">0</div>
-      </div>
-      <div class="w3-rpStat">
-        <div class="w3-rpStatLabel">Volume</div>
-        <div class="w3-rpStatVal num"><span id="w3RpVol">0</span> <span class="w3-rpUnit">kg</span></div>
-      </div>
-      <div class="w3-rpStat">
-        <div class="w3-rpStatLabel">Duration</div>
-        <div class="w3-rpStatVal num" id="w3RpTime">--:--</div>
-      </div>
-      <div class="w3-rpStat">
-        <div class="w3-rpStatLabel">PRs</div>
-        <div class="w3-rpStatVal num" id="w3RpPRsCount">0</div>
-      </div>
-    </div>
-  </section>
-  <section class="w3-rpCard" id="w3RpWeekPlan" aria-label="Weekly plan">
-    <div class="w3-rpCardTop">
-      <div class="w3-rpTitle">Week plan</div>
-      <div class="w3-rpHint">Pre-plan workouts</div>
-    </div>
-    <div class="w3-weekPlanList" id="w3WeekPlanList"></div>
-  </section>
-
-
-  <!-- Desktop-only: quick access to Templates + History (same design as Today summary) -->
-  <section class="w3-rpCard w3-dockNavCard" id="w3DockTemplates" data-tab="templates" role="button" tabindex="0" aria-label="Open templates">
-    <div class="w3-rpCardTop">
-      <div class="w3-rpTitle">Templates</div>
-      <div class="w3-rpHint">Reusable routines</div>
-    </div>
-    <div class="w3-dockBody">
-      <div class="w3-dockBig">Browse &amp; start a template</div>
-      <div class="w3-dockCta">Open →</div>
-    </div>
-  </section>
-
-  <section class="w3-rpCard w3-dockNavCard" id="w3DockHistory" data-tab="history" role="button" tabindex="0" aria-label="Open history">
-    <div class="w3-rpCardTop">
-      <div class="w3-rpTitle">History</div>
-      <div class="w3-rpHint">Past sessions</div>
-    </div>
-    <div class="w3-dockBody">
-      <div class="w3-dockBig">Review previous workouts</div>
-      <div class="w3-dockCta">Open →</div>
-    </div>
-  </section>
-</aside>
-</div>
-<footer class="w3-bottomBar">
-<div class="w3-rpStack" id="w3RightPanel">
-<section class="w3-rpCard" hidden="" id="w3RpNext">
-<div class="w3-rpCardTop">
-<div class="w3-rpTitle">Next suggested</div>
-<div class="w3-rpHint" id="w3RpNextSource"></div>
-</div>
-<div class="w3-rpNextName" id="w3RpNextName">—</div>
-<div class="w3-rpMuted" id="w3RpNextSub"> </div>
-<div class="w3-rpRow">
-<button class="w3-rpBtn" id="w3RpStartSuggested" type="button">Start</button>
-<button class="w3-rpBtn ghost" id="w3RpAddSuggested" type="button">Add to workout</button>
-</div>
-</section>
-<section class="w3-rpCard" hidden="" id="w3RpContext">
-<div class="w3-rpCardTop">
-<div class="w3-rpTitle">Exercise context</div>
-<div class="w3-rpHint" id="w3RpCtxName"></div>
-</div>
-<div class="w3-rpSection">
-<div class="w3-rpSectionTitle">Last session</div>
-<div class="w3-rpMuted" id="w3RpLastSession">—</div>
-</div>
-<div class="w3-rpSection">
-<div class="w3-rpSectionTitle">PRs</div>
-<div class="w3-rpMuted" id="w3RpPRs">—</div>
-</div>
-</section>
-<div aria-label="Desktop sections" class="w3-sideTiles" id="w3SideTiles">
-<button class="w3-sideTile" data-tab="today" type="button">🏋️ Today</button>
-<button class="w3-sideTile" data-tab="history" type="button">📜 History</button>
-<button class="w3-sideTile" data-tab="templates" type="button">🧩 Templates</button>
-</div>
-<div class="w3-rpActions">
-<button class="w3-btnSecondary" id="w3AddExercise">+ Exercise</button>
-<button class="w3-btnSecondary" id="w3Rest60" aria-haspopup="dialog" aria-expanded="false">Rest 01:00</button>
-<button class="w3-btnSecondary" data-action="start-workout" id="w3Start">Start</button>
-</div>
-
-<!-- Rest duration picker (1s .. 5m) -->
-<div class="w3-restPicker" id="w3RestPicker" role="dialog" aria-modal="false" aria-label="Rest duration">
-  <div class="w3-restPickerTop">
-    <div class="w3-restPickerTitle">Rest duration</div>
-    <div class="w3-restPickerValue" id="w3RestPickerValue">01:00</div>
-    <button class="w3-restPickerClose" id="w3RestPickerClose" type="button" aria-label="Close">✕</button>
-  </div>
-  <div class="w3-restPickerRow">
-    <input class="w3-restPickerRange" id="w3RestPickerRange" type="range" min="1" max="300" value="60" />
-    <input class="w3-restPickerSec" id="w3RestPickerSec" type="number" min="1" max="300" value="60" />
-  </div>
-  <div class="w3-restPickerActions">
-    <button class="w3-restPickerStart" id="w3RestPickerStart" type="button">Start</button>
-  </div>
-</div>
-</div>
-</footer>
-<!-- Floating rest clock (timer + analog ring) -->
-<div aria-live="polite" class="w3-restClock" hidden="" id="w3RestTimer" role="status">
-  <div class="w3-restDial" aria-hidden="true">
-    <svg class="w3-restRing" focusable="false" viewBox="0 0 100 100">
-      <defs>
-        <linearGradient id="w3RestGrad" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0%" stop-color="#60a5fa"></stop>
-          <stop offset="55%" stop-color="#a78bfa"></stop>
-          <stop offset="100%" stop-color="#34d399"></stop>
-        </linearGradient>
-      </defs>
-      <circle class="w3-restTrack" cx="50" cy="50" r="40"></circle>
-      <circle class="w3-restProgress" cx="50" cy="50" id="w3RestProgress" r="40"></circle>
-    </svg>
-    <div class="w3-restCenter">
-      <div class="w3-restTime num" id="w3RestTime">01:00</div>
-      <div class="w3-restLabel">REST</div>
-    </div>
-  </div>
-
-  <div class="w3-restMeta">
-    <div class="w3-restMetaTitle">Rest timer</div>
-    <div class="w3-restMetaHint">Tap Stop to end</div>
-  </div>
-
-  <button aria-label="Stop rest" class="w3-restBtn" id="w3RestStop" type="button">
-    <span class="w3-restStopIcon" aria-hidden="true">⏹</span>
-    <span class="w3-restStopText">Stop</span>
-  </button>
-</div>
-
-</div>
 </main>
 </div>
 
-<nav class="bottomNav" aria-label="Primary">
-  <a href="dashboard.html">🏠<span>Dashboard</span></a>
-  <a href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>
-  <a class="active" href="workouts.html">🏋️<span>Workouts</span></a>
-  <a href="nutrition.html">🍎<span>Nutrition</span></a>
-  <a href="finances.html">💰<span>Finances</span></a>
-</nav>
-<!-- Add exercise modal -->
-<div class="w3-modalOverlay" hidden="" id="w3ModalOverlay">
-<div aria-labelledby="w3ModalTitle" aria-modal="true" class="w3-modalCard" role="dialog">
-<div class="w3-modalTop">
-<div class="w3-modalTitle" id="w3ModalTitle">Add exercise</div>
-<button aria-label="Close" class="w3-modalClose" id="w3ModalClose">×</button>
-</div>
-<label class="w3-modalLabel" for="w3ExerciseName">Exercise name</label>
-<input class="w3-modalInput" id="w3ExerciseName" placeholder="e.g., Bench Press"/>
-<div class="w3-modalActions">
-<button class="w3-modalBtn" id="w3ModalCancel" type="button">Cancel</button>
-<button class="w3-modalBtn primary" id="w3ModalOk" type="button">Add</button>
-</div>
-</div>
-</div>
-
-<div cl
-<div class="w3-modalOverlay" hidden id="w3PlanOverlay">
-  <div class="w3-modal" id="w3PlanModal" role="dialog" aria-modal="true" aria-labelledby="w3PlanModalTitle">
-    <div class="w3-modalTop">
-      <div class="w3-modalTitle" id="w3PlanModalTitle">Plan workout</div>
-      <button class="w3-modalClose" id="w3PlanModalClose" aria-label="Close">×</button>
-    </div>
-    <div class="w3-muted" id="w3PlanModalDate" style="margin-top:-4px;margin-bottom:10px;"></div>
-
-    <label class="w3-modalLabel" for="w3PlanTpl">Template</label>
-    <select class="w3-modalInput" id="w3PlanTpl"></select>
-
-    <label class="w3-modalLabel" for="w3PlanDay">Scheduled for</label>
-    <div class="w3-appSelect" id="w3PlanDaySelect">
-      <button class="w3-appSelectBtn w3-modalInput" id="w3PlanDayBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Select date</button>
-      <div class="w3-appSelectList" id="w3PlanDayList" role="listbox" tabindex="-1"></div>
-    </div>
-    <select class="w3-modalInput w3-hiddenNative" id="w3PlanDay" aria-hidden="true" tabindex="-1"></select>
-
-    <div class="w3-modalActions">
-      <button class="w3-modalBtn" id="w3PlanClear" type="button">Clear</button>
-      <button class="w3-modalBtn" id="w3PlanCancel" type="button">Cancel</button>
-      <button class="w3-modalBtn primary" id="w3PlanSave" type="button">Save</button>
-    </div>
-  </div>
-</div>
-</div>
-<script src="app.js"></script>
-<script src="ui.js"></script><script src="workouts.js"></script><script src="workouts_v3.js"></script>
-</body></html>
+<script src="workouts_v3.js"></script>
+</body>
+</html>
