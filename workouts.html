@@ -38,13 +38,31 @@
         <div class="workoutsTitleRow">
           <h1 class="pageTitle">Workouts</h1>
           <div class="workoutsDateControls">
-            <div class="controlGroup">
-              <label class="microLabel" for="monthPicker">Month</label>
-              <input class="input" id="monthPicker" type="month" />
+            <!-- Pretty pickers (only for Workouts header) -->
+            <div class="datePill" title="Jump to month">
+              <span class="pillIcon" aria-hidden="true">📅</span>
+              <span class="pillText">Month</span>
+              <input class="dateInput" id="monthPicker" type="month" aria-label="Pick month" />
             </div>
-            <div class="controlGroup">
-              <label class="microLabel" for="datePicker">Date</label>
-              <input class="input" id="datePicker" type="date" />
+
+            <div class="datePill" title="Jump to date">
+              <span class="pillIcon" aria-hidden="true">🗓️</span>
+              <span class="pillText">Date</span>
+              <input class="dateInput" id="datePicker" type="date" aria-label="Pick date" />
+            </div>
+
+            <div class="rangeWrap" aria-label="Filter by date range">
+              <div class="datePill small" title="From">
+                <span class="pillIcon" aria-hidden="true">↦</span>
+                <span class="pillText">From</span>
+                <input class="dateInput" id="fromPicker" type="date" aria-label="From date" />
+              </div>
+              <div class="datePill small" title="To">
+                <span class="pillIcon" aria-hidden="true">↤</span>
+                <span class="pillText">To</span>
+                <input class="dateInput" id="toPicker" type="date" aria-label="To date" />
+              </div>
+              <button class="btn secondary mini" id="clearRangeBtn" type="button" title="Clear range">Clear</button>
             </div>
           </div>
         </div>

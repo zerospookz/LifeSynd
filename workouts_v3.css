@@ -2930,3 +2930,100 @@ main.content h1{
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* --- Workouts header: pretty date controls (only near Workouts) --- */
+.workoutsTitleRow{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.workoutsDateControls{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rangeWrap{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.datePill{
+  position: relative;
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+
+.datePill.small{ padding: 9px 11px; }
+
+.datePill:hover{
+  background: rgba(255,255,255,0.055);
+  border-color: rgba(120,130,255,0.40);
+  transform: translateY(-1px);
+}
+
+.datePill:focus-within{
+  border-color: rgba(120,130,255,0.70);
+  box-shadow: 0 0 0 3px rgba(120,130,255,0.18), 0 10px 24px rgba(0,0,0,0.25);
+}
+
+.pillIcon{
+  width: 22px;
+  height: 22px;
+  display:grid;
+  place-items:center;
+  opacity: .95;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+}
+
+.pillText{
+  font-size: 12px;
+  letter-spacing: .02em;
+  opacity: .85;
+  user-select:none;
+}
+
+.dateInput{
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 0;
+  min-width: 132px;
+}
+
+/* Make native picker indicator subtle */
+.dateInput::-webkit-calendar-picker-indicator{
+  opacity: .45;
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.btn.mini{
+  padding: 9px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px){
+  .dateInput{ min-width: 124px; }
+  .workoutsTitleRow{ align-items:flex-start; }
+}
