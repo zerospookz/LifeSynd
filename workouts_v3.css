@@ -1868,7 +1868,7 @@ body[data-theme="dark"]{
   display:flex;
   align-items:center;
   gap: 12px;
-  padding: 12px 12px 12px 14px;
+  padding: 10px 12px;
   border-radius: 18px;
   background: rgba(17, 24, 39, 0.82);
   border: 1px solid rgba(255,255,255,0.12);
@@ -1904,16 +1904,20 @@ body[data-theme="dark"]{
 
 .pwRestClockClose,
 .pwRestClockGear{
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.90);
   cursor: pointer;
-  display:grid;
-  place-items:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 0;
 }
+
+.pwRestIcon{ width: 18px; height: 18px; display:block; }
 .pwRestClockClose:hover,
 .pwRestClockGear:hover{ background: rgba(255,255,255,0.10); }
 .pwRestClockClose:active,
