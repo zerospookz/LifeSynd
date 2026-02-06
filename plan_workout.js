@@ -22,6 +22,7 @@
   // Multiple workouts per day
   const workoutSel = $("#pwWorkoutSelect");
   const newWorkoutBtn = $("#pwNewWorkout");
+  const deleteWorkoutBtn = $("#pwDeleteWorkout");
 
   const backBtn = $("#pwBack");
   const backInlineBtn = $("#pwBackInline");
@@ -43,6 +44,35 @@
   let activeChip = "Recent";
   let draggingId = null;
   let openMenuEl = null;
+
+  // Keyboard quality-of-life in the picker.
+  // - Enter: add the first matching exercise, or create the typed one.
+  // - Esc: close the sheet.
+  if (searchEl){
+    searchEl.addEventListener("keydown", (e) => {
+      if (e.key === "Escape"){
+        e.preventDefault();
+        closeSheet();
+        return;
+      }
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const rawQ = (searchEl.value || "").trim();
+      const items = computePickerItems();
+      const qLower = rawQ.toLowerCase();
+      const hasExact = !!rawQ && items.some(x => (x.name || "").trim().toLowerCase() === qLower);
+      if (rawQ && !hasExact){
+        upsertCustom(rawQ);
+        addExerciseToWorkout(rawQ);
+        closeSheet();
+        return;
+      }
+      if (items && items.length){
+        addExerciseToWorkout(items[0].name);
+        closeSheet();
+      }
+    });
+  }
 
   // --- Utils ---
   function pretty(iso){
@@ -251,7 +281,37 @@
     {name:"Jump Rope", tag:"Cardio", cat:"Cardio"},
   ];
 
-  const CHIP_ORDER = ["Recent","Favorites","Push","Pull","Legs","Core","Cardio"];
+  // Include a dedicated "Custom" tab so user-created exercises are easy to find again.
+  const CHIP_ORDER = ["Recent","Favorites","Custom","Push","Pull","Legs","Core","Cardio"];
+
+  function customKey(){ return "pwCustomExercises"; }
+  function getCustoms(){
+    try{ return JSON.parse(localStorage.getItem(customKey()) || "[]"); }catch{ return []; }
+  }
+  function setCustoms(arr){
+    localStorage.setItem(customKey(), JSON.stringify(arr));
+  }
+  function upsertCustom(name, tag="Custom"){
+    const n = (name || "").trim();
+    if (!n) return;
+    const cur = getCustoms();
+    const key = n.toLowerCase();
+    const idx = cur.findIndex(x => String(x?.name||"").toLowerCase() === key);
+    const obj = { name: n, tag: tag || "Custom", cat: "Custom" };
+    if (idx >= 0) cur[idx] = { ...cur[idx], ...obj };
+    else cur.unshift(obj);
+    setCustoms(cur.slice(0, 200));
+  }
+
+  function mergedCatalog(){
+    // Custom exercises are merged into the catalog so they appear in search and recents.
+    const customs = getCustoms().filter(x => x && x.name);
+    return EX_CATALOG.concat(customs.map(x => ({
+      name: String(x.name),
+      tag: x.tag || "Custom",
+      cat: "Custom",
+    })));
+  }
 
   function favKey(){ return "pwFavExercises"; }
   function getFavs(){
@@ -405,15 +465,18 @@
     const favs = new Set(getFavs().map(x => String(x).toLowerCase()));
     const recent = getRecentNames();
 
+    const CATALOG = mergedCatalog();
+
     let items = [];
 
     if (activeChip === "Recent"){
+      // Preserve recency order (avoid alphabetizing), but still enrich rows if they exist in the catalog.
       items = recent.map(n => {
-        const found = EX_CATALOG.find(x => x.name.toLowerCase() === n.toLowerCase());
+        const found = CATALOG.find(x => x.name.toLowerCase() === n.toLowerCase());
         return found || { name: n, tag: "Recent", cat: "Recent" };
       });
     }else if (activeChip === "Favorites"){
-      items = EX_CATALOG.filter(x => favs.has(x.name.toLowerCase()))
+      items = CATALOG.filter(x => favs.has(x.name.toLowerCase()))
         .concat(recent.filter(n => favs.has(n.toLowerCase())).map(n => ({name:n, tag:"Favorite", cat:"Favorites"})));
       // de-dupe
       const seen = new Set();
@@ -423,13 +486,15 @@
         seen.add(k);
         return true;
       });
+    }else if (activeChip === "Custom"){
+      items = CATALOG.filter(x => x.cat === "Custom");
     }else{
-      items = EX_CATALOG.filter(x => x.cat === activeChip);
+      items = CATALOG.filter(x => x.cat === activeChip);
     }
 
     // search filters across the whole catalog if query is present
     if (q){
-      const all = EX_CATALOG.slice();
+      const all = CATALOG.slice();
       // include recents not in catalog
       for (const n of recent){
         if (!all.find(x => x.name.toLowerCase() === n.toLowerCase())){
@@ -439,14 +504,30 @@
       items = all.filter(x => x.name.toLowerCase().includes(q));
     }
 
-    // de-dupe + sort
+    // de-dupe + sort (but keep Recent order intact)
     const seen = new Set();
     items = items.filter(x => {
       const k = x.name.toLowerCase();
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
-    }).sort((a,b) => a.name.localeCompare(b.name));
+    });
+
+    if (activeChip !== "Recent" && !q){
+      items = items.sort((a,b) => a.name.localeCompare(b.name));
+    }
+
+    // When searching, sort by a "startsWith" boost, then alpha.
+    if (q){
+      items = items.sort((a,b) => {
+        const an = a.name.toLowerCase();
+        const bn = b.name.toLowerCase();
+        const aStarts = an.startsWith(q) ? 0 : 1;
+        const bStarts = bn.startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return a.name.localeCompare(b.name);
+      });
+    }
 
     return items;
   }
@@ -472,11 +553,11 @@
 
       const t = document.createElement("div");
       t.className = "exRowTitle";
-      t.textContent = `Create “${rawQ}”`;
+      t.textContent = "Create exercise";
 
       const m = document.createElement("div");
       m.className = "exRowMeta";
-      m.textContent = "Custom exercise";
+      m.textContent = `“${rawQ}” · Tap or press Enter`;
 
       main.appendChild(t);
       main.appendChild(m);
@@ -488,6 +569,7 @@
       createRow.appendChild(main);
       createRow.appendChild(plus);
       createRow.addEventListener("click", () => {
+        upsertCustom(rawQ);
         addExerciseToWorkout(rawQ);
         closeSheet();
       });
@@ -799,6 +881,24 @@
   }
   if (newWorkoutBtn){
     newWorkoutBtn.addEventListener("click", () => createAnotherWorkout());
+  }
+
+  // Delete the currently selected workout (session)
+  if (deleteWorkoutBtn){
+    deleteWorkoutBtn.addEventListener("click", () => {
+      if (!workout) return;
+      const label = (workout.name || "Workout").trim();
+      const ok = confirm(`Delete this workout session\n\n“${label}”\n\nThis removes all exercises and sets.`);
+      if (!ok) return;
+      try {
+        Workouts.deleteWorkout(workout.id);
+      } catch (e) {
+        alert("Couldn't delete workout.");
+        return;
+      }
+      // After delete, go back to the workouts overview.
+      location.href = "workouts.html";
+    });
   }
 
   if (bigDateEl) bigDateEl.textContent = date ? pretty(date) : "—";

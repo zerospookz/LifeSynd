@@ -2023,15 +2023,23 @@ img.pulseOnce{
 .exTitle{ flex: 1; font-weight: 900; letter-spacing: -0.01em; }
 
 .exMenuBtn{
-  width: 42px;
-  height: 38px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
   padding: 0;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(148,163,184,.20);
-  color: rgba(255,255,255,.92);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(148,163,184,.18);
+  color: rgba(255,255,255,.94);
+  box-shadow: 0 10px 22px rgba(0,0,0,.25);
 }
-.exMenuBtn:hover{ background: rgba(255,255,255,.09); }
+.exMenuBtn:hover{ background: rgba(255,255,255,.085); border-color: rgba(148,163,184,.26); }
+.exMenuBtn:active{ transform: scale(.97); }
+.exMenuBtn:focus-visible{ outline: 2px solid rgba(99,102,241,.55); outline-offset: 2px; }
 
 .exSets{ margin-top: 10px; display:flex; flex-direction:column; gap: 8px; }
 .setRow{ display:grid; grid-template-columns: 20px 26px 1fr 1fr 1fr; gap: 8px; align-items:center; }
@@ -2093,8 +2101,8 @@ img.pulseOnce{
   left: 50%;
   transform: translateX(-50%);
   bottom: 18px;
-  width: min(640px, calc(100vw - 18px));
-  max-height: min(74vh, calc(100vh - 120px));
+  width: min(720px, calc(100vw - 18px));
+  max-height: min(78vh, calc(100vh - 110px));
   overflow: hidden;
   z-index: 1001;
   border-radius: 22px;
@@ -2110,6 +2118,12 @@ img.pulseOnce{
 .sheetSearch{ padding: 0 14px 12px; }
 .sheetSearch input{ width: 100%; border-radius: 16px; }
 
+.sheetHint{
+  padding: 0 14px 10px;
+  font-size: 12px;
+  opacity: .70;
+}
+
 .sheetChips{ display:flex; gap: 8px; padding: 0 14px 10px; overflow:auto; -webkit-overflow-scrolling: touch; }
 .sheetChip{
   white-space: nowrap;
@@ -2124,6 +2138,9 @@ img.pulseOnce{
 .sheetChip:hover{ transform:none; background: rgba(255,255,255,.08); }
 
 .sheetList{ overflow:auto; max-height: calc(min(74vh, 100vh - 120px) - 150px); padding: 0 8px 10px; }
+
+/* Slightly bigger tap targets & clearer separation */
+.sheetList .exRow{ margin: 2px 0; }
 
 .exRow{
   display:flex;
@@ -2157,8 +2174,8 @@ img.pulseOnce{
   align-items:center;
   justify-content:center;
   font-weight: 900;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(148,163,184,.18);
+  background: rgba(99,102,241,.22);
+  border: 1px solid rgba(99,102,241,.40);
 }
 
 .exStar{

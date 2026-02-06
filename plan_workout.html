@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="style.css"/>
 <link rel="stylesheet" href="workouts_v3.css"/>
 </head>
-<body>
+<body class="pwPage">
 <div class="layout">
   <aside class="sidebar">
     <div class="brand">
@@ -69,6 +69,7 @@
             <span class="pwMetaLabel">Session</span>
             <select id="pwWorkoutSelect" class="pwSelect" aria-label="Select workout"></select>
             <button class="pwIconBtn" id="pwNewWorkout" type="button" aria-label="New workout">+</button>
+            <button class="pwIconBtn" id="pwDeleteWorkout" type="button" aria-label="Delete workout" title="Delete workout">🗑</button>
           </div>
         </div>
       </div>
@@ -101,6 +102,8 @@
   <div class="sheetSearch">
     <input id="exSearch" type="search" placeholder="Search exercises…" autocomplete="off" />
   </div>
+
+  <div class="sheetHint">Type to search — or create your own exercise (press Enter)</div>
 
   <div class="sheetChips" id="exChips">
     <!-- JS fills chips -->

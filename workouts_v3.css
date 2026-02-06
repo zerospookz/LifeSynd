@@ -2659,6 +2659,11 @@ main.content h1{
 @media (max-width: 900px){
   body{ overflow:hidden; }
   .content{ overflow:hidden; }
+
+  /* Plan workout needs vertical scrolling on small screens */
+  body.pwPage{ overflow:auto; }
+  body.pwPage .content{ overflow:auto; }
+  body.pwPage .pwWrap{ padding-bottom: calc(120px + env(safe-area-inset-bottom) + var(--kb, 0px)); }
   .month-grid{
     overflow: auto;
     height: calc(100vh - 140px - var(--kb, 0px)); /* topbar + padding estimate */
