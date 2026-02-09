@@ -1,7 +1,34 @@
 "use strict";
 // --- Analytics state (must be defined before first render) ---
 let analyticsView = localStorage.getItem("habitsAnalyticsView") || "month";
-let analyticsOffsetDays = parseInt(localStorage.getItem("habitsAnalyticsOffsetDays") || "0", 10);
+
+// Per-view offsets so switching Week/Month/Year doesn't unexpectedly jump to past periods.
+let analyticsOffsets = (() => {
+  try {
+    const raw = localStorage.getItem("habitsAnalyticsOffsets");
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === "object") {
+        return {
+          week:  Number(obj.week)  || 0,
+          month: Number(obj.month) || 0,
+          year:  Number(obj.year)  || 0,
+          all:   Number(obj.all)   || 0,
+        };
+      }
+    }
+  } catch (e) {}
+
+  // Migration: older builds stored a single offset.
+  const legacy = parseInt(localStorage.getItem("habitsAnalyticsOffsetDays") || "0", 10) || 0;
+  return { week: 0, month: legacy, year: 0, all: 0 };
+})();
+
+function saveAnalyticsOffsets() {
+  localStorage.setItem("habitsAnalyticsOffsets", JSON.stringify(analyticsOffsets));
+}
+
+let analyticsOffsetDays = Number(analyticsOffsets[analyticsView]) || 0;
 let analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || "mark"; // mark | erase
 let lastPulse = null; // {hid, iso, mode:"done"|"miss"} for subtle mark animation
 
@@ -524,8 +551,8 @@ function renderAnalytics(){
   function getAnalyticsConfig(view){
     const v = (view||"").toLowerCase();
     if(v === "week") return { key:"week", range:7, step:7, dir:"forward" };
-    if(v === "month") return { key:"month", range:30, step:30, dir:"backward" };
-    if(v === "year") return { key:"year", range:365, step:30, dir:"backward" };
+    if(v === "month") return { key:"month", range:30, step:30, dir:"forward" };
+    if(v === "year") return { key:"year", range:365, step:365, dir:"forward" };
 
     // All time: from earliest mark we have, capped.
     let earliest = null;
@@ -549,14 +576,14 @@ function renderAnalytics(){
   if(!["week","month","year","all"].includes(analyticsView)) analyticsView = "month";
 
   const cfg = getAnalyticsConfig(analyticsView);
+  // Sync current offset from per-view storage
+  analyticsOffsetDays = Number(analyticsOffsets[analyticsView]) || 0;
   const range = isMobile ? Math.min(7, cfg.range) : cfg.range;
   const step  = isMobile ? 7 : cfg.step;
   const offsetLabel = analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`);
 
 
-  const dates = (analyticsView === "week")
-    ? rangeDates(range, analyticsOffsetDays, "forward")
-    : rangeDates(range, analyticsOffsetDays, "backward");
+  const dates = rangeDates(range, analyticsOffsetDays, cfg.dir);
   const rangeLabel = `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
 card.innerHTML = `
     <div class="cardHeader" style="align-items:flex-start">
@@ -599,6 +626,10 @@ card.innerHTML = `
       if(!v || v===analyticsView) return;
       analyticsView = v;
       localStorage.setItem("habitsAnalyticsView", analyticsView);
+      // Reset offset when switching views so we start from the current period.
+      analyticsOffsets[analyticsView] = 0;
+      saveAnalyticsOffsets();
+      analyticsOffsetDays = 0;
       renderAnalytics();
     });
   });
@@ -606,12 +637,16 @@ card.innerHTML = `
   // calendar navigation
   card.querySelector("#calPrev").addEventListener("click", ()=>{
     analyticsOffsetDays -= step;
-    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    analyticsOffsets[analyticsView] = analyticsOffsetDays;
+    saveAnalyticsOffsets();
+    // legacy key no longer used
     renderAnalytics();
   });
   card.querySelector("#calNext").addEventListener("click", ()=>{
     analyticsOffsetDays += step;
-    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    analyticsOffsets[analyticsView] = analyticsOffsetDays;
+    saveAnalyticsOffsets();
+    // legacy key no longer used
     renderAnalytics();
   });
   card.querySelector("#calToday").addEventListener("click", ()=>{
@@ -621,7 +656,9 @@ card.innerHTML = `
       localStorage.setItem("habitsAnalyticsView", analyticsView);
     }
     analyticsOffsetDays = 0;
-    localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+    analyticsOffsets[analyticsView] = analyticsOffsetDays;
+    saveAnalyticsOffsets();
+    // legacy key no longer used
     window.__resetMatrixScroll = true;
     renderAnalytics();
   });
@@ -847,7 +884,9 @@ card.innerHTML = `
         if(dx > 0 && !atLeftEdge)  return; // swiping right but not at start → just scroll
 
         analyticsOffsetDays += (dx < 0 ? step : -step);
-        localStorage.setItem('habitsAnalyticsOffsetDays', String(analyticsOffsetDays));
+        analyticsOffsets[analyticsView] = analyticsOffsetDays;
+        saveAnalyticsOffsets();
+        // legacy key no longer used
         renderAnalytics();
       });
       wrap.addEventListener('pointercancel', ()=>{ pointerDown=false; });
@@ -1747,7 +1786,9 @@ function adaptDayLabels(scope=document){
 
 function setAnalyticsOffset(val){
   analyticsOffsetDays = val;
-  localStorage.setItem("habitsAnalyticsOffsetDays", String(analyticsOffsetDays));
+  analyticsOffsets[analyticsView] = analyticsOffsetDays;
+    saveAnalyticsOffsets();
+    // legacy key no longer used
   render();
 }
 
