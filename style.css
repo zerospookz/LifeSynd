@@ -1099,6 +1099,62 @@ font-weight: 750;
     text-align: center;
   }
 }
+
+/* Medium widths: keep the Habits filter header tidy (Year was breaking on low res) */
+@media (max-width: 760px){
+  .analyticsControls.analyticsFilter{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .analyticsControls.analyticsFilter .segRow{
+    justify-content: flex-start;
+  }
+  .rangeNav{
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .rangeLabel{
+    flex: 1 1 220px;
+    text-align: center;
+  }
+}
+
+/* Habits hero: simple quick-add field (replaces old large "Add & mark" hero card) */
+.heroCard.heroAddOnly{
+  padding: 14px;
+}
+.heroAddRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+}
+.heroAddForm{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 320px;
+}
+.heroAddInput{
+  flex: 1 1 auto;
+}
+.heroAddBtn{
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+}
+@media (max-width: 700px){
+  .heroAddRow{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .heroAddForm{
+    min-width: 0;
+  }
+}
 .matrixWrap{ padding: 14px; }
 .matrixGrid{ gap: 10px; }
 .matrixHeaderRow, .matrixRow{ gap: 10px; }

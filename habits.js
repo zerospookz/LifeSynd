@@ -294,15 +294,8 @@ function ensureUniqueHues(){
 }
 
 function openAddHabit(triggerEl){
-  const isPhone = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
-  const card = document.getElementById('addCard');
-  if(isPhone){
-    openAddHabitModal(triggerEl);
-    return;
-  }
-  if(card) card.classList.toggle('open');
-  const input = document.getElementById('habitName');
-  input && input.focus && input.focus();
+  // Always open the modal (FAB is the single entry point)
+  openAddHabitModal(triggerEl);
 }
 
 function openAddHabitModal(triggerEl){
@@ -365,12 +358,6 @@ function confirmAddHabitModal(){
   closeAddHabitModal();
 }
 
-function addHabit(){
-  // Used by the desktop "Add & mark" card.
-  if(typeof habitName === "undefined") return;
-  addHabitNamed(habitName.value);
-  habitName.value="";
-}
 
 function toggleHabitAt(id, iso, opts={}){
   const h = habits.find(x=>x.id===id);
@@ -1976,64 +1963,37 @@ function setHeroWheel(el, pct){
 function renderHero(){
   const el = document.getElementById("habitsHero");
   if(!el) return;
-  const H = getFilteredHabits();
-  const iso = today();
-  const done = H.filter(h => (h.datesDone||[]).includes(iso)).length;
-  const total = H.length || 0;
-  const pct = total ? Math.round((done/total)*100) : 0;
-
+  // Desktop-friendly quick add field (replaces the old "Add & mark"/hero card).
+  // Primary action remains the floating button, but desktop users asked for a simple inline field.
   el.innerHTML = `
-    <div class="card heroCard">
-      <div class="heroTop">
-        <div>
-          <div class="cardTitle">Today</div>
-          <div class="heroKpi"><span class="heroNum">${done}</span><span class="heroDen">/${total||0}</span> done</div>
-          <div class="small">Keep it simple: small wins compound.</div>
+    <div class="card heroCard heroAddOnly">
+      <div class="heroAddRow">
+        <div class="heroAddLeft">
+          <div class="cardTitle">New habit</div>
+          <div class="small">Type a name and press Enter.</div>
         </div>
-
-        <div class="habitWheel" id="heroArc" data-pct="${pct}" role="img" aria-label="Today's completion">
-          <svg class="wheelSvg" viewBox="0 0 120 120" aria-hidden="true">
-            <defs>
-              <linearGradient id="wheelGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="rgba(255, 222, 107, 0.95)"/>
-                <stop offset="55%" stop-color="rgba(255, 204, 64, 0.98)"/>
-                <stop offset="100%" stop-color="rgba(255, 180, 35, 0.95)"/>
-              </linearGradient>
-              <filter id="wheelGlow" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="3.5" result="blur"/>
-                <feColorMatrix in="blur" type="matrix"
-                  values="1 0 0 0 0
-                          0 1 0 0 0
-                          0 0 1 0 0
-                          0 0 0 0.75 0" result="glow"/>
-                <feMerge>
-                  <feMergeNode in="glow"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-
-            <g class="wheelRot">
-              <circle class="wheelTrack" cx="60" cy="60" r="46"></circle>
-              <circle class="wheelProg" cx="60" cy="60" r="46"></circle>
-            </g>
-          </svg>
-
-          <div class="wheelCenter">
-            <div class="wheelPct">${pct}%</div>
-            <div class="wheelSub">${done} of ${total||0} done</div>
-          </div>
+        <div class="heroAddForm">
+          <input class="input heroAddInput" id="heroHabitInput" placeholder="e.g., Water 5 cups" maxlength="28" />
+          <button class="btn primary heroAddBtn" id="heroHabitAdd" type="button">Create</button>
         </div>
-      </div>
-
-      <div class="heroActions">
-        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">New habit</button>
       </div>
     </div>
   `;
 
-  const wheel = el.querySelector("#heroArc");
-  if(wheel) setHeroWheel(wheel, pct);
+  const input = el.querySelector('#heroHabitInput');
+  const btn = el.querySelector('#heroHabitAdd');
+  const submit = ()=>{
+    if(!input) return;
+    const v = (input.value||'').trim();
+    if(!v) return;
+    addHabitNamed(v);
+    input.value = '';
+    input.focus();
+  };
+  btn && btn.addEventListener('click', submit);
+  input && input.addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Enter') submit();
+  });
 }
 
 // Floating "New habit" action

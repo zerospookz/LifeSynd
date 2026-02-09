@@ -50,17 +50,9 @@
 </div>
 <div class="habitsLayout">
 <div class="habitsMain">
-<div class="card soft habitsAddCard" id="addCard">
-<div class="cardHeader">
-<h3 class="cardTitle">Add &amp; mark</h3><span class="badge">Streaks</span>
-</div>
-<div class="actionsRow">
-<input class="input" id="habitName" placeholder="New habit"/>
-<button onclick="addHabit()">New habit</button>
-<span class="pill" style="margin-left:auto">Mark date</span>
-<input class="input" id="markDate" type="date"/>
-</div>
-<p class="small" style="margin:12px 0 0">Pick a date to recover missed days and keep streaks honest.</p>
+<div class="actionsRow habitsMarkRow">
+  <span class="pill">Mark date</span>
+  <input class="input" id="markDate" type="date"/>
 </div>
 <section class="tabPanel active" data-panel="grid">
 <div class="card analyticsCard" id="habitAnalytics"></div>
