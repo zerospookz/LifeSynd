@@ -1,5 +1,5 @@
 /* Workouts Month Planner (Layout v3)
- * - Renders a February calendar (1..28) in a 7-column grid
+ * - Renders a month calendar (dynamic month length) in a 7-column grid
  * - Uses window.Workouts (workouts.js) as the single source of truth
  * - Drag & drop to move/reorder workouts between days
  *
