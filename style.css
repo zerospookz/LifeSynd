@@ -1101,7 +1101,7 @@ font-weight: 750;
 }
 
 /* Medium widths: keep the Habits filter header tidy (Year was breaking on low res) */
-@media (max-width: 760px){
+@media (max-width: 1040px){
   .analyticsControls.analyticsFilter{
     flex-direction: column;
     align-items: stretch;
@@ -1109,6 +1109,7 @@ font-weight: 750;
   }
   .analyticsControls.analyticsFilter .segRow{
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
   .rangeNav{
     width: 100%;

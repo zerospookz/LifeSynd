@@ -1963,37 +1963,9 @@ function setHeroWheel(el, pct){
 function renderHero(){
   const el = document.getElementById("habitsHero");
   if(!el) return;
-  // Desktop-friendly quick add field (replaces the old "Add & mark"/hero card).
-  // Primary action remains the floating button, but desktop users asked for a simple inline field.
-  el.innerHTML = `
-    <div class="card heroCard heroAddOnly">
-      <div class="heroAddRow">
-        <div class="heroAddLeft">
-          <div class="cardTitle">New habit</div>
-          <div class="small">Type a name and press Enter.</div>
-        </div>
-        <div class="heroAddForm">
-          <input class="input heroAddInput" id="heroHabitInput" placeholder="e.g., Water 5 cups" maxlength="28" />
-          <button class="btn primary heroAddBtn" id="heroHabitAdd" type="button">Create</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const input = el.querySelector('#heroHabitInput');
-  const btn = el.querySelector('#heroHabitAdd');
-  const submit = ()=>{
-    if(!input) return;
-    const v = (input.value||'').trim();
-    if(!v) return;
-    addHabitNamed(v);
-    input.value = '';
-    input.focus();
-  };
-  btn && btn.addEventListener('click', submit);
-  input && input.addEventListener('keydown', (ev)=>{
-    if(ev.key === 'Enter') submit();
-  });
+  // No inline "New habit" field in the page header.
+  // Creating habits should happen via the floating action button (FAB) + modal.
+  el.innerHTML = '';
 }
 
 // Floating "New habit" action
