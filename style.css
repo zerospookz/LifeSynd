@@ -2,20 +2,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
-  --bg0:#020617;
-  --bg1:#050b1a;
-  --panel:#0b1220;
-  --card:#0f172a;
+  /* App palette (requested) */
+  --bg0:#0B1020;            /* Background */
+  --bg1:#0B1020;            /* Background */
+  --panel:#1A1F36;          /* Surface */
+  --card:#1A1F36;           /* Surface */
+  --surfaceActive:#242B4A;  /* Surface Active */
+  --divider:#2E3455;        /* Divider */
+
   --glass:rgba(255,255,255,.06);
   --glass2:rgba(255,255,255,.03);
-  --accent:#6366f1;
-  --accent2:#818cf8;
+
+  --accent:#6A6EFF;         /* CTA Primary */
+  --accent2:#6A6EFF;
   --success:#22c55e;
   --warn:#f59e0b;
   --danger:#ef4444;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --border:#1e293b;
+  --text:#FFFFFF;           /* Text Primary */
+  --muted:#A8ADCC;          /* Text Secondary */
+  --muted2:#7E84A8;         /* Text Tertiary */
+  --border:var(--divider);
   --shadow: 0 20px 50px rgba(0,0,0,.55);
   --radius-sm: 12px;
   --radius-md: 14px;
@@ -75,8 +81,8 @@ body{
   font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial;
   color:var(--text);
   background:
-    radial-gradient(1200px 800px at 8% 10%, #0f172a 0%, var(--bg0) 55%),
-    radial-gradient(900px 700px at 90% 15%, rgba(99,102,241,.22) 0%, transparent 60%),
+    radial-gradient(1200px 800px at 10% 10%, rgba(36,43,74,.55) 0%, transparent 55%),
+    radial-gradient(900px 700px at 92% 15%, rgba(106,110,255,.16) 0%, transparent 60%),
     linear-gradient(180deg, var(--bg1), var(--bg0));
 }
 
@@ -978,7 +984,7 @@ font-weight: 750;
 .segRow{
   display:flex;
   gap:12px;
-  align-items:center;
+  align-items:stretch;
   justify-content:flex-end;
 }
 
@@ -989,10 +995,11 @@ font-weight: 750;
   align-items:stretch;
   width: 420px;
   max-width: 100%;
+  height: 48px;
   padding: 4px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-  border: 1px solid rgba(255,255,255,.10);
+  background: var(--panel);
+  border: 1px solid var(--divider);
   overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
 }
@@ -1006,9 +1013,9 @@ font-weight: 750;
   width: calc((100% - 8px) / 4);
   transform: translateX(calc(var(--seg-index, 0) * 100%));
   border-radius: 999px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+  background: var(--surfaceActive);
+  border: 1px solid var(--divider);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
   transition: transform 220ms ease;
   pointer-events: none;
 }
@@ -1017,8 +1024,8 @@ font-weight: 750;
   flex: 1 1 0;
   background: transparent;
   border: 0;
-  color: rgba(255,255,255,.72);
-  padding: 11px 14px;
+  color: var(--muted);
+  padding: 0 14px;
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
@@ -1027,6 +1034,9 @@ font-weight: 750;
   outline: none;
   border-radius: 999px;
   line-height: 1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 /* Thin dividers */
@@ -1037,11 +1047,11 @@ font-weight: 750;
   top: 10px;
   bottom: 10px;
   width: 1px;
-  background: rgba(255,255,255,.08);
+  background: rgba(46,52,85,.55);
 }
 
 .segBtn:hover{
-  color: rgba(255,255,255,.86);
+  color: var(--text);
 }
 
 .segBtn.active{
@@ -1050,19 +1060,22 @@ font-weight: 750;
 
 /* Keep focus accessible without the old purple outline */
 .segBtn:focus-visible{
-  box-shadow: 0 0 0 2px rgba(255,255,255,.16);
+  box-shadow: 0 0 0 2px rgba(106,110,255,.28);
 }
 
 /* Inline add habit button next to segmented control */
 .addHabitInline{
   white-space: nowrap;
-  border-radius: 18px;
-  padding: 12px 18px;
+  height: 48px;
+  border-radius: 999px;
+  padding: 0 18px;
   font-weight: 800;
   letter-spacing: .2px;
-  background: rgba(99,102,241,1);
-  border: 1px solid rgba(255,255,255,.14);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.24);
+  background: var(--accent);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.20);
+  display:flex;
+  align-items:center;
 }
 
 .addHabitInline:hover{
@@ -2349,8 +2362,8 @@ img.pulseOnce{
   gap: 10px;
 }
 .seg.segWide .segBtn{
-  padding: 8px 14px;
-  font-size: .8rem;
+  padding: 0 14px;
+  font-size: .82rem;
 }
 .rangeNav{
   display:flex;
@@ -2362,12 +2375,16 @@ img.pulseOnce{
   height: 34px;
   padding: 0;
   border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--divider);
+  color: var(--muted2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
 .rangeLabel{
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.10);
+  background: var(--panel);
+  border: 1px solid var(--divider);
   color: var(--text);
   font-weight: 750;
   font-size: .86rem;
