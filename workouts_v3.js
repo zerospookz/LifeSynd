@@ -22,10 +22,19 @@
   const monthGrid = $("#monthGrid");
   const monthLabel = $("#wMonthLabel");
   const todayBtn = $("#todayBtn");
-  const monthPicker = $("#monthPicker");
-  const datePicker = $("#datePicker");
-  const rangePillText = $("#rangePillText");
-  const clearRangeBtn = $("#clearRangeBtn");
+  // Unified period picker (Month / Date / Range)
+  const periodBtn = $("#periodBtn");
+  const periodBtnText = $("#periodBtnText");
+  const periodOverlay = $("#periodOverlay");
+  const periodPop = $("#periodPop");
+  const periodClose = $("#periodClose");
+  const periodFrom = $("#periodFrom");
+  const periodTo = $("#periodTo");
+  const periodMonth = $("#periodMonth");
+  const periodApply = $("#periodApply");
+  const periodClear = $("#periodClear");
+  const periodPreviewLabel = $("#periodPreviewLabel");
+  const periodPreviewFill = $("#periodPreviewFill");
 
   // ---- Month model ----
   // Month view is controlled by the Month + Date pickers in the header.
@@ -90,15 +99,43 @@
     return `${left}–${right}${year}`;
   }
 
-  function updateRangePill(){
-    if (!rangePillText) return;
-    if (rangeFromISO && rangeToISO && rangeFromISO !== rangeToISO){
-      rangePillText.textContent = friendlyRangeLabel(rangeFromISO, rangeToISO);
-      document.getElementById('rangePill')?.classList?.remove('is-hidden');
+  function monthShortLabel(year, month){
+    const m = new Date(year, month, 1).toLocaleString(undefined, { month: "short" });
+    return `${m} ${year}`;
+  }
+
+  function hasActiveRange(){
+    return !!(rangeFromISO && rangeToISO && rangeFromISO <= rangeToISO);
+  }
+
+  function updatePeriodButton(){
+    if (!periodBtnText) return;
+    if (hasActiveRange()){
+      periodBtnText.textContent = friendlyRangeLabel(rangeFromISO, rangeToISO);
     } else {
-      rangePillText.textContent = "Drag to range";
-      document.getElementById('rangePill')?.classList?.add('is-hidden');
+      periodBtnText.textContent = monthShortLabel(viewYear, viewMonth);
     }
+  }
+
+  function updatePeriodPreview(fromISO, toISO){
+    if (!periodPreviewLabel || !periodPreviewFill) return;
+    if (!fromISO || !toISO || fromISO > toISO){
+      periodPreviewLabel.textContent = "—";
+      periodPreviewFill.style.width = "0%";
+      return;
+    }
+    periodPreviewLabel.textContent = friendlyRangeLabel(fromISO, toISO);
+    const a = dateFromISO(fromISO);
+    const b = dateFromISO(toISO);
+    if (!a || !b){
+      periodPreviewFill.style.width = "0%";
+      return;
+    }
+    const ms = (b - a) + 24*60*60*1000;
+    const days = Math.max(1, Math.round(ms / (24*60*60*1000)));
+    // simple visual: 1..31 days mapped to 8..100%
+    const pct = Math.max(8, Math.min(100, Math.round((days/31)*100)));
+    periodPreviewFill.style.width = pct + "%";
   }
 
   // ---- DnD state ----
@@ -134,16 +171,10 @@
     if (!monthGrid) return;
 
     // If user selected a valid date range, render only that period.
-    const hasRange = !!(rangeFromISO && rangeToISO && rangeFromISO <= rangeToISO);
+    const hasRange = hasActiveRange();
 
-    // Update range pill UI
-    if (rangePillText){
-      rangePillText.textContent = hasRange ? friendlyRangeLabel(rangeFromISO, rangeToISO) : "Drag to range";
-    }
-    const rangePill = clearRangeBtn?.closest?.('.rangePill');
-    if (rangePill){
-      rangePill.classList.toggle('is-hidden', !hasRange);
-    }
+    // Update unified period button
+    updatePeriodButton();
 
     const periodStart = hasRange ? dateFromISO(rangeFromISO) : startOfMonth(viewYear, viewMonth);
     const periodEnd = hasRange ? dateFromISO(rangeToISO) : endOfMonth(viewYear, viewMonth);
@@ -375,7 +406,8 @@
     viewYear = t.getFullYear();
     viewMonth = t.getMonth();
     selectedISO = isoFromDate(t);
-    syncPickers();
+    rangeFromISO = "";
+    rangeToISO = "";
     render();
     // try to scroll the today cell into view
     const todayISO = selectedISO;
@@ -383,74 +415,122 @@
     if (el) el.scrollIntoView({ behavior:"smooth", block:"center", inline:"center" });
   }
 
-  function syncPickers(){
-    if (monthPicker){
-      monthPicker.value = `${viewYear}-${pad2(viewMonth+1)}`;
+  function syncPeriodFields(){
+    if (periodMonth){
+      periodMonth.value = `${viewYear}-${pad2(viewMonth+1)}`;
     }
-    if (datePicker && selectedISO){
-      datePicker.value = selectedISO;
-    }
-    // Range pill is updated in render() (so it always reflects the active view).
+    const fromVal = periodFrom?.value || (hasActiveRange() ? rangeFromISO : (selectedISO || ""));
+    const toVal = periodTo?.value || (hasActiveRange() ? rangeToISO : (selectedISO || ""));
+    if (periodFrom && !periodFrom.value) periodFrom.value = fromVal;
+    if (periodTo && !periodTo.value) periodTo.value = toVal;
+    updatePeriodPreview(periodFrom?.value || "", periodTo?.value || "");
+  }
+
+  function openPeriodPicker(){
+    if (!periodPop || !periodOverlay) return;
+    periodBtn?.setAttribute?.('aria-expanded', 'true');
+    periodOverlay.hidden = false;
+    periodPop.hidden = false;
+    syncPeriodFields();
+    // Focus first field for keyboard users
+    try { periodFrom?.focus({ preventScroll: true }); } catch { periodFrom?.focus?.(); }
+  }
+
+  function closePeriodPicker(){
+    if (!periodPop || !periodOverlay) return;
+    periodBtn?.setAttribute?.('aria-expanded', 'false');
+    periodOverlay.hidden = true;
+    periodPop.hidden = true;
   }
 
   // --- controls ---
   if (todayBtn) todayBtn.addEventListener("click", gotoToday);
 
-  // Make the whole date "pill" clickable (not just the small native input).
-  // This fixes cases where users click the pill but the browser doesn't open the picker.
-  (function enablePillClickFocus(){
-    const pills = document.querySelectorAll('.workoutsDateControls .datePill');
-    pills.forEach((pill) => {
-      pill.addEventListener('click', (e) => {
-        // Don't steal clicks from the clear (×) button on the range pill.
-        if (e.target && e.target.closest && e.target.closest('.pillX')) return;
-        const input = pill.querySelector('input.dateInput');
-        if (!input) return;
-        // Focus first so screen readers / keyboard users also benefit.
-        try { input.focus({ preventScroll: true }); } catch { input.focus(); }
-        // Chrome/Edge support showPicker() for month/date inputs.
-        if (typeof input.showPicker === 'function') {
-          try { input.showPicker(); } catch (_) { /* ignore */ }
-        }
-      });
-    });
-  })();
+  // Unified period picker UI
+  if (periodBtn){
+    periodBtn.addEventListener('click', () => openPeriodPicker());
+  }
+  if (periodOverlay){
+    periodOverlay.addEventListener('click', () => closePeriodPicker());
+  }
+  if (periodClose){
+    periodClose.addEventListener('click', () => closePeriodPicker());
+  }
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !periodPop?.hidden) closePeriodPicker();
+  });
 
-  if (monthPicker){
-    monthPicker.addEventListener("change", () => {
-      const val = String(monthPicker.value || "");
-      const m = val.match(/^(\d{4})-(\d{2})$/);
-      if (!m) return;
+  const readMonth = () => {
+    const val = String(periodMonth?.value || '');
+    const m = val.match(/^(\d{4})-(\d{2})$/);
+    if (!m) return null;
+    return { y: Number(m[1]), m: Math.max(0, Math.min(11, Number(m[2]) - 1)) };
+  };
 
-      // Switching months exits range filtering
-      rangeFromISO = "";
-      rangeToISO = "";
-      viewYear = Number(m[1]);
-      viewMonth = Math.max(0, Math.min(11, Number(m[2]) - 1));
-      // keep selected day if it is within the new month; otherwise select 1st
-      const keepDay = selectedISO ? Number(selectedISO.slice(8,10)) : 1;
-      const maxDay = endOfMonth(viewYear, viewMonth).getDate();
-      const day = Math.max(1, Math.min(maxDay, keepDay));
-      selectedISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(day)}`;
-      syncPickers();
-      render();
+  const applyMonth = ({ y, m }) => {
+    viewYear = y;
+    viewMonth = m;
+    rangeFromISO = "";
+    rangeToISO = "";
+    // keep selected day if it is within the new month; otherwise select 1st
+    const keepDay = selectedISO ? Number(String(selectedISO).slice(8,10)) : 1;
+    const maxDay = endOfMonth(viewYear, viewMonth).getDate();
+    const day = Math.max(1, Math.min(maxDay, keepDay));
+    selectedISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(day)}`;
+    render();
+  };
+
+  const applyRange = (fromISO, toISO) => {
+    if (!fromISO || !toISO) return;
+    // normalize order
+    if (fromISO > toISO){ const tmp = fromISO; fromISO = toISO; toISO = tmp; }
+    rangeFromISO = fromISO;
+    rangeToISO = toISO;
+    // snap view month to the range start
+    const d = dateFromISO(fromISO);
+    if (d){ viewYear = d.getFullYear(); viewMonth = d.getMonth(); }
+    selectedISO = clampISOToRange(selectedISO, rangeFromISO, rangeToISO);
+    render();
+  };
+
+  if (periodFrom){
+    periodFrom.addEventListener('change', () => updatePeriodPreview(periodFrom.value || '', periodTo?.value || ''));
+  }
+  if (periodTo){
+    periodTo.addEventListener('change', () => updatePeriodPreview(periodFrom?.value || '', periodTo.value || ''));
+  }
+  if (periodMonth){
+    periodMonth.addEventListener('change', () => {
+      const mm = readMonth();
+      if (mm) applyMonth(mm);
     });
   }
 
-  if (datePicker){
-    datePicker.addEventListener("change", () => {
-      const val = String(datePicker.value || "");
-      if (!val) return;
-      selectedISO = val;
-      const parts = val.split("-").map(Number);
-      if (parts.length === 3){
-        viewYear = parts[0];
-        viewMonth = parts[1] - 1;
+  if (periodApply){
+    periodApply.addEventListener('click', () => {
+      const fromISO = String(periodFrom?.value || '');
+      const toISO = String(periodTo?.value || '');
+      if (fromISO && toISO){
+        applyRange(fromISO, toISO);
+      } else {
+        const mm = readMonth();
+        if (mm) applyMonth(mm);
       }
-      syncPickers();
+      closePeriodPicker();
+    });
+  }
+
+  if (periodClear){
+    periodClear.addEventListener('click', () => {
+      rangeFromISO = "";
+      rangeToISO = "";
+      // snap back to current month of selection
+      if (selectedISO){
+        const p = selectedISO.split("-").map(Number);
+        if (p.length === 3){ viewYear = p[0]; viewMonth = p[1] - 1; }
+      }
       render();
-      const el = monthGrid?.querySelector(`.month-cell[data-date="${selectedISO}"]`);
-      if (el) el.scrollIntoView({ behavior:"smooth", block:"center", inline:"center" });
+      syncPeriodFields();
     });
   }
 
@@ -486,8 +566,8 @@
       // Keep month picker in sync with the pressed day
       const d = dateFromISO(iso);
       if (d){ viewYear = d.getFullYear(); viewMonth = d.getMonth(); }
-      syncPickers();
       render();
+      syncPeriodFields();
       try { monthGrid.setPointerCapture(e.pointerId); } catch(_){ }
       monthGrid.classList.add('is-selecting');
     }, { capture: true });
@@ -519,8 +599,8 @@
         rangeFromISO = "";
         rangeToISO = "";
       }
-      syncPickers();
       render();
+      syncPeriodFields();
     };
     monthGrid.addEventListener('pointerup', endSelect);
     monthGrid.addEventListener('pointercancel', endSelect);
@@ -529,23 +609,6 @@
     window.addEventListener('pointerup', endSelect, { passive: true });
     window.addEventListener('pointercancel', endSelect, { passive: true });
   })();
-  if (clearRangeBtn){
-    clearRangeBtn.addEventListener("click", () => {
-      rangeFromISO = "";
-      rangeToISO = "";
-      // snap back to current month of selection
-      if (selectedISO){
-        const p = selectedISO.split("-").map(Number);
-        if (p.length === 3){
-          viewYear = p[0];
-          viewMonth = p[1] - 1;
-        }
-      }
-      syncPickers();
-      render();
-    });
-  }
-
   // --- Drag-to-scroll (mobile & desktop) ---
   // On small screens we disable page scrolling and let users pan the calendar by dragging.
   (function enableDragPan(){
@@ -594,6 +657,6 @@
   })();
 
   // initial render
-  syncPickers();
   render();
+  syncPeriodFields();
 })();

@@ -38,25 +38,12 @@
         <div class="workoutsTitleRow">
           <h1 class="pageTitle">Workouts</h1>
           <div class="workoutsDateControls">
-            <!-- Pretty pickers (only for Workouts header) -->
-            <div class="datePill" title="Jump to month">
+            <!-- Unified period picker (replaces Month / Date / Drag-to-range pills) -->
+            <button class="datePill periodPill" id="periodBtn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Pick a period">
               <span class="pillIcon" aria-hidden="true">📅</span>
-              <span class="pillText">Month</span>
-              <input class="dateInput" id="monthPicker" type="month" aria-label="Pick month" />
-            </div>
-
-            <div class="datePill" title="Jump to date">
-              <span class="pillIcon" aria-hidden="true">🗓️</span>
-              <span class="pillText">Date</span>
-              <input class="dateInput" id="datePicker" type="date" aria-label="Pick date" />
-            </div>
-
-            <!-- Range selection is done directly in the calendar (press a day, drag to another day). -->
-            <div class="datePill rangePill" id="rangePill" title="Press a day and drag to select a period">
-              <span class="pillIcon" aria-hidden="true">⟷</span>
-              <span class="pillText" id="rangePillText">Drag to range</span>
-              <button class="pillX" id="clearRangeBtn" type="button" aria-label="Clear range" title="Clear range">×</button>
-            </div>
+              <span class="pillText" id="periodBtnText">Period</span>
+              <span class="pillCaret" aria-hidden="true">▾</span>
+            </button>
           </div>
         </div>
         <p class="subtitle">Month plan · <span id="wMonthLabel">—</span></p>
@@ -70,6 +57,45 @@
     <section class="month-grid" id="monthGrid">
       <!-- JS fills days -->
     </section>
+
+    <!-- Period picker popover (dialog) -->
+    <div class="periodOverlay" id="periodOverlay" hidden></div>
+    <div class="periodPop" id="periodPop" hidden role="dialog" aria-modal="true" aria-label="Pick period">
+      <div class="periodHead">
+        <div class="periodTitle">Pick period</div>
+        <button class="pillX" id="periodClose" type="button" aria-label="Close">×</button>
+      </div>
+
+      <div class="periodBody">
+        <div class="periodRow">
+          <label class="pwMetaLabel" for="periodFrom">From date</label>
+          <input id="periodFrom" class="dateField" type="date" />
+        </div>
+        <div class="periodRow">
+          <label class="pwMetaLabel" for="periodTo">To date</label>
+          <input id="periodTo" class="dateField" type="date" />
+        </div>
+
+        <div class="periodHint">Tip: pick From/To to show only that period in the big calendar.</div>
+
+        <div class="periodPreview" id="periodPreview" aria-hidden="true">
+          <div class="periodPreviewLabel" id="periodPreviewLabel">—</div>
+          <div class="periodPreviewBar"><span id="periodPreviewFill"></span></div>
+        </div>
+
+        <div class="periodDivider"></div>
+
+        <div class="periodRow">
+          <label class="pwMetaLabel" for="periodMonth">Jump to month</label>
+          <input id="periodMonth" class="dateField" type="month" />
+        </div>
+      </div>
+
+      <div class="periodFoot">
+        <button class="btn secondary" id="periodClear" type="button">Clear range</button>
+        <button class="btn" id="periodApply" type="button">Apply</button>
+      </div>
+    </div>
   </main>
 </div>
 

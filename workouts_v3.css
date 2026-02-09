@@ -3124,6 +3124,117 @@ main.content h1{
   transition: transform .12s ease, border-color .12s ease, background .12s ease;
 }
 
+/* Unified period picker button */
+.periodPill{
+  cursor: pointer;
+  user-select: none;
+  font: inherit;
+  color: inherit;
+  border: none;
+}
+
+.pillCaret{
+  opacity: .75;
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+/* Period picker popover */
+.periodOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 80;
+}
+
+.periodPop{
+  position: fixed;
+  top: 86px;
+  right: 26px;
+  width: min(380px, calc(100vw - 32px));
+  border-radius: 18px;
+  background: rgba(18, 20, 30, 0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  z-index: 81;
+  overflow: hidden;
+}
+
+.periodHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.periodTitle{
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.periodBody{ padding: 12px; display:flex; flex-direction:column; gap: 10px; }
+.periodRow{ display:flex; flex-direction:column; gap: 6px; }
+
+.dateField{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: inherit;
+  outline: none;
+}
+
+.dateField:focus{ border-color: rgba(120,130,255,0.70); box-shadow: 0 0 0 3px rgba(120,130,255,0.18); }
+
+.periodHint{
+  font-size: 12px;
+  opacity: .78;
+}
+
+.periodDivider{ height: 1px; background: rgba(255,255,255,0.08); margin: 2px 0; }
+
+.periodPreview{
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.periodPreviewLabel{ font-size: 12px; opacity: .85; margin-bottom: 8px; }
+
+.periodPreviewBar{
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+
+.periodPreviewBar > span{
+  display:block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(120,130,255,0.55), rgba(120,130,255,0.95));
+  box-shadow: 0 0 0 1px rgba(120,130,255,0.25);
+}
+
+.periodFoot{
+  display:flex;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.periodFoot .btn{ flex: 1; }
+
+@media (max-width: 720px){
+  .periodPop{ right: 16px; left: 16px; width: auto; top: 96px; }
+}
+
 .datePill.small{ padding: 9px 11px; }
 
 .datePill:hover{
