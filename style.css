@@ -782,12 +782,12 @@ font-weight: 750;
     position: fixed;
     left: 50%;
     top: 50%;
-    width: min(480px, calc(100vw - 40px));
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(16,18,32,0.94);
-    box-shadow: 0 28px 90px rgba(0,0,0,0.65);
-    padding: 16px;
+    width: min(600px, calc(100vw - 56px));
+    border-radius: 22px;
+    border: 1px solid var(--divider);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--panel) 92%, #000 8%), var(--panel));
+    box-shadow: 0 26px 80px rgba(0,0,0,0.66);
+    padding: 22px;
     transform: translate(-50%, calc(-50% + 10px));
     opacity: 0;
     z-index: 1001;
@@ -795,17 +795,30 @@ font-weight: 750;
   .modal.open .modalSheet{animation: desktopModalIn .18s ease-out forwards}
   @keyframes desktopModalIn{to{transform:translate(-50%, -50%); opacity:1}}
 }
-.modalHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.modalTitle{margin:0;font-size:1.05rem;font-weight:800;letter-spacing:-.03em}
+.modalHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.modalTitle{margin:0;font-size:1.22rem;font-weight:800;letter-spacing:-.035em}
+.modalBody{display:flex;flex-direction:column;gap:10px}
+.modalBody .small{color:var(--muted2)}
+
+.modalInput{height:46px;font-size:.98rem;border-radius:14px}
+
+.modalActions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.modalActions .btn{height:40px;min-width:108px;border-radius:14px}
+
 .iconBtn{
-  background: rgba(255,255,255,.05);
-  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background: color-mix(in oklab, var(--panel) 88%, #000 12%);
+  border: 1px solid var(--divider);
   color: var(--text);
-  padding: 10px 12px;
-  border-radius: 14px;
+  border-radius: 12px;
   cursor:pointer;
+  line-height: 1;
 }
-.iconBtn:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+.iconBtn:hover{filter:brightness(1.06)}
 
 
 /* Habits: per-habit analytics controls + mini heat preview */
