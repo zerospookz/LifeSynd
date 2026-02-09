@@ -279,6 +279,7 @@ function openAddHabit(triggerEl){
 }
 
 function openAddHabitModal(triggerEl){
+  window.__lastAddHabitTrigger = triggerEl || window.__lastAddHabitTrigger || null;
   const modal = document.getElementById('addHabitModal');
   const input = document.getElementById('addHabitModalInput');
   if(!modal || !input){
@@ -297,7 +298,9 @@ function openAddHabitModal(triggerEl){
     triggerEl.classList.add('pillPop');
   }
 
+  // Make modal visible to assistive tech *before* moving focus into it.
   modal.classList.add('open');
+  modal.removeAttribute('inert');
   modal.setAttribute('aria-hidden', 'false');
   document.documentElement.classList.add('modalOpen');
   input.value = '';
@@ -307,8 +310,16 @@ function openAddHabitModal(triggerEl){
 function closeAddHabitModal(){
   const modal = document.getElementById('addHabitModal');
   if(!modal) return;
+  // Move focus OUT of the modal before hiding it to avoid aria-hidden warnings.
+  const backTo = window.__lastAddHabitTrigger;
+  if(backTo && backTo.focus) {
+    try{ backTo.focus(); }catch(_e){}
+  } else {
+    try{ document.body && document.body.focus && document.body.focus(); }catch(_e){}
+  }
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
+  modal.setAttribute('inert', '');
   document.documentElement.classList.remove('modalOpen');
 }
 
@@ -550,15 +561,18 @@ function renderAnalytics(){
 card.innerHTML = `
     <div class="cardHeader" style="align-items:flex-start">
       <div>
-        <h3 class="cardTitle">Analytics</h3>
+        <h3 class="cardTitle">Habits</h3>
         <p class="small" style="margin:6px 0 0">Tap to toggle · Drag to paint · <span class="badge">${offsetLabel}</span></p>
       </div>
       <div class="analyticsControls analyticsFilter">
-        <div class="seg segWide" role="tablist" aria-label="Analytics range">
+        <div class="segRow">
+          <div class="seg segWide" role="tablist" aria-label="Habits range">
           <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
           <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
           <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
           <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
+          </div>
+          <button class="btn primary addHabitInline" id="analyticsAddHabit" type="button">+ Add habit</button>
         </div>
         <div class="rangeNav" aria-label="Analytics period">
           <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
@@ -611,6 +625,12 @@ card.innerHTML = `
     window.__resetMatrixScroll = true;
     renderAnalytics();
   });
+
+  // Inline add habit action (matches the new filter header UI)
+  const addInline = card.querySelector('#analyticsAddHabit');
+  if(addInline){
+    addInline.addEventListener('click', (e)=>openAddHabit(e.currentTarget));
+  }
 
   if(!H || H.length===0){
     grid.innerHTML = '<p class="empty">Add a habit to see analytics.</p>';

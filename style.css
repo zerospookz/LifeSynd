@@ -974,10 +974,11 @@ font-weight: 750;
 /* --- Habits Analytics upgrades --- */
 .analyticsCard{ margin-top: 18px; }
 .analyticsControls{ display:flex; gap:10px; align-items:center; justify-content:flex-end; }
+.segRow{ display:flex; gap:10px; align-items:center; justify-content:flex-end; }
 .seg{
   display:inline-flex;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.06);
   border-radius: 999px;
   padding: 4px;
   gap: 4px;
@@ -985,7 +986,7 @@ font-weight: 750;
 .segBtn{
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: rgba(255,255,255,.72);
   padding: 7px 12px;
   border-radius: 999px;
   font-weight: 650;
@@ -994,8 +995,21 @@ font-weight: 750;
 }
 .segBtn.active{
   color: var(--text);
-  background: rgba(255,255,255,.10);
+  background: rgba(255,255,255,.16);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 10px 26px rgba(0,0,0,.18);
+}
+
+.addHabitInline{
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 520px){
+  .segRow{ flex-wrap: wrap; justify-content:flex-start; }
+  .seg{ width: 100%; justify-content: space-between; }
+  .addHabitInline{ width: 100%; }
 }
 .matrixWrap{ padding: 14px; }
 .matrixGrid{ gap: 10px; }

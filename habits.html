@@ -33,13 +33,7 @@
 <h1 class="pageTitle">Habits</h1>
 <p class="subtitle">Streaks, consistency and recovery.</p>
 </div>
-<div class="habitsTopControls">
-<div class="controlGroup searchGroup">
-<label class="microLabel" for="habitSearch">Search</label>
-<input class="input" id="habitSearch" placeholder="Search habits"/>
-</div>
-<button class="btn primary" id="newHabitBtn">New habit +</button>
-</div>
+<!-- Top-right search / new habit removed: the primary "Add Habit" action lives in the Habits filter header below. -->
 </header>
 <!-- Mobile app bar -->
 <header class="habitsAppbar">
@@ -99,7 +93,7 @@
 </div>
 
 <!-- Add habit modal (used on phone screens instead of browser prompt) -->
-<div class="modal" id="addHabitModal" aria-hidden="true">
+<div class="modal" id="addHabitModal" aria-hidden="true" inert>
   <div class="modalBackdrop" data-close></div>
   <div class="modalSheet" role="dialog" aria-modal="true" aria-label="Add habit">
     <div class="modalHeader">
