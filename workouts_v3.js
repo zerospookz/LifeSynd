@@ -393,6 +393,9 @@
       list.className = "month-list";
 
       const items = (byDate.get(c.iso) || []);
+      // Only show the in-range highlight bar when the day has at least one workout.
+      // (User preference: no decorative bar on empty days.)
+      if (items.length) cell.classList.add('has-workout');
       // Show *all* workouts for the day. If there are many, the list becomes scrollable.
       for (const w of items){
         list.appendChild(renderWorkoutCard(w));

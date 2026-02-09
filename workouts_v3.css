@@ -2865,7 +2865,7 @@ main.content h1{
    Goal: visible “slider/pill” inside the calendar like the reference.
    We draw a soft rounded bar near the top of each selected day with a
    subtle accent underline. */
-.month-cell.in-range::before{
+.month-cell.in-range.has-workout::before{
   content:"";
   position:absolute;
   left: -1px;
@@ -2880,7 +2880,7 @@ main.content h1{
   z-index: 0;
 }
 
-.month-cell.in-range::after{
+.month-cell.in-range.has-workout::after{
   content:"";
   position:absolute;
   left: 14px;
@@ -2895,17 +2895,17 @@ main.content h1{
   z-index: 0;
 }
 
-.month-cell.range-start::before{
+.month-cell.range-start.has-workout::before{
   border-top-left-radius: 18px;
   border-bottom-left-radius: 18px;
 }
-.month-cell.range-end::before{
+.month-cell.range-end.has-workout::before{
   border-top-right-radius: 18px;
   border-bottom-right-radius: 18px;
 }
 
-.month-cell.range-start::after{ left: 18px; }
-.month-cell.range-end::after{ right: 18px; }
+.month-cell.range-start.has-workout::after{ left: 18px; }
+.month-cell.range-end.has-workout::after{ right: 18px; }
 
 .month-cell.range-start,
 .month-cell.range-end{
