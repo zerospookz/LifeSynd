@@ -1427,6 +1427,59 @@ requestAnimationFrame(()=>{
   `;
 }
 
+
+
+// ---------- Quick Mark Panel (inspired by Dribbble shot) ----------
+function renderQuickMarkPanel(){
+  const host = document.getElementById("habitQuickMark");
+  if(!host) return;
+
+  const H = getFilteredHabits();
+  const iso = getMarkDate();
+  const d = new Date(iso+"T00:00:00");
+  const label = d.toLocaleDateString(undefined, { weekday:"short", month:"numeric", day:"numeric" });
+
+  // Build list
+  const rows = H.map(h=>{
+    const done = (h.datesDone||[]).includes(iso);
+    const color = h.color || h.hex || h.col || "#5b7cfa";
+    return `
+      <div class="qmRow ${done ? "isDone" : ""}" data-hid="${h.id}">
+        <div class="qmSwatch" style="background:${color}"></div>
+        <div class="qmMain">
+          <div class="qmName">${escapeHtml(h.name||"Habit")}</div>
+          <div class="qmMeta">${done ? "Completed" : "Not completed"}</div>
+        </div>
+        <button class="btn small qmBtn">${done ? "Undo" : "Mark complete"}</button>
+      </div>
+    `;
+  }).join("");
+
+  host.innerHTML = `
+    <div class="qmHead">
+      <div>
+        <div class="qmTitle">Habits</div>
+        <div class="qmSub">${label}</div>
+      </div>
+    </div>
+    <div class="qmList">${rows || '<p class="empty">No habits yet.</p>'}</div>
+  `;
+
+  // Bind actions
+  host.querySelectorAll(".qmRow").forEach(row=>{
+    const hid = row.getAttribute("data-hid");
+    const btn = row.querySelector(".qmBtn");
+    if(!btn) return;
+    btn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      toggleHabitAt(hid, iso, { silentToast:false });
+      // rerender all to keep everything in sync (matrix, streaks, etc.)
+      render();
+    });
+  });
+}
+
 function render(){
   if(markDate && !markDate.value) markDate.value=today();
   const H = getFilteredHabits();
@@ -1437,6 +1490,7 @@ function render(){
   renderHero();
   renderFocusCard();
   syncSidePanels();
+  renderQuickMarkPanel();
 
   habitList.innerHTML="";
   if(H.length===0){

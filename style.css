@@ -2309,3 +2309,18 @@ img.pulseOnce{
   .rangeNav{ justify-content: space-between; }
   .rangeLabel{ flex: 1; text-align: center; }
 }
+
+
+/* --- Habits Quick Mark panel (Dribbble-inspired) --- */
+
+#habitQuickMark .qmHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+#habitQuickMark .qmTitle{font-weight:700;font-size:14px;letter-spacing:.2px}
+#habitQuickMark .qmSub{font-size:12px;opacity:.7;margin-top:2px}
+#habitQuickMark .qmList{display:flex;flex-direction:column;gap:8px}
+#habitQuickMark .qmRow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+#habitQuickMark .qmRow.isDone{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10)}
+#habitQuickMark .qmSwatch{width:10px;height:28px;border-radius:10px;opacity:.95;flex:0 0 auto}
+#habitQuickMark .qmMain{min-width:0;flex:1 1 auto}
+#habitQuickMark .qmName{font-weight:650;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#habitQuickMark .qmMeta{font-size:12px;opacity:.7;margin-top:2px}
+#habitQuickMark .qmBtn{flex:0 0 auto}
