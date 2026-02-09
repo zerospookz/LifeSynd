@@ -1579,52 +1579,81 @@ font-weight: 750;
   bottom: 92px; /* clears bottom nav */
   height: 56px;
   width: 56px;
-  padding: 0 18px;
+  padding: 0;
   border: none;
   border-radius: 999px;
   background: #6A6EFF;
   color: #FFFFFF;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
   cursor: pointer;
   z-index: 50;
   box-shadow: 0 10px 28px rgba(0,0,0,0.35);
   transition: width 220ms ease, transform 120ms ease, box-shadow 220ms ease, filter 220ms ease;
   animation: fabIntro 420ms ease both;
+  overflow: hidden; /* keeps icon centered when collapsed */
 }
-.fabNewHabit .fabIcon{
-  font-size: 22px;
-  line-height: 1;
-  font-weight: 700;
-  transform: translateY(-1px);
+
+/* Left circular area so + stays perfectly centered */
+.fabNewHabit .fabCircle{
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 56px;
+}
+
+/* Crisp, longer-stroke plus built from bars (not a glyph) */
+.fabNewHabit .fabPlus{
+  width: 24px;
+  height: 24px;
+  position: relative;
+  transform: rotate(0deg);
   transition: transform 220ms ease;
+}
+.fabNewHabit .fabPlus::before,
+.fabNewHabit .fabPlus::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24px;
+  height: 3px;
+  background: #FFFFFF;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+}
+.fabNewHabit .fabPlus::after{
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 .fabNewHabit .fabText{
   font-weight: 700;
   letter-spacing: .2px;
   white-space: nowrap;
   opacity: 0;
+  max-width: 0;
+  overflow: hidden;
   transform: translateX(-6px);
-  transition: opacity 160ms ease, transform 220ms ease;
+  transition: opacity 160ms ease, transform 220ms ease, max-width 220ms ease;
 }
 
 /* Expand on hover/focus to show label (matches Dribbble behavior) */
 .fabNewHabit:hover,
 .fabNewHabit:focus-visible{
   width: 170px;
-  justify-content: flex-start;
   filter: brightness(1.03);
 }
 .fabNewHabit:hover .fabText,
 .fabNewHabit:focus-visible .fabText{
   opacity: 1;
+  max-width: 140px;
   transform: translateX(0);
 }
-.fabNewHabit:hover .fabIcon,
-.fabNewHabit:focus-visible .fabIcon{
-  transform: translateY(-1px) rotate(90deg);
+.fabNewHabit:hover .fabPlus,
+.fabNewHabit:focus-visible .fabPlus{
+  transform: rotate(22deg); /* light rotation, like the reference */
 }
 
 .fabNewHabit:active{
