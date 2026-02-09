@@ -2854,8 +2854,10 @@ main.content h1{
 }
 
 .month-cell.is-selected{
-  border-color: rgba(164, 122, 255, 0.70);
-  box-shadow: 0 0 0 2px rgba(164, 122, 255, 0.20);
+  /* Keep selection subtle: range highlight is the primary indicator.
+     (Avoid strong purple outlines on the big calendar tiles.) */
+  border-color: rgba(255,255,255,.10);
+  box-shadow: none;
 }
 
 /* Range highlight (selected period)
@@ -3136,6 +3138,19 @@ main.content h1{
   font: inherit;
   color: inherit;
   border: none;
+}
+
+/* Mobile: give the period control its own row so it never gets squeezed */
+@media (max-width: 520px){
+  .workoutsDateControls{
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .periodPill{
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 .pillCaret{
