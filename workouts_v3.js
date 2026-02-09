@@ -47,11 +47,11 @@
   let rpToISO = "";
   let rpBaseYear = 0;
   let rpBaseMonth = 0; // 0..11 (first pane)
-  // range-picker drag-to-select
+
+  // Range-picker drag-to-select (inside the modal picker)
   let rpIsDragging = false;
   let rpDragAnchorISO = "";
   let rpDragMoved = false;
-  let rpIgnoreNextClick = false;
 
   // ---- Month model ----
   // Month view is controlled by the Month + Date pickers in the header.
@@ -230,35 +230,13 @@
       // range highlight
       if (rpFromISO){
         const lo = rpFromISO;
-        const hi = rpToISO || rpFromI// drag-to-range (pointer)
-      btn.addEventListener('pointerdown', (e) => {
-        // allow touch/pen drag selection
-        e.preventDefault();
-        clearPresetActive();
-        rpIsDragging = true;
-        rpDragMoved = false;
-        rpDragAnchorISO = iso;
-        rpFromISO = iso;
-        rpToISO = iso;
-        setPeriodRangeField(rpFromISO, rpToISO);
-        renderRangePicker();
-        try { btn.setPointerCapture(e.pointerId); } catch {}
-      });
-
-      btn.addEventListener('pointerenter', () => {
-        if (!rpIsDragging) return;
-        if (iso !== rpDragAnchorISO) rpDragMoved = true;
-        clearPresetActive();
-        rpFromISO = rpDragAnchorISO;
-        rpToISO = iso;
-        normalizeRange();
-        setPeriodRangeField(rpFromISO, rpToISO);
-        renderRangePicker();
-      });
-
-      // click selection (keyboard / simple click)
+        const hi = rpToISO || rpFromISO;
+        if (iso >= lo && iso <= hi) btn.classList.add('inRange');
+        if (iso === lo || iso === hi) btn.classList.add('edge');
+      }
       btn.addEventListener('click', () => {
-        if (rpIgnoreNextClick) return;
+        // If the user just finished a drag-to-range gesture, ignore the synthetic click.
+        if (rpDragMoved){ rpDragMoved = false; return; }
         clearPresetActive();
         if (!rpFromISO || (rpFromISO && rpToISO)){
           rpFromISO = iso;
@@ -287,30 +265,6 @@
     buildMonthGrid(d0.getFullYear(), d0.getMonth(), rpGrid0);
     buildMonthGrid(d1.getFullYear(), d1.getMonth(), rpGrid1);
   }
-
-  // End drag on pointer up/cancel (works for mouse/touch/pen)
-  document.addEventListener('pointerup', () => {
-    if (!rpIsDragging) return;
-    rpIsDragging = false;
-    normalizeRange();
-    setPeriodRangeField(rpFromISO, rpToISO);
-    renderRangePicker();
-    // suppress click that may fire after drag
-    rpIgnoreNextClick = rpDragMoved;
-    rpDragMoved = false;
-    if (rpIgnoreNextClick) setTimeout(() => { rpIgnoreNextClick = false; }, 0);
-  }, { passive: true });
-
-  document.addEventListener('pointercancel', () => {
-    if (!rpIsDragging) return;
-    rpIsDragging = false;
-    normalizeRange();
-    setPeriodRangeField(rpFromISO, rpToISO);
-    renderRangePicker();
-    rpIgnoreNextClick = true;
-    rpDragMoved = false;
-    setTimeout(() => { rpIgnoreNextClick = false; }, 0);
-  }, { passive: true });
 
   // ---- DnD state ----
   let drag = null; // { workoutId, fromDate }
@@ -675,6 +629,63 @@
       applyPreset(String(b.dataset.preset || ''));
     });
   }
+
+  // Drag-to-range inside the modal range picker
+  const rpGetISOFromTarget = (t) => {
+    const el = t && t.closest ? t.closest('.rpDay') : null;
+    return el ? String(el.dataset.iso || '') : '';
+  };
+
+  const rpStart = (e) => {
+    const iso = rpGetISOFromTarget(e.target);
+    if (!iso) return;
+    e.preventDefault();
+    clearPresetActive();
+    rpIsDragging = true;
+    rpDragMoved = false;
+    rpDragAnchorISO = iso;
+    rpFromISO = iso;
+    rpToISO = '';
+    setPeriodRangeField(rpFromISO, rpToISO);
+    renderRangePicker();
+    try { e.target.setPointerCapture?.(e.pointerId); } catch(_){ }
+  };
+
+  const rpMove = (e) => {
+    if (!rpIsDragging) return;
+    const t = document.elementFromPoint(e.clientX, e.clientY);
+    const iso = rpGetISOFromTarget(t);
+    if (!iso) return;
+    if (iso !== rpDragAnchorISO) rpDragMoved = true;
+    rpFromISO = (rpDragAnchorISO <= iso) ? rpDragAnchorISO : iso;
+    rpToISO = (rpDragAnchorISO <= iso) ? iso : rpDragAnchorISO;
+    setPeriodRangeField(rpFromISO, rpToISO);
+    renderRangePicker();
+  };
+
+  const rpEnd = (e) => {
+    if (!rpIsDragging) return;
+    rpIsDragging = false;
+    try { e.target.releasePointerCapture?.(e.pointerId); } catch(_){ }
+    if (!rpDragMoved){
+      // treat as single-day
+      rpToISO = rpFromISO;
+    }
+    normalizeRange();
+    setPeriodRangeField(rpFromISO, rpToISO);
+    renderRangePicker();
+  };
+
+  const bindRpGrid = (grid) => {
+    if (!grid) return;
+    grid.addEventListener('pointerdown', rpStart);
+    grid.addEventListener('pointermove', rpMove);
+    grid.addEventListener('pointerup', rpEnd);
+    grid.addEventListener('pointercancel', rpEnd);
+    grid.addEventListener('pointerleave', rpEnd);
+  };
+  bindRpGrid(rpGrid0);
+  bindRpGrid(rpGrid1);
 
   if (periodApply){
     periodApply.addEventListener('click', () => {
