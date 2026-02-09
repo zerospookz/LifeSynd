@@ -3151,9 +3151,11 @@ main.content h1{
 
 .periodPop{
   position: fixed;
-  top: 86px;
-  right: 26px;
-  width: min(380px, calc(100vw - 32px));
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(820px, calc(100vw - 32px));
+  max-height: min(82vh, 760px);
   border-radius: 18px;
   background: rgba(18, 20, 30, 0.92);
   border: 1px solid rgba(255,255,255,0.10);
@@ -3161,6 +3163,8 @@ main.content h1{
   z-index: 81;
   overflow: hidden;
 }
+
+.periodBody{ overflow: auto; }
 
 .periodHead{
   display:flex;
@@ -3232,7 +3236,126 @@ main.content h1{
 .periodFoot .btn{ flex: 1; }
 
 @media (max-width: 720px){
-  .periodPop{ right: 16px; left: 16px; width: auto; top: 96px; }
+  .periodPop{
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100vw - 20px);
+    max-height: 86vh;
+  }
+}
+
+/* Full-size range picker inside the modal */
+.rangePicker{
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 12px;
+  padding: 10px 0 0;
+}
+
+.rangePresets{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 10px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.presetBtn{
+  width: 100%;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: inherit;
+  cursor: pointer;
+}
+
+.presetBtn:hover{ border-color: rgba(120,130,255,0.35); background: rgba(255,255,255,0.06); }
+.presetBtn.active{ border-color: rgba(120,130,255,0.70); box-shadow: 0 0 0 3px rgba(120,130,255,0.14); }
+
+.rangeCal{ display:flex; flex-direction:column; gap: 10px; }
+
+.rangeCalHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 4px 0 0;
+}
+
+.calNav{
+  width: 38px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: inherit;
+  cursor: pointer;
+}
+
+.calNav:hover{ border-color: rgba(120,130,255,0.35); background: rgba(255,255,255,0.06); }
+
+.calHeadLabel{ font-size: 12px; opacity: .75; }
+
+.rangeMonths{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.monthPane{
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.monthTitle{ font-weight: 700; margin-bottom: 8px; }
+
+.dowRow{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 11px;
+  opacity: .65;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dowRow span{ text-align:center; }
+
+.monthGridSm{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.rpDay{
+  height: 34px;
+  border-radius: 12px;
+  display:grid;
+  place-items:center;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  user-select:none;
+}
+
+.rpDay.off{ opacity: .35; }
+.rpDay:hover{ border-color: rgba(120,130,255,0.35); background: rgba(255,255,255,0.05); }
+
+.rpDay.inRange{ background: rgba(120,130,255,0.18); border-color: rgba(120,130,255,0.25); }
+.rpDay.edge{ background: rgba(120,130,255,0.55); border-color: rgba(120,130,255,0.75); font-weight: 700; }
+
+.rangeHint{ font-size: 12px; opacity: .75; }
+
+@media (max-width: 820px){
+  .rangePicker{ grid-template-columns: 1fr; }
+  .rangePresets{ flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); padding-right: 0; padding-bottom: 10px; }
+  .presetBtn{ width: auto; }
+  .rangeMonths{ grid-template-columns: 1fr; }
 }
 
 .datePill.small{ padding: 9px 11px; }

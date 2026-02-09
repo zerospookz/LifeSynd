@@ -28,13 +28,25 @@
   const periodOverlay = $("#periodOverlay");
   const periodPop = $("#periodPop");
   const periodClose = $("#periodClose");
-  const periodFrom = $("#periodFrom");
-  const periodTo = $("#periodTo");
-  const periodMonth = $("#periodMonth");
+  const periodRange = $("#periodRange");
+  // full size range picker (inside modal)
+  const rangePicker = $("#rangePicker");
+  const presetBtns = Array.from(document.querySelectorAll('.presetBtn'));
+  const rpPrev = $("#rpPrev");
+  const rpNext = $("#rpNext");
+  const rpLabel = $("#rpLabel");
+  const rpM0 = $("#rpM0");
+  const rpM1 = $("#rpM1");
+  const rpGrid0 = $("#rpGrid0");
+  const rpGrid1 = $("#rpGrid1");
   const periodApply = $("#periodApply");
   const periodClear = $("#periodClear");
-  const periodPreviewLabel = $("#periodPreviewLabel");
-  const periodPreviewFill = $("#periodPreviewFill");
+
+  // temp selection in the modal (only applied on Apply)
+  let rpFromISO = "";
+  let rpToISO = "";
+  let rpBaseYear = 0;
+  let rpBaseMonth = 0; // 0..11 (first pane)
 
   // ---- Month model ----
   // Month view is controlled by the Month + Date pickers in the header.
@@ -117,25 +129,128 @@
     }
   }
 
-  function updatePeriodPreview(fromISO, toISO){
-    if (!periodPreviewLabel || !periodPreviewFill) return;
-    if (!fromISO || !toISO || fromISO > toISO){
-      periodPreviewLabel.textContent = "—";
-      periodPreviewFill.style.width = "0%";
-      return;
+  function setPeriodRangeField(fromISO, toISO){
+    if (!periodRange) return;
+    if (fromISO && toISO){
+      periodRange.value = friendlyRangeLabel(fromISO, toISO);
+    } else if (fromISO){
+      periodRange.value = friendlyRangeLabel(fromISO, fromISO);
+    } else {
+      periodRange.value = "";
     }
-    periodPreviewLabel.textContent = friendlyRangeLabel(fromISO, toISO);
-    const a = dateFromISO(fromISO);
-    const b = dateFromISO(toISO);
-    if (!a || !b){
-      periodPreviewFill.style.width = "0%";
-      return;
+  }
+
+  function startOfWeekMon(d){
+    const x = new Date(d);
+    const dow = (x.getDay() + 6) % 7; // Monday=0
+    x.setDate(x.getDate() - dow);
+    x.setHours(0,0,0,0);
+    return x;
+  }
+
+  function endOfWeekMon(d){
+    const s = startOfWeekMon(d);
+    return addDays(s, 6);
+  }
+
+  function clearPresetActive(){
+    for (const b of presetBtns) b.classList.remove('active');
+  }
+
+  function applyPreset(name){
+    const t = new Date();
+    t.setHours(0,0,0,0);
+    let a = null; let b = null;
+    if (name === 'today'){
+      a = t; b = t;
+    } else if (name === 'yesterday'){
+      a = addDays(t, -1); b = a;
+    } else if (name === 'thisWeek'){
+      a = startOfWeekMon(t); b = endOfWeekMon(t);
+    } else if (name === 'lastWeek'){
+      const s = startOfWeekMon(t);
+      a = addDays(s, -7); b = addDays(s, -1);
+    } else if (name === 'past2w'){
+      a = addDays(t, -13); b = t;
+    } else if (name === 'thisMonth'){
+      a = startOfMonth(t.getFullYear(), t.getMonth());
+      b = endOfMonth(t.getFullYear(), t.getMonth());
+    } else if (name === 'lastMonth'){
+      const yy = t.getFullYear();
+      const mm = t.getMonth();
+      const prev = new Date(yy, mm - 1, 1);
+      a = startOfMonth(prev.getFullYear(), prev.getMonth());
+      b = endOfMonth(prev.getFullYear(), prev.getMonth());
     }
-    const ms = (b - a) + 24*60*60*1000;
-    const days = Math.max(1, Math.round(ms / (24*60*60*1000)));
-    // simple visual: 1..31 days mapped to 8..100%
-    const pct = Math.max(8, Math.min(100, Math.round((days/31)*100)));
-    periodPreviewFill.style.width = pct + "%";
+    if (!a || !b) return;
+    rpFromISO = isoFromDate(a);
+    rpToISO = isoFromDate(b);
+    rpBaseYear = a.getFullYear();
+    rpBaseMonth = a.getMonth();
+    setPeriodRangeField(rpFromISO, rpToISO);
+    renderRangePicker();
+  }
+
+  function normalizeRange(){
+    if (rpFromISO && rpToISO && rpFromISO > rpToISO){
+      const t = rpFromISO; rpFromISO = rpToISO; rpToISO = t;
+    }
+  }
+
+  function monthName(year, month){
+    return new Date(year, month, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' });
+  }
+
+  function buildMonthGrid(year, month, targetEl){
+    if (!targetEl) return;
+    targetEl.innerHTML = '';
+    const first = new Date(year, month, 1);
+    const firstDowMon = (first.getDay() + 6) % 7; // 0..6
+    const start = addDays(first, -firstDowMon);
+    for (let i = 0; i < 42; i++){
+      const d = addDays(start, i);
+      const iso = isoFromDate(d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'rpDay';
+      btn.dataset.iso = iso;
+      btn.textContent = String(d.getDate());
+      if (d.getMonth() !== month) btn.classList.add('off');
+      // range highlight
+      if (rpFromISO){
+        const lo = rpFromISO;
+        const hi = rpToISO || rpFromISO;
+        if (iso >= lo && iso <= hi) btn.classList.add('inRange');
+        if (iso === lo || iso === hi) btn.classList.add('edge');
+      }
+      btn.addEventListener('click', () => {
+        clearPresetActive();
+        if (!rpFromISO || (rpFromISO && rpToISO)){
+          rpFromISO = iso;
+          rpToISO = '';
+        } else {
+          rpToISO = iso;
+          normalizeRange();
+        }
+        setPeriodRangeField(rpFromISO, rpToISO);
+        renderRangePicker();
+      });
+      targetEl.appendChild(btn);
+    }
+  }
+
+  function renderRangePicker(){
+    if (!rangePicker) return;
+    normalizeRange();
+    const y0 = rpBaseYear;
+    const m0 = rpBaseMonth;
+    const d0 = new Date(y0, m0, 1);
+    const d1 = new Date(y0, m0 + 1, 1);
+    if (rpM0) rpM0.textContent = monthName(d0.getFullYear(), d0.getMonth());
+    if (rpM1) rpM1.textContent = monthName(d1.getFullYear(), d1.getMonth());
+    if (rpLabel) rpLabel.textContent = `${monthShortLabel(d0.getFullYear(), d0.getMonth())}  ·  ${monthShortLabel(d1.getFullYear(), d1.getMonth())}`;
+    buildMonthGrid(d0.getFullYear(), d0.getMonth(), rpGrid0);
+    buildMonthGrid(d1.getFullYear(), d1.getMonth(), rpGrid1);
   }
 
   // ---- DnD state ----
@@ -415,15 +530,17 @@
     if (el) el.scrollIntoView({ behavior:"smooth", block:"center", inline:"center" });
   }
 
-  function syncPeriodFields(){
-    if (periodMonth){
-      periodMonth.value = `${viewYear}-${pad2(viewMonth+1)}`;
-    }
-    const fromVal = periodFrom?.value || (hasActiveRange() ? rangeFromISO : (selectedISO || ""));
-    const toVal = periodTo?.value || (hasActiveRange() ? rangeToISO : (selectedISO || ""));
-    if (periodFrom && !periodFrom.value) periodFrom.value = fromVal;
-    if (periodTo && !periodTo.value) periodTo.value = toVal;
-    updatePeriodPreview(periodFrom?.value || "", periodTo?.value || "");
+  function syncPeriodPickerState(){
+    // Initialize modal selection from the active range, or fallback to the currently selected day.
+    const seed = hasActiveRange() ? rangeFromISO : (selectedISO || isoFromDate(new Date()));
+    const seedDate = dateFromISO(seed) || new Date();
+    rpBaseYear = seedDate.getFullYear();
+    rpBaseMonth = seedDate.getMonth();
+    rpFromISO = hasActiveRange() ? rangeFromISO : seed;
+    rpToISO = hasActiveRange() ? rangeToISO : "";
+    setPeriodRangeField(rpFromISO, rpToISO);
+    clearPresetActive();
+    renderRangePicker();
   }
 
   function openPeriodPicker(){
@@ -431,9 +548,9 @@
     periodBtn?.setAttribute?.('aria-expanded', 'true');
     periodOverlay.hidden = false;
     periodPop.hidden = false;
-    syncPeriodFields();
-    // Focus first field for keyboard users
-    try { periodFrom?.focus({ preventScroll: true }); } catch { periodFrom?.focus?.(); }
+    syncPeriodPickerState();
+    // Focus the range field for keyboard users
+    try { periodRange?.focus({ preventScroll: true }); } catch { periodRange?.focus?.(); }
   }
 
   function closePeriodPicker(){
@@ -460,26 +577,6 @@
     if (e.key === 'Escape' && !periodPop?.hidden) closePeriodPicker();
   });
 
-  const readMonth = () => {
-    const val = String(periodMonth?.value || '');
-    const m = val.match(/^(\d{4})-(\d{2})$/);
-    if (!m) return null;
-    return { y: Number(m[1]), m: Math.max(0, Math.min(11, Number(m[2]) - 1)) };
-  };
-
-  const applyMonth = ({ y, m }) => {
-    viewYear = y;
-    viewMonth = m;
-    rangeFromISO = "";
-    rangeToISO = "";
-    // keep selected day if it is within the new month; otherwise select 1st
-    const keepDay = selectedISO ? Number(String(selectedISO).slice(8,10)) : 1;
-    const maxDay = endOfMonth(viewYear, viewMonth).getDate();
-    const day = Math.max(1, Math.min(maxDay, keepDay));
-    selectedISO = `${viewYear}-${pad2(viewMonth+1)}-${pad2(day)}`;
-    render();
-  };
-
   const applyRange = (fromISO, toISO) => {
     if (!fromISO || !toISO) return;
     // normalize order
@@ -493,29 +590,39 @@
     render();
   };
 
-  if (periodFrom){
-    periodFrom.addEventListener('change', () => updatePeriodPreview(periodFrom.value || '', periodTo?.value || ''));
+  // Range picker controls
+  if (rpPrev){
+    rpPrev.addEventListener('click', () => {
+      const d = new Date(rpBaseYear, rpBaseMonth - 1, 1);
+      rpBaseYear = d.getFullYear();
+      rpBaseMonth = d.getMonth();
+      clearPresetActive();
+      renderRangePicker();
+    });
   }
-  if (periodTo){
-    periodTo.addEventListener('change', () => updatePeriodPreview(periodFrom?.value || '', periodTo.value || ''));
+  if (rpNext){
+    rpNext.addEventListener('click', () => {
+      const d = new Date(rpBaseYear, rpBaseMonth + 1, 1);
+      rpBaseYear = d.getFullYear();
+      rpBaseMonth = d.getMonth();
+      clearPresetActive();
+      renderRangePicker();
+    });
   }
-  if (periodMonth){
-    periodMonth.addEventListener('change', () => {
-      const mm = readMonth();
-      if (mm) applyMonth(mm);
+  for (const b of presetBtns){
+    b.addEventListener('click', () => {
+      clearPresetActive();
+      b.classList.add('active');
+      applyPreset(String(b.dataset.preset || ''));
     });
   }
 
   if (periodApply){
     periodApply.addEventListener('click', () => {
-      const fromISO = String(periodFrom?.value || '');
-      const toISO = String(periodTo?.value || '');
-      if (fromISO && toISO){
-        applyRange(fromISO, toISO);
-      } else {
-        const mm = readMonth();
-        if (mm) applyMonth(mm);
-      }
+      // If user picked only one date, treat as 1-day range
+      const fromISO = String(rpFromISO || '');
+      const toISO = String(rpToISO || rpFromISO || '');
+      if (fromISO && toISO) applyRange(fromISO, toISO);
       closePeriodPicker();
     });
   }
@@ -530,7 +637,11 @@
         if (p.length === 3){ viewYear = p[0]; viewMonth = p[1] - 1; }
       }
       render();
-      syncPeriodFields();
+      rpFromISO = "";
+      rpToISO = "";
+      setPeriodRangeField("", "");
+      clearPresetActive();
+      renderRangePicker();
     });
   }
 
@@ -567,7 +678,6 @@
       const d = dateFromISO(iso);
       if (d){ viewYear = d.getFullYear(); viewMonth = d.getMonth(); }
       render();
-      syncPeriodFields();
       try { monthGrid.setPointerCapture(e.pointerId); } catch(_){ }
       monthGrid.classList.add('is-selecting');
     }, { capture: true });
@@ -600,7 +710,6 @@
         rangeToISO = "";
       }
       render();
-      syncPeriodFields();
     };
     monthGrid.addEventListener('pointerup', endSelect);
     monthGrid.addEventListener('pointercancel', endSelect);
@@ -658,5 +767,4 @@
 
   // initial render
   render();
-  syncPeriodFields();
 })();

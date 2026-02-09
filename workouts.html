@@ -67,27 +67,50 @@
       </div>
 
       <div class="periodBody">
+        <!-- Single range field + full size range picker -->
         <div class="periodRow">
-          <label class="pwMetaLabel" for="periodFrom">From date</label>
-          <input id="periodFrom" class="dateField" type="date" />
-        </div>
-        <div class="periodRow">
-          <label class="pwMetaLabel" for="periodTo">To date</label>
-          <input id="periodTo" class="dateField" type="date" />
+          <label class="pwMetaLabel" for="periodRange">Period</label>
+          <input id="periodRange" class="dateField" type="text" readonly placeholder="Pick a date range" />
         </div>
 
-        <div class="periodHint">Tip: pick From/To to show only that period in the big calendar.</div>
+        <div class="rangePicker" id="rangePicker" aria-label="Date range picker">
+          <div class="rangePresets" role="listbox" aria-label="Presets">
+            <button type="button" class="presetBtn" data-preset="today">Today</button>
+            <button type="button" class="presetBtn" data-preset="yesterday">Yesterday</button>
+            <button type="button" class="presetBtn" data-preset="thisWeek">This week</button>
+            <button type="button" class="presetBtn" data-preset="lastWeek">Last week</button>
+            <button type="button" class="presetBtn" data-preset="past2w">Past 2 weeks</button>
+            <button type="button" class="presetBtn" data-preset="thisMonth">This month</button>
+            <button type="button" class="presetBtn" data-preset="lastMonth">Last month</button>
+          </div>
 
-        <div class="periodPreview" id="periodPreview" aria-hidden="true">
-          <div class="periodPreviewLabel" id="periodPreviewLabel">—</div>
-          <div class="periodPreviewBar"><span id="periodPreviewFill"></span></div>
-        </div>
+          <div class="rangeCal">
+            <div class="rangeCalHead">
+              <button type="button" class="calNav" id="rpPrev" aria-label="Previous month">‹</button>
+              <div class="calHeadLabel" id="rpLabel">—</div>
+              <button type="button" class="calNav" id="rpNext" aria-label="Next month">›</button>
+            </div>
 
-        <div class="periodDivider"></div>
+            <div class="rangeMonths" id="rpMonths">
+              <div class="monthPane" data-pane="0">
+                <div class="monthTitle" id="rpM0">—</div>
+                <div class="dowRow" aria-hidden="true">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+                <div class="monthGridSm" id="rpGrid0"></div>
+              </div>
 
-        <div class="periodRow">
-          <label class="pwMetaLabel" for="periodMonth">Jump to month</label>
-          <input id="periodMonth" class="dateField" type="month" />
+              <div class="monthPane" data-pane="1">
+                <div class="monthTitle" id="rpM1">—</div>
+                <div class="dowRow" aria-hidden="true">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+                <div class="monthGridSm" id="rpGrid1"></div>
+              </div>
+            </div>
+
+            <div class="rangeHint">Click a start date, then an end date. The selected period will show in the big calendar after Apply.</div>
+          </div>
         </div>
       </div>
 
