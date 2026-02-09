@@ -2862,56 +2862,7 @@ main.content h1{
 }
 
 /* Range highlight (selected period)
-   Goal: visible “slider/pill” inside the calendar like the reference.
-   We draw a soft rounded bar near the top of each selected day with a
-   subtle accent underline. */
-.month-cell.in-range.has-workout::before{
-  content:"";
-  position:absolute;
-  left: -1px;
-  right: -1px;
-  top: 34px;
-  height: 44px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-  pointer-events: none;
-  border-radius: 0;
-  z-index: 0;
-}
-
-.month-cell.in-range.has-workout::after{
-  content:"";
-  position:absolute;
-  left: 14px;
-  right: 14px;
-  top: 34px;
-  height: 44px;
-  /* Remove the purple accent line inside the tiles; keep only a neutral highlight */
-  border-bottom: 3px solid rgba(255,255,255,0.22);
-  border-bottom-left-radius: 999px;
-  border-bottom-right-radius: 999px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.month-cell.range-start.has-workout::before{
-  border-top-left-radius: 18px;
-  border-bottom-left-radius: 18px;
-}
-.month-cell.range-end.has-workout::before{
-  border-top-right-radius: 18px;
-  border-bottom-right-radius: 18px;
-}
-
-.month-cell.range-start.has-workout::after{ left: 18px; }
-.month-cell.range-end.has-workout::after{ right: 18px; }
-
-.month-cell.range-start,
-.month-cell.range-end{
-  border-color: rgba(255,255,255,.10);
-  box-shadow: none;
-}
+   Disabled: no inner bars/arcs. */
 
 /* Keep content above range visuals */
 .month-head, .month-list, .month-add{ position: relative; z-index: 2; }
