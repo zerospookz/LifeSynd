@@ -56,7 +56,7 @@
 </div>
 <div class="actionsRow">
 <input class="input" id="habitName" placeholder="New habit"/>
-<button onclick="addHabit()">Add habit</button>
+<button onclick="addHabit()">New habit</button>
 <span class="pill" style="margin-left:auto">Mark date</span>
 <input class="input" id="markDate" type="date"/>
 </div>
@@ -96,9 +96,9 @@
 <!-- Add habit modal (used on phone screens instead of browser prompt) -->
 <div class="modal" id="addHabitModal" aria-hidden="true" inert>
   <div class="modalBackdrop" data-close></div>
-  <div class="modalSheet" role="dialog" aria-modal="true" aria-label="Add habit">
+  <div class="modalSheet" role="dialog" aria-modal="true" aria-label="New habit">
     <div class="modalHeader">
-      <div class="modalTitle">Add habit</div>
+      <div class="modalTitle">New habit</div>
       <button class="iconBtn" id="addHabitClose" aria-label="Close">✕</button>
     </div>
     <div class="modalBody">
@@ -107,10 +107,16 @@
     </div>
     <div class="modalActions">
       <button class="btn ghost" id="addHabitCancel">Cancel</button>
-      <button class="btn primary" id="addHabitConfirm">Add</button>
+      <button class="btn primary" id="addHabitConfirm">Create</button>
     </div>
   </div>
 </div>
+
+<!-- Floating New Habit button (Dribbble-inspired) -->
+<button class="fabNewHabit" id="fabNewHabit" type="button" aria-label="New habit">
+  <span class="fabIcon" aria-hidden="true">+</span>
+  <span class="fabText">New habit</span>
+</button>
 
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="habits.js"></script>

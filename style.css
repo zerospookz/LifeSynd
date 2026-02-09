@@ -1572,6 +1572,81 @@ font-weight: 750;
   }
 }
 
+/* Floating New Habit button (Dribbble-inspired) */
+.fabNewHabit{
+  position: fixed;
+  right: 24px;
+  bottom: 92px; /* clears bottom nav */
+  height: 56px;
+  width: 56px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: #6A6EFF;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  z-index: 50;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+  transition: width 220ms ease, transform 120ms ease, box-shadow 220ms ease, filter 220ms ease;
+  animation: fabIntro 420ms ease both;
+}
+.fabNewHabit .fabIcon{
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 700;
+  transform: translateY(-1px);
+  transition: transform 220ms ease;
+}
+.fabNewHabit .fabText{
+  font-weight: 700;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 160ms ease, transform 220ms ease;
+}
+
+/* Expand on hover/focus to show label (matches Dribbble behavior) */
+.fabNewHabit:hover,
+.fabNewHabit:focus-visible{
+  width: 170px;
+  justify-content: flex-start;
+  filter: brightness(1.03);
+}
+.fabNewHabit:hover .fabText,
+.fabNewHabit:focus-visible .fabText{
+  opacity: 1;
+  transform: translateX(0);
+}
+.fabNewHabit:hover .fabIcon,
+.fabNewHabit:focus-visible .fabIcon{
+  transform: translateY(-1px) rotate(90deg);
+}
+
+.fabNewHabit:active{
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.30);
+}
+
+@keyframes fabIntro{
+  from{ opacity: 0; transform: translateY(14px) scale(0.98); }
+  to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (min-width: 901px){
+  .fabNewHabit{ bottom: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .fabNewHabit{ animation: none; transition: none; }
+  .fabNewHabit .fabIcon,
+  .fabNewHabit .fabText{ transition: none; }
+}
+
 /* On desktop show all panels (tabs are mobile-only) */
 @media (min-width: 901px){
   .tabPanel{display:block}

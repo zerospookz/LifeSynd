@@ -601,7 +601,7 @@ card.innerHTML = `
           <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
           <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
           </div>
-          <button class="btn primary addHabitInline" id="analyticsAddHabit" type="button">+ Add habit</button>
+          <!-- Primary action moved to the floating New Habit button -->
         </div>
         <div class="rangeNav" aria-label="Analytics period">
           <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
@@ -665,11 +665,7 @@ card.innerHTML = `
     renderAnalytics();
   });
 
-  // Inline add habit action (matches the new filter header UI)
-  const addInline = card.querySelector('#analyticsAddHabit');
-  if(addInline){
-    addInline.addEventListener('click', (e)=>openAddHabit(e.currentTarget));
-  }
+  // Primary add habit action lives in the floating button (bound once globally)
 
   if(!H || H.length===0){
     grid.innerHTML = '<p class="empty">Add a habit to see analytics.</p>';
@@ -2031,7 +2027,7 @@ function renderHero(){
       </div>
 
       <div class="heroActions">
-        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">Add habit</button>
+        <button class="heroPill onlyMobile" onclick="openAddHabit(this)">New habit</button>
       </div>
     </div>
   `;
@@ -2039,4 +2035,14 @@ function renderHero(){
   const wheel = el.querySelector("#heroArc");
   if(wheel) setHeroWheel(wheel, pct);
 }
+
+// Floating "New habit" action
+(() => {
+  const fab = document.getElementById("fabNewHabit");
+  if(!fab) return;
+  fab.addEventListener("click", (e)=>{
+    e.preventDefault();
+    openAddHabit(fab);
+  });
+})();
 
