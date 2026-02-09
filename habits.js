@@ -585,15 +585,17 @@ function renderAnalytics(){
 
   const dates = rangeDates(range, analyticsOffsetDays, cfg.dir);
   const rangeLabel = `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
+  const segIndex = ({ week:0, month:1, year:2, all:3 })[analyticsView] ?? 0;
 card.innerHTML = `
     <div class="cardHeader" style="align-items:flex-start">
       <div>
         <h3 class="cardTitle">Habits</h3>
         <p class="small" style="margin:6px 0 0">Tap to toggle · Drag to paint · <span class="badge">${offsetLabel}</span></p>
       </div>
-      <div class="analyticsControls analyticsFilter">
+        <div class="analyticsControls analyticsFilter">
         <div class="segRow">
-          <div class="seg segWide" role="tablist" aria-label="Habits range">
+          <div class="seg segWide" role="tablist" aria-label="Habits range" style="--seg-index:${segIndex}">
+          <div class="segIndicator" aria-hidden="true"></div>
           <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
           <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
           <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
