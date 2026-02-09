@@ -1126,18 +1126,22 @@ font-weight: 750;
 
 /* Extra small phones: keep Month/Year readable and avoid clipping */
 @media (max-width: 420px){
-  /* Give segments more vertical room so "All Time" can wrap without bleeding */
+  /* Small screens: keep labels on ONE line to avoid vertical bleed */
   .seg{ height: 52px; padding: 4px; }
   .segIndicator{ top: 6px; bottom: 6px; }
   .segBtn{
-    padding: 0 6px;
+    padding: 0 4px;
     font-size: 11px;
-    font-weight: 750;
-    white-space: normal;
-    line-height: 1.15;
+    font-weight: 760;
+    white-space: nowrap;
+    line-height: 1;
+    letter-spacing: 0;
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .segBtn:last-child{ font-size: 10.5px; }
+  /* "All Time" needs a touch smaller font to fit */
+  .segBtn:last-child{ font-size: 10px; }
   .segBtn:not(:last-child)::after{ top: 12px; bottom: 12px; opacity: .45; }
 }
 
@@ -1145,8 +1149,15 @@ font-weight: 750;
   /* Even smaller phones: keep everything inside the pill */
   .seg{ height: 56px; }
   .segIndicator{ top: 7px; bottom: 7px; }
-  .segBtn{ padding: 0 6px; font-size: 10px; }
-  .segBtn:last-child{ font-size: 9.5px; }
+  .segBtn{
+    padding: 0 3px;
+    font-size: 10px;
+    white-space: nowrap;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .segBtn:last-child{ font-size: 9px; }
 }
 
 /* Medium widths: keep the Habits filter header tidy (Year was breaking on low res) */
