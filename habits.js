@@ -1483,13 +1483,15 @@ function renderQuickMarkPanel(){
     const done = (h.datesDone||[]).includes(iso);
     const color = h.color || h.hex || h.col || "#5b7cfa";
     return `
-      <div class="qmRow ${done ? "isDone" : ""}" data-hid="${h.id}">
-        <div class="qmSwatch" style="background:${color}"></div>
+      <div class="qmRow ${done ? "isDone" : ""}" data-hid="${h.id}" style="--accent:${color}">
+        <div class="qmDot" aria-hidden="true"></div>
         <div class="qmMain">
           <div class="qmName">${escapeHtml(h.name||"Habit")}</div>
           <div class="qmMeta">${done ? "Completed" : "Not completed"}</div>
         </div>
-        <button class="btn small qmBtn">${done ? "Undo" : "Mark complete"}</button>
+        <button class="qmToggle" aria-label="${done ? "Undo" : "Mark complete"}" title="${done ? "Undo" : "Mark complete"}">
+          ${done ? "✓" : ""}
+        </button>
       </div>
     `;
   }).join("");
@@ -1507,7 +1509,7 @@ function renderQuickMarkPanel(){
   // Bind actions
   host.querySelectorAll(".qmRow").forEach(row=>{
     const hid = row.getAttribute("data-hid");
-    const btn = row.querySelector(".qmBtn");
+    const btn = row.querySelector(".qmToggle");
     if(!btn) return;
     btn.addEventListener("click", (e)=>{
       e.preventDefault();

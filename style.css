@@ -2317,10 +2317,13 @@ img.pulseOnce{
 #habitQuickMark .qmTitle{font-weight:700;font-size:14px;letter-spacing:.2px}
 #habitQuickMark .qmSub{font-size:12px;opacity:.7;margin-top:2px}
 #habitQuickMark .qmList{display:flex;flex-direction:column;gap:8px}
-#habitQuickMark .qmRow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
-#habitQuickMark .qmRow.isDone{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10)}
-#habitQuickMark .qmSwatch{width:10px;height:28px;border-radius:10px;opacity:.95;flex:0 0 auto}
+#habitQuickMark .qmRow{display:flex;align-items:center;gap:10px;padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+#habitQuickMark .qmRow.isDone{background:rgba(255,255,255,.06);border-color:color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.10))}
+#habitQuickMark .qmDot{width:10px;height:10px;border-radius:50%;background:transparent;border:2px solid color-mix(in srgb, var(--accent) 75%, rgba(255,255,255,.2));box-shadow:0 0 0 4px rgba(0,0,0,.18) inset;flex:0 0 auto}
+#habitQuickMark .qmRow.isDone .qmDot{background:var(--accent);border-color:transparent}
 #habitQuickMark .qmMain{min-width:0;flex:1 1 auto}
 #habitQuickMark .qmName{font-weight:650;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #habitQuickMark .qmMeta{font-size:12px;opacity:.7;margin-top:2px}
-#habitQuickMark .qmBtn{flex:0 0 auto}
+#habitQuickMark .qmToggle{flex:0 0 auto;width:46px;height:46px;border-radius:14px;border:1px solid color-mix(in srgb, var(--accent) 70%, rgba(255,255,255,.14));background:rgba(255,255,255,.02);color:rgba(255,255,255,.92);font-weight:900;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s ease, filter .12s ease, background .12s ease}
+#habitQuickMark .qmRow.isDone .qmToggle{background:color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.08));border-color:color-mix(in srgb, var(--accent) 72%, rgba(255,255,255,.12))}
+#habitQuickMark .qmToggle:active{transform:scale(.98)}
