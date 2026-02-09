@@ -1049,9 +1049,10 @@ font-weight: 750;
   background: transparent;
   border: 0;
   color: var(--muted);
-  padding: 0 14px;
+  /* Responsive padding so labels never wrap/bleed */
+  padding: 0 clamp(4px, 2.2vw, 14px);
   font-weight: 800;
-  font-size: 13px;
+  font-size: clamp(10px, 2.6vw, 13px);
   cursor: pointer;
   position: relative;
   z-index: 1;
@@ -1061,6 +1062,10 @@ font-weight: 750;
   display:flex;
   align-items:center;
   justify-content:center;
+  /* Never allow multi-line labels */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Thin dividers */
