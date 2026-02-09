@@ -270,12 +270,6 @@
         setPeriodRangeField(rpFromISO, rpToISO);
         renderRangePicker();
       });
-        rpToISO = iso;
-          normalizeRange();
-        }
-        setPeriodRangeField(rpFromISO, rpToISO);
-        renderRangePicker();
-      });
       targetEl.appendChild(btn);
     }
   }
