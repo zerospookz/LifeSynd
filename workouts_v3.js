@@ -325,8 +325,10 @@
     // Clear
     monthGrid.innerHTML = "";
 
-    // Calendar alignment: add leading blanks so the first day lands on correct weekday
-    const leading = periodStart.getDay(); // 0 Sun ... 6 Sat
+    // Calendar alignment:
+    // - Month view: keep weekday alignment (leading/trailing blanks)
+    // - Range view: render consecutively from the left (no blanks)
+    const leading = hasRange ? 0 : periodStart.getDay(); // 0 Sun ... 6 Sat
     const cells = [];
     for (let i=0;i<leading;i++) cells.push({ empty:true });
 
@@ -341,9 +343,11 @@
       iDay++;
       if (iDay > 400) break; // safety
     }
-    // trailing to complete weeks
-    const trailing = (7 - (cells.length % 7)) % 7;
-    for (let i=0;i<trailing;i++) cells.push({ empty:true });
+    // trailing to complete weeks (month view only)
+    if (!hasRange){
+      const trailing = (7 - (cells.length % 7)) % 7;
+      for (let i=0;i<trailing;i++) cells.push({ empty:true });
+    }
 
     const todayISO = isoFromDate(new Date());
 

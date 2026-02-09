@@ -83,9 +83,10 @@
 .rangePill.is-hidden .pillX{ display:none; }
 
 @media (max-width: 520px){
-  .workoutsDateControls{ width:100%; }
-  .rangePill{ flex: 1 1 100%; }
-  .rangePill .pillText{ flex:1; }
+  .workoutsTitleRow{ flex-direction:column; align-items:flex-start; }
+  .workoutsDateControls{ width:100%; align-items:stretch; }
+  .periodPill{ width:100%; justify-content:space-between; }
+  .periodPill .pillText{ flex:1; }
 }
 
 /* Range filter: desktop uses date inputs; mobile uses dual-thumb slider */
@@ -2886,7 +2887,8 @@ main.content h1{
   right: 14px;
   top: 34px;
   height: 44px;
-  border-bottom: 4px solid rgba(124,124,255,0.70);
+  /* Remove the purple accent line inside the tiles; keep only a neutral highlight */
+  border-bottom: 3px solid rgba(255,255,255,0.22);
   border-bottom-left-radius: 999px;
   border-bottom-right-radius: 999px;
   pointer-events: none;
@@ -2907,8 +2909,8 @@ main.content h1{
 
 .month-cell.range-start,
 .month-cell.range-end{
-  border-color: rgba(164, 122, 255, 0.65);
-  box-shadow: 0 0 0 2px rgba(164, 122, 255, 0.14);
+  border-color: rgba(255,255,255,.10);
+  box-shadow: none;
 }
 
 /* Keep content above range visuals */
