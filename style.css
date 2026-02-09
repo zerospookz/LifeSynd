@@ -1012,42 +1012,34 @@ font-weight: 750;
   justify-content:flex-end;
 }
 
-/* Segmented control (Week/Month/Year/All Time) */
+/* Segmented control (Week/Month/Year/All Time)
+   User request: remove the outer "pill" container.
+   We keep the same markup, but make the container transparent and
+   style each segment as its own pill.
+*/
 .seg{
   position: relative;
   display:flex;
   align-items:stretch;
-  width: 420px;
+  gap: 10px;
+  width: auto;
   max-width: 100%;
-  height: 48px;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--panel);
-  border: 1px solid var(--divider);
-  overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  height: 44px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  overflow: visible;
+  box-shadow: none;
 }
 
 /* Sliding active background */
-.segIndicator{
-  position:absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc((100% - 8px) / 4);
-  transform: translateX(calc(var(--seg-index, 0) * 100%));
-  border-radius: 999px;
-  background: var(--surfaceActive);
-  border: 1px solid var(--divider);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-  transition: transform 220ms ease;
-  pointer-events: none;
-}
+.segIndicator{ display:none; }
 
 .segBtn{
   flex: 1 1 0;
-  background: transparent;
-  border: 0;
+  background: var(--panel);
+  border: 1px solid var(--divider);
   color: var(--muted);
   /* Responsive padding so labels never wrap/bleed */
   padding: 0 clamp(4px, 2.2vw, 14px);
@@ -1063,21 +1055,17 @@ font-weight: 750;
   align-items:center;
   justify-content:center;
   /* Never allow multi-line labels */
-  white-space: nowrap;
+  white-space: nowrap !important;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0; /* critical for flex children to allow truncation */
 }
 
-/* Thin dividers */
-.segBtn:not(:last-child)::after{
-  content:"";
-  position:absolute;
-  right: -2px;
-  top: 10px;
-  bottom: 10px;
-  width: 1px;
-  background: rgba(46,52,85,.55);
-}
+/* Remove global button glossy overlay for segmented control buttons */
+.segBtn::after{ content: none !important; }
+
+/* No inner dividers when using separate pills */
+.segBtn:not(:last-child)::before{ content:none; }
 
 .segBtn:hover{
   color: var(--text);
@@ -1085,6 +1073,7 @@ font-weight: 750;
 
 .segBtn.active{
   color: #fff;
+  background: var(--surfaceActive);
 }
 
 /* Keep focus accessible without the old purple outline */
@@ -1131,9 +1120,8 @@ font-weight: 750;
 
 /* Extra small phones: keep Month/Year readable and avoid clipping */
 @media (max-width: 420px){
-  /* Small screens: keep labels on ONE line to avoid vertical bleed */
-  .seg{ height: 52px; padding: 4px; }
-  .segIndicator{ top: 6px; bottom: 6px; }
+  /* Small screens: shrink spacing, keep labels on ONE line */
+  .seg{ height: 40px; gap: 8px; }
   .segBtn{
     padding: 0 4px;
     font-size: 11px;
@@ -1147,13 +1135,12 @@ font-weight: 750;
   }
   /* "All Time" needs a touch smaller font to fit */
   .segBtn:last-child{ font-size: 10px; }
-  .segBtn:not(:last-child)::after{ top: 12px; bottom: 12px; opacity: .45; }
+  .segBtn:not(:last-child)::before{ content:none; }
 }
 
 @media (max-width: 360px){
-  /* Even smaller phones: keep everything inside the pill */
-  .seg{ height: 56px; }
-  .segIndicator{ top: 7px; bottom: 7px; }
+  /* Even smaller phones */
+  .seg{ height: 38px; gap: 6px; }
   .segBtn{
     padding: 0 3px;
     font-size: 10px;

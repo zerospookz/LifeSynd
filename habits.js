@@ -586,7 +586,7 @@ card.innerHTML = `
           <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
           <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
           <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
-          <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
+          <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
           </div>
           <!-- Primary action moved to the floating New Habit button -->
         </div>
