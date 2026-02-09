@@ -633,17 +633,8 @@ font-weight: 750;
   filter: brightness(1.06);
 }
 
-.matrixCell.done::after{
-  content:"";
-  width: 9px;
-  height: 16px;
-  border-right: 2px solid rgba(255,255,255,.92);
-  border-bottom: 2px solid rgba(255,255,255,.92);
-  display:block;
-  transform: rotate(40deg);
-  margin: 6px auto 0;
-  opacity: .9;
-}
+/* Completed cells are color-only (no checkmark). */
+.matrixCell.done::after{ content:""; display:none; }
 
 .matrixCell.missed::after{ content:""; display:none; }
 
