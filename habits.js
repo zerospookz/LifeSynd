@@ -36,6 +36,17 @@ function fmtMonthDay(iso){
     return iso.slice(5);
   }
 }
+
+// Format ISO date to e.g. "Mon, 2/4"
+function fmtDowShortMD(iso){
+  const d = new Date(iso+"T00:00:00");
+  try{
+    // Use numeric month/day to match compact UI.
+    return new Intl.DateTimeFormat(undefined,{weekday:"short", month:"numeric", day:"numeric"}).format(d);
+  }catch(e){
+    return iso;
+  }
+}
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 
@@ -495,28 +506,66 @@ function renderAnalytics(){
     });
   }
 
+  
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
-  // Mobile: show a 7-day viewport and allow paging via swipe.
-  const range = isMobile ? 7 : (analyticsView==="week" ? 14 : 60);
-  const step  = isMobile ? 7 : (analyticsView==="week" ? 14 : 30);
 
-  const viewLabel = analyticsView==="week" ? "2W" : "60D";
+  // Map views to window sizes. We keep ranges bounded for performance.
+  function getAnalyticsConfig(view){
+    const v = (view||"").toLowerCase();
+    if(v === "week") return { key:"week", range:7, step:7, dir:"forward" };
+    if(v === "month") return { key:"month", range:30, step:30, dir:"backward" };
+    if(v === "year") return { key:"year", range:365, step:30, dir:"backward" };
+
+    // All time: from earliest mark we have, capped.
+    let earliest = null;
+    (habits||[]).forEach(h=>{
+      (h.datesDone||[]).forEach(iso=>{
+        if(!earliest || iso < earliest) earliest = iso;
+      });
+    });
+    const todayIso = today();
+    let days = 60;
+    if(earliest){
+      const a = new Date(earliest+"T00:00:00");
+      const b = new Date(todayIso+"T00:00:00");
+      days = Math.max(7, Math.floor((b - a) / 86400000) + 1);
+    }
+    days = Math.min(days, 730); // cap to ~2 years for UI/perf
+    return { key:"all", range:days, step:30, dir:"backward" };
+  }
+
+  // Normalize stored value
+  if(!["week","month","year","all"].includes(analyticsView)) analyticsView = "month";
+
+  const cfg = getAnalyticsConfig(analyticsView);
+  const range = isMobile ? Math.min(7, cfg.range) : cfg.range;
+  const step  = isMobile ? 7 : cfg.step;
   const offsetLabel = analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`);
 
-  card.innerHTML = `
+
+  const dates = (analyticsView === "week")
+    ? rangeDates(range, analyticsOffsetDays, "forward")
+    : rangeDates(range, analyticsOffsetDays, "backward");
+  const rangeLabel = `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
+card.innerHTML = `
     <div class="cardHeader" style="align-items:flex-start">
       <div>
         <h3 class="cardTitle">Analytics</h3>
-        <p class="small" style="margin:6px 0 0">Tap to toggle · Drag to paint · <span class="badge">${viewLabel}</span> · <span class="badge">${offsetLabel}</span></p>
+        <p class="small" style="margin:6px 0 0">Tap to toggle · Drag to paint · <span class="badge">${offsetLabel}</span></p>
       </div>
-      <div class="analyticsControls">
-        <div class="seg" role="tablist" aria-label="Analytics range">
-          <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">2W</button>
-          <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">60D</button>
+      <div class="analyticsControls analyticsFilter">
+        <div class="seg segWide" role="tablist" aria-label="Analytics range">
+          <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
+          <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
+          <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
+          <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
         </div>
-        <button class="btn ghost" id="calPrev" type="button">←</button>
-        <button class="btn ghost" id="calToday" type="button">Today</button>
-        <button class="btn ghost" id="calNext" type="button">→</button>
+        <div class="rangeNav" aria-label="Analytics period">
+          <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
+          <div class="rangeLabel" id="rangeLabel">${rangeLabel}</div>
+          <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
+          <button class="btn ghost" id="calToday" type="button">Today</button>
+        </div>
       </div>
     </div>
 
@@ -568,10 +617,8 @@ function renderAnalytics(){
     return;
   }
 
-  // Week view should look forward (today → next N days). Month view remains historical.
-  const dates = analyticsView === "week"
-    ? rangeDates(range, analyticsOffsetDays, "forward")
-    : rangeDates(range, analyticsOffsetDays);
+  // Dates are computed above based on the selected view.
+
 
   const todayIso = today();
 
@@ -1443,21 +1490,7 @@ function syncSidePanels(){
 }
 
 function wireHabitsLayout(){
-  const sel = document.getElementById("dateRangeSelect");
-  const sel2 = document.getElementById("appWeekSelect");
-  const applyRange = (val)=>{
-    analyticsView = (val==="week") ? "week" : "month";
-    localStorage.setItem("habitsAnalyticsView", analyticsView);
-    render();
-  };
-  if(sel){
-    sel.value = (analyticsView==="week") ? "week" : "sixty";
-    sel.addEventListener("change", ()=>applyRange(sel.value));
-  }
-  if(sel2){
-    sel2.value = (analyticsView==="week") ? "week" : "sixty";
-    sel2.addEventListener("change", ()=>applyRange(sel2.value));
-  }
+  // Analytics filter UI is rendered inside the Analytics card header.
 
   const search = document.getElementById("habitSearch");
   if(search){
