@@ -47,6 +47,11 @@
   let rpToISO = "";
   let rpBaseYear = 0;
   let rpBaseMonth = 0; // 0..11 (first pane)
+  // range-picker drag-to-select
+  let rpIsDragging = false;
+  let rpDragAnchorISO = "";
+  let rpDragMoved = false;
+  let rpIgnoreNextClick = false;
 
   // ---- Month model ----
   // Month view is controlled by the Month + Date pickers in the header.
@@ -172,6 +177,12 @@
       a = addDays(s, -7); b = addDays(s, -1);
     } else if (name === 'past2w'){
       a = addDays(t, -13); b = t;
+    } else if (name === 'last30'){
+      a = addDays(t, -29); b = t;
+    } else if (name === 'next7'){
+      a = t; b = addDays(t, 6);
+    } else if (name === 'next30'){
+      a = t; b = addDays(t, 29);
     } else if (name === 'thisMonth'){
       a = startOfMonth(t.getFullYear(), t.getMonth());
       b = endOfMonth(t.getFullYear(), t.getMonth());
@@ -219,17 +230,47 @@
       // range highlight
       if (rpFromISO){
         const lo = rpFromISO;
-        const hi = rpToISO || rpFromISO;
-        if (iso >= lo && iso <= hi) btn.classList.add('inRange');
-        if (iso === lo || iso === hi) btn.classList.add('edge');
-      }
+        const hi = rpToISO || rpFromI// drag-to-range (pointer)
+      btn.addEventListener('pointerdown', (e) => {
+        // allow touch/pen drag selection
+        e.preventDefault();
+        clearPresetActive();
+        rpIsDragging = true;
+        rpDragMoved = false;
+        rpDragAnchorISO = iso;
+        rpFromISO = iso;
+        rpToISO = iso;
+        setPeriodRangeField(rpFromISO, rpToISO);
+        renderRangePicker();
+        try { btn.setPointerCapture(e.pointerId); } catch {}
+      });
+
+      btn.addEventListener('pointerenter', () => {
+        if (!rpIsDragging) return;
+        if (iso !== rpDragAnchorISO) rpDragMoved = true;
+        clearPresetActive();
+        rpFromISO = rpDragAnchorISO;
+        rpToISO = iso;
+        normalizeRange();
+        setPeriodRangeField(rpFromISO, rpToISO);
+        renderRangePicker();
+      });
+
+      // click selection (keyboard / simple click)
       btn.addEventListener('click', () => {
+        if (rpIgnoreNextClick) return;
         clearPresetActive();
         if (!rpFromISO || (rpFromISO && rpToISO)){
           rpFromISO = iso;
           rpToISO = '';
         } else {
           rpToISO = iso;
+          normalizeRange();
+        }
+        setPeriodRangeField(rpFromISO, rpToISO);
+        renderRangePicker();
+      });
+        rpToISO = iso;
           normalizeRange();
         }
         setPeriodRangeField(rpFromISO, rpToISO);
@@ -252,6 +293,30 @@
     buildMonthGrid(d0.getFullYear(), d0.getMonth(), rpGrid0);
     buildMonthGrid(d1.getFullYear(), d1.getMonth(), rpGrid1);
   }
+
+  // End drag on pointer up/cancel (works for mouse/touch/pen)
+  document.addEventListener('pointerup', () => {
+    if (!rpIsDragging) return;
+    rpIsDragging = false;
+    normalizeRange();
+    setPeriodRangeField(rpFromISO, rpToISO);
+    renderRangePicker();
+    // suppress click that may fire after drag
+    rpIgnoreNextClick = rpDragMoved;
+    rpDragMoved = false;
+    if (rpIgnoreNextClick) setTimeout(() => { rpIgnoreNextClick = false; }, 0);
+  }, { passive: true });
+
+  document.addEventListener('pointercancel', () => {
+    if (!rpIsDragging) return;
+    rpIsDragging = false;
+    normalizeRange();
+    setPeriodRangeField(rpFromISO, rpToISO);
+    renderRangePicker();
+    rpIgnoreNextClick = true;
+    rpDragMoved = false;
+    setTimeout(() => { rpIgnoreNextClick = false; }, 0);
+  }, { passive: true });
 
   // ---- DnD state ----
   let drag = null; // { workoutId, fromDate }
