@@ -758,7 +758,12 @@ font-weight: 750;
   .content{padding:22px 18px 44px}
 }
 
-/* Modal */
+/* Modal (shared)
+   Fix: the modal must open on desktop too.
+   We show the backdrop whenever `.modal.open` is present (no extra `.show` class required). */
+.modal{display:none; position:fixed; inset:0; z-index: 1000;}
+.modal.open{display:block}
+
 .modalBackdrop{
   position:fixed; inset:0;
   background: rgba(0,0,0,.55);
@@ -766,23 +771,29 @@ font-weight: 750;
   display:none;
   align-items:center;
   justify-content:center;
-  z-index: 50;
   padding: 18px;
 }
-.modalBackdrop.show{display:flex; animation: fadeInModal .18s ease}
+.modal.open .modalBackdrop{display:flex; animation: fadeInModal .18s ease}
 @keyframes fadeInModal{from{opacity:0}to{opacity:1}}
-/* Modal root (hidden by default on ALL breakpoints) */
-.modal{display:none}
-.modal.open{display:block}
 
-/* Desktop modal layout (mobile overrides below) */
+/* Desktop modal layout (mobile overrides later) */
 @media (min-width: 761px){
-  .modalBackdrop{ z-index: 200; }
-  .modalBackdrop.show{ display:flex; }
-}
-
+  .modalSheet{
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: min(480px, calc(100vw - 40px));
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(16,18,32,0.94);
+    box-shadow: 0 28px 90px rgba(0,0,0,0.65);
+    padding: 16px;
+    transform: translate(-50%, calc(-50% + 10px));
+    opacity: 0;
+    z-index: 1001;
+  }
   .modal.open .modalSheet{animation: desktopModalIn .18s ease-out forwards}
-  @keyframes desktopModalIn{to{transform: translateX(-50%) translateY(0); opacity:1}}
+  @keyframes desktopModalIn{to{transform:translate(-50%, -50%); opacity:1}}
 }
 .modalHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 .modalTitle{margin:0;font-size:1.05rem;font-weight:800;letter-spacing:-.03em}
@@ -1098,6 +1109,18 @@ font-weight: 750;
     width: 100%;
     text-align: center;
   }
+}
+
+/* Extra small phones: keep Month/Year readable and avoid clipping */
+@media (max-width: 420px){
+  .seg{ height: 44px; padding: 4px; }
+  .segIndicator{ top: 4px; bottom: 4px; }
+  .segBtn{ padding: 0 8px; font-size: 12px; font-weight: 750; white-space: nowrap; min-width: 0; }
+  .segBtn:not(:last-child)::after{ top: 9px; bottom: 9px; opacity: .45; }
+}
+
+@media (max-width: 360px){
+  .segBtn{ padding: 0 6px; font-size: 11px; }
 }
 
 /* Medium widths: keep the Habits filter header tidy (Year was breaking on low res) */
