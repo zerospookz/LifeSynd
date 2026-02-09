@@ -1126,14 +1126,27 @@ font-weight: 750;
 
 /* Extra small phones: keep Month/Year readable and avoid clipping */
 @media (max-width: 420px){
-  .seg{ height: 44px; padding: 4px; }
-  .segIndicator{ top: 4px; bottom: 4px; }
-  .segBtn{ padding: 0 8px; font-size: 12px; font-weight: 750; white-space: nowrap; min-width: 0; }
-  .segBtn:not(:last-child)::after{ top: 9px; bottom: 9px; opacity: .45; }
+  /* Give segments more vertical room so "All Time" can wrap without bleeding */
+  .seg{ height: 52px; padding: 4px; }
+  .segIndicator{ top: 6px; bottom: 6px; }
+  .segBtn{
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 750;
+    white-space: normal;
+    line-height: 1.15;
+    min-width: 0;
+  }
+  .segBtn:last-child{ font-size: 10.5px; }
+  .segBtn:not(:last-child)::after{ top: 12px; bottom: 12px; opacity: .45; }
 }
 
 @media (max-width: 360px){
-  .segBtn{ padding: 0 6px; font-size: 11px; }
+  /* Even smaller phones: keep everything inside the pill */
+  .seg{ height: 56px; }
+  .segIndicator{ top: 7px; bottom: 7px; }
+  .segBtn{ padding: 0 6px; font-size: 10px; }
+  .segBtn:last-child{ font-size: 9.5px; }
 }
 
 /* Medium widths: keep the Habits filter header tidy (Year was breaking on low res) */
