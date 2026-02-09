@@ -1489,9 +1489,7 @@ function renderQuickMarkPanel(){
           <div class="qmName">${escapeHtml(h.name||"Habit")}</div>
           <div class="qmMeta">${done ? "Completed" : "Not completed"}</div>
         </div>
-        <button class="qmToggle" aria-label="${done ? "Undo" : "Mark complete"}" title="${done ? "Undo" : "Mark complete"}">
-          ${done ? "✓" : ""}
-        </button>
+        <button class="qmToggle" aria-label="${done ? "Undo" : "Mark complete"}" title="${done ? "Undo" : "Mark complete"}"></button>
       </div>
     `;
   }).join("");
