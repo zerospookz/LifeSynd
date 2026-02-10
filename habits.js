@@ -154,8 +154,9 @@ function getCurrentViewMode(){
 function setHabitsViewMode(tab){
   const t = (tab||"grid").toLowerCase();
   try{ localStorage.setItem("habitsViewMode", t); }catch(e){}
-  const panels = Array.from(document.querySelectorAll(".tabPanel"));
-  panels.forEach(p=>p.classList.toggle("active", p.getAttribute("data-panel")===t));
+  // We keep the analytics card visible and swap content INSIDE it (matrix vs list)
+  // to avoid a "new page" feel.
+  document.body.classList.toggle("habitsViewList", t === "list");
 
   // Keep both the page-level toggle (mobile) and the in-header toggles (desktop) in sync.
   const allBtns = Array.from(document.querySelectorAll('.tabBtn[data-tab], .tabBtn[data-settab]'));
@@ -885,8 +886,29 @@ function renderAnalytics(){
         <div class="habitsRightControls">
           <button class="btn ghost miniBtn" id="calToday" type="button">Today</button>
           <div class="viewToggles" aria-label="View">
-            <button class="tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view"><span class="tabIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="4" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="13" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="13" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-            <button class="tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="Table view" title="Table view"><span class="tabIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 7h14M6 12h14M6 17h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 7h.01M4 12h.01M4 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span></button>
+            <!-- Grid icon: 2 columns x 3 rows (6 cells) -->
+            <button class="tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view">
+              <span class="tabIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect x="5" y="4" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="13" y="4" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="5" y="9.5" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="13" y="9.5" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="5" y="15" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="13" y="15" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+            </button>
+            <!-- List icon: 3 lines with different lengths (short / medium / long) -->
+            <button class="tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view">
+              <span class="tabIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M6 7h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M6 17h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -901,6 +923,12 @@ function renderAnalytics(){
     </div>
 
     <div class="matrixWrap"><div class="matrixGrid" id="matrixGrid"></div></div>
+
+    <!-- List view content swaps into the SAME card (below the header) to match the Dribbble demo. -->
+    <div class="listInGrid" id="habitList" aria-label="Habits list view"></div>
+
+    <!-- List view renders INSIDE the analytics card, swapping with the grid (Dribbble-style). -->
+    <div class="listInGrid" id="habitList" aria-label="Habits list"></div>
 
     <div class="matrixHelp">
       <div class="matrixHint">Tip: hold then drag to paint. Hold Shift to erase temporarily. Hold a habit name for 2.5s to remove it.</div>
@@ -1847,11 +1875,9 @@ function render(){
   renderQuickMarkPanel();
 
   
-  habitList.innerHTML="";
-  if(H.length===0){
-    habitList.innerHTML='<p class="empty">No habits yet. Add your first habit above.</p>';
-    return;
-  }
+  // List view content lives inside the analytics card (habitList element is created by renderHero).
+  const habitListEl = document.getElementById("habitList") || window.habitList;
+  if(habitListEl) habitListEl.innerHTML="";
 
   const date=getMarkDate();
   const viewMode = (()=> {
@@ -1864,8 +1890,13 @@ function render(){
     return (t === "list") ? "list" : "grid";
   })();
 
-  // Card/table content swaps inside Habits page, matching the UI demo.
+  // Swap the content INSIDE the analytics card (grid vs list), matching the UI demo.
   if(viewMode === "list"){
+    if(!habitListEl) return;
+    if(H.length===0){
+      habitListEl.innerHTML='<p class="empty">No habits yet. Add your first habit above.</p>';
+      return;
+    }
     const rows = H.map((h, idx)=>{
       const trend = computeTrendDeltaPct(h, analyticsView, analyticsOffsetDays);
       const set=new Set(h.datesDone||[]);
@@ -1899,43 +1930,10 @@ function render(){
         </div>
       `;
     }).join("");
-    habitList.innerHTML = `<div class="habitTable">${rows}</div>`;
+    habitListEl.innerHTML = `<div class="habitTable">${rows}</div>`;
   }else{
-    const cards = H.map((h, idx)=>{
-      const trend = computeTrendDeltaPct(h, analyticsView, analyticsOffsetDays);
-      const set=new Set(h.datesDone||[]);
-      const done=set.has(date);
-      const s=streakFor(h);
-      const deltaClass = trend.delta >= 0 ? "pos" : "neg";
-      const sign = trend.delta >= 0 ? "+" : "";
-      const w = Math.min(100, Math.abs(trend.delta));
-      return `
-        <div class="card habitSlide" data-index="${idx}" aria-label="Habit ${idx+1} of ${H.length}">
-          <div class="row" style="justify-content:space-between;align-items:flex-start">
-            <div>
-              <strong>${escapeHtml(h.name)}</strong>
-              <div class="small">Current: ${s.current} • Best: ${s.best}</div>
-            </div>
-            <span class="badge">${habitBadgeText(h, done)}</span>
-          </div>
-          <div class="trendWrap">
-            <div class="trendTop">
-              <span class="trendDelta ${deltaClass}">${sign}${Math.round(trend.delta)}%</span>
-              <span class="trendCaption">${trend.label}</span>
-            </div>
-            <div class="trendBar ${deltaClass}">
-              <div class="trendFill" style="width:${w}%"></div>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <span class="badge">Date: ${date}</span>
-            <span class="badge">Mark in grid</span>
-          </div>
-          ${miniHeatHtml(h)}
-        </div>
-      `;
-    }).join("");
-    habitList.innerHTML = `<div class="habitListStack">${cards}</div>`;
+    // Grid view: we only show the matrix; keep the list container empty.
+    if(habitListEl) habitListEl.innerHTML = "";
   }
 
 }
