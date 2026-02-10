@@ -57,6 +57,66 @@ function rangeDates(rangeDays, offsetDays, dir="backward"){
   return res;
 }
 
+function addMonths(d, months){
+  const x = new Date(d);
+  const day = x.getDate();
+  x.setDate(1);
+  x.setMonth(x.getMonth() + (months||0));
+  const last = new Date(x.getFullYear(), x.getMonth()+1, 0).getDate();
+  x.setDate(Math.min(day, last));
+  return x;
+}
+
+function addYears(d, years){
+  const x = new Date(d);
+  x.setFullYear(x.getFullYear() + (years||0));
+  return x;
+}
+
+function getBoundsForView(view, offset){
+  const v = (view||"week").toLowerCase();
+  const now = new Date();
+
+  if(v === "month"){
+    const base = addMonths(now, offset||0);
+    const y = base.getFullYear();
+    const m = base.getMonth();
+    return { start: new Date(y,m,1), end: new Date(y,m+1,0) };
+  }
+  if(v === "year"){
+    const base = addYears(now, offset||0);
+    const y = base.getFullYear();
+    return { start: new Date(y,0,1), end: new Date(y,11,31) };
+  }
+
+  // week + all: use rolling windows in days.
+  const base = new Date(now);
+  base.setDate(base.getDate() + (offset||0));
+  if(v === "all"){
+    // bounds for "All" are handled elsewhere (earliest mark). Provide a reasonable default.
+    const end = new Date(base);
+    const start = new Date(base);
+    start.setDate(end.getDate()-29);
+    return { start, end };
+  }
+
+  // week
+  const end = new Date(base);
+  const start = new Date(base);
+  start.setDate(end.getDate()-6);
+  return { start, end };
+}
+
+function datesFromBounds(bounds){
+  const out = [];
+  const d = new Date(bounds.start);
+  while(d <= bounds.end){
+    out.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+
 // Format ISO date (YYYY-MM-DD) to e.g. "Jan 29"
 function fmtMonthDay(iso){
   const d = new Date(iso+"T00:00:00");
@@ -87,39 +147,58 @@ function isoDate(d){
 }
 function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 
+function getCurrentViewMode(){
+  try{ return localStorage.getItem("habitsViewMode") || "grid"; }catch(e){ return "grid"; }
+}
+
+function setHabitsViewMode(tab){
+  const t = (tab||"grid").toLowerCase();
+  try{ localStorage.setItem("habitsViewMode", t); }catch(e){}
+  const panels = Array.from(document.querySelectorAll(".tabPanel"));
+  panels.forEach(p=>p.classList.toggle("active", p.getAttribute("data-panel")===t));
+
+  // Keep both the page-level toggle (mobile) and the in-header toggles (desktop) in sync.
+  const allBtns = Array.from(document.querySelectorAll('.tabBtn[data-tab], .tabBtn[data-settab]'));
+  allBtns.forEach(b=>{
+    const k = b.getAttribute('data-tab') || b.getAttribute('data-settab') || "grid";
+    b.classList.toggle('active', k===t);
+  });
+
+  try{ render(); }catch(e){}
+}
+
 // Returns period bounds for the current analyticsView.
 // Note: week uses a rolling 7-day window ending at (today+offsetDays).
 // month/year use calendar month/year containing (today+offsetDays).
-function getPeriodBounds(view, offsetDays){
+function getPeriodBounds(view, offset){
   const v=(view||"week").toLowerCase();
-  const base=new Date();
-  base.setDate(base.getDate() + (offsetDays||0));
+  const now=new Date();
 
   if(v==="month"){
+    const base=addMonths(now, offset||0);
     const y=base.getFullYear();
     const m=base.getMonth();
-    const start=new Date(y,m,1);
-    const end=new Date(y,m+1,0);
-    return { start, end, label:"vs last month", periodName:"month" };
+    return { start:new Date(y,m,1), end:new Date(y,m+1,0), label:"vs last month", periodName:"month" };
   }
   if(v==="year"){
+    const base=addYears(now, offset||0);
     const y=base.getFullYear();
-    const start=new Date(y,0,1);
-    const end=new Date(y,11,31);
-    return { start, end, label:"vs last year", periodName:"year" };
+    return { start:new Date(y,0,1), end:new Date(y,11,31), label:"vs last year", periodName:"year" };
   }
   if(v==="all"){
     // All-time comparison doesn't really make sense. Keep a neutral bar.
-    const start=new Date(base);
-    start.setDate(base.getDate()-6);
-    const end=new Date(base);
+    const end=new Date(now);
+    end.setDate(end.getDate() + (offset||0));
+    const start=new Date(end);
+    start.setDate(end.getDate()-6);
     return { start, end, label:"", periodName:"period" };
   }
 
-  // week (default)
-  const end=new Date(base);
-  const start=new Date(base);
-  start.setDate(base.getDate()-6);
+  // week (default): rolling 7-day window ending at (today + offsetDays)
+  const end=new Date(now);
+  end.setDate(end.getDate() + (offset||0));
+  const start=new Date(end);
+  start.setDate(end.getDate()-6);
   return { start, end, label:"vs last week", periodName:"week" };
 }
 
@@ -697,9 +776,10 @@ function renderAnalytics(){
   // Map views to window sizes. We keep ranges bounded for performance.
   function getAnalyticsConfig(view){
     const v = (view||"").toLowerCase();
-    if(v === "week") return { key:"week", range:7, step:7, dir:"forward" };
-    if(v === "month") return { key:"month", range:30, step:30, dir:"forward" };
-    if(v === "year") return { key:"year", range:365, step:365, dir:"forward" };
+    if(v === "week") return { key:"week", range:7, step:7, dir:"backward" };
+    // Month/Year are calendar-based; range is computed from bounds, step is in months/years.
+    if(v === "month") return { key:"month", range:31, step:1, dir:"calendar" };
+    if(v === "year") return { key:"year", range:366, step:1, dir:"calendar" };
 
     // All time: from earliest mark we have, capped.
     let earliest = null;
@@ -725,37 +805,98 @@ function renderAnalytics(){
   const cfg = getAnalyticsConfig(analyticsView);
   // Sync current offset from per-view storage
   analyticsOffsetDays = Number(analyticsOffsets[analyticsView]) || 0;
-  const range = isMobile ? Math.min(7, cfg.range) : cfg.range;
-  const step  = isMobile ? 7 : cfg.step;
-  const offsetLabel = analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`);
 
+  // For week/month/year we use calendar bounds (month/year) and rolling bounds (week).
+  // On mobile, we still render a 7-day viewport, but bounds/range labels remain correct.
+  let dates = [];
+  let range = cfg.range;
+  if(analyticsView === "all"){
+    range = isMobile ? Math.min(7, cfg.range) : cfg.range;
+    dates = rangeDates(range, analyticsOffsetDays, cfg.dir);
+  }else{
+    const bounds = getBoundsForView(analyticsView, analyticsOffsetDays);
+    dates = datesFromBounds(bounds);
+    range = dates.length;
+    if(isMobile) dates = dates.slice(Math.max(0, dates.length-7));
+  }
 
-  const dates = rangeDates(range, analyticsOffsetDays, cfg.dir);
+  const step  = (analyticsView === "week" || analyticsView === "all")
+    ? (isMobile ? 7 : cfg.step)
+    : cfg.step;
+  const offsetLabel = (analyticsView==="month")
+    ? (analyticsOffsetDays===0 ? "This month" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}m` : `${analyticsOffsetDays}m`))
+    : (analyticsView==="year")
+      ? (analyticsOffsetDays===0 ? "This year" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}y` : `${analyticsOffsetDays}y`))
+      : (analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`));
   const rangeLabel = `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
   const segIndex = ({ week:0, month:1, year:2, all:3 })[analyticsView] ?? 0;
-card.innerHTML = `
-    <div class="cardHeader" style="align-items:flex-start">
-      <div>
-        <h3 class="cardTitle">Habits</h3>
-        <p class="small" style="margin:6px 0 0">Tap to toggle · Drag to paint · <span class="badge">${offsetLabel}</span></p>
-      </div>
-        <div class="analyticsControls analyticsFilter">
-        <div class="segRow">
-          <div class="seg segWide" role="tablist" aria-label="Habits range" style="--seg-index:${segIndex}">
+
+  // Overall (shared) underline bar stats
+  const totalCells = Math.max(1, (H||[]).length * (dates||[]).length);
+  let doneCells = 0;
+  (H||[]).forEach(h=>{
+    const set = new Set(h.datesDone||[]);
+    (dates||[]).forEach(iso=>{ if(set.has(iso)) doneCells++; });
+  });
+  const achievedPct = Math.round((doneCells / totalCells) * 100);
+
+  let deltaPct = 0;
+  let hasDelta = analyticsView !== "all";
+  if(hasDelta){
+    const curBounds = getPeriodBounds(analyticsView, analyticsOffsetDays);
+    const prevBounds = shiftPeriod(curBounds, analyticsView);
+    const curDates = datesFromBounds({ start: curBounds.start, end: curBounds.end });
+    const prevDates = datesFromBounds({ start: prevBounds.start, end: prevBounds.end });
+    const curTotal = Math.max(1, (H||[]).length * curDates.length);
+    const prevTotal = Math.max(1, (H||[]).length * prevDates.length);
+    let curDone = 0;
+    let prevDone = 0;
+    (H||[]).forEach(h=>{
+      const set = new Set(h.datesDone||[]);
+      curDates.forEach(iso=>{ if(set.has(iso)) curDone++; });
+      prevDates.forEach(iso=>{ if(set.has(iso)) prevDone++; });
+    });
+    const curP = (curDone / curTotal) * 100;
+    const prevP = (prevDone / prevTotal) * 100;
+    deltaPct = Math.round(curP - prevP);
+  }
+  const deltaAbs = Math.min(100, Math.abs(deltaPct));
+  const isUp = deltaPct >= 0;
+
+  card.innerHTML = `
+    <div class="habitsHeader">
+      <div class="habitsHeaderRow1">
+        <div class="seg segWide habitsRangeSeg" role="tablist" aria-label="Habits range" style="--seg-index:${segIndex}">
           <div class="segIndicator" aria-hidden="true"></div>
           <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
           <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
           <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
           <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
-          </div>
-          <!-- Primary action moved to the floating New Habit button -->
         </div>
-        <div class="rangeNav" aria-label="Analytics period">
+        <button class="btn secondary habitsAddBtn" id="addHabitDesktop" type="button">+ Add Habit</button>
+      </div>
+
+      <div class="habitsHeaderRow2">
+        <div class="habitsDateRow">
           <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
           <div class="rangeLabel" id="rangeLabel">${rangeLabel}</div>
           <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
-          <button class="btn ghost" id="calToday" type="button">Today</button>
         </div>
+        <div class="habitsRightControls">
+          <button class="btn ghost miniBtn" id="calToday" type="button">Today</button>
+          <div class="viewToggles" aria-label="View">
+            <button class="tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view"><span class="tabIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="4" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="13" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="13" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button class="tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="Table view" title="Table view"><span class="tabIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 7h14M6 12h14M6 17h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 7h.01M4 12h.01M4 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overallTrend ${hasDelta ? (isUp?"up":"down") : "neutral"}">
+        <div class="trendMeta">
+          ${hasDelta ? `<span class="trendDelta">${isUp?"Up":"Down"} ${deltaAbs}% from the period before</span>` : `<span class="trendDelta">All-time view</span>`}
+        </div>
+        <div class="trendBar" aria-hidden="true"><div class="trendFill" style="width:${deltaAbs}%"></div></div>
+        <div class="trendAchieved"><b>${achievedPct}%</b> achieved</div>
       </div>
     </div>
 
@@ -767,6 +908,23 @@ card.innerHTML = `
   `;
 
   const grid = card.querySelector("#matrixGrid");
+
+  // Desktop Add Habit button (FAB handles mobile)
+  const addBtn = card.querySelector("#addHabitDesktop");
+  if(addBtn){
+    addBtn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      try{ openAddHabit(addBtn); }catch(_){ }
+    });
+  }
+
+  // Desktop view toggles (grid / table)
+  card.querySelectorAll("[data-settab]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const t = btn.getAttribute("data-settab") || "grid";
+      setHabitsViewMode(t);
+    });
+  });
 
   // view toggle
   card.querySelectorAll("[data-view]").forEach(btn=>{
@@ -1880,7 +2038,7 @@ function wireHabitsLayout(){
   }
 
   // tabs (mobile)
-  const tabBtns = Array.from(document.querySelectorAll(".tabBtn"));
+  const tabBtns = Array.from(document.querySelectorAll(".tabBtn[data-tab]"));
   const panels = Array.from(document.querySelectorAll(".tabPanel"));
   tabBtns.forEach(btn=>{
     btn.addEventListener("click", ()=>{
