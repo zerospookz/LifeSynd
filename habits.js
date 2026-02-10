@@ -1099,138 +1099,73 @@ function renderAnalytics(){
       grid.appendChild(row);
     });
   } else {
-    // Mobile transpose
-    const habitCol = 152;
-    const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
-    const gap = 8;
-    // Slightly smaller cells on phone so more days fit comfortably.
-    const maxCell = 58;
-    const minCell = 34;
-    const avail = Math.max(0, wrapW - habitCol - gap*(dates.length+1));
-    const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, dates.length))));
-    grid.style.setProperty("--habitCol", habitCol+"px");
-    grid.style.setProperty("--cell", cell+"px");
+    // Mobile: Dribbble-style weekly list (circles)
+    grid.classList.add('mobileWeekTable');
+    grid.innerHTML = '';
 
-    const colTemplate = `var(--habitCol) repeat(${dates.length}, var(--cell))`;
-
-    const header = document.createElement("div");
-    header.className = "matrixHeaderRow";
-    header.style.gridTemplateColumns = colTemplate;
-
-    const corner = document.createElement("div");
-    corner.className = "matrixCorner";
-    corner.innerHTML = `
-      <div style="font-weight:800">Habits</div>
-      <div class="small" style="margin-top:4px;opacity:.85">Swipe ← →</div>
-    `;
-    header.appendChild(corner);
-
-    dates.forEach(iso=>{
-      const d = document.createElement("div");
-      d.className = "matrixDayHead";
-      // Mobile day chip (low resolution): show ONLY
-      // Row 1: month (2 letters)
-      // Row 2: day (2 digits)
-      const dd = new Date(iso+"T00:00:00");
-      let mon = "";
-      let day = "";
-      try{
-        mon = new Intl.DateTimeFormat(undefined,{month:"short"}).format(dd);
-        day = new Intl.DateTimeFormat(undefined,{day:"2-digit"}).format(dd);
-      }catch(e){
-        mon = iso.slice(5,7);
-        day = iso.slice(8,10);
-      }
-      // Force month to 2 letters for low-res chips (e.g. "Jan", "Feb" -> "Ja", "Fe").
-      // Trim common trailing punctuation from some locales (e.g. "ян.").
-      const mon2 = (String(mon).replace(/\./g, "").trim()).slice(0, 2);
-      d.innerHTML = `
-        <div class="d1"><span class="m" data-full="${mon}">${mon2}</span></div>
-        <div class="d2"><span class="n">${day}</span></div>
-      `;
-      header.appendChild(d);
+    // Day-of-week header (S M T W T F S)
+    const head = document.createElement('div');
+    head.className = 'mwtHead';
+    head.appendChild(Object.assign(document.createElement('div'), { className: 'mwtCorner' }));
+    (dates||[]).forEach(iso=>{
+      const d = new Date(iso+"T00:00:00");
+      let w = '';
+      try{ w = new Intl.DateTimeFormat(undefined,{weekday:'narrow'}).format(d); }
+      catch(_){ w = ['S','M','T','W','T','F','S'][d.getDay()] || ''; }
+      const c = document.createElement('div');
+      c.className = 'mwtDow';
+      c.textContent = String(w).toUpperCase();
+      head.appendChild(c);
     });
+    grid.appendChild(head);
 
-    grid.appendChild(header);
-    // No adaptive month/weekday shrinking here: low-res spec is fixed 2-letter month + 2-digit day.
+    // Habit rows
+    (H||[]).forEach(h=>{
+      const row = document.createElement('div');
+      row.className = 'mwtRow';
+      row.style.setProperty('--habit-accent', `hsl(${habitHue(h.id)} 70% 55%)`);
 
-    H.forEach(h=>{
-      const row = document.createElement("div");
-      row.className = "matrixRow";
-      row.style.gridTemplateColumns = colTemplate;
+      const left = document.createElement('div');
+      left.className = 'mwtLabel';
+      left.title = h.name;
+      left.innerHTML = `
+        <span class="mwtDot" aria-hidden="true"></span>
+        <span class="mwtName">${escapeHtml(h.name)}</span>
+      `;
+      bindHoldToDelete(left, h);
+      row.appendChild(left);
 
-      const name = document.createElement("div");
-      name.className = "matrixHabitName";
-      name.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
-      name.title = h.name;
-      name.innerHTML = `<span>${escapeHtml(h.name)}</span><div class="holdBar" aria-hidden="true"></div>`;
-      bindHoldToDelete(name, h);
-      row.appendChild(name);
+      const set = new Set(h.datesDone||[]);
+      let doneCount = 0;
 
-      dates.forEach(iso=>{
-        const cell = document.createElement("div");
-        cell.className = "matrixCell";
-        cell.style.setProperty("--habit-accent", `hsl(${habitHue(h.id)} 70% 55%)`);
-
-        const set = new Set(h.datesDone||[]);
+      (dates||[]).forEach(iso=>{
+        const cell = document.createElement('div');
+        cell.className = 'mwtCell matrixCell';
+        cell.style.setProperty('--habit-accent', `hsl(${habitHue(h.id)} 70% 55%)`);
         const done = set.has(iso);
-        if(done) cell.classList.add("done");
-        else if(iso < todayIso) cell.classList.add("missed");
-
+        if(done){ cell.classList.add('done'); doneCount++; }
+        else if(iso < todayIso) cell.classList.add('missed');
         if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
-          cell.classList.add("justChanged");
-          if(lastPulse.mode==="miss") cell.classList.add("pulseMiss");
+          cell.classList.add('justChanged');
+          if(lastPulse.mode==='miss') cell.classList.add('pulseMiss');
         }
-
         cell.dataset.hid = h.id;
         cell.dataset.iso = iso;
         row.appendChild(cell);
       });
 
+      // Right-side mini fraction (e.g., 3/6)
+      const frac = document.createElement('div');
+      frac.className = 'mwtFrac';
+      frac.textContent = `${doneCount}/${Math.max(1,(dates||[]).length)}`;
+      row.appendChild(frac);
+
       grid.appendChild(row);
     });
 
-    // Swipe paging (mobile viewport)
+    // Mobile weekly list doesn't need the swipe pager on the matrix wrapper.
     const wrap = card.querySelector('.matrixWrap');
-    if(wrap && !wrap.dataset.swipeBound){
-      wrap.dataset.swipeBound = '1';
-      let sx=0, sy=0;
-      let pointerDown=false;
-      wrap.addEventListener('pointerdown', (e)=>{
-        if(e.target && e.target.closest('.matrixCell')) return; // don't fight paint/tap
-        pointerDown=true;
-        sx=e.clientX; sy=e.clientY;
-        const startScrollLeft = wrap.scrollLeft;
-        wrap.dataset._swipeStartSL = String(startScrollLeft);
-      });
-      wrap.addEventListener('pointerup', (e)=>{
-        if(!pointerDown) return;
-        pointerDown=false;
-        const dx = e.clientX - sx;
-        const dy = e.clientY - sy;
-
-        // If the user actually scrolled the matrix horizontally, do NOT page the week.
-        const startSL = Number(wrap.dataset._swipeStartSL || 0);
-        const curSL = wrap.scrollLeft;
-        if(Math.abs(curSL - startSL) > 6) return;
-
-        // Only page when the user is at the scroll edges; otherwise the swipe is intended to pan the grid.
-        const maxScroll = Math.max(0, wrap.scrollWidth - wrap.clientWidth);
-        const atLeftEdge  = curSL <= 2;
-        const atRightEdge = curSL >= (maxScroll - 2);
-
-        if(Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
-        if(dx < 0 && !atRightEdge) return; // swiping left but not at end → just scroll
-        if(dx > 0 && !atLeftEdge)  return; // swiping right but not at start → just scroll
-
-        analyticsOffsetDays += (dx < 0 ? step : -step);
-        analyticsOffsets[analyticsView] = analyticsOffsetDays;
-        saveAnalyticsOffsets();
-        // legacy key no longer used
-        renderAnalytics();
-      });
-      wrap.addEventListener('pointercancel', ()=>{ pointerDown=false; });
-    }
+    if(wrap) wrap.dataset.swipeBound = '1';
   }
 
   // If user tapped "Today", ensure the viewport starts from the first day.

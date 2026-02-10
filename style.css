@@ -1671,6 +1671,87 @@ body.habitsViewList .listInGrid{ display:block; }
   .tabBtn.active .tabIcon svg{opacity:1;}
   .tabText{line-height:1;}
 
+  /* Mobile weekly list (Dribbble-style): circles instead of square cells */
+  .matrixWrap{overflow: visible;}
+  .matrixGrid.mobileWeekTable{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+    padding: 12px;
+  }
+  .matrixGrid.mobileWeekTable{ --mwt-dot: clamp(18px, 5.2vw, 26px); }
+  .mwtHead,
+  .mwtRow{
+    display:grid;
+    grid-template-columns: minmax(120px, 1fr) repeat(7, var(--mwt-dot)) 44px;
+    align-items:center;
+    column-gap: 10px;
+  }
+  .mwtCorner{height: 1px;} /* spacer */
+  .mwtDow{
+    font-size: 11px;
+    font-weight: 750;
+    color: rgba(255,255,255,0.55);
+    text-align:center;
+    letter-spacing: .08em;
+  }
+  .mwtLabel{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    min-width:0;
+    padding: 8px 10px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .mwtDot{
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--habit-accent, rgba(99,102,241,0.9));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--habit-accent, rgba(99,102,241,0.8)) 18%, transparent);
+    flex:0 0 auto;
+  }
+  .mwtName{
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mwtCell{
+    width: var(--mwt-dot);
+    height: var(--mwt-dot);
+    border-radius: 999px !important;
+    justify-self:center;
+  }
+  .mwtFrac{
+    font-size: 12px;
+    font-weight: 750;
+    color: rgba(255,255,255,0.62);
+    text-align:right;
+  }
+
+  /* Make the dot cells feel like "soft circles" */
+  .matrixGrid.mobileWeekTable .matrixCell{
+    border-radius: 999px !important;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .matrixGrid.mobileWeekTable .matrixCell.done{
+    background: color-mix(in srgb, var(--habit-accent) 32%, rgba(255,255,255,0.03));
+    border-color: color-mix(in srgb, var(--habit-accent) 55%, rgba(255,255,255,0.10));
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--habit-accent) 12%, transparent);
+  }
+  .matrixGrid.mobileWeekTable .matrixCell.missed{
+    background: rgba(255,255,255,0.02);
+    border-color: rgba(255,255,255,0.06);
+    opacity: 0.75;
+  }
+
   /* Hero action pills (Today / Add habit) — visually aligned with tabs but not identical. */
   .heroPill{
     padding: 10px 14px;
