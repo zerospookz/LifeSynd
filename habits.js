@@ -1,4 +1,7 @@
 "use strict";
+// Optional date input (some layouts include a date picker; Habits page currently doesn't).
+// We still declare it to avoid ReferenceError in strict mode.
+let markDate = null;
 // --- Analytics state (must be defined before first render) ---
 let analyticsView = localStorage.getItem("habitsAnalyticsView") || "month";
 
@@ -327,7 +330,10 @@ function escapeHtml(str){
 }
 
 function today(){return isoToday();}
-function getMarkDate(){ return markDate.value ? markDate.value : today(); }
+function getMarkDate(){
+  // If a date picker exists, use it. Otherwise default to today.
+  return (markDate && markDate.value) ? markDate.value : today();
+}
 
 const HUE_PALETTE = [140, 260, 20, 200, 320, 80, 0, 170, 240, 300, 110, 30];
 
@@ -1769,7 +1775,8 @@ function render(){
 
 
 // Re-render when the selected mark date changes (affects streaks + insights)
-if(typeof markDate!=="undefined"){
+// (Only if the optional date picker exists in the current layout.)
+if(markDate){
   markDate.addEventListener("change", ()=>render());
 }
 
@@ -1808,6 +1815,13 @@ function syncSidePanels(){
 
 function wireHabitsLayout(){
   // Analytics filter UI is rendered inside the Analytics card header.
+
+  // Optional date picker (some templates include it). If not present, we default to today.
+  markDate = document.getElementById("markDate");
+  if(markDate && !markDate.__wired){
+    markDate.__wired = true;
+    markDate.addEventListener("change", ()=>render());
+  }
 
   const search = document.getElementById("habitSearch");
   if(search){
