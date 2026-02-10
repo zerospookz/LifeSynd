@@ -1379,6 +1379,10 @@ font-weight: 750;
   #focusHint{margin-bottom: 12px}
 .bottomNav{display:none}
 
+/* Tabs/panels: keep only the active panel visible on all screen sizes. */
+.tabPanel{display:none}
+.tabPanel.active{display:block}
+
 .habitsTopbar{
   display:flex;
   align-items:flex-end;
@@ -1856,14 +1860,37 @@ font-weight: 750;
   .fabNewHabit .fabText{ transition: none; }
 }
 
-/* On desktop show all panels (tabs are mobile-only) */
-@media (min-width: 901px){
-  .tabPanel{display:block}
-}
-
 @media (max-width: 900px){ .sidebar{display:none} }
 
-@media (min-width: 901px){ .tabPanel[data-panel="stats"]{display:none} .habitsTabs{display:none} }
+/* Desktop: keep the analytics grid + list/table switcher; hide the legacy stats panel
+   because insights/streaks are duplicated into the right side panel. */
+@media (min-width: 901px){
+  .tabPanel[data-panel="stats"]{display:none}
+  .habitsTabs{display:flex}
+  .habitsTabs{gap:8px;margin: 8px 0 14px;}
+  .tabBtn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width: 44px;
+    height: 38px;
+    padding: 0;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.75);
+    font-weight: 650;
+    cursor: pointer;
+  }
+  .tabBtn.active{
+    color:#fff;
+    background: rgba(99,102,241,0.18);
+    border-color: rgba(99,102,241,0.35);
+  }
+  .tabIcon{display:inline-flex;align-items:center;justify-content:center;}
+  .tabIcon svg{width:1.15em;height:1.15em;opacity:0.9;}
+  .tabBtn.active .tabIcon svg{opacity:1;}
+}
 
 
 /* Habits: List tab stacked layout */
