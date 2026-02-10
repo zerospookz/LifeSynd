@@ -1014,8 +1014,12 @@ function renderAnalytics(){
     const corner = document.createElement("div");
     corner.className = "matrixCorner";
     corner.innerHTML = `
-      <div style="font-weight:800">Dates</div>
-      <div class="small" style="margin-top:4px;opacity:.85">${fmtMonthDay(dates[0])} → ${fmtMonthDay(dates[dates.length-1])}</div>
+      <div class="mcLabel">Dates</div>
+      <div class="mcRange">
+        <span>${fmtMonthDay(dates[0])}</span>
+        <span class="mcSep">–</span>
+        <span>${fmtMonthDay(dates[dates.length-1])}</span>
+      </div>
     `;
     header.appendChild(corner);
 
