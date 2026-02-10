@@ -1625,6 +1625,16 @@ body.habitsViewList .listInGrid{ display:block; }
   /* Reserve space for the fixed bottom nav so content doesn't sit underneath it */
   .content{padding-bottom: 116px;}
 
+  /* Mobile: keep the weekly table fully inside the card and prevent overflow when there are many habits */
+  .matrixWrap{
+    overflow: auto;
+    overflow-x: hidden;
+    max-height: min(620px, calc(100vh - 340px));
+    border-radius: 18px;
+  }
+  /* Remove the lighter sticky-date strip on mobile (it reads like an unwanted band) */
+  .matrixWrap::before{opacity: 0; width: 0;}
+
   .habitsAppbar{
     display:block;
     position: sticky;
@@ -1672,7 +1682,7 @@ body.habitsViewList .listInGrid{ display:block; }
   .tabText{line-height:1;}
 
   /* Mobile weekly list (Dribbble-style): circles instead of square cells */
-  .matrixWrap{overflow: visible;}
+  .matrixWrap{overflow: auto; overflow-x:hidden;}
   .matrixGrid.mobileWeekTable{
     display:flex;
     flex-direction:column;
