@@ -1011,20 +1011,15 @@ function renderAnalytics(){
     });
   }
 
-  // Desktop view toggles (grid / list)
-  // In Month view, the list icon acts as a "hamburger" that swaps the date row for the month panel.
+  // View toggles (grid / list)
+  // Requirement: the calendar grid and the list must be mutually exclusive.
+  // The list icon should ALWAYS switch to list mode (and hide the calendar),
+  // even in Month view.
   card.querySelectorAll("[data-settab]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      const t = btn.getAttribute("data-settab") || "grid";
-      if(analyticsView === "month"){
-        if(t === "list"){
-          setMonthInline(!monthInline?.classList.contains("open"));
-          return;
-        }
-        // grid icon closes drawer
-        setMonthInline(false);
-        return;
-      }
+      const t = (btn.getAttribute("data-settab") || "grid").toLowerCase();
+      // Always close the Month inline panel when switching modes.
+      setMonthInline(false);
       setHabitsViewMode(t);
     });
   });
