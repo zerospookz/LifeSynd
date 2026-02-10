@@ -1680,12 +1680,28 @@ body.habitsViewList .listInGrid{ display:block; }
     padding: 12px;
   }
   .matrixGrid.mobileWeekTable{ --mwt-dot: clamp(18px, 5.2vw, 26px); }
-  .mwtHead,
-  .mwtRow{
+  .mwtHead{
+    padding: 0 12px;
+  }
+  .mwtDowRow{
     display:grid;
-    grid-template-columns: minmax(120px, 1fr) repeat(7, var(--mwt-dot)) 44px;
+    grid-template-columns: repeat(7, var(--mwt-dot)) 44px;
     align-items:center;
     column-gap: 10px;
+    justify-content:start;
+  }
+  .mwtRow{
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+  }
+  .mwtCells{
+    display:grid;
+    grid-template-columns: repeat(7, var(--mwt-dot)) 44px;
+    align-items:center;
+    column-gap: 10px;
+    justify-content:start;
+    padding-left: 10px; /* align under label content */
   }
   .mwtCorner{height: 1px;} /* spacer */
   .mwtDow{
@@ -1734,6 +1750,7 @@ body.habitsViewList .listInGrid{ display:block; }
     color: rgba(255,255,255,0.62);
     text-align:right;
   }
+  .mwtFracHead{opacity:0;}
 
   /* Make the dot cells feel like "soft circles" */
   .matrixGrid.mobileWeekTable .matrixCell{

@@ -1106,7 +1106,8 @@ function renderAnalytics(){
     // Day-of-week header (S M T W T F S)
     const head = document.createElement('div');
     head.className = 'mwtHead';
-    head.appendChild(Object.assign(document.createElement('div'), { className: 'mwtCorner' }));
+    const dowRow = document.createElement('div');
+    dowRow.className = 'mwtDowRow';
     (dates||[]).forEach(iso=>{
       const d = new Date(iso+"T00:00:00");
       let w = '';
@@ -1115,8 +1116,11 @@ function renderAnalytics(){
       const c = document.createElement('div');
       c.className = 'mwtDow';
       c.textContent = String(w).toUpperCase();
-      head.appendChild(c);
+      dowRow.appendChild(c);
     });
+    // fraction spacer
+    dowRow.appendChild(Object.assign(document.createElement('div'), { className: 'mwtFracHead' }));
+    head.appendChild(dowRow);
     grid.appendChild(head);
 
     // Habit rows
@@ -1135,6 +1139,9 @@ function renderAnalytics(){
       bindHoldToDelete(left, h);
       row.appendChild(left);
 
+      const cellsWrap = document.createElement('div');
+      cellsWrap.className = 'mwtCells';
+
       const set = new Set(h.datesDone||[]);
       let doneCount = 0;
 
@@ -1151,14 +1158,16 @@ function renderAnalytics(){
         }
         cell.dataset.hid = h.id;
         cell.dataset.iso = iso;
-        row.appendChild(cell);
+        cellsWrap.appendChild(cell);
       });
 
       // Right-side mini fraction (e.g., 3/6)
       const frac = document.createElement('div');
       frac.className = 'mwtFrac';
       frac.textContent = `${doneCount}/${Math.max(1,(dates||[]).length)}`;
-      row.appendChild(frac);
+      cellsWrap.appendChild(frac);
+
+      row.appendChild(cellsWrap);
 
       grid.appendChild(row);
     });
