@@ -77,9 +77,40 @@ function fmtDowShortMD(iso){
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 
+// Normalize habit kinds on load (older builds didn't store this field).
+function normalizeHabitKinds(){
+  let changed = false;
+  for(const h of (habits||[])){
+    if(!h || typeof h !== 'object') continue;
+    if(h.kind !== 'positive' && h.kind !== 'negative'){
+      h.kind = 'positive';
+      changed = true;
+    }
+  }
+  if(changed) save();
+}
+
+function habitKind(h){
+  return (h && (h.kind === 'negative' || h.kind === 'positive')) ? h.kind : 'positive';
+}
+
+function habitDoneText(h, done){
+  return habitKind(h)==='negative' ? (done ? 'Avoided' : 'Slipped') : (done ? 'Completed' : 'Not completed');
+}
+
+function habitActionText(h, done){
+  if(done) return 'Undo';
+  return habitKind(h)==='negative' ? 'Mark avoided' : 'Mark complete';
+}
+
+function habitBadgeText(h, done){
+  return habitKind(h)==='negative' ? (done ? 'Avoided' : 'At risk') : (done ? 'Completed' : 'Due');
+}
+
 // Normalize hues on load so accents stay stable and unique.
 // (If older data had duplicates, we keep the first occurrence and reassign the rest.)
 try{
+  normalizeHabitKinds();
   ensureHabitHues();
   ensureUniqueHues();
 }catch(e){ /* ignore */ }
@@ -237,9 +268,10 @@ function fmtWeekday(iso){
 }
 
 
-function addHabitNamed(name){
+function addHabitNamed(name, kind='positive'){
   const n = (name||"").trim();
   if(!n) return;
+  kind = (kind === 'negative') ? 'negative' : 'positive';
   // Persist an explicit hue so the habit keeps a stable accent everywhere
   // (especially important in the transposed mobile grid).
   const used = new Set((habits||[]).map(h=>h.hue).filter(v=>typeof v==="number"));
@@ -260,10 +292,10 @@ function addHabitNamed(name){
       guard++;
     }
   }
-  habits.push({id:crypto.randomUUID(), name:n, created:today(), datesDone:[], hue});
+  habits.push({id:crypto.randomUUID(), name:n, kind, created:today(), datesDone:[], hue});
   save();
   render();
-  showToast("Habit added");
+  showToast(kind==='negative' ? "Negative habit added" : "Habit added");
 }
 
 // Ensure no two habits share the same hue. Keeps the first occurrence and reassigns duplicates.
@@ -324,6 +356,22 @@ function openAddHabitModal(triggerEl){
   modal.setAttribute('aria-hidden', 'false');
   document.documentElement.classList.add('modalOpen');
   input.value = '';
+
+  // Default to "positive" when opening.
+  try{
+    window.__addHabitKind = 'positive';
+    const seg = document.getElementById('habitKindSeg');
+    if(seg){
+      const btns = Array.from(seg.querySelectorAll('[data-kind]'));
+      btns.forEach(b=>{
+        const k = b.getAttribute('data-kind');
+        const active = (k === window.__addHabitKind);
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+    }
+  }catch(_e){}
+
   setTimeout(()=>input.focus(), 60);
 }
 
@@ -354,7 +402,8 @@ function confirmAddHabitModal(){
     input.focus();
     return;
   }
-  addHabitNamed(name);
+  const kind = (window.__addHabitKind === 'negative') ? 'negative' : 'positive';
+  addHabitNamed(name, kind);
   closeAddHabitModal();
 }
 
@@ -368,12 +417,12 @@ function toggleHabitAt(id, iso, opts={}){
   if(idx>=0){
     h.datesDone.splice(idx,1);
     nowDone = false;
-    showToast("Marked as missed");
+    showToast(habitKind(h)==='negative' ? "Marked as slipped" : "Marked as missed");
   }else{
     h.datesDone.push(iso);
     h.datesDone.sort();
     nowDone = true;
-    showToast("Marked done");
+    showToast(habitKind(h)==='negative' ? "Marked avoided" : "Marked done");
   }
   lastPulse = { hid: id, iso, mode: nowDone ? "done" : "miss" };
   save();
@@ -1472,9 +1521,9 @@ function renderQuickMarkPanel(){
         <div class="qmDot" aria-hidden="true"></div>
         <div class="qmMain">
           <div class="qmName">${escapeHtml(h.name||"Habit")}</div>
-          <div class="qmMeta">${done ? "Completed" : "Not completed"}</div>
+          <div class="qmMeta">${habitDoneText(h, done)}</div>
         </div>
-        <button class="qmToggle" aria-label="${done ? "Undo" : "Mark complete"}" title="${done ? "Undo" : "Mark complete"}"></button>
+        <button class="qmToggle" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}"></button>
       </div>
     `;
   }).join("");
@@ -1534,7 +1583,7 @@ function render(){
             <strong>${escapeHtml(h.name)}</strong>
             <div class="small">Current: ${s.current} • Best: ${s.best}</div>
           </div>
-          <span class="badge">${done?'Completed':'Due'}</span>
+          <span class="badge">${habitBadgeText(h, done)}</span>
         </div>
         <div style="margin-top:10px">
           <span class="badge">Date: ${date}</span>
@@ -1608,6 +1657,7 @@ function wireHabitsLayout(){
   if(modal && !modal.__wired){
     modal.__wired = true;
     const input = document.getElementById('addHabitModalInput');
+    const kindSeg = document.getElementById('habitKindSeg');
     const close = document.getElementById('addHabitClose');
     const cancel = document.getElementById('addHabitCancel');
     const confirm = document.getElementById('addHabitConfirm');
@@ -1618,6 +1668,24 @@ function wireHabitsLayout(){
     cancel && cancel.addEventListener('click', onClose);
     backdrop && backdrop.addEventListener('click', onClose);
     confirm && confirm.addEventListener('click', ()=>confirmAddHabitModal());
+
+    // Habit type (positive/negative)
+    if(kindSeg){
+      kindSeg.addEventListener('click', (ev)=>{
+        const btn = ev.target && ev.target.closest && ev.target.closest('[data-kind]');
+        if(!btn) return;
+        ev.preventDefault();
+        const kind = btn.getAttribute('data-kind');
+        window.__addHabitKind = (kind === 'negative') ? 'negative' : 'positive';
+        const btns = Array.from(kindSeg.querySelectorAll('[data-kind]'));
+        btns.forEach(b=>{
+          const k = b.getAttribute('data-kind');
+          const active = (k === window.__addHabitKind);
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+      });
+    }
     input && input.addEventListener('keydown', (ev)=>{
       if(ev.key==='Enter') confirmAddHabitModal();
       if(ev.key==='Escape') onClose();

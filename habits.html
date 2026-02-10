@@ -94,6 +94,12 @@
       <button class="iconBtn" id="addHabitClose" aria-label="Close">✕</button>
     </div>
     <div class="modalBody">
+      <div class="segRow" style="justify-content:flex-start; margin-bottom: 10px;">
+        <div class="seg segWide" id="habitKindSeg" role="tablist" aria-label="Habit type">
+          <button class="segBtn active" type="button" data-kind="positive" role="tab" aria-selected="true">Positive</button>
+          <button class="segBtn" type="button" data-kind="negative" role="tab" aria-selected="false">Negative</button>
+        </div>
+      </div>
       <input class="input modalInput" id="addHabitModalInput" placeholder="Habit name (e.g., Water 5 cups)" maxlength="28" />
       <div class="small">Keep it short and measurable.</div>
     </div>
