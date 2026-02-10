@@ -918,10 +918,21 @@ function renderAnalytics(){
       </div>
 
       <div class="habitsHeaderRow2">
-        <div class="habitsDateRow">
-          <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
-          <div class="rangeLabel" id="rangeLabel">${rangeLabel}</div>
-          <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
+        <div class="habitsDateSlot">
+          <div class="habitsDateRow" id="habitsDateRow">
+            <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
+            <div class="rangeLabel" id="rangeLabel">${rangeLabel}</div>
+            <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
+          </div>
+
+          <!-- Month list panel: replaces the date row when the list icon is pressed (Month view only). -->
+          <div class="monthInline" id="monthInline" aria-hidden="true">
+            <div class="monthInlineHeader">
+              <div class="monthInlineTitle">This month</div>
+              <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="monthInlineBody" id="monthInlineBody"></div>
+          </div>
         </div>
         <div class="habitsRightControls">
           <div class="viewToggles" aria-label="View">
@@ -966,17 +977,7 @@ function renderAnalytics(){
     <!-- List view renders INSIDE the analytics card (below the header) to match the Dribbble demo. -->
     <div class="listInGrid" id="habitList" aria-label="Habits list"></div>
 
-    <!-- Month drawer (Dribbble-style): on Month view, the list icon opens a habits panel for the month. -->
-    <div class="monthDrawer" id="monthDrawer" aria-hidden="true">
-      <div class="monthDrawerBackdrop" data-close></div>
-      <div class="monthDrawerSheet" role="dialog" aria-modal="true" aria-label="Monthly habits">
-        <div class="monthDrawerHeader">
-          <div class="monthDrawerTitle">This month</div>
-          <button class="iconBtn" id="monthDrawerClose" type="button" aria-label="Close">✕</button>
-        </div>
-        <div class="monthDrawerBody" id="monthDrawerBody"></div>
-      </div>
-    </div>
+    <!-- Month list panel renders inside the header area (replaces the date row). -->
 
     <div class="matrixHelp">
       <div class="matrixHint">Tip: hold then drag to paint. Hold Shift to erase temporarily. Hold a habit name for 2.5s to remove it.</div>
@@ -984,25 +985,21 @@ function renderAnalytics(){
   `;
 
   const grid = card.querySelector("#matrixGrid");
-  const monthDrawer = card.querySelector("#monthDrawer");
-  const monthDrawerBody = card.querySelector("#monthDrawerBody");
-  const monthDrawerTitle = card.querySelector(".monthDrawerTitle");
-  const monthDrawerClose = card.querySelector("#monthDrawerClose");
+  const monthInline = card.querySelector("#monthInline");
+  const monthInlineBody = card.querySelector("#monthInlineBody");
+  const monthInlineTitle = card.querySelector(".monthInlineTitle");
+  const monthInlineClose = card.querySelector("#monthInlineClose");
+  const habitsDateRow = card.querySelector("#habitsDateRow");
 
-  function setMonthDrawer(open){
-    if(!monthDrawer) return;
-    monthDrawer.classList.toggle("open", !!open);
-    monthDrawer.setAttribute("aria-hidden", open ? "false" : "true");
+  function setMonthInline(open){
+    if(!monthInline) return;
+    monthInline.classList.toggle("open", !!open);
+    monthInline.setAttribute("aria-hidden", open ? "false" : "true");
+    if(habitsDateRow) habitsDateRow.classList.toggle("hidden", !!open);
   }
 
-  // Close drawer on backdrop click / close button
-  if(monthDrawer){
-    monthDrawer.querySelectorAll("[data-close]").forEach(el=>{
-      el.addEventListener("click", ()=>setMonthDrawer(false));
-    });
-  }
-  if(monthDrawerClose){
-    monthDrawerClose.addEventListener("click", ()=>setMonthDrawer(false));
+  if(monthInlineClose){
+    monthInlineClose.addEventListener("click", ()=>setMonthInline(false));
   }
 
   // Desktop Add Habit button (FAB handles mobile)
@@ -1015,17 +1012,17 @@ function renderAnalytics(){
   }
 
   // Desktop view toggles (grid / list)
-  // In Month view, the list icon acts as a "hamburger" to open the month drawer (Dribbble-style).
+  // In Month view, the list icon acts as a "hamburger" that swaps the date row for the month panel.
   card.querySelectorAll("[data-settab]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const t = btn.getAttribute("data-settab") || "grid";
       if(analyticsView === "month"){
         if(t === "list"){
-          setMonthDrawer(!monthDrawer?.classList.contains("open"));
+          setMonthInline(!monthInline?.classList.contains("open"));
           return;
         }
         // grid icon closes drawer
-        setMonthDrawer(false);
+        setMonthInline(false);
         return;
       }
       setHabitsViewMode(t);
@@ -1040,7 +1037,7 @@ function renderAnalytics(){
       analyticsView = v;
       localStorage.setItem("habitsAnalyticsView", analyticsView);
       // Leaving Month view closes the drawer.
-      if(analyticsView !== "month") setMonthDrawer(false);
+      if(analyticsView !== "month") setMonthInline(false);
       // Reset offset when switching views so we start from the current period.
       analyticsOffsets[analyticsView] = 0;
       saveAnalyticsOffsets();
@@ -1107,9 +1104,9 @@ function renderAnalytics(){
     try{
       const m = new Date(bounds.start);
       const monthLabel = new Intl.DateTimeFormat(undefined,{month:"long", year:"numeric"}).format(m);
-      if(monthDrawerTitle) monthDrawerTitle.textContent = monthLabel;
+      if(monthInlineTitle) monthInlineTitle.textContent = monthLabel;
     }catch(e){
-      if(monthDrawerTitle) monthDrawerTitle.textContent = "This month";
+      if(monthInlineTitle) monthInlineTitle.textContent = "This month";
     }
 
     // Render calendar grid (Mon..Sun) with daily completion %.
@@ -1158,7 +1155,7 @@ function renderAnalytics(){
     grid.innerHTML = html;
 
     // Render month drawer content: habits + count of checked days in this month.
-    if(monthDrawerBody){
+    if(monthInlineBody){
       const rows = (H||[]).map(h=>{
         const done = countDoneInBounds(h, bounds);
         const pct = Math.round((done / Math.max(1, daysInMonth)) * 100);
@@ -1176,7 +1173,7 @@ function renderAnalytics(){
           </div>
         `;
       }).join('');
-      monthDrawerBody.innerHTML = rows || '<div class="empty">No habits yet.</div>';
+      monthInlineBody.innerHTML = rows || '<div class="empty">No habits yet.</div>';
     }
 
     // Month calendar is view-only; hide paint hint.

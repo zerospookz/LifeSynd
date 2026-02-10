@@ -1066,6 +1066,15 @@ font-weight: 750;
   flex-wrap:wrap;
 }
 .habitsDateRow{ display:flex; align-items:center; gap: 10px; }
+
+/* Month inline list panel (opens from the list icon in Month view) */
+.habitsDateSlot{ flex: 1; min-width: 0; }
+.hidden{ display:none !important; }
+.monthInline{ display:none; flex:1; min-width:0; background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 10px 10px; }
+.monthInline.open{ display:flex; flex-direction:column; gap: 10px; }
+.monthInlineHeader{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.monthInlineTitle{ font-weight: 900; letter-spacing: 0.2px; }
+.monthInlineBody{ max-height: 280px; overflow:auto; display:flex; flex-direction:column; gap:10px; padding-right: 4px; }
 .habitsRightControls{ display:flex; align-items:center; gap: 10px; }
 .viewToggles{ display:flex; align-items:center; gap: 8px; }
 .viewToggles .tabBtn{ width: 38px; height: 38px; border-radius: 14px; }
