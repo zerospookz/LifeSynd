@@ -884,7 +884,6 @@ function renderAnalytics(){
           <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
         </div>
         <div class="habitsRightControls">
-          <button class="btn ghost miniBtn" id="calToday" type="button">Today</button>
           <div class="viewToggles" aria-label="View">
             <!-- Grid icon: 2 columns x 3 rows (6 cells) -->
             <button class="tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view">
@@ -984,19 +983,23 @@ function renderAnalytics(){
     // legacy key no longer used
     renderAnalytics();
   });
-  card.querySelector("#calToday").addEventListener("click", ()=>{
-    // On phone we want a clean "today → next 7 days" view.
-    if(isMobile){
-      analyticsView = "week";
-      localStorage.setItem("habitsAnalyticsView", analyticsView);
-    }
-    analyticsOffsetDays = 0;
-    analyticsOffsets[analyticsView] = analyticsOffsetDays;
-    saveAnalyticsOffsets();
-    // legacy key no longer used
-    window.__resetMatrixScroll = true;
-    renderAnalytics();
-  });
+  // "Today" button removed by request. Keep null-safe logic in case older markup exists.
+  const todayBtn = card.querySelector("#calToday");
+  if(todayBtn){
+    todayBtn.addEventListener("click", ()=>{
+      // On phone we want a clean "today → next 7 days" view.
+      if(isMobile){
+        analyticsView = "week";
+        localStorage.setItem("habitsAnalyticsView", analyticsView);
+      }
+      analyticsOffsetDays = 0;
+      analyticsOffsets[analyticsView] = analyticsOffsetDays;
+      saveAnalyticsOffsets();
+      // legacy key no longer used
+      window.__resetMatrixScroll = true;
+      renderAnalytics();
+    });
+  }
 
   // Primary add habit action lives in the floating button (bound once globally)
 

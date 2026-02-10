@@ -80,10 +80,8 @@ body{
   margin:0;
   font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial;
   color:var(--text);
-  background:
-    radial-gradient(1200px 800px at 10% 10%, rgba(36,43,74,.55) 0%, transparent 55%),
-    radial-gradient(900px 700px at 92% 15%, rgba(106,110,255,.16) 0%, transparent 60%),
-    linear-gradient(180deg, var(--bg1), var(--bg0));
+  /* Requested: remove the "lighter band" / uneven top glow so backgrounds feel uniform across screens. */
+  background: var(--bg0);
 }
 
 a{color:inherit}
@@ -1071,6 +1069,11 @@ font-weight: 750;
 .habitsRightControls{ display:flex; align-items:center; gap: 10px; }
 .viewToggles{ display:flex; align-items:center; gap: 8px; }
 .viewToggles .tabBtn{ width: 38px; height: 38px; border-radius: 14px; }
+.viewToggles .tabBtn[data-settab="grid"] .tabIcon{
+  /* Requested: rotate ONLY the grid icon by 90deg (functionality stays the same). */
+  display: inline-flex;
+  transform: rotate(90deg);
+}
 .miniBtn{ padding: 8px 12px; border-radius: 14px; }
 
 .overallTrend{
