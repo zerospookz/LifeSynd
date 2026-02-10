@@ -1727,7 +1727,7 @@ body.habitsViewList .listInGrid{ display:block; }
     height: 8px;
     border-radius: 50%;
     background: var(--habit-accent, rgba(99,102,241,0.9));
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--habit-accent, rgba(99,102,241,0.8)) 18%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--habit-accent, rgba(99,102,241,0.8)) 18%, transparent);
     flex:0 0 auto;
   }
   .mwtName{
@@ -1759,9 +1759,9 @@ body.habitsViewList .listInGrid{ display:block; }
     border: 1px solid rgba(255,255,255,0.08);
   }
   .matrixGrid.mobileWeekTable .matrixCell.done{
-    background: color-mix(in srgb, var(--habit-accent) 32%, rgba(255,255,255,0.03));
-    border-color: color-mix(in srgb, var(--habit-accent) 55%, rgba(255,255,255,0.10));
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--habit-accent) 12%, transparent);
+    background: color-mix(in oklab, var(--habit-accent) 65%, transparent);
+    border-color: color-mix(in oklab, var(--habit-accent) 28%, rgba(255,255,255,.07));
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--habit-accent) 12%, transparent);
   }
   .matrixGrid.mobileWeekTable .matrixCell.missed{
     background: rgba(255,255,255,0.02);
