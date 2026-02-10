@@ -95,7 +95,10 @@ function habitKind(h){
 }
 
 function habitDoneText(h, done){
-  return habitKind(h)==='negative' ? (done ? 'Avoided' : 'Slipped') : (done ? 'Completed' : 'Not completed');
+  // For negative habits, a "done" mark means you successfully avoided the habit.
+  return habitKind(h)==='negative'
+    ? (done ? 'I avoided this' : 'I slipped')
+    : (done ? 'Completed' : 'Not completed');
 }
 
 function habitActionText(h, done){
