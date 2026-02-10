@@ -107,6 +107,19 @@ function getBoundsForView(view, offset){
   return { start, end };
 }
 
+// Calendar week bounds where the week starts on Monday (Mon..Sun)
+function getMondayWeekBounds(baseDate){
+  const d = new Date(baseDate);
+  // JS getDay(): 0=Sun..6=Sat. Convert to days since Monday.
+  const daysSinceMon = (d.getDay() + 6) % 7;
+  const start = new Date(d);
+  start.setHours(0,0,0,0);
+  start.setDate(start.getDate() - daysSinceMon);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return { start, end };
+}
+
 function datesFromBounds(bounds){
   const out = [];
   const d = new Date(bounds.start);
@@ -815,10 +828,22 @@ function renderAnalytics(){
     range = isMobile ? Math.min(7, cfg.range) : cfg.range;
     dates = rangeDates(range, analyticsOffsetDays, cfg.dir);
   }else{
-    const bounds = getBoundsForView(analyticsView, analyticsOffsetDays);
+    // On small screens, "Week" should be a calendar week that starts on Monday.
+    // Desktop keeps the rolling 7-day window behavior.
+    let bounds;
+    if(isMobile && analyticsView === "week"){
+      const weekOffset = Math.round((analyticsOffsetDays||0) / 7);
+      const base = new Date();
+      base.setDate(base.getDate() + weekOffset*7);
+      bounds = getMondayWeekBounds(base);
+    }else{
+      bounds = getBoundsForView(analyticsView, analyticsOffsetDays);
+    }
     dates = datesFromBounds(bounds);
     range = dates.length;
-    if(isMobile) dates = dates.slice(Math.max(0, dates.length-7));
+    // On small screens, Month is a true calendar view (show the whole month grid),
+    // while Year keeps a compact viewport for performance.
+    if(isMobile && analyticsView === "year") dates = dates.slice(Math.max(0, dates.length-7));
   }
 
   const step  = (analyticsView === "week" || analyticsView === "all")
@@ -844,8 +869,23 @@ function renderAnalytics(){
   let deltaPct = 0;
   let hasDelta = analyticsView !== "all";
   if(hasDelta){
-    const curBounds = getPeriodBounds(analyticsView, analyticsOffsetDays);
-    const prevBounds = shiftPeriod(curBounds, analyticsView);
+    // Keep comparisons consistent with the rendered dates.
+    let curBounds;
+    let prevBounds;
+    if(isMobile && analyticsView === "week"){
+      const weekOffset = Math.round((analyticsOffsetDays||0) / 7);
+      const base = new Date();
+      base.setDate(base.getDate() + weekOffset*7);
+      curBounds = getMondayWeekBounds(base);
+      const prevStart = new Date(curBounds.start);
+      prevStart.setDate(prevStart.getDate() - 7);
+      const prevEnd = new Date(curBounds.end);
+      prevEnd.setDate(prevEnd.getDate() - 7);
+      prevBounds = { start: prevStart, end: prevEnd };
+    }else{
+      curBounds = getPeriodBounds(analyticsView, analyticsOffsetDays);
+      prevBounds = shiftPeriod(curBounds, analyticsView);
+    }
     const curDates = datesFromBounds({ start: curBounds.start, end: curBounds.end });
     const prevDates = datesFromBounds({ start: prevBounds.start, end: prevBounds.end });
     const curTotal = Math.max(1, (H||[]).length * curDates.length);
@@ -923,11 +963,20 @@ function renderAnalytics(){
 
     <div class="matrixWrap"><div class="matrixGrid" id="matrixGrid"></div></div>
 
-    <!-- List view content swaps into the SAME card (below the header) to match the Dribbble demo. -->
-    <div class="listInGrid" id="habitList" aria-label="Habits list view"></div>
-
-    <!-- List view renders INSIDE the analytics card, swapping with the grid (Dribbble-style). -->
+    <!-- List view renders INSIDE the analytics card (below the header) to match the Dribbble demo. -->
     <div class="listInGrid" id="habitList" aria-label="Habits list"></div>
+
+    <!-- Month drawer (Dribbble-style): on Month view, the list icon opens a habits panel for the month. -->
+    <div class="monthDrawer" id="monthDrawer" aria-hidden="true">
+      <div class="monthDrawerBackdrop" data-close></div>
+      <div class="monthDrawerSheet" role="dialog" aria-modal="true" aria-label="Monthly habits">
+        <div class="monthDrawerHeader">
+          <div class="monthDrawerTitle">This month</div>
+          <button class="iconBtn" id="monthDrawerClose" type="button" aria-label="Close">✕</button>
+        </div>
+        <div class="monthDrawerBody" id="monthDrawerBody"></div>
+      </div>
+    </div>
 
     <div class="matrixHelp">
       <div class="matrixHint">Tip: hold then drag to paint. Hold Shift to erase temporarily. Hold a habit name for 2.5s to remove it.</div>
@@ -935,6 +984,26 @@ function renderAnalytics(){
   `;
 
   const grid = card.querySelector("#matrixGrid");
+  const monthDrawer = card.querySelector("#monthDrawer");
+  const monthDrawerBody = card.querySelector("#monthDrawerBody");
+  const monthDrawerTitle = card.querySelector(".monthDrawerTitle");
+  const monthDrawerClose = card.querySelector("#monthDrawerClose");
+
+  function setMonthDrawer(open){
+    if(!monthDrawer) return;
+    monthDrawer.classList.toggle("open", !!open);
+    monthDrawer.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+
+  // Close drawer on backdrop click / close button
+  if(monthDrawer){
+    monthDrawer.querySelectorAll("[data-close]").forEach(el=>{
+      el.addEventListener("click", ()=>setMonthDrawer(false));
+    });
+  }
+  if(monthDrawerClose){
+    monthDrawerClose.addEventListener("click", ()=>setMonthDrawer(false));
+  }
 
   // Desktop Add Habit button (FAB handles mobile)
   const addBtn = card.querySelector("#addHabitDesktop");
@@ -945,10 +1014,20 @@ function renderAnalytics(){
     });
   }
 
-  // Desktop view toggles (grid / table)
+  // Desktop view toggles (grid / list)
+  // In Month view, the list icon acts as a "hamburger" to open the month drawer (Dribbble-style).
   card.querySelectorAll("[data-settab]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const t = btn.getAttribute("data-settab") || "grid";
+      if(analyticsView === "month"){
+        if(t === "list"){
+          setMonthDrawer(!monthDrawer?.classList.contains("open"));
+          return;
+        }
+        // grid icon closes drawer
+        setMonthDrawer(false);
+        return;
+      }
       setHabitsViewMode(t);
     });
   });
@@ -960,6 +1039,8 @@ function renderAnalytics(){
       if(!v || v===analyticsView) return;
       analyticsView = v;
       localStorage.setItem("habitsAnalyticsView", analyticsView);
+      // Leaving Month view closes the drawer.
+      if(analyticsView !== "month") setMonthDrawer(false);
       // Reset offset when switching views so we start from the current period.
       analyticsOffsets[analyticsView] = 0;
       saveAnalyticsOffsets();
@@ -1012,6 +1093,97 @@ function renderAnalytics(){
 
 
   const todayIso = today();
+
+  // ------------------------
+  // Month calendar view (Dribbble-style)
+  // ------------------------
+  const viewMode = getCurrentViewMode();
+  if(analyticsView === "month" && viewMode === "grid"){
+    const bounds = getBoundsForView("month", analyticsOffsetDays);
+    const monthDates = datesFromBounds(bounds);
+    const daysInMonth = monthDates.length;
+
+    // Label the drawer with the month name.
+    try{
+      const m = new Date(bounds.start);
+      const monthLabel = new Intl.DateTimeFormat(undefined,{month:"long", year:"numeric"}).format(m);
+      if(monthDrawerTitle) monthDrawerTitle.textContent = monthLabel;
+    }catch(e){
+      if(monthDrawerTitle) monthDrawerTitle.textContent = "This month";
+    }
+
+    // Render calendar grid (Mon..Sun) with daily completion %.
+    const weekdayNames = (()=>{
+      // Always Monday-first to match the rest of the app.
+      const base = new Date("2020-06-01T00:00:00"); // Monday
+      const names = [];
+      for(let i=0;i<7;i++){
+        const d = new Date(base);
+        d.setDate(base.getDate()+i);
+        try{ names.push(new Intl.DateTimeFormat(undefined,{weekday:"narrow"}).format(d)); }
+        catch(_){ names.push(["M","T","W","T","F","S","S"][i]); }
+      }
+      return names;
+    })();
+
+    function pctForIso(iso){
+      const total = Math.max(1, H.length);
+      let done = 0;
+      for(const h of H){
+        if((h.datesDone||[]).includes(iso)) done++;
+      }
+      return Math.round((done/total)*100);
+    }
+
+    // Calendar start offset (Mon=0..Sun=6)
+    const first = new Date(bounds.start);
+    const offset = (first.getDay() + 6) % 7;
+
+    let html = '<div class="monthCal" role="grid" aria-label="Month calendar">';
+    html += '<div class="monthCalDow" aria-hidden="true">' + weekdayNames.map(n=>`<div class="dow">${escapeHtml(n)}</div>`).join('') + '</div>';
+    html += '<div class="monthCalGrid">';
+    for(let i=0;i<offset;i++) html += '<div class="calCell empty" aria-hidden="true"></div>';
+    for(const iso of monthDates){
+      const day = Number(iso.slice(8,10));
+      const pct = pctForIso(iso);
+      const isToday = iso === todayIso;
+      html += `
+        <button class="calCell ${isToday?"today":""}" type="button" data-iso="${iso}" style="--pct:${pct/100}" aria-label="${iso}, ${pct}%">
+          <div class="calDay">${day}</div>
+          <div class="calPct">${pct}%</div>
+        </button>
+      `;
+    }
+    html += '</div></div>';
+    grid.innerHTML = html;
+
+    // Render month drawer content: habits + count of checked days in this month.
+    if(monthDrawerBody){
+      const rows = (H||[]).map(h=>{
+        const done = countDoneInBounds(h, bounds);
+        const pct = Math.round((done / Math.max(1, daysInMonth)) * 100);
+        const hue = habitHue(h.id);
+        return `
+          <div class="monthHabitRow" style="--habit-accent:hsl(${hue} 70% 55%)">
+            <div class="mhrLeft">
+              <div class="mhrName">${escapeHtml(h.name)}</div>
+              <div class="mhrMeta">${done}/${daysInMonth} days</div>
+            </div>
+            <div class="mhrRight">
+              <div class="mhrBar" aria-hidden="true"><div class="mhrFill" style="width:${pct}%"></div></div>
+              <div class="mhrPct">${pct}%</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      monthDrawerBody.innerHTML = rows || '<div class="empty">No habits yet.</div>';
+    }
+
+    // Month calendar is view-only; hide paint hint.
+    const help = card.querySelector('.matrixHelp');
+    if(help) help.style.display = 'none';
+    return;
+  }
 
   // ------------------------
   // Desktop: dates (rows) x habits (cols)
