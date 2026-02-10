@@ -213,15 +213,66 @@ function render(){
   const habitsDue = habits.length;
   const habitsDone = habits.filter(h=>h.datesDone?.includes(today)).length;
   const habitsPct = habitsDue ? Math.round((habitsDone/Math.max(1,habitsDue))*100) : 0;
-  
+
+  // Week-over-week delta (last 7 days vs previous 7 days)
+  const addDays = (iso, d)=>{
+    const [y,m,dd] = iso.split("-").map(n=>parseInt(n,10));
+    const dt = new Date(Date.UTC(y, m-1, dd));
+    dt.setUTCDate(dt.getUTCDate() + d);
+    return dt.toISOString().slice(0,10);
+  };
+  const daysBack = (fromIso, count, startOffset=0)=>{
+    const out=[];
+    for(let i=0;i<count;i++){
+      out.push(addDays(fromIso, -(startOffset+i)));
+    }
+    return out;
+  };
+  const last7 = daysBack(today, 7, 0);   // today .. -6
+  const prev7 = daysBack(today, 7, 7);   // -7 .. -13
+
+  const countDoneIn = (range)=>{
+    let c=0;
+    for(const h of habits){
+      const set = new Set(h.datesDone||[]);
+      for(const d of range) if(set.has(d)) c++;
+    }
+    return c;
+  };
+
+  const possible = Math.max(1, habitsDue * 7);
+  const doneLast = countDoneIn(last7);
+  const donePrev = countDoneIn(prev7);
+  const rateLast = doneLast / possible;
+  const ratePrev = donePrev / possible;
+
+  // Relative delta vs previous week (fallback to percentage-point delta when prev is 0)
+  let delta = 0;
+  let deltaMode = "rel";
+  if(ratePrev > 0){
+    delta = Math.round(((rateLast - ratePrev) / ratePrev) * 100);
+  } else {
+    deltaMode = "pp";
+    delta = Math.round((rateLast - ratePrev) * 100);
+  }
+  const isUp = delta >= 0;
+  const deltaAbs = Math.min(100, Math.abs(delta));
+  const deltaLabel = deltaMode==="rel" ? `${isUp?"+":""}${delta}%` : `${isUp?"+":""}${delta}pp`;
+
   const hCard = $("dHabits");
   if(hCard){
     hCard.innerHTML = `
       <div class="cardHeader"><h3 class="cardTitle">Habits</h3><span class="badge ${habitsDue? (habitsDone===habitsDue?'ok':'warn'):'warn'}">${habitsDone}/${habitsDue}</span></div>
       <div class="metric">${habitsPct}%</div>
       <div class="small">${habitsDue? 'Completion rate today.':'Add your first habit to start streaks.'}</div>
+      <div class="deltaRow">
+        <div class="deltaText">${habitsDue ? 'vs last week <span class="'+(isUp?'up':'down')+'">'+deltaLabel+'</span>' : ''}</div>
+        <div class="deltaBar" aria-hidden="true"><div class="deltaFill ${isUp?'':'down'}" style="width:${habitsDue?deltaAbs:0}%"></div></div>
+      </div>
     `;
   }
+
+
 
   // Workouts KPI
   const wCard = $("dWorkouts");
