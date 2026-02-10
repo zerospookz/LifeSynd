@@ -2635,21 +2635,3 @@ img.pulseOnce{
 #habitQuickMark .qmRow.isDone .qmToggle{background:color-mix(in srgb, var(--accent) 78%, rgba(255,255,255,.06));
   border-color:color-mix(in srgb, var(--accent) 78%, rgba(255,255,255,.12))}
 #habitQuickMark .qmToggle:active{transform:scale(.98)}
-
-
-/* === Habit type UI upgrade === */
-.habit-icon{
-  width:14px;height:14px;flex-shrink:0;
-}
-.habit-icon.positive{
-  border-radius:50%;
-  border:2px solid #4f7cff;
-}
-.habit.completed .habit-icon.positive{
-  background:#4f7cff;
-}
-.habit-icon.negative{
-  color:#ff4d4d;
-  font-weight:700;
-  font-size:16px;
-}
