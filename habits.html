@@ -96,8 +96,20 @@
     <div class="modalBody">
       <div class="segRow" style="justify-content:flex-start; margin-bottom: 10px;">
         <div class="seg segWide" id="habitKindSeg" role="tablist" aria-label="Habit type">
-          <button class="segBtn active" type="button" data-kind="positive" role="tab" aria-selected="true">Positive</button>
-          <button class="segBtn" type="button" data-kind="negative" role="tab" aria-selected="false">Negative</button>
+          <button class="segBtn active" type="button" data-kind="positive" role="tab" aria-selected="true">
+            <svg class="segIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Positive</span>
+          </button>
+          <button class="segBtn" type="button" data-kind="negative" role="tab" aria-selected="false">
+            <svg class="segIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M8 12h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Negative</span>
+          </button>
         </div>
       </div>
       <input class="input modalInput" id="addHabitModalInput" placeholder="Habit name (e.g., Water 5 cups)" maxlength="28" />

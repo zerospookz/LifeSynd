@@ -1067,6 +1067,25 @@ font-weight: 750;
   background: var(--surfaceActive);
 }
 
+/* Habit type (Positive / Negative) segmented control accents */
+#habitKindSeg .segBtn{
+  gap: 8px;
+}
+#habitKindSeg .segBtn .segIcon{
+  flex: 0 0 auto;
+  opacity: .95;
+}
+#habitKindSeg .segBtn[data-kind="positive"].active{
+  background: rgba(34,197,94,.18);
+  color: #22c55e;
+  border-color: rgba(34,197,94,.26);
+}
+#habitKindSeg .segBtn[data-kind="negative"].active{
+  background: rgba(239,68,68,.18);
+  color: #ef4444;
+  border-color: rgba(239,68,68,.26);
+}
+
 /* Keep focus accessible without the old purple outline */
 .segBtn:focus-visible{
   box-shadow: 0 0 0 2px rgba(106,110,255,.28);
