@@ -1508,13 +1508,13 @@ function render(){
   if(markDate && !markDate.value) markDate.value=today();
   const H = getFilteredHabits();
 
-  renderAnalytics();
+  // The app previously rendered multiple Habits UIs (analytics grid + quick-mark list + cards).
+  // We keep only the card list UI to avoid duplicates.
   renderInsights();
   renderStreakSummary();
   renderHero();
   renderFocusCard();
   syncSidePanels();
-  renderQuickMarkPanel();
 
   habitList.innerHTML="";
   if(H.length===0){
@@ -1538,7 +1538,6 @@ function render(){
         </div>
         <div style="margin-top:10px">
           <span class="badge">Date: ${date}</span>
-          <span class="badge">Mark in grid</span>
         </div>
         ${miniHeatHtml(h)}
       </div>

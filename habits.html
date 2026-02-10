@@ -43,33 +43,16 @@
 </div>
 </header>
 <section class="habitsHero" id="habitsHero"></section>
-<div class="habitsTabs">
-<button class="tabBtn active" data-tab="grid">Grid</button>
-<button class="tabBtn" data-tab="list">List</button>
-<button class="tabBtn" data-tab="stats">Stats</button>
-</div>
+<!-- Simplified Habits view: keep only the card list UI (no duplicate grid/quick-mark views). -->
 <div class="habitsLayout">
 <div class="habitsMain">
 <div class="actionsRow habitsMarkRow">
   <span class="pill">Mark date</span>
   <input class="input" id="markDate" type="date"/>
 </div>
-<section class="tabPanel active" data-panel="grid">
-<div class="card analyticsCard" id="habitAnalytics"></div>
-</section>
-<section class="tabPanel" data-panel="list">
 <div class="grid" id="habitList"></div>
-</section>
-<section class="tabPanel" data-panel="stats">
-<div class="grid insightsGrid">
-<div class="card" id="insights"></div>
-<div class="card focusCard" id="focusHint"></div>
-<div class="card" id="streakSummary"></div>
-</div>
-</section>
 </div>
 <aside class="habitsRight">
-<div class="card" id="habitQuickMark"></div>
 <div class="card" id="streakSummarySide"></div>
 <div class="card" id="insightsSide"></div>
 </aside>
