@@ -3011,10 +3011,13 @@ img.pulseOnce{
 /* ----------------------
    Habits: Month calendar + month drawer (Dribbble-style)
 ---------------------- */
-.monthCal{width:100%}
+.monthCal{width:100%; box-sizing:border-box; padding: 2px;}
 .monthCalDow{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin: 10px 0 12px 0}
 .monthCalDow .dow{font-size:12px;color: rgba(255,255,255,0.55);text-align:center}
 .monthCalGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+
+/* Prevent edge clipping of the rounded calendar cells inside scroll containers */
+.monthCalGrid{box-sizing:border-box; padding: 2px;}
 
 .calCell{
   position:relative;
@@ -3038,6 +3041,8 @@ img.pulseOnce{
 
 @media (max-width: 520px){
   .monthCalGrid{gap:8px}
+  .monthCal{padding: 4px;}
+  .monthCalGrid{padding: 4px;}
   .calCell{min-height:58px;padding:9px 9px;border-radius:12px}
   .calPct{font-size:11px}
 }

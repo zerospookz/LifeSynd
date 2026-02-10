@@ -832,9 +832,9 @@ function renderAnalytics(){
     // Desktop keeps the rolling 7-day window behavior.
     let bounds;
     if(isMobile && analyticsView === "week"){
-      const weekOffset = Math.round((analyticsOffsetDays||0) / 7);
+      // Use the *actual* offset in days so week navigation stays aligned even near boundaries.
       const base = new Date();
-      base.setDate(base.getDate() + weekOffset*7);
+      base.setDate(base.getDate() + (analyticsOffsetDays||0));
       bounds = getMondayWeekBounds(base);
     }else{
       bounds = getBoundsForView(analyticsView, analyticsOffsetDays);
@@ -873,9 +873,9 @@ function renderAnalytics(){
     let curBounds;
     let prevBounds;
     if(isMobile && analyticsView === "week"){
-      const weekOffset = Math.round((analyticsOffsetDays||0) / 7);
+      // Keep comparisons consistent with the rendered dates and the day-based offset.
       const base = new Date();
-      base.setDate(base.getDate() + weekOffset*7);
+      base.setDate(base.getDate() + (analyticsOffsetDays||0));
       curBounds = getMondayWeekBounds(base);
       const prevStart = new Date(curBounds.start);
       prevStart.setDate(prevStart.getDate() - 7);
