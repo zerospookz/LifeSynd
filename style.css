@@ -427,14 +427,27 @@ input:focus,select:focus{
 
 /* Habits: matrix analytics (dates x habits) */
 .matrixWrap{
-  border: 1px solid var(--border);
+  position: relative;
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: 18px;
-  background: rgba(255,255,255,.02);
+  background: linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.012));
   padding: 12px;
   overflow: auto;
   /* Prevent mobile overscroll from revealing background seams */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Subtle background strip behind the sticky Dates column so it reads as a dedicated panel. */
+.matrixWrap::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: calc(var(--dateCol, 190px) + 12px);
+  background: linear-gradient(90deg, rgba(255,255,255,.045), rgba(255,255,255,0));
+  border-radius: 18px;
+  pointer-events: none;
+  opacity: .9;
 }
 .matrixGrid{display:grid;gap:8px;min-width:100%;--cell:54px;--dateCol:190px}
 .matrixHeaderRow{
@@ -452,8 +465,8 @@ input:focus,select:focus{
   left: 0;
   z-index: 4;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.022));
   padding: 10px 10px;
   font-size: .75rem;
   color: var(--muted);
@@ -465,6 +478,7 @@ input:focus,select:focus{
   align-items: flex-start;
   justify-content: flex-start;
   overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
 }
 .matrixHabit{
   --habit-accent: var(--accent);
@@ -488,9 +502,17 @@ input:focus,select:focus{
   z-index: 2;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.02);
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
   padding: 10px 10px;
   line-height: 1.15;
+}
+.matrixRow:hover .matrixDate{
+  border-color: rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+}
+.matrixRow.today .matrixDate{
+  border-color: rgba(99,102,241,.35);
+  box-shadow: 0 10px 24px rgba(99,102,241,.16), inset 0 1px 0 rgba(255,255,255,.06);
 }
 .matrixDate .d1{font-weight:700;letter-spacing:-.02em}
 .matrixDate .d2{font-size:.75rem;color:var(--muted);margin-top:2px}

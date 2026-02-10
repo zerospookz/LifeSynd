@@ -990,14 +990,19 @@ function renderAnalytics(){
   if(!isMobile){
     const dateCol = 190;
     // compute cell size to fill available width when there are few H
-    const wrapW = card.querySelector(".matrixWrap")?.clientWidth || 360;
+    const wrapEl = card.querySelector(".matrixWrap");
+    const wrapW = wrapEl?.clientWidth || 360;
     const gap = 8;
     const maxCell = 74;
     const minCell = 44;
     const avail = Math.max(0, wrapW - dateCol - gap*(H.length+1));
     const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, H.length))));
+    // Set sizing vars on both the grid and its scroll wrapper.
+    // The wrapper uses these to paint a subtle background strip behind the sticky date column.
     grid.style.setProperty("--dateCol", dateCol+"px");
     grid.style.setProperty("--cell", cell+"px");
+    wrapEl?.style.setProperty("--dateCol", dateCol+"px");
+    wrapEl?.style.setProperty("--cell", cell+"px");
 
     const colTemplate = `var(--dateCol) repeat(${H.length}, var(--cell))`;
 
