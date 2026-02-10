@@ -447,7 +447,7 @@ input:focus,select:focus{
   background: linear-gradient(90deg, rgba(255,255,255,.035), rgba(255,255,255,0));
   border-radius: 18px;
   pointer-events: none;
-  opacity: .75;
+  opacity: .45;
 }
 .matrixGrid{display:grid;gap:8px;min-width:100%;--cell:54px;--dateCol:190px}
 .matrixHeaderRow{
@@ -456,12 +456,18 @@ input:focus,select:focus{
   position: sticky;
   top: 0;
   z-index: 3;
-  /* A lighter "rail" so the header reads as part of the card, not a black slab */
-  background: linear-gradient(180deg, rgba(2,6,23,.72), rgba(2,6,23,.42));
+  
+  /* Closed, card-like header rail */
+  background: linear-gradient(180deg, rgba(15,23,42,.72), rgba(2,6,23,.52));
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 14px 36px rgba(0,0,0,.28);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding: 6px 0 10px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
 }
 .matrixRow{display:grid;gap:8px;align-items:center}
 .matrixCorner{
@@ -2619,7 +2625,7 @@ img.pulseOnce{
 .exRow:hover{ background: rgba(255,255,255,.05); border-color: rgba(148,163,184,.14); }
 .exRowMain{ display:flex; flex-direction:column; gap: 3px; }
 .exRowTitle{ font-weight: 900; }
-.exRowMeta{ font-size: 12px; opacity: .75; }
+.exRowMeta{ font-size: 12px; opacity: .45; }
 
 /* "Create custom exercise" row */
 .exRowCreate{
@@ -2798,7 +2804,7 @@ img.pulseOnce{
 }
 #habitQuickMark .qmRow.isMissed .qmToggle{
   background: color-mix(in oklab, var(--accent) 12%, rgba(255,255,255,.03));
-  opacity: .75;
+  opacity: .45;
 }
 #habitQuickMark .qmToggle:active{transform:scale(.98)}
 
