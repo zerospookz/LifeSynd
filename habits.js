@@ -74,6 +74,108 @@ function fmtDowShortMD(iso){
     return iso;
   }
 }
+
+
+// ----------------------
+// Period comparison (for underline trend bar)
+// ----------------------
+function isoDate(d){
+  return d.toISOString().slice(0,10);
+}
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+// Returns period bounds for the current analyticsView.
+// Note: week uses a rolling 7-day window ending at (today+offsetDays).
+// month/year use calendar month/year containing (today+offsetDays).
+function getPeriodBounds(view, offsetDays){
+  const v=(view||"week").toLowerCase();
+  const base=new Date();
+  base.setDate(base.getDate() + (offsetDays||0));
+
+  if(v==="month"){
+    const y=base.getFullYear();
+    const m=base.getMonth();
+    const start=new Date(y,m,1);
+    const end=new Date(y,m+1,0);
+    return { start, end, label:"vs last month", periodName:"month" };
+  }
+  if(v==="year"){
+    const y=base.getFullYear();
+    const start=new Date(y,0,1);
+    const end=new Date(y,11,31);
+    return { start, end, label:"vs last year", periodName:"year" };
+  }
+  if(v==="all"){
+    // All-time comparison doesn't really make sense. Keep a neutral bar.
+    const start=new Date(base);
+    start.setDate(base.getDate()-6);
+    const end=new Date(base);
+    return { start, end, label:"", periodName:"period" };
+  }
+
+  // week (default)
+  const end=new Date(base);
+  const start=new Date(base);
+  start.setDate(base.getDate()-6);
+  return { start, end, label:"vs last week", periodName:"week" };
+}
+
+function shiftPeriod(bounds, view){
+  const v=(view||"week").toLowerCase();
+  if(v==="month"){
+    const s=bounds.start;
+    const prevStart=new Date(s.getFullYear(), s.getMonth()-1, 1);
+    const prevEnd=new Date(s.getFullYear(), s.getMonth(), 0);
+    return { start: prevStart, end: prevEnd };
+  }
+  if(v==="year"){
+    const y=bounds.start.getFullYear()-1;
+    return { start:new Date(y,0,1), end:new Date(y,11,31) };
+  }
+  // week/all fallback: previous 7 days
+  const prevEnd=new Date(bounds.start);
+  prevEnd.setDate(bounds.start.getDate()-1);
+  const prevStart=new Date(prevEnd);
+  prevStart.setDate(prevEnd.getDate()-6);
+  return { start: prevStart, end: prevEnd };
+}
+
+function countDoneInBounds(h, b){
+  const arr = (h && h.datesDone) ? h.datesDone : [];
+  if(!arr || arr.length===0) return 0;
+  const s = isoDate(b.start);
+  const e = isoDate(b.end);
+  let c=0;
+  for(const iso of arr){
+    if(typeof iso!=="string") continue;
+    if(iso>=s && iso<=e) c++;
+  }
+  return c;
+}
+
+function daysInBounds(b){
+  const ms = b.end.getTime() - b.start.getTime();
+  return Math.floor(ms / (24*3600*1000)) + 1;
+}
+
+// Returns { current, prev, delta, label, periodName }
+function computeTrendDeltaPct(h, view, offsetDays){
+  const bounds = getPeriodBounds(view, offsetDays);
+  const prevB = shiftPeriod(bounds, view);
+  const daysCur = Math.max(1, daysInBounds(bounds));
+  const daysPrev = Math.max(1, daysInBounds(prevB));
+  const curPct = (countDoneInBounds(h, bounds) / daysCur) * 100;
+  const prevPct = (countDoneInBounds(h, prevB) / daysPrev) * 100;
+  const delta = clamp(curPct - prevPct, -100, 100);
+  return {
+    current: curPct,
+    prev: prevPct,
+    delta,
+    label: bounds.label || "",
+    periodName: bounds.periodName || "period",
+  };
+}
+
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 
@@ -1571,38 +1673,100 @@ function render(){
   syncSidePanels();
   renderQuickMarkPanel();
 
+  
   habitList.innerHTML="";
   if(H.length===0){
-    habitList.innerHTML='<p class="empty">No H yet. Add your first habit above.</p>';
+    habitList.innerHTML='<p class="empty">No habits yet. Add your first habit above.</p>';
     return;
   }
 
   const date=getMarkDate();
-  const cards = H.map((h, idx)=>{
-    const set=new Set(h.datesDone||[]);
-    const done=set.has(date);
-    const s=streakFor(h);
-    return `
-      <div class="card habitSlide" data-index="${idx}" aria-label="Habit ${idx+1} of ${H.length}">
-        <div class="row" style="justify-content:space-between;align-items:flex-start">
-          <div>
-            <strong>${escapeHtml(h.name)}</strong>
-            <div class="small">Current: ${s.current} • Best: ${s.best}</div>
-          </div>
-          <span class="badge">${habitBadgeText(h, done)}</span>
-        </div>
-        <div style="margin-top:10px">
-          <span class="badge">Date: ${date}</span>
-          <span class="badge">Mark in grid</span>
-        </div>
-        ${miniHeatHtml(h)}
-      </div>
-    `;
-  }).join('');
+  const viewMode = (()=> {
+    try{
+      const stored = localStorage.getItem("habitsViewMode");
+      if(stored === "grid" || stored === "list") return stored;
+    }catch(e){}
+    const active = document.querySelector('.tabBtn.active');
+    const t = active ? active.getAttribute('data-tab') : null;
+    return (t === "list") ? "list" : "grid";
+  })();
 
-  habitList.innerHTML = `<div class="habitListStack">${cards}</div>`;
+  // Card/table content swaps inside Habits page, matching the UI demo.
+  if(viewMode === "list"){
+    const rows = H.map((h, idx)=>{
+      const trend = computeTrendDeltaPct(h, analyticsView, analyticsOffsetDays);
+      const set=new Set(h.datesDone||[]);
+      const done=set.has(date);
+      const s=streakFor(h);
+      const deltaClass = trend.delta >= 0 ? "pos" : "neg";
+      const sign = trend.delta >= 0 ? "+" : "";
+      const w = Math.min(100, Math.abs(trend.delta));
+      return `
+        <div class="habitTableRow" data-index="${idx}">
+          <div class="htrMain">
+            <div class="htrTitleRow">
+              <strong>${escapeHtml(h.name)}</strong>
+              <span class="badge">${habitBadgeText(h, done)}</span>
+            </div>
+            <div class="htrMeta small">Current: ${s.current} • Best: ${s.best}</div>
+            <div class="trendWrap">
+              <div class="trendTop">
+                <span class="trendDelta ${deltaClass}">${sign}${Math.round(trend.delta)}%</span>
+                <span class="trendCaption">${trend.label}</span>
+              </div>
+              <div class="trendBar ${deltaClass}">
+                <div class="trendFill" style="width:${w}%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="htrRight">
+            <div class="htrPct">${Math.round(trend.current)}%</div>
+            <div class="small">this ${trend.periodName}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+    habitList.innerHTML = `<div class="habitTable">${rows}</div>`;
+  }else{
+    const cards = H.map((h, idx)=>{
+      const trend = computeTrendDeltaPct(h, analyticsView, analyticsOffsetDays);
+      const set=new Set(h.datesDone||[]);
+      const done=set.has(date);
+      const s=streakFor(h);
+      const deltaClass = trend.delta >= 0 ? "pos" : "neg";
+      const sign = trend.delta >= 0 ? "+" : "";
+      const w = Math.min(100, Math.abs(trend.delta));
+      return `
+        <div class="card habitSlide" data-index="${idx}" aria-label="Habit ${idx+1} of ${H.length}">
+          <div class="row" style="justify-content:space-between;align-items:flex-start">
+            <div>
+              <strong>${escapeHtml(h.name)}</strong>
+              <div class="small">Current: ${s.current} • Best: ${s.best}</div>
+            </div>
+            <span class="badge">${habitBadgeText(h, done)}</span>
+          </div>
+          <div class="trendWrap">
+            <div class="trendTop">
+              <span class="trendDelta ${deltaClass}">${sign}${Math.round(trend.delta)}%</span>
+              <span class="trendCaption">${trend.label}</span>
+            </div>
+            <div class="trendBar ${deltaClass}">
+              <div class="trendFill" style="width:${w}%"></div>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <span class="badge">Date: ${date}</span>
+            <span class="badge">Mark in grid</span>
+          </div>
+          ${miniHeatHtml(h)}
+        </div>
+      `;
+    }).join("");
+    habitList.innerHTML = `<div class="habitListStack">${cards}</div>`;
+  }
 
 }
+
 
 // Re-render when the selected mark date changes (affects streaks + insights)
 if(typeof markDate!=="undefined"){
@@ -1707,8 +1871,11 @@ function wireHabitsLayout(){
   tabBtns.forEach(btn=>{
     btn.addEventListener("click", ()=>{
       tabBtns.forEach(b=>b.classList.toggle("active", b===btn));
-      const tab = btn.getAttribute("data-tab");
+      const tab = btn.getAttribute("data-tab") || "grid";
+      try{ localStorage.setItem("habitsViewMode", tab); }catch(e){}
       panels.forEach(p=>p.classList.toggle("active", p.getAttribute("data-panel")===tab));
+      // Swap the content inside Habits page (grid vs table view)
+      try{ render(); }catch(e){}
       // On desktop, keep all visible via CSS
       if(tab==="stats"){ try{ renderFocusCard(); }catch(e){} }
     });
