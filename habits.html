@@ -95,7 +95,18 @@
     </div>
     <div class="modalBody">
       <input class="input modalInput" id="addHabitModalInput" placeholder="Habit name (e.g., Water 5 cups)" maxlength="28" />
-      <div class="small">Keep it short and measurable.</div>
+      
+   <div class="habitTypePicker" role="radiogroup" aria-label="Habit type">
+     <button type="button" class="typeOption active" data-habit-type="positive" aria-checked="true" role="radio">
+       <span class="typeIcon">○</span>
+       <span>Positive</span>
+     </button>
+     <button type="button" class="typeOption" data-habit-type="negative" aria-checked="false" role="radio">
+       <span class="typeIcon">✕</span>
+       <span>Negative</span>
+     </button>
+   </div>
+<div class="small">Keep it short and measurable.</div>
     </div>
     <div class="modalActions">
       <button class="btn ghost" id="addHabitCancel">Cancel</button>

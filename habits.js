@@ -75,6 +75,27 @@ function fmtDowShortMD(iso){
   }
 }
 let habits=JSON.parse(localStorage.getItem("habitsV2")||"[]");
+// --- Habit type support (positive / negative) ---
+// Existing data (older builds) may not have a type; default to "positive".
+function ensureHabitTypes(){
+  let changed = false;
+  for(const h of (habits||[])){
+    if(!h.type){
+      h.type = "positive";
+      changed = true;
+    }
+  }
+  if(changed) save();
+}
+
+// Persist last used type for the add-habit modal.
+function getLastAddHabitType(){
+  return localStorage.getItem("habitsLastAddType") || "positive";
+}
+function setLastAddHabitType(t){
+  localStorage.setItem("habitsLastAddType", t);
+}
+
 function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 
 // Normalize hues on load so accents stay stable and unique.
@@ -82,6 +103,7 @@ function save(){localStorage.setItem("habitsV2",JSON.stringify(habits));}
 try{
   ensureHabitHues();
   ensureUniqueHues();
+  ensureHabitTypes();
 }catch(e){ /* ignore */ }
 // --- UI filters ---
 let habitSearchTerm = "";
@@ -237,7 +259,8 @@ function fmtWeekday(iso){
 }
 
 
-function addHabitNamed(name){
+function addHabitNamed(name, type="positive"){
+  type = (type==="negative") ? "negative" : "positive";
   const n = (name||"").trim();
   if(!n) return;
   // Persist an explicit hue so the habit keeps a stable accent everywhere
@@ -260,7 +283,7 @@ function addHabitNamed(name){
       guard++;
     }
   }
-  habits.push({id:crypto.randomUUID(), name:n, created:today(), datesDone:[], hue});
+  habits.push({id:crypto.randomUUID(), name:n, type, created:today(), datesDone:[], hue});
   save();
   render();
   showToast("Habit added");
@@ -324,6 +347,7 @@ function openAddHabitModal(triggerEl){
   modal.setAttribute('aria-hidden', 'false');
   document.documentElement.classList.add('modalOpen');
   input.value = '';
+  setSelectedAddHabitType(getLastAddHabitType());
   setTimeout(()=>input.focus(), 60);
 }
 
@@ -354,9 +378,47 @@ function confirmAddHabitModal(){
     input.focus();
     return;
   }
-  addHabitNamed(name);
+  const t = getSelectedAddHabitType();
+  addHabitNamed(name, t);
+  setLastAddHabitType(t);
   closeAddHabitModal();
 }
+
+
+
+
+function getSelectedAddHabitType(){
+  const modal = document.getElementById('addHabitModal');
+  if(!modal) return "positive";
+  const active = modal.querySelector('.typeOption.active');
+  const t = active ? active.getAttribute('data-habit-type') : null;
+  return (t==="negative") ? "negative" : "positive";
+}
+
+function setSelectedAddHabitType(type){
+  const modal = document.getElementById('addHabitModal');
+  if(!modal) return;
+  const wanted = (type==="negative") ? "negative" : "positive";
+  const opts = Array.from(modal.querySelectorAll('.typeOption[data-habit-type]'));
+  for(const b of opts){
+    const t = b.getAttribute('data-habit-type');
+    const on = (t === wanted);
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+}
+
+// Bind type picker (one-time)
+(() => {
+  const modal = document.getElementById('addHabitModal');
+  if(!modal) return;
+  modal.addEventListener('click', (ev)=>{
+    const btn = ev.target && ev.target.closest && ev.target.closest('.typeOption[data-habit-type]');
+    if(!btn) return;
+    ev.preventDefault();
+    setSelectedAddHabitType(btn.getAttribute('data-habit-type'));
+  });
+})();
 
 
 function toggleHabitAt(id, iso, opts={}){
@@ -1523,30 +1585,44 @@ function render(){
   }
 
   const date=getMarkDate();
-  const cards = H.map((h, idx)=>{
+  const items = H.map((h, idx)=>{
     const set=new Set(h.datesDone||[]);
     const done=set.has(date);
-    const s=streakFor(h);
+    const type = (h.type==="negative") ? "negative" : "positive";
+    const icon = (type==="negative") ? "✕" : "○";
+    const sub = type==="negative"
+      ? (done ? "Avoided" : "Not avoided yet")
+      : (done ? "Completed" : "Not completed");
+    const btnLabel = type==="negative" ? "I avoided this" : "Mark Complete";
+    const hue = habitHue(h.id);
     return `
-      <div class="card habitSlide" data-index="${idx}" aria-label="Habit ${idx+1} of ${H.length}">
-        <div class="row" style="justify-content:space-between;align-items:flex-start">
-          <div>
-            <strong>${escapeHtml(h.name)}</strong>
-            <div class="small">Current: ${s.current} • Best: ${s.best}</div>
-          </div>
-          <span class="badge">${done?'Completed':'Due'}</span>
+      <div class="card habitRow" style="--habit-hue:${hue}" data-hid="${h.id}">
+        <div class="habitLeft">
+          <span class="habitTypeIcon ${type} ${done?'done':''}" aria-hidden="true">${icon}</span>
         </div>
-        <div style="margin-top:10px">
-          <span class="badge">Date: ${date}</span>
-          <span class="badge">Mark in grid</span>
+        <div class="habitMain">
+          <div class="habitTitle">${escapeHtml(h.name)}</div>
+          <div class="habitSub">${sub}</div>
         </div>
-        ${miniHeatHtml(h)}
+        <div class="habitRight">
+          <button class="btn habitActionBtn ${done?'ghost':'primary'}" data-action="toggle" data-hid="${h.id}">${btnLabel}</button>
+        </div>
       </div>
     `;
   }).join('');
 
-  habitList.innerHTML = `<div class="habitListStack">${cards}</div>`;
+  habitList.innerHTML = `<div class="habitListStack">${items}</div>`;
 
+  // one-time delegation for action button
+  if(!habitList.__boundActions){
+    habitList.__boundActions = true;
+    habitList.addEventListener('click', (ev)=>{
+      const btn = ev.target && ev.target.closest && ev.target.closest('button[data-action="toggle"][data-hid]');
+      if(!btn) return;
+      ev.preventDefault();
+      toggleHabitAt(btn.getAttribute('data-hid'), getMarkDate(), {source:'list'});
+    });
+  }
 }
 
 // Re-render when the selected mark date changes (affects streaks + insights)
