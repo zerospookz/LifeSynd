@@ -45,10 +45,10 @@
 <div class="habitsLayout">
   <div class="habitsMain">
 <section class="habitsHero" id="habitsHero"></section>
-<div class="habitsTabs">
-<button class="tabBtn active" data-tab="grid" aria-label="Grid view" title="Grid view"><span class="tabIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="4" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="13" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="13" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-<button class="tabBtn" data-tab="list" aria-label="Table view" title="Table view"><span class="tabIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 7h14M6 12h14M6 17h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 7h.01M4 12h.01M4 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span></button>
-</div>
+
+<!-- View-mode (grid/table) controls are rendered inside the Habits header (habitsHero).
+     The inline buttons below were an older fallback and would duplicate the controls,
+     so they have been removed. -->
 <section class="tabPanel active" data-panel="grid">
 <div class="card analyticsCard" id="habitAnalytics"></div>
 </section>
