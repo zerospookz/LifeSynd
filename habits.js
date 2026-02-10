@@ -1516,11 +1516,14 @@ function renderQuickMarkPanel(){
   const label = d.toLocaleDateString(undefined, { weekday:"short", month:"numeric", day:"numeric" });
 
   // Build list
+  const todayIso = today();
   const rows = H.map(h=>{
     const done = (h.datesDone||[]).includes(iso);
-    const color = h.color || h.hex || h.col || "#5b7cfa";
+    const missed = (!done && iso < todayIso);
+    // Keep the Quick Mark tile color in sync with the Analytics matrix.
+    const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     return `
-      <div class="qmRow ${done ? "isDone" : ""}" data-hid="${h.id}" style="--accent:${color}">
+      <div class="qmRow ${done ? "isDone" : ""} ${missed ? "isMissed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
         <div class="qmDot" aria-hidden="true"></div>
         <div class="qmMain">
           <div class="qmName">${escapeHtml(h.name||"Habit")}</div>
