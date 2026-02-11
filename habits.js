@@ -1536,12 +1536,18 @@ function renderAnalytics(){
   const viewMode = getCurrentViewMode();
   if(analyticsView === "month" && viewMode === "grid"){
     const bounds = getBoundsForView("month", analyticsOffsetDays);
-    const monthDates = datesFromBounds(bounds);
+    // Defensive: ensure the calendar grid is strictly the selected month (no spillover days like 31st from prev month).
+    const b0 = new Date(bounds.start);
+    const y = b0.getFullYear();
+    const m = b0.getMonth();
+    const monthStart = new Date(y, m, 1);
+    const monthEnd = new Date(y, m+1, 0);
+    const monthDates = datesFromBounds({ start: monthStart, end: monthEnd });
     const daysInMonth = monthDates.length;
 
     // Label the drawer with the month name.
     try{
-      const m = new Date(bounds.start);
+      const m = new Date(monthStart);
       const monthLabel = new Intl.DateTimeFormat(undefined,{month:"long", year:"numeric"}).format(m);
       if(monthInlineTitle) monthInlineTitle.textContent = monthLabel;
     }catch(e){
@@ -1572,7 +1578,7 @@ function renderAnalytics(){
     }
 
     // Calendar start offset (Mon=0..Sun=6)
-    const first = new Date(bounds.start);
+    const first = new Date(monthStart);
     const offset = (first.getDay() + 6) % 7;
 
     let html = '<div class="monthCal" role="grid" aria-label="Month calendar">';
@@ -1596,7 +1602,7 @@ function renderAnalytics(){
     // Render month drawer content: habits + count of checked days in this month.
     if(monthInlineBody){
       const rows = (H||[]).map(h=>{
-        const done = countDoneInBounds(h, bounds);
+        const done = countDoneInBounds(h, { start: monthStart, end: monthEnd });
         const pct = Math.round((done / Math.max(1, daysInMonth)) * 100);
         const hue = habitHue(h.id);
         return `
