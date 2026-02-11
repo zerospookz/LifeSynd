@@ -160,6 +160,220 @@ function isoDate(d){
 }
 function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 
+
+// ---------- Year heatmap helpers ----------
+let yearHabitId = localStorage.getItem("habitsYearHabitId") || null;
+function getYearHabit(){
+  const H = getFilteredHabits ? getFilteredHabits() : (habits||[]);
+  if(!H || !H.length) return null;
+  if(!yearHabitId || !H.some(h=>h.id===yearHabitId)){
+    yearHabitId = H[0].id;
+    localStorage.setItem("habitsYearHabitId", yearHabitId);
+  }
+  return H.find(h=>h.id===yearHabitId) || H[0];
+}
+function setYearHabit(id){
+  yearHabitId = id;
+  localStorage.setItem("habitsYearHabitId", id);
+}
+function monthBoundsFor(year, monthIndex){
+  const start = new Date(year, monthIndex, 1);
+  const end = new Date(year, monthIndex+1, 0);
+  return { start, end };
+}
+function enumerateDates(start, end){
+  const out = [];
+  const d = new Date(start);
+  d.setHours(0,0,0,0);
+  const e = new Date(end);
+  e.setHours(0,0,0,0);
+  while(d <= e){
+    out.push(isoDate(d));
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+function calcStreaksInWindow(habit, startIso, endIso){
+  const doneSet = new Set(habit.datesDone||[]);
+  const start = new Date(startIso+"T00:00:00");
+  const end = new Date(endIso+"T00:00:00");
+  // best streak
+  let best = 0, cur = 0;
+  const d = new Date(start);
+  while(d <= end){
+    const k = isoDate(d);
+    if(doneSet.has(k)){ cur++; best = Math.max(best, cur); }
+    else cur = 0;
+    d.setDate(d.getDate()+1);
+  }
+  // current streak (ending at endIso)
+  let current = 0;
+  const b = new Date(end);
+  while(b >= start){
+    const k = isoDate(b);
+    if(doneSet.has(k)){ current++; b.setDate(b.getDate()-1); }
+    else break;
+  }
+  return { best, current };
+}
+function intensityLevel(pct){
+  if(pct <= 0) return 0;
+  if(pct <= 30) return 1;
+  if(pct <= 60) return 2;
+  if(pct <= 85) return 3;
+  return 4;
+}
+
+
+function renderYearHeatmap(gridEl, cardEl, habitsList, yearOffset){
+  const viewYearBounds = getBoundsForView("year", Number(yearOffset)||0);
+  const year = viewYearBounds.start.getFullYear();
+  const todayIso = today();
+  const yearStartIso = isoDate(viewYearBounds.start);
+  const yearEndIsoRaw = isoDate(viewYearBounds.end);
+  const yearEndIso = (yearEndIsoRaw < todayIso) ? yearEndIsoRaw : todayIso;
+
+  const habit = getYearHabit();
+  if(!habit){
+    gridEl.innerHTML = '<p class="empty">Add a habit to view the year heatmap.</p>';
+    return;
+  }
+
+  const accent = `hsl(${habitHue(habit.id)} 70% 55%)`;
+  const createdIso = (habit && typeof habit.created === "string" && habit.created.length===10) ? habit.created : yearStartIso;
+  const startIso = (createdIso > yearStartIso) ? createdIso : yearStartIso;
+  const endIso = (yearEndIso < startIso) ? startIso : yearEndIso;
+
+  // Year totals
+  const doneYear = countDoneInBounds(habit, { start: new Date(startIso+"T00:00:00"), end: new Date(endIso+"T00:00:00") });
+  const startD = new Date(startIso+"T00:00:00");
+  const endD = new Date(endIso+"T00:00:00");
+  let eligibleYear = Math.floor((endD - startD) / 86400000) + 1;
+  if(!Number.isFinite(eligibleYear) || eligibleYear < 0) eligibleYear = 0;
+  const pctYear = eligibleYear ? Math.round((doneYear/eligibleYear)*100) : 0;
+
+  // Per-month stats
+  const monthStats = [];
+  for(let m=0;m<12;m++){
+    const mb = monthBoundsFor(year, m);
+    const msIso = isoDate(mb.start);
+    const meIsoRaw = isoDate(mb.end);
+    const meIso = (meIsoRaw < endIso) ? meIsoRaw : endIso;
+
+    const mStartIso = (startIso > msIso) ? startIso : msIso;
+    const mEndIso = (meIso < mStartIso) ? mStartIso : meIso;
+
+    const mStartD = new Date(mStartIso+"T00:00:00");
+    const mEndD = new Date(mEndIso+"T00:00:00");
+    let eligible = Math.floor((mEndD - mStartD) / 86400000) + 1;
+    if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+
+    const done = countDoneInBounds(habit, { start: new Date(mStartIso+"T00:00:00"), end: new Date(mEndIso+"T00:00:00") });
+    const pct = eligible ? Math.round((done/eligible)*100) : 0;
+    monthStats.push({ m, eligible, done, pct });
+  }
+
+  const validMonths = monthStats.filter(x=>x.eligible>0);
+  const best = validMonths.length ? validMonths.reduce((a,b)=> (b.pct>a.pct?b:a)) : null;
+  const worst = validMonths.length ? validMonths.reduce((a,b)=> (b.pct<a.pct?b:a)) : null;
+
+  const streaks = calcStreaksInWindow(habit, startIso, endIso);
+
+  const monthName = (m)=> {
+    try{ return new Intl.DateTimeFormat(undefined,{month:"short"}).format(new Date(year, m, 1)); }
+    catch(_){ return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m]; }
+  };
+
+  function monthHeatmapHTML(m){
+    const mb = monthBoundsFor(year, m);
+    const ms = mb.start;
+    const me = mb.end;
+    const msIso = isoDate(ms);
+    const meIsoRaw = isoDate(me);
+    const meIso = (meIsoRaw < endIso) ? meIsoRaw : endIso;
+
+    const monthDates = enumerateDates(ms, new Date(meIso+"T00:00:00"));
+    // Mon-first offset
+    const first = new Date(msIso+"T00:00:00");
+    const offset = (first.getDay() + 6) % 7;
+
+    const doneSet = new Set(habit.datesDone||[]);
+    let html = '<div class="yHeat" role="grid" aria-label="'+monthName(m)+'">';
+    for(let i=0;i<offset;i++){
+      html += '<div class="yCell empty" aria-hidden="true"></div>';
+    }
+    for(const dIso of monthDates){
+      // Respect habit created/start window
+      const inWindow = (dIso >= startIso && dIso <= endIso);
+      const isDone = inWindow && doneSet.has(dIso);
+      const isToday = dIso === todayIso;
+      html += '<div class="yCell '+(isDone?'done':'')+' '+(isToday?'today':'')+' '+(!inWindow?'disabled':'')+'" title="'+dIso+': '+(isDone?'done':'not done')+'"></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  const summaryHtml = `
+    <div class="yearSummary" style="--habit-accent:${accent}">
+      <div class="yearSummaryLeft">
+        <div class="yearKicker">YEAR VIEW</div>
+        <div class="yearHabitName">${escapeHtml(habit.name)}</div>
+        <div class="yearMeta">${doneYear} / ${eligibleYear} days • ${pctYear}% consistency</div>
+      </div>
+      <div class="yearSummaryStats">
+        <div class="yStat"><div class="k">Current streak</div><div class="v">${streaks.current}</div></div>
+        <div class="yStat"><div class="k">Best streak</div><div class="v">${streaks.best}</div></div>
+        <div class="yStat"><div class="k">Best month</div><div class="v">${best?monthName(best.m):"—"} <span class="sub">${best?best.pct+"%":""}</span></div></div>
+        <div class="yStat"><div class="k">Worst month</div><div class="v">${worst?monthName(worst.m):"—"} <span class="sub">${worst?worst.pct+"%":""}</span></div></div>
+      </div>
+    </div>
+  `;
+
+  const options = (habitsList||[]).map(h=>`<option value="${h.id}" ${h.id===habit.id?'selected':''}>${escapeHtml(h.name)}</option>`).join("");
+  const pickerHtml = `
+    <div class="yearPickerRow">
+      <div class="yearPicker">
+        <div class="yearPickerLabel">Habit</div>
+        <select id="yearHabitSelect" class="yearSelect">${options}</select>
+      </div>
+    </div>
+  `;
+
+  const monthsHtml = `
+    <div class="yearMonths" style="--habit-accent:${accent}">
+      ${monthStats.map(ms=>{
+        const lvl = intensityLevel(ms.pct);
+        const title = `${monthName(ms.m)} ${year}: ${ms.done}/${ms.eligible} (${ms.pct}%)`;
+        return `
+          <div class="monthCard lvl${lvl}" title="${title}">
+            <div class="monthHead">
+              <div class="monthTitle">${monthName(ms.m)}</div>
+              <div class="monthMeta">${ms.done}/${ms.eligible}</div>
+            </div>
+            ${monthHeatmapHTML(ms.m)}
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  gridEl.innerHTML = `<div class="yearView">${pickerHtml}${summaryHtml}${monthsHtml}</div>`;
+
+  const sel = gridEl.querySelector("#yearHabitSelect");
+  sel?.addEventListener("change", (e)=>{
+    const id = e.target && e.target.value;
+    if(id){
+      setYearHabit(id);
+      renderAnalytics();
+      renderListInAnalytics();
+    }
+  });
+
+  // Hide paint hint (year heatmap is view-only).
+  const help = cardEl.querySelector('.matrixHelp');
+  if(help) help.style.display = 'none';
+}
+
 function getCurrentViewMode(){
   try{ return localStorage.getItem("habitsViewMode") || "grid"; }catch(e){ return "grid"; }
 }
@@ -995,7 +1209,7 @@ function renderAnalytics(){
     <!-- Month list panel renders inside the header area (replaces the date row). -->
 
     <div class="matrixHelp">
-      <div class="matrixHint">Tip: hold then drag to paint. Hold Shift to erase temporarily. Hold a habit name for 2.5s to remove it.</div>
+      <div class="matrixHint">Tip: hold then drag to paint. Hold a habit name for 2.5s to remove it.</div>
     </div>
   `;
 
@@ -1195,6 +1409,15 @@ function renderAnalytics(){
     // Month calendar is view-only; hide paint hint.
     const help = card.querySelector('.matrixHelp');
     if(help) help.style.display = 'none';
+    return;
+  }
+
+
+  // ------------------------
+  // Year heatmap (per habit)
+  // ------------------------
+  if(analyticsView === "year" && viewMode === "grid"){
+    renderYearHeatmap(grid, card, H, analyticsOffsetDays);
     return;
   }
 
@@ -1606,7 +1829,6 @@ function renderListInAnalytics(){
     // Done in window
     let doneCount = 0;
     const set = new Set(h.datesDone||[]);
-    // Iterate days (eligible is at most 31 for month view, so this is cheap)
     if(eligible > 0){
       const d = new Date(startD);
       while(d <= endD){
@@ -1617,6 +1839,71 @@ function renderListInAnalytics(){
     }
 
     const pct = eligible ? Math.round((doneCount / eligible) * 100) : 0;
+
+    // Year-only: richer card with mini month bar + streaks
+    if(period.kind === "year"){
+      const year = new Date(periodStartIso+"T00:00:00").getFullYear();
+
+      // Month segments (intensity per month completion %)
+      const segs = [];
+      const monthStats = [];
+      for(let m=0;m<12;m++){
+        const mb = monthBoundsFor(year, m);
+        const msIso = isoDate(mb.start);
+        const meIsoRaw = isoDate(mb.end);
+        const meIso = (meIsoRaw < endIso) ? meIsoRaw : endIso;
+
+        const mStartIso = (startIso > msIso) ? startIso : msIso;
+        const mEndIso = (meIso < mStartIso) ? mStartIso : meIso;
+
+        const mStartD = new Date(mStartIso+"T00:00:00");
+        const mEndD = new Date(mEndIso+"T00:00:00");
+        let mEligible = Math.floor((mEndD - mStartD) / 86400000) + 1;
+        if(!Number.isFinite(mEligible) || mEligible < 0) mEligible = 0;
+
+        const mDone = countDoneInBounds(h, { start: new Date(mStartIso+"T00:00:00"), end: new Date(mEndIso+"T00:00:00") });
+        const mPct = mEligible ? Math.round((mDone/mEligible)*100) : 0;
+        monthStats.push({ m, eligible:mEligible, done:mDone, pct:mPct });
+        segs.push(intensityLevel(mPct));
+      }
+
+      const valid = monthStats.filter(x=>x.eligible>0);
+      const best = valid.length ? valid.reduce((a,b)=> (b.pct>a.pct?b:a)) : null;
+      const worst = valid.length ? valid.reduce((a,b)=> (b.pct<a.pct?b:a)) : null;
+
+      const streaks = calcStreaksInWindow(h, startIso, endIso);
+
+      const mName = (m)=>{
+        try{ return new Intl.DateTimeFormat(undefined,{month:"short"}).format(new Date(year, m, 1)); }
+        catch(_){ return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m]; }
+      };
+
+      return `
+        <div class="habitYearRow" style="--accent:${accent}">
+          <div class="hyrTop">
+            <div class="hyrTitle">
+              <strong>${escapeHtml(h.name||"Habit")}</strong>
+              <span class="badge">${escapeHtml(period.label||"")}</span>
+            </div>
+            <div class="hyrCount">${doneCount} / ${eligible}</div>
+          </div>
+
+          <div class="hyrBar" aria-hidden="true">
+            ${segs.map((lvl,i)=>`<span class="hyrSeg lvl${lvl}" title="${mName(i)}"></span>`).join("")}
+          </div>
+
+          <div class="hyrMeta">
+            <span>${pct}% consistency</span>
+            <span>Current streak: <b>${streaks.current}</b></span>
+            <span>Best streak: <b>${streaks.best}</b></span>
+            <span>Best: <b>${best?mName(best.m):"—"}</b> ${best?best.pct+"%":""}</span>
+            <span>Worst: <b>${worst?mName(worst.m):"—"}</b> ${worst?worst.pct+"%":""}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Default list row (Week/Month/All)
     return `
       <div class="habitTableRow" style="--accent:${accent}">
         <div class="htrMain">
