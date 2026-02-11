@@ -1239,7 +1239,23 @@ function renderAnalytics(){
       ? (analyticsOffsetDays===0 ? "This year" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}y` : `${analyticsOffsetDays}y`))
       : (analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`));
   // Range label
-  let rangeLabel = `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
+  let rangeLabel = (() => {
+    // Premium English range label (Week/All), e.g. "Feb 5 – Feb 11" (optionally with year)
+    try {
+      const start = dates[0];
+      const end = dates[dates.length-1];
+      const nowY = (new Date()).getFullYear();
+      const fmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+      const base = `${fmt.format(start)} – ${fmt.format(end)}`;
+      const y = start.getFullYear();
+      const y2 = end.getFullYear();
+      if (y !== y2) return `${base}, ${y}–${y2}`;
+      if (y !== nowY) return `${base}, ${y}`;
+      return base;
+    } catch (_) {
+      return `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
+    }
+  })();
   try{
     if(analyticsView === "month"){
       const b = getBoundsForView("month", analyticsOffsetDays);

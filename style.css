@@ -1067,6 +1067,61 @@ font-weight: 750;
 }
 .habitsDateRow{ display:flex; align-items:center; gap: 10px; }
 
+/* Premium period controls (Habits top bar) */
+.habitsDateRow .navBtn{
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255,255,255,.85);
+  font-size: 18px;
+  line-height: 1;
+}
+.habitsDateRow .navBtn:hover{
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.16);
+}
+.habitsDateRow .navBtn:active{ transform: translateY(1px); }
+
+.habitsDateRow .rangeLabel{
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 10px 26px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255,255,255,.92);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+
+/* Make segmented tabs feel more premium without changing layout */
+.habitsHeaderRow1 .segBtn{
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.10);
+  box-shadow: 0 10px 24px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.habitsHeaderRow1 .segBtn.active{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.18);
+  color: #fff;
+}
+.habitsHeaderRow1 .segBtn:hover{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.14);
+}
+
+
 /* Month inline list panel (opens from the list icon in Month view) */
 .habitsDateSlot{ flex: 1; min-width: 0; }
 .hidden{ display:none !important; }
