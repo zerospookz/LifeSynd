@@ -3376,3 +3376,58 @@ img.pulseOnce{
 @media (max-width: 380px){
   .yearSummaryStats{grid-template-columns: 1fr;}
 }
+
+
+/* ================= YEAR ENHANCEMENTS ================= */
+
+.yearEnhancements{
+  display:grid;
+  gap:16px;
+  margin-top:20px;
+}
+
+.enhCard{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:18px;
+  padding:16px;
+}
+
+.enhTitle{
+  font-size:12px;
+  opacity:0.7;
+  margin-bottom:6px;
+}
+
+.enhValue{
+  font-size:22px;
+  font-weight:600;
+}
+
+.stripe{
+  display:flex;
+  align-items:flex-end;
+  gap:4px;
+  height:60px;
+}
+
+.stripeBar{
+  flex:1;
+  background:linear-gradient(180deg,#6c7bff,#4c5bff);
+  border-radius:4px;
+  opacity:0.8;
+}
+
+.weekdayGrid{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.weekdayRow{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+  opacity:0.85;
+}
+

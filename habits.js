@@ -3481,3 +3481,100 @@ function renderHero(){
   });
 })();
 
+
+
+// =======================
+// YEAR ENHANCEMENTS
+// =======================
+
+function calculateMonthlyConsistency(H, year){
+  const months = [];
+  for(let m=0;m<12;m++){
+    const start = new Date(Date.UTC(year,m,1));
+    const end = new Date(Date.UTC(year,m+1,0));
+    let total = 0, done = 0;
+    (H||[]).forEach(h=>{
+      const set = new Set(h.datesDone||[]);
+      const d = new Date(start);
+      while(d<=end){
+        const iso = d.toISOString().slice(0,10);
+        total++;
+        if(set.has(iso)) done++;
+        d.setUTCDate(d.getUTCDate()+1);
+      }
+    });
+    months.push(total? Math.round(done/total*100):0);
+  }
+  return months;
+}
+
+function calculateStabilityIndex(months){
+  const avg = months.reduce((a,b)=>a+b,0)/12;
+  const variance = months.reduce((a,b)=>a+Math.pow(b-avg,2),0)/12;
+  const stability = Math.max(0,100-Math.round(Math.sqrt(variance)));
+  return stability;
+}
+
+function calculateWeekdayPerformance(H, year){
+  const days = Array(7).fill().map(()=>({total:0,done:0}));
+  (H||[]).forEach(h=>{
+    const set = new Set(h.datesDone||[]);
+    for(let m=0;m<12;m++){
+      const start = new Date(Date.UTC(year,m,1));
+      const end = new Date(Date.UTC(year,m+1,0));
+      const d = new Date(start);
+      while(d<=end){
+        const iso = d.toISOString().slice(0,10);
+        const wd = d.getUTCDay();
+        days[wd].total++;
+        if(set.has(iso)) days[wd].done++;
+        d.setUTCDate(d.getUTCDate()+1);
+      }
+    }
+  });
+  return days.map(d=> d.total? Math.round(d.done/d.total*100):0);
+}
+
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  const yearContainer = document.querySelector(".yearSummary");
+  if(!yearContainer) return;
+
+  const year = new Date().getFullYear();
+  const H = window.H || [];
+
+  const months = calculateMonthlyConsistency(H, year);
+  const stability = calculateStabilityIndex(months);
+  const weekdays = calculateWeekdayPerformance(H, year);
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "yearEnhancements";
+
+  wrapper.innerHTML = `
+    <div class="enhCard">
+      <div class="enhTitle">Stability Index</div>
+      <div class="enhValue">${stability}/100</div>
+    </div>
+
+    <div class="enhCard">
+      <div class="enhTitle">Consistency Stripe</div>
+      <div class="stripe">
+        ${months.map(p=>`<div class="stripeBar" style="height:${p}%"></div>`).join("")}
+      </div>
+    </div>
+
+    <div class="enhCard">
+      <div class="enhTitle">Weekday Performance</div>
+      <div class="weekdayGrid">
+        ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>`
+          <div class="weekdayRow">
+            <span>${d}</span>
+            <span>${weekdays[i]}%</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+
+  yearContainer.after(wrapper);
+});
