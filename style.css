@@ -3608,3 +3608,20 @@ img.pulseOnce{
   .calCell.calDayCard{ padding:12px; }
   .calNum{ font-size:28px; }
 }
+
+
+/* Month card: place percent under the day to avoid cut-off on small screens */
+.calPctRow{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:6px;
+  position:relative;
+  z-index:2;
+}
+
+/* Month card: pct row mobile */
+@media (max-width: 420px){
+  .calPctRow{ justify-content:flex-start; margin-top:6px; }
+  .calPctNum{ font-size:12px; }
+  .calNum{ font-size:26px; }
+}

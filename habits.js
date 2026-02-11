@@ -175,13 +175,25 @@ function openDayDetails(iso){
       toggleBtn.classList.toggle("primary", nowDone);
     }
 
-    // Update the month cell percent + classes
+    // Update the month cell percent + visuals (no page refresh)
     const cell = document.querySelector(`.monthCalGrid .calCell[data-iso="${iso}"]`);
     if(cell){
       const pct = computePctForIso(iso);
-      cell.style.setProperty("--pct", String(pct/100));
-      const pctEl = cell.querySelector(".calPct");
-      if(pctEl) pctEl.textContent = pct + "%";
+      // colors based on pct (0..120 hue)
+      const hue = (pct * 120) / 100;
+      const bar = `hsl(${hue}, 88%, 55%)`;
+      const glow = `hsla(${hue}, 92%, 58%, .70)`;
+      cell.style.setProperty("--barColor", bar);
+      cell.style.setProperty("--glowColor", glow);
+
+      const pctEl = cell.querySelector(".calPctNum");
+      if(pctEl){
+        pctEl.textContent = pct + "%";
+        pctEl.setAttribute("data-target", String(pct));
+      }
+      const fill = cell.querySelector(".calFill");
+      if(fill) fill.style.width = pct + "%";
+
       cell.setAttribute("aria-label", `${iso}, ${pct}%`);
       cell.classList.toggle("isZero", pct===0);
       cell.classList.toggle("isLow", pct>0 && pct<35);
@@ -1779,6 +1791,8 @@ for(const iso of monthDates){
           <span class="shine" aria-hidden="true"></span>
           <div class="calTop">
             <div class="calNum">${day}</div>
+          </div>
+          <div class="calPctRow">
             <div class="calPctNum" data-target="${pct}">0%</div>
           </div>
           <div class="calBar" aria-hidden="true">
