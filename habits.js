@@ -1670,7 +1670,7 @@ function renderAnalytics(){
     const corner = document.createElement("div");
     corner.className = "matrixCorner";
     corner.innerHTML = `
-      <div class="mcLabel">Dates</div>
+      <div class="mcLabel">DATES: 2026</div>
       <div class="mcRange">
         <span>${fmtMonthDay(dates[0])}</span>
         <span class="mcSep">–</span>
