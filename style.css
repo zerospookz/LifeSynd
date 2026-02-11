@@ -4069,3 +4069,8 @@ img.pulseOnce{
 .hmStatus--empty{
   opacity:.25;
 }
+
+/* Ensure hmBadge has no internal text */
+.hmBadge.hmToggle{
+  font-size:0;
+}

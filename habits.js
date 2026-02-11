@@ -3034,7 +3034,7 @@ function renderQuickMarkPanel(){
     })();
 
     return `
-      <article class="hmCard hmCard--${variant} ${done ? "is-done" : ""} ${missed ? "is-missed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
+      <article class="hmCard hmCard--${variant}  ${missed ? "is-missed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
         <div class="hmLeft">
           <span class="hmStatus ${isNeg ? (done ? "hmStatus--pos-done" : (missed ? "hmStatus--neg" : "hmStatus--empty")) : (done ? "hmStatus--pos-done" : "hmStatus--empty")}" aria-hidden="true">${isNeg ? (done ? "✓" : (missed ? "✕" : "")) : (done ? "✓" : "")}</span>
           <div class="hmText">
@@ -3042,7 +3042,7 @@ function renderQuickMarkPanel(){
             <div class="hmMeta">${habitDoneText(h, done)}</div>
           </div>
         </div>
-        <button class="hmBadge hmToggle ${done ? "is-done" : ""}" type="button" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}">${done ? "✓" : ""}</button>
+        <button class="hmBadge hmToggle " type="button" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}"></button>
       </article>
     `;
   }).join("");
