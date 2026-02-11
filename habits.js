@@ -1699,6 +1699,10 @@ function renderAnalytics(){
     // Respect the user's current paint mode:
     // - mark: always color/mark cells as done
     // - erase: always remove/clear done marks
+    // Pull the latest mode from storage in case it was changed without reloading.
+
+    try{ analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || analyticsPaintMode || "mark"; }catch(_e){}
+
     targetDone = (analyticsPaintMode !== "erase");
 
 
