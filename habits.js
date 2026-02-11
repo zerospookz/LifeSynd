@@ -3137,18 +3137,19 @@ host.innerHTML = `
     <div class="hmTopCard">
       <div class="hmTopTitle">Habits</div>
       <div class="hmTopSub">${label}</div>
+      ${weakest?`
+        <div class="hmFocusHint" id="weakestHintQM" role="button" tabindex="0" aria-label="Jump to weakest habit">
+          <div class="hmFocusIcon">🧠</div>
+          <div class="hmFocusText">
+            <div class="hmFocusTitle">Focus hint</div>
+            <div class="hmFocusBody">Weakest: <strong>${escapeHtml(weakest.h.name)}</strong> • ${weakest.done}/${weakest.days} in last 2 weeks</div>
+          </div>
+          <div class="hmFocusCta">Jump →</div>
+        </div>
+      `:""}
+
     </div>
     <div class="qmList">${rows || '<p class="empty">No habits yet.</p>'}</div>
-    ${weakest?`
-      <div class="hintCard compact hmHintInHabits" id="weakestHintQM" role="button" tabindex="0" aria-label="Jump to weakest habit">
-        <div class="hintIcon">🧠</div>
-        <div class="hintText">
-          <div class="hintTitle">Focus hint</div>
-          <div class="hintBody">Weakest: <strong>${escapeHtml(weakest.h.name)}</strong> • ${weakest.done}/${weakest.days} in last 2 weeks</div>
-        </div>
-        <div class="hintCta">Jump →</div>
-      </div>
-    `:""}
   `;
 
   // Bind actions
