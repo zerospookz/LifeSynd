@@ -3046,12 +3046,46 @@ function renderQuickMarkPanel(){
       </article>
     `;
   }).join("");
+
+  // Focus hint (weakest habit in last 2 weeks) shown inside Habits box
+  const weakest = (()=>{
+    const end = new Date(todayIso + "T00:00:00Z");
+    const start = new Date(end); start.setUTCDate(start.getUTCDate()-13);
+    let best = null;
+    for(const h of H){
+      let done = 0;
+      const set = new Set(h.datesDone||[]);
+      const d = new Date(start);
+      let days = 0;
+      while(d <= end){
+        const iso2 = d.toISOString().slice(0,10);
+        // count only eligible days (all days for now)
+        days++;
+        if(set.has(iso2)) done++;
+        d.setUTCDate(d.getUTCDate()+1);
+      }
+      const rate = days ? done/days : 1;
+      if(!best || rate < best.rate) best = {h, done, days, rate};
+    }
+    return best;
+  })();
+
 host.innerHTML = `
     <div class="hmTopCard">
       <div class="hmTopTitle">Habits</div>
       <div class="hmTopSub">${label}</div>
     </div>
     <div class="qmList">${rows || '<p class="empty">No habits yet.</p>'}</div>
+    ${weakest?`
+      <div class="hintCard compact hmHintInHabits" id="weakestHintQM" role="button" tabindex="0" aria-label="Jump to weakest habit">
+        <div class="hintIcon">🧠</div>
+        <div class="hintText">
+          <div class="hintTitle">Focus hint</div>
+          <div class="hintBody">Weakest: <strong>${escapeHtml(weakest.h.name)}</strong> • ${weakest.done}/${weakest.days} in last 2 weeks</div>
+        </div>
+        <div class="hintCta">Jump →</div>
+      </div>
+    `:""}
   `;
 
   // Bind actions
@@ -3067,6 +3101,24 @@ host.innerHTML = `
       render();
     });
   });
+
+  if(weakest){
+    const hint = host.querySelector('#weakestHintQM');
+    const go = ()=>{
+      try{
+        const idx = H.findIndex(x=>x.id===weakest.h.id);
+        if(typeof setCarouselIndex === "function" && idx >= 0) setCarouselIndex(idx);
+      }catch(e){}
+      // Scroll to analytics area if present
+      const analytics = document.querySelector('#analytics') || document.querySelector('.analyticsCard') || document.querySelector('[data-panel="analytics"]');
+      if(analytics) analytics.scrollIntoView({behavior:'smooth', block:'start'});
+    };
+    if(hint){
+      hint.addEventListener('click', go);
+      hint.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') go(); });
+    }
+  }
+
 }
 
 function render(){

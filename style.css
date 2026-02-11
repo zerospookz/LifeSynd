@@ -4074,3 +4074,36 @@ img.pulseOnce{
 .hmBadge.hmToggle{
   font-size:0;
 }
+
+
+/* ===== Habits right side: use empty space on large screens ===== */
+.habitsSideGrid{
+  display:grid;
+  gap:16px;
+}
+.habitsSideStack{
+  display:grid;
+  gap:16px;
+}
+
+@media (min-width: 980px){
+  .habitsSideGrid{
+    grid-template-columns: minmax(360px, 1.25fr) minmax(320px, 1fr);
+    align-items:start;
+  }
+  .habitsQuickMarkCard{
+    height: fit-content;
+  }
+}
+
+@media (max-width: 979px){
+  .habitsSideGrid{
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Focus hint inside Habits box */
+.hmHintInHabits{
+  margin-top:14px;
+}
