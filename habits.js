@@ -103,6 +103,7 @@ function computePctForIso(iso){
 
 // Sync UI bits after marking from any view (week/month/day details)
 function syncAfterHabitChange(hid, iso){
+  let handled = false;
   try{
     const h = habits.find(x=>x.id===hid);
     if(h){
@@ -112,13 +113,17 @@ function syncAfterHabitChange(hid, iso){
       const missed = (!done && iso < todayIso);
 
       // Week matrix cells (desktop)
-      document.querySelectorAll(`.matrixCell[data-hid="${hid}"][data-iso="${iso}"]`).forEach(cell=>{
+      const mc = document.querySelectorAll(`.matrixCell[data-hid="${hid}"][data-iso="${iso}"]`);
+      if(mc.length) handled = true;
+      mc.forEach(cell=>{
         cell.classList.toggle("done", done);
         cell.classList.toggle("missed", missed);
       });
 
       // Mobile week dots / rows if present
-      document.querySelectorAll(`[data-hid="${hid}"][data-iso="${iso}"]`).forEach(el=>{
+      const md = document.querySelectorAll(`[data-hid="${hid}"][data-iso="${iso}"]`);
+      if(md.length) handled = true;
+      md.forEach(el=>{
         if(el.classList && (el.classList.contains("weekDot") || el.classList.contains("mobileWeekDot"))){
           el.classList.toggle("done", done);
           el.classList.toggle("missed", missed);
@@ -131,6 +136,7 @@ function syncAfterHabitChange(hid, iso){
   // Month grid cell (if visible)
   try{
     const cell = document.querySelector(`.monthCalGrid .calCell[data-iso="${iso}"]`);
+    if(cell) handled = true;
     if(cell){
       const pct = computePctForIso(iso);
       const hue = (pct * 120) / 100;
@@ -154,8 +160,9 @@ function syncAfterHabitChange(hid, iso){
   }catch(e){}
 
 // Quick mark panel + side panels
-  try{ renderQuickMarkPanel(); }catch(e){}
-  try{ syncSidePanels(); }catch(e){}
+  try{ if(document.getElementById("habitQuickMark")) handled = true; renderQuickMarkPanel(); }catch(e){}
+  try{ if(document.getElementById("streakSummarySide") || document.getElementById("insightsSide") || document.getElementById("streakSummary") || document.getElementById("insightsCard")) handled = true; syncSidePanels(); }catch(e){}
+  return handled;
 }
 function ensureDayDetailsModal(){
   if(dayDetailsModalEl) return dayDetailsModalEl;
@@ -1261,6 +1268,7 @@ function confirmAddHabitModal(){
 function toggleHabitAt(id, iso, opts={}){
   const h = habits.find(x=>x.id===id);
   if(!h) return;
+
   const {done: nowDone} = applyHabitMark(id, iso, "toggle");
 
   showToast(habitKind(h)==='negative'
@@ -1270,58 +1278,9 @@ function toggleHabitAt(id, iso, opts={}){
 
   lastPulse = { hid: id, iso, mode: nowDone ? "done" : "miss" };
 
-  // Preserve scroll positions for a smoother feel (both matrix + page)
-  const wrap = document.querySelector('.matrixWrap');
-  const scroll = wrap ? {top:wrap.scrollTop, left:wrap.scrollLeft} : null;
-  const pageScrollY = window.scrollY;
-
-  // Main render stays (low risk). Then we sync any other visible panels (Habits box / month cells).
-  render();
+  // Targeted UI updates (no full render)
   try{ syncAfterHabitChange(id, iso); }catch(e){}
 
-  if(opts && opts.preserveScroll){
-    requestAnimationFrame(()=>{
-      const w = document.querySelector('.matrixWrap');
-      if(w && scroll){ w.scrollTop = scroll.top; w.scrollLeft = scroll.left; }
-      window.scrollTo({ top: pageScrollY, left: 0, behavior: 'auto' });
-    });
-  }
-  return nowDone;
-}
-){
-  const h = habits.find(x=>x.id===id);
-  if(!h) return;
-  h.datesDone = h.datesDone || [];
-  const idx = h.datesDone.indexOf(iso);
-  let nowDone;
-  if(idx>=0){
-    h.datesDone.splice(idx,1);
-    nowDone = false;
-    showToast(habitKind(h)==='negative' ? "Marked as slipped" : "Marked as missed");
-  }else{
-    h.datesDone.push(iso);
-    h.datesDone.sort();
-    nowDone = true;
-    showToast(habitKind(h)==='negative' ? "Marked avoided" : "Marked done");
-  }
-  lastPulse = { hid: id, iso, mode: nowDone ? "done" : "miss" };
-  save();
-
-  // Preserve scroll positions for a smoother feel (both matrix + page)
-  const wrap = document.querySelector('.matrixWrap');
-  const scroll = wrap ? {top:wrap.scrollTop, left:wrap.scrollLeft} : null;
-  const pageScrollY = window.scrollY;
-
-  render();
-
-  if(opts && opts.preserveScroll){
-    requestAnimationFrame(()=>{
-      const w = document.querySelector('.matrixWrap');
-      if(w && scroll){ w.scrollTop = scroll.top; w.scrollLeft = scroll.left; }
-      // prevent "jump to top" after re-render
-      window.scrollTo({ top: pageScrollY, left: 0, behavior: 'auto' });
-    });
-  }
   return nowDone;
 }
 
