@@ -3036,22 +3036,20 @@ function renderQuickMarkPanel(){
     return `
       <article class="hmCard hmCard--${variant} ${done ? "is-done" : ""} ${missed ? "is-missed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
         <div class="hmLeft">
-          <span class="hmStatus ${done ? "hmStatus--done" : "hmStatus--idle"}" aria-hidden="true">${done ? "✓" : ""}</span>
+          <span class="hmStatus hmStatus--idle" aria-hidden="true"></span>
           <div class="hmText">
             <div class="hmName">${escapeHtml(h.name||"Habit")}</div>
             <div class="hmMeta">${habitDoneText(h, done)}</div>
           </div>
         </div>
-        <button class="hmBadge hmToggle" type="button" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}"></button>
+        <button class="hmBadge hmToggle ${done ? "is-done" : ""}" type="button" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}">${done ? "✓" : ""}</button>
       </article>
     `;
   }).join("");
 host.innerHTML = `
-    <div class="qmHead">
-      <div>
-        <div class="qmTitle">Habits</div>
-        <div class="qmSub">${label}</div>
-      </div>
+    <div class="hmTopCard">
+      <div class="hmTopTitle">Habits</div>
+      <div class="hmTopSub">${label}</div>
     </div>
     <div class="qmList">${rows || '<p class="empty">No habits yet.</p>'}</div>
   `;
