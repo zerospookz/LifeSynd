@@ -1923,11 +1923,22 @@ function renderAnalytics(){
     const dx = Math.abs(e.clientX - dragStartX);
     const dy = Math.abs(e.clientY - dragStartY);
 
-    // If user starts moving before holding long enough, treat it as scroll/hover and cancel drag.
-    if(!dragging && (dx > 12 || dy > 12)){
-      if(dragHoldTimer){ clearTimeout(dragHoldTimer); dragHoldTimer = null; }
-      dragPrimed = false;
-      return;
+    // If the user starts moving before the hold finishes:
+    // - Mouse: start paint immediately (more natural for desktop).
+    // - Touch: assume scrolling unless they held long enough.
+    if(!dragging && (dx > 8 || dy > 8)){
+      if(e.pointerType === "mouse"){
+        if(dragHoldTimer){ clearTimeout(dragHoldTimer); dragHoldTimer = null; }
+        if(dragPrimed){
+          dragStarted = true;
+          dragging = true;
+          applyCell(dragStartCell);
+        }
+      }else{
+        if(dragHoldTimer){ clearTimeout(dragHoldTimer); dragHoldTimer = null; }
+        dragPrimed = false;
+        return;
+      }
     }
     if(!dragging) return;
 
@@ -2255,7 +2266,7 @@ function renderListInAnalytics(){
         </div>
       </div>
     `;
-  }).join("");
+  }).join(""));
 
   if(period.kind === 'all'){
     habitListEl.innerHTML = `
