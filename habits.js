@@ -741,6 +741,11 @@ function renderAnalytics(){
   if(!card) return;
   const H = getFilteredHabits();
 
+  // Keep the body + header toggles in sync even when we re-render ONLY the analytics card
+  // (e.g. when navigating periods). Otherwise, list mode can appear "blank".
+  const currentViewMode = getCurrentViewMode();
+  document.body.classList.toggle("habitsViewList", currentViewMode === "list");
+
   // Shared: hold-to-delete (2.5s) for habit labels (desktop header + mobile sticky column)
   function bindHoldToDelete(labelEl, habit){
     if(!labelEl || !habit) return;
@@ -854,7 +859,17 @@ function renderAnalytics(){
     : (analyticsView==="year")
       ? (analyticsOffsetDays===0 ? "This year" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}y` : `${analyticsOffsetDays}y`))
       : (analyticsOffsetDays===0 ? "Today" : (analyticsOffsetDays>0 ? `+${analyticsOffsetDays}d` : `${analyticsOffsetDays}d`));
-  const rangeLabel = `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
+  // Range label
+  let rangeLabel = `${fmtDowShortMD(dates[0])} - ${fmtDowShortMD(dates[dates.length-1])}`;
+  try{
+    if(analyticsView === "month"){
+      const b = getBoundsForView("month", analyticsOffsetDays);
+      rangeLabel = new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start);
+    }else if(analyticsView === "year"){
+      const b = getBoundsForView("year", analyticsOffsetDays);
+      rangeLabel = String(b.start.getFullYear());
+    }
+  }catch(_){ /* keep fallback */ }
   const segIndex = ({ week:0, month:1, year:2, all:3 })[analyticsView] ?? 0;
 
   // Overall (shared) underline bar stats
@@ -1038,6 +1053,7 @@ function renderAnalytics(){
       saveAnalyticsOffsets();
       analyticsOffsetDays = 0;
       renderAnalytics();
+      renderListInAnalytics();
     });
   });
 
@@ -1048,6 +1064,9 @@ function renderAnalytics(){
     saveAnalyticsOffsets();
     // legacy key no longer used
     renderAnalytics();
+    // In list mode, the list content is rendered outside the matrix builder.
+    // Rebuild it here as well so switching periods doesn't "blank" the list.
+    renderListInAnalytics();
   });
   card.querySelector("#calNext").addEventListener("click", ()=>{
     analyticsOffsetDays += step;
@@ -1055,6 +1074,7 @@ function renderAnalytics(){
     saveAnalyticsOffsets();
     // legacy key no longer used
     renderAnalytics();
+    renderListInAnalytics();
   });
   // "Today" button removed by request. Keep null-safe logic in case older markup exists.
   const todayBtn = card.querySelector("#calToday");
@@ -1071,6 +1091,7 @@ function renderAnalytics(){
       // legacy key no longer used
       window.__resetMatrixScroll = true;
       renderAnalytics();
+      renderListInAnalytics();
     });
   }
 
@@ -1481,6 +1502,86 @@ function renderAnalytics(){
     });
     lastPulse = null;
   }
+}
+
+// Render the list section that lives INSIDE the analytics card.
+// This must be callable even when only renderAnalytics() ran.
+function renderListInAnalytics(){
+  const habitListEl = document.getElementById("habitList");
+  if(!habitListEl) return;
+
+  const H = getFilteredHabits();
+  const viewMode = getCurrentViewMode();
+  if(viewMode !== "list"){
+    habitListEl.innerHTML = "";
+    return;
+  }
+
+  if(!H.length){
+    habitListEl.innerHTML = '<p class="empty">No habits yet. Add your first habit above.</p>';
+    return;
+  }
+
+  // Month completion numbers (like 17 / 23). We use the *current month* unless the user
+  // is currently browsing Month view, in which case we respect that month offset.
+  const monthOffset = (analyticsView === "month") ? (Number(analyticsOffsetDays)||0) : 0;
+  const monthBounds = getBoundsForView("month", monthOffset);
+  const monthStartIso = isoDate(monthBounds.start);
+  const monthEndIso = isoDate(monthBounds.end);
+  const todayIso = today();
+
+  // Eligible window for each habit:
+  // from max(monthStart, habit.created) to min(monthEnd, today) (or monthEnd if browsing past months).
+  const browseEndIso = (monthEndIso < todayIso) ? monthEndIso : todayIso;
+
+  let monthLabel = "This month";
+  try{ monthLabel = new Intl.DateTimeFormat(undefined,{ month:"long" }).format(monthBounds.start); }catch(_){ }
+
+  const rows = H.map((h)=>{
+    const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
+    const createdIso = (h && typeof h.created === "string" && h.created.length===10) ? h.created : monthStartIso;
+    const startIso = (createdIso > monthStartIso) ? createdIso : monthStartIso;
+    const endIso = (browseEndIso < startIso) ? startIso : browseEndIso;
+
+    // Count eligible days inclusive
+    const startD = new Date(startIso+"T00:00:00");
+    const endD = new Date(endIso+"T00:00:00");
+    let eligible = Math.floor((endD - startD) / 86400000) + 1;
+    if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+
+    // Done in window
+    let doneCount = 0;
+    const set = new Set(h.datesDone||[]);
+    // Iterate days (eligible is at most 31 for month view, so this is cheap)
+    if(eligible > 0){
+      const d = new Date(startD);
+      while(d <= endD){
+        const iso = d.toISOString().slice(0,10);
+        if(set.has(iso)) doneCount++;
+        d.setDate(d.getDate()+1);
+      }
+    }
+
+    const pct = eligible ? Math.round((doneCount / eligible) * 100) : 0;
+    return `
+      <div class="habitTableRow" style="--accent:${accent}">
+        <div class="htrMain">
+          <div class="htrTitleRow">
+            <strong>${escapeHtml(h.name||"Habit")}</strong>
+            <span class="badge">${monthLabel}</span>
+          </div>
+          <div class="monthProg" aria-hidden="true"><div class="monthFill" style="width:${pct}%"></div></div>
+          <div class="htrMeta small">${habitKind(h)==='negative' ? 'Avoidance' : 'Completion'} • ${pct}%</div>
+        </div>
+        <div class="htrRight">
+          <div class="htrCount">${doneCount} / ${eligible}</div>
+          <div class="small">days</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  habitListEl.innerHTML = `<div class="habitTable">${rows}</div>`;
 }
 
 
@@ -1985,67 +2086,10 @@ function render(){
   syncSidePanels();
   renderQuickMarkPanel();
 
-  
-  // List view content lives inside the analytics card (habitList element is created by renderHero).
-  const habitListEl = document.getElementById("habitList") || window.habitList;
-  if(habitListEl) habitListEl.innerHTML="";
-
-  const date=getMarkDate();
-  const viewMode = (()=> {
-    try{
-      const stored = localStorage.getItem("habitsViewMode");
-      if(stored === "grid" || stored === "list") return stored;
-    }catch(e){}
-    const active = document.querySelector('.tabBtn.active');
-    const t = active ? active.getAttribute('data-tab') : null;
-    return (t === "list") ? "list" : "grid";
-  })();
-
-  // Swap the content INSIDE the analytics card (grid vs list), matching the UI demo.
-  if(viewMode === "list"){
-    if(!habitListEl) return;
-    if(H.length===0){
-      habitListEl.innerHTML='<p class="empty">No habits yet. Add your first habit above.</p>';
-      return;
-    }
-    const rows = H.map((h, idx)=>{
-      const trend = computeTrendDeltaPct(h, analyticsView, analyticsOffsetDays);
-      const set=new Set(h.datesDone||[]);
-      const done=set.has(date);
-      const s=streakFor(h);
-      const deltaClass = trend.delta >= 0 ? "pos" : "neg";
-      const sign = trend.delta >= 0 ? "+" : "";
-      const w = Math.min(100, Math.abs(trend.delta));
-      return `
-        <div class="habitTableRow" data-index="${idx}">
-          <div class="htrMain">
-            <div class="htrTitleRow">
-              <strong>${escapeHtml(h.name)}</strong>
-              <span class="badge">${habitBadgeText(h, done)}</span>
-            </div>
-            <div class="htrMeta small">Current: ${s.current} • Best: ${s.best}</div>
-            <div class="trendWrap">
-              <div class="trendTop">
-                <span class="trendDelta ${deltaClass}">${sign}${Math.round(trend.delta)}%</span>
-                <span class="trendCaption">${trend.label}</span>
-              </div>
-              <div class="trendBar ${deltaClass}">
-                <div class="trendFill" style="width:${w}%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="htrRight">
-            <div class="htrPct">${Math.round(trend.current)}%</div>
-            <div class="small">this ${trend.periodName}</div>
-          </div>
-        </div>
-      `;
-    }).join("");
-    habitListEl.innerHTML = `<div class="habitTable">${rows}</div>`;
-  }else{
-    // Grid view: we only show the matrix; keep the list container empty.
-    if(habitListEl) habitListEl.innerHTML = "";
-  }
+  // List view lives inside the Analytics card.
+  // Render it here too (in addition to callers that only re-render analytics),
+  // so all side panels stay in sync.
+  renderListInAnalytics();
 
 }
 

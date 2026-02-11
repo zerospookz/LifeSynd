@@ -3002,6 +3002,11 @@ img.pulseOnce{
 .htrRight{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px;min-width:72px}
 .htrPct{font-weight:800;font-size:18px;line-height:1}
 
+/* Habits list (Month completion numbers) */
+.monthProg{height:10px;border-radius:999px;background: rgba(255,255,255,0.08);overflow:hidden;margin-top:10px}
+.monthFill{height:100%;border-radius:999px;background: var(--accent, rgba(255,255,255,0.55))}
+.htrCount{font-weight:800;font-size:16px;line-height:1.1}
+
 @media (max-width: 520px){
   .habitTableRow{flex-direction:column}
   .htrRight{align-items:flex-start}
