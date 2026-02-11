@@ -1455,8 +1455,12 @@ function renderAnalytics(){
     touched = new Set();
     dirty = false;
 
-    targetDone = (analyticsPaintMode==="erase" ? false : !cell.classList.contains("done"));
-    if(e.shiftKey) targetDone = false;
+    // Respect the user's current paint mode:
+    // - mark: always color/mark cells as done
+    // - erase: always remove/clear done marks
+    // Shift temporarily inverts the current mode.
+    targetDone = (analyticsPaintMode !== "erase");
+    if(e.shiftKey) targetDone = !targetDone;
 
     // Arm paint mode only after a short hold. If user releases quickly, it's just a tap.
     if(dragHoldTimer){ clearTimeout(dragHoldTimer); }
@@ -1522,25 +1526,58 @@ function renderListInAnalytics(){
     return;
   }
 
-  // Month completion numbers (like 17 / 23). We use the *current month* unless the user
-  // is currently browsing Month view, in which case we respect that month offset.
-  const monthOffset = (analyticsView === "month") ? (Number(analyticsOffsetDays)||0) : 0;
-  const monthBounds = getBoundsForView("month", monthOffset);
-  const monthStartIso = isoDate(monthBounds.start);
-  const monthEndIso = isoDate(monthBounds.end);
+  // List view summary counts should follow the currently selected analytics period.
+  // Example: if the user is browsing Month view with an offset, use that month.
   const todayIso = today();
 
-  // Eligible window for each habit:
-  // from max(monthStart, habit.created) to min(monthEnd, today) (or monthEnd if browsing past months).
-  const browseEndIso = (monthEndIso < todayIso) ? monthEndIso : todayIso;
+  function getListPeriod(){
+    const v = (analyticsView||"month").toLowerCase();
+    const off = Number(analyticsOffsetDays)||0;
 
-  let monthLabel = "This month";
-  try{ monthLabel = new Intl.DateTimeFormat(undefined,{ month:"long" }).format(monthBounds.start); }catch(_){ }
+    if(v === "month"){
+      const b = getBoundsForView("month", off);
+      let label = "This month";
+      try{ label = new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start); }catch(_){ }
+      return { startIso: isoDate(b.start), endIso: isoDate(b.end), label, kind:"month" };
+    }
+
+    if(v === "year"){
+      const b = getBoundsForView("year", off);
+      let label = "This year";
+      try{ label = String(b.start.getFullYear()); }catch(_){ }
+      return { startIso: isoDate(b.start), endIso: isoDate(b.end), label, kind:"year" };
+    }
+
+    if(v === "week"){
+      // Use calendar week (Mon..Sun) that contains (today + offsetDays).
+      const base = new Date();
+      base.setDate(base.getDate() + off);
+      const b = getMondayWeekBounds(base);
+      let label = "This week";
+      try{
+        const s = new Intl.DateTimeFormat(undefined,{ month:"short", day:"numeric" }).format(b.start);
+        const e = new Intl.DateTimeFormat(undefined,{ month:"short", day:"numeric" }).format(b.end);
+        label = `${s} – ${e}`;
+      }catch(_){ }
+      return { startIso: isoDate(b.start), endIso: isoDate(b.end), label, kind:"week" };
+    }
+
+    // all-time: show last 30 days as a useful default
+    const b = getBoundsForView("all", off);
+    return { startIso: isoDate(b.start), endIso: isoDate(b.end), label:"Last 30 days", kind:"all" };
+  }
+
+  const period = getListPeriod();
+  const periodStartIso = period.startIso;
+  const periodEndIso = period.endIso;
+
+  // Cap the end at today for current/future periods.
+  const browseEndIso = (periodEndIso < todayIso) ? periodEndIso : todayIso;
 
   const rows = H.map((h)=>{
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
-    const createdIso = (h && typeof h.created === "string" && h.created.length===10) ? h.created : monthStartIso;
-    const startIso = (createdIso > monthStartIso) ? createdIso : monthStartIso;
+    const createdIso = (h && typeof h.created === "string" && h.created.length===10) ? h.created : periodStartIso;
+    const startIso = (createdIso > periodStartIso) ? createdIso : periodStartIso;
     const endIso = (browseEndIso < startIso) ? startIso : browseEndIso;
 
     // Count eligible days inclusive
@@ -1568,7 +1605,7 @@ function renderListInAnalytics(){
         <div class="htrMain">
           <div class="htrTitleRow">
             <strong>${escapeHtml(h.name||"Habit")}</strong>
-            <span class="badge">${monthLabel}</span>
+            <span class="badge">${escapeHtml(period.label||"")}</span>
           </div>
           <div class="monthProg" aria-hidden="true"><div class="monthFill" style="width:${pct}%"></div></div>
           <div class="htrMeta small">${habitKind(h)==='negative' ? 'Avoidance' : 'Completion'} • ${pct}%</div>
