@@ -1766,11 +1766,6 @@ function renderAnalytics(){
         </button>
       `;
     }
-          <div class="calDay">${day}</div>
-          <div class="calPct">${pct}%</div>
-        </button>
-      `;
-    }
     html += '</div></div>';
     grid.innerHTML = html;
 
