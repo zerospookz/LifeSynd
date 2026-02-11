@@ -3022,27 +3022,31 @@ function renderQuickMarkPanel(){
   const rows = H.map(h=>{
     const done = (h.datesDone||[]).includes(iso);
     const missed = (!done && iso < todayIso);
-    // Keep the Quick Mark tile color in sync with the Analytics matrix.
-    const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
+    const hue = habitHue(h.id);
+    const accent = `hsl(${hue} 70% 55%)`;
     const isNeg = habitKind(h)==='negative';
-    const negIcon = isNeg ? `
-      <svg class="qmX" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    ` : "";
+
+    // Map hue -> a soft variant label (used only for subtle background bias)
+    const variant = (()=>{
+      if(hue >= 90 && hue <= 160) return "green";
+      if(hue >= 20 && hue <= 60) return "orange";
+      return "purple";
+    })();
+
     return `
-      <div class="qmRow ${done ? "isDone" : ""} ${missed ? "isMissed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
-        <div class="qmDot ${isNeg ? "isNeg" : ""}" aria-hidden="true">${negIcon}</div>
-        <div class="qmMain">
-          <div class="qmName">${escapeHtml(h.name||"Habit")}</div>
-          <div class="qmMeta">${habitDoneText(h, done)}</div>
+      <article class="hmCard hmCard--${variant} ${done ? "is-done" : ""} ${missed ? "is-missed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
+        <div class="hmLeft">
+          <span class="hmStatus ${done ? "hmStatus--done" : "hmStatus--idle"}" aria-hidden="true">${done ? "✓" : ""}</span>
+          <div class="hmText">
+            <div class="hmName">${escapeHtml(h.name||"Habit")}</div>
+            <div class="hmMeta">${habitDoneText(h, done)}</div>
+          </div>
         </div>
-        <button class="qmToggle" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}"></button>
-      </div>
+        <button class="hmBadge hmToggle" type="button" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}"></button>
+      </article>
     `;
   }).join("");
-
-  host.innerHTML = `
+host.innerHTML = `
     <div class="qmHead">
       <div>
         <div class="qmTitle">Habits</div>
@@ -3053,9 +3057,9 @@ function renderQuickMarkPanel(){
   `;
 
   // Bind actions
-  host.querySelectorAll(".qmRow").forEach(row=>{
+  host.querySelectorAll(".hmCard").forEach(row=>{
     const hid = row.getAttribute("data-hid");
-    const btn = row.querySelector(".qmToggle");
+    const btn = row.querySelector(".hmToggle");
     if(!btn) return;
     btn.addEventListener("click", (e)=>{
       e.preventDefault();
