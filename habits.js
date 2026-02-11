@@ -248,12 +248,12 @@ function getBoundsForView(view, offset){
     const base = addMonths(now, offset||0);
     const y = base.getFullYear();
     const m = base.getMonth();
-    return { start: new Date(y,m,1), end: new Date(y,m+1,0) };
+    return { start: utcDate(y,m,1), end: utcDate(y,m+1,0) };
   }
   if(v === "year"){
     const base = addYears(now, offset||0);
     const y = base.getFullYear();
-    return { start: new Date(y,0,1), end: new Date(y,11,31) };
+    return { start: utcDate(y,0,1), end: utcDate(y,11,31) };
   }
 
   // week + all: use rolling windows in days.
@@ -325,6 +325,10 @@ function fmtDowShortMD(iso){
 function isoDate(d){
   return d.toISOString().slice(0,10);
 }
+function utcDate(y,m,d){
+  return new Date(Date.UTC(y,m,d));
+}
+
 function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 
 
@@ -1707,8 +1711,8 @@ function renderAnalytics(){
     const b0 = new Date(bounds.start);
     const y = b0.getFullYear();
     const m = b0.getMonth();
-    const monthStart = new Date(y, m, 1);
-    const monthEnd = new Date(y, m+1, 0);
+    const monthStart = utcDate(y, m, 1);
+    const monthEnd = utcDate(y, m+1, 0);
     const monthDates = datesFromBounds({ start: monthStart, end: monthEnd });
     const daysInMonth = monthDates.length;
 
