@@ -3314,7 +3314,8 @@ function wireHabitsLayout(){
       panels.forEach(p=>p.classList.toggle("active", p.getAttribute("data-panel")===tab));
       // Swap the content inside Habits page (grid vs table view)
       try{ render(); }catch(e){}
-      // On desktop, keep all visible via CSS});
+      // On desktop, keep all visible via CSS
+    });
   });
 }
 
