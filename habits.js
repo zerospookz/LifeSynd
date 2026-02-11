@@ -35,6 +35,173 @@ let analyticsOffsetDays = Number(analyticsOffsets[analyticsView]) || 0;
 let analyticsPaintMode = (localStorage.getItem("habitsAnalyticsPaintMode")==="mark" || localStorage.getItem("habitsAnalyticsPaintMode")==="erase") ? localStorage.getItem("habitsAnalyticsPaintMode") : null; // mark | erase
 let lastPulse = null; // {hid, iso, mode:"done"|"miss"} for subtle mark animation
 
+// Month view selected day + quick day details modal
+let monthSelectedIso = null;
+let dayDetailsModalEl = null;
+
+function isWeekendIso(iso){
+  try{
+    const d = new Date(iso + "T00:00:00");
+    const dow = d.getDay(); // 0 Sun .. 6 Sat
+    return dow === 0 || dow === 6;
+  }catch(e){ return false; }
+}
+
+function setHabitDoneForIso(hid, iso, done){
+  const h = habits.find(x=>x.id===hid);
+  if(!h) return;
+  h.datesDone = h.datesDone || [];
+  const set = new Set(h.datesDone);
+  const had = set.has(iso);
+  if(done){
+    set.add(iso);
+  }else{
+    set.delete(iso);
+  }
+  // no-op
+  if(had === set.has(iso)) return;
+  h.datesDone = Array.from(set).sort();
+  save();
+}
+
+function computePctForIso(iso){
+  const total = Math.max(1, (habits||[]).length);
+  let done = 0;
+  for(const h of (habits||[])){
+    if((h.datesDone||[]).includes(iso)) done++;
+  }
+  return Math.round((done/total)*100);
+}
+
+function ensureDayDetailsModal(){
+  if(dayDetailsModalEl) return dayDetailsModalEl;
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.id = "dayDetailsModal";
+  modal.innerHTML = `
+    <div class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Day details">
+      <div class="modalSheet">
+        <div class="modalHeader">
+          <div class="modalTitle" id="dayDetailsTitle">Day details</div>
+          <button class="iconBtn" type="button" data-close aria-label="Close">✕</button>
+        </div>
+        <div class="modalBody" id="dayDetailsBody"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const close = ()=> modal.classList.remove("open");
+  modal.addEventListener("click", (e)=>{
+    const t = e.target;
+    if(t && (t.classList.contains("modalBackdrop") || t.closest("[data-close]"))){
+      close();
+    }
+  });
+  window.addEventListener("keydown", (e)=>{
+    if(e.key==="Escape" && modal.classList.contains("open")) close();
+  });
+
+  dayDetailsModalEl = modal;
+  return modal;
+}
+
+function openDayDetails(iso){
+  monthSelectedIso = iso;
+  const modal = ensureDayDetailsModal();
+  const title = modal.querySelector("#dayDetailsTitle");
+  const body = modal.querySelector("#dayDetailsBody");
+  const d = new Date(iso + "T00:00:00");
+  const pretty = d.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"short", day:"numeric" });
+  if(title) title.textContent = pretty;
+
+  const todayIso = today();
+  const rows = (habits||[]).map(h=>{
+    const done = (h.datesDone||[]).includes(iso);
+    const missed = (!done && iso < todayIso);
+    const accent = habitAccent(h);
+    return `
+      <div class="dayRow" data-hid="${h.id}">
+        <div class="dayLeft">
+          <div class="dayDot" style="--accent:${accent}"></div>
+          <div class="dayName">${escapeHtml(h.name)}</div>
+          <div class="dayStatus ${done ? "isDone":""} ${missed ? "isMissed":""}">
+            ${done ? "Done" : (missed ? "Missed" : "—")}
+          </div>
+        </div>
+        <div class="dayActions">
+          <button class="btnSmall ${done ? "primary":""}" type="button" data-act="toggle">${done ? "Undo" : "Done"}</button>
+          <button class="btnSmall" type="button" data-act="clear">Clear</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  body.innerHTML = `
+    <div class="dayMeta">
+      <div class="dayMetaChip">${isWeekendIso(iso) ? "Weekend" : "Weekday"}</div>
+      <div class="dayMetaChip"><span class="mono">${iso}</span></div>
+    </div>
+    <div class="dayRows">
+      ${rows || '<div class="empty">No habits yet. Add a habit to use day details.</div>'}
+    </div>
+  `;
+
+  body.onclick = (e)=>{
+    const btn = e.target.closest("button[data-act]");
+    if(!btn) return;
+    const row = btn.closest(".dayRow");
+    if(!row) return;
+    const hid = row.dataset.hid;
+    const act = btn.dataset.act;
+    const h = habits.find(x=>x.id===hid);
+    if(!h) return;
+
+    const currentlyDone = (h.datesDone||[]).includes(iso);
+    if(act==="toggle"){
+      setHabitDoneForIso(hid, iso, !currentlyDone);
+    }else if(act==="clear"){
+      setHabitDoneForIso(hid, iso, false);
+    }
+
+    // Update modal row UI
+    const nowDone = (h.datesDone||[]).includes(iso);
+    const nowMissed = (!nowDone && iso < today());
+    row.querySelector(".dayStatus").textContent = nowDone ? "Done" : (nowMissed ? "Missed" : "—");
+    row.querySelector(".dayStatus").className = `dayStatus ${nowDone ? "isDone":""} ${nowMissed ? "isMissed":""}`;
+    const toggleBtn = row.querySelector('button[data-act="toggle"]');
+    if(toggleBtn){
+      toggleBtn.textContent = nowDone ? "Undo" : "Done";
+      toggleBtn.classList.toggle("primary", nowDone);
+    }
+
+    // Update the month cell percent + classes
+    const cell = document.querySelector(`.monthCalGrid .calCell[data-iso="${iso}"]`);
+    if(cell){
+      const pct = computePctForIso(iso);
+      cell.style.setProperty("--pct", String(pct/100));
+      const pctEl = cell.querySelector(".calPct");
+      if(pctEl) pctEl.textContent = pct + "%";
+      cell.setAttribute("aria-label", `${iso}, ${pct}%`);
+      cell.classList.toggle("isZero", pct===0);
+      cell.classList.toggle("isLow", pct>0 && pct<35);
+    }
+  };
+
+  // Highlight selected cell
+  document.querySelectorAll(".monthCalGrid .calCell.selected").forEach(x=>x.classList.remove("selected"));
+  const cell = document.querySelector(`.monthCalGrid .calCell[data-iso="${iso}"]`);
+  if(cell) cell.classList.add("selected");
+
+  modal.classList.add("open");
+}
+
+// Accent helper for modal dot (keeps it consistent with the rest of the app)
+function habitAccent(h){
+  const hue = (typeof h.hue === "number") ? h.hue : habitHue(h.id);
+  return `hsl(${hue} 85% 60%)`;
+}
+
 function rangeDates(rangeDays, offsetDays, dir="backward"){
   // dir: "backward" (default) returns [oldest..newest] ending at (today+offset)
   //      "forward" returns [today+offset .. +rangeDays-1]
@@ -1589,8 +1756,16 @@ function renderAnalytics(){
       const day = Number(iso.slice(8,10));
       const pct = pctForIso(iso);
       const isToday = iso === todayIso;
+      const isWeekend = isWeekendIso(iso);
+      const isSelected = (monthSelectedIso === iso);
+      const pctCls = (pct===0) ? "isZero" : (pct<35 ? "isLow" : "");
       html += `
-        <button class="calCell ${isToday?"today":""}" type="button" data-iso="${iso}" style="--pct:${pct/100}" aria-label="${iso}, ${pct}%">
+        <button class="calCell ${isToday?"today":""} ${isWeekend?"weekend":""} ${isSelected?"selected":""} ${pctCls}" type="button" data-iso="${iso}" style="--pct:${pct/100}" aria-label="${iso}, ${pct}%">
+          <div class="calDay">${day}</div>
+          <div class="calPct">${pct}%</div>
+        </button>
+      `;
+    }
           <div class="calDay">${day}</div>
           <div class="calPct">${pct}%</div>
         </button>
@@ -1598,6 +1773,11 @@ function renderAnalytics(){
     }
     html += '</div></div>';
     grid.innerHTML = html;
+
+    // Click a day → open details modal + set selected state
+    grid.querySelectorAll('.calCell[data-iso]').forEach(btn=>{
+      btn.addEventListener('click', ()=> openDayDetails(btn.dataset.iso));
+    });
 
     // Render month drawer content: habits + count of checked days in this month.
     if(monthInlineBody){
