@@ -2626,16 +2626,6 @@ function renderInsights(){
       </div>
     </div>
     <p class="small" style="margin-top:12px">Tap to toggle. Drag to paint in the Analytics grid.</p>
-    ${weakest?`
-      <div class="hintCard compact" style="margin-top:12px" id="weakestHint" role="button" tabindex="0" aria-label="Jump to weakest habit">
-        <div class="hintIcon">🧠</div>
-        <div class="hintText">
-          <div class="hintTitle">Focus hint</div>
-          <div class="hintBody">Weakest: <strong>${escapeHtml(weakest.h.name)}</strong> • ${weakest.done}/${weakest.days} in last 2 weeks</div>
-        </div>
-        <div class="hintCta">Jump →</div>
-      </div>
-    `:""}
   `;
 
   // Modern segmented "arc reactor" for 60-day consistency.
@@ -2645,7 +2635,7 @@ function renderInsights(){
   window.__lastConsistency180 = r180;
 
   if(weakest){
-    const hint = el.querySelector('#weakestHint');
+    const hint = el.querySelector('#weakestHintQM');
     const go = ()=>{ setCarouselIndex(H.findIndex(x=>x.id===weakest.h.id)); };
     hint?.addEventListener('click', go);
     hint?.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); go(); } });
@@ -3157,13 +3147,6 @@ function deleteHabit(id){
 
 
 
-function renderFocusCard(){
-  // v10: avoid duplicate "Focus hint" cards. We keep the single compact hint tile.
-  const el = document.getElementById("focusHint");
-  if(!el) return;
-  el.innerHTML = "";
-  el.style.display = "none";
-}
 
 function syncSidePanels(){
   const sMain = document.getElementById("streakSummary");
