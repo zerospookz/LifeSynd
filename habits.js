@@ -1435,7 +1435,25 @@ function renderAnalytics(){
     dragPrimed = false;
     dragStartCell = null;
 
-    if(dirty) save();
+    // When painting via drag, we mutate in-memory habit dates and update only the grid cells.
+    // We still need to refresh the rest of the UI (e.g., the "Today" list cards) so the
+    // completion state matches what was painted.
+    if(dirty){
+      save();
+
+      // Preserve scroll positions for a smoother feel (both matrix + page)
+      const wrap = document.querySelector('.matrixWrap');
+      const scroll = wrap ? {top:wrap.scrollTop, left:wrap.scrollLeft} : null;
+      const pageScrollY = window.scrollY;
+
+      render();
+
+      requestAnimationFrame(()=>{
+        const w = document.querySelector('.matrixWrap');
+        if(w && scroll){ w.scrollTop = scroll.top; w.scrollLeft = scroll.left; }
+        window.scrollTo({ top: pageScrollY, left: 0, behavior: 'auto' });
+      });
+    }
     dirty = false;
     touched = new Set();
     dragging = false;
