@@ -1088,19 +1088,34 @@ font-weight: 750;
 }
 .habitsDateRow .navBtn:active{ transform: translateY(1px); }
 
-.habitsDateRow .rangeLabel{
-  padding: 9px 14px;
-  border-radius: 999px;
+.habitsDateRow .rangePill{
+  padding: 8px 14px 9px 14px;
+  border-radius: 16px;
   border: 1px solid rgba(255,255,255,.10);
   background: rgba(255,255,255,.06);
   box-shadow: 0 10px 26px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.06);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  display:flex;
+  flex-direction:column;
+  gap: 2px;
+  min-width: 118px;
+}
+.habitsDateRow .rangePill .rangeKicker{
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  font-weight: 900;
+  line-height: 1;
+}
+.habitsDateRow .rangePill .rangeLabel{
   color: rgba(255,255,255,.92);
-  font-weight: 800;
+  font-weight: 850;
   font-size: 13px;
   letter-spacing: .2px;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 /* Make segmented tabs feel more premium without changing layout */

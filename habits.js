@@ -1265,6 +1265,11 @@ function renderAnalytics(){
       rangeLabel = String(b.start.getFullYear());
     }
   }catch(_){ /* keep fallback */ }
+  let rangeKicker = "DATES";
+  if(analyticsView === "month") rangeKicker = "MONTH";
+  else if(analyticsView === "year") rangeKicker = "YEAR";
+  else if(analyticsView === "all") rangeKicker = "ALL TIME";
+
   const segIndex = ({ week:0, month:1, year:2, all:3 })[analyticsView] ?? 0;
 
   // Overall (shared) underline bar stats
@@ -1351,7 +1356,7 @@ function renderAnalytics(){
         <div class="habitsDateSlot">
           <div class="habitsDateRow" id="habitsDateRow">
             <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
-            <div class="rangeLabel" id="rangeLabel">${rangeLabel}</div>
+            <div class="rangePill" id="rangePill"><div class="rangeKicker" id="rangeKicker">${rangeKicker}</div><div class="rangeLabel" id="rangeLabel">${rangeLabel}</div></div>
             <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
           </div>
 
@@ -1476,8 +1481,10 @@ function renderAnalytics(){
   const prevBtn = card.querySelector("#calPrev");
   const nextBtn = card.querySelector("#calNext");
   const rangeEl = card.querySelector("#rangeLabel");
+  const kickerEl = card.querySelector("#rangeKicker");
   if(analyticsView === 'all'){
     if(rangeEl) rangeEl.textContent = 'All time';
+    if(kickerEl) kickerEl.textContent = 'ALL TIME';
     [prevBtn,nextBtn].forEach(b=>{
       if(!b) return;
       b.disabled = true;
