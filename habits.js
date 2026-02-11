@@ -1476,9 +1476,8 @@ function renderAnalytics(){
     // Respect the user's current paint mode:
     // - mark: always color/mark cells as done
     // - erase: always remove/clear done marks
-    // Shift temporarily inverts the current mode.
     targetDone = (analyticsPaintMode !== "erase");
-    if(e.shiftKey) targetDone = !targetDone;
+
 
     // Arm paint mode only after a short hold. If user releases quickly, it's just a tap.
     if(dragHoldTimer){ clearTimeout(dragHoldTimer); }
@@ -1505,7 +1504,7 @@ function renderAnalytics(){
     if(!dragging) return;
 
     e.preventDefault();
-    if(e.shiftKey) targetDone = false;
+
     const el = document.elementFromPoint(e.clientX, e.clientY);
     const cell = el ? el.closest(".matrixCell") : null;
     applyCell(cell);
