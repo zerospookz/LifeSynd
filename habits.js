@@ -1,4 +1,11 @@
 "use strict";
+
+// =============================
+// Habits page (refactor pass)
+// - Single mutation entrypoint (applyHabitMark)
+// - Single UI sync entrypoint (syncAfterHabitChange)
+// =============================
+
 // Optional date input (some layouts include a date picker; Habits page currently doesn't).
 // We still declare it to avoid ReferenceError in strict mode.
 let markDate = null;
@@ -64,6 +71,26 @@ function setHabitDoneForIso(hid, iso, done){
   save();
 }
 
+
+function getHabitDone(hid, iso){
+  const h = habits.find(x=>x.id===hid);
+  if(!h) return false;
+  return (h.datesDone||[]).includes(iso);
+}
+
+/**
+ * applyHabitMark: the ONLY place that mutates habit completion state.
+ * mode:
+ *  - "toggle": flip current state
+ *  - "set": set done to boolean `done`
+ */
+function applyHabitMark(hid, iso, mode="toggle", done=true){
+  const cur = getHabitDone(hid, iso);
+  const next = (mode==="toggle") ? !cur : !!done;
+  setHabitDoneForIso(hid, iso, next);
+  return {hid, iso, done: next};
+}
+
 function computePctForIso(iso){
   const total = Math.max(1, (habits||[]).length);
   let done = 0;
@@ -100,7 +127,33 @@ function syncAfterHabitChange(hid, iso){
     }
   }catch(e){}
 
-  // Quick mark panel + side panels
+  
+  // Month grid cell (if visible)
+  try{
+    const cell = document.querySelector(`.monthCalGrid .calCell[data-iso="${iso}"]`);
+    if(cell){
+      const pct = computePctForIso(iso);
+      const hue = (pct * 120) / 100;
+      const bar = `hsl(${hue}, 88%, 55%)`;
+      const glow = `hsla(${hue}, 92%, 58%, .70)`;
+      cell.style.setProperty("--barColor", bar);
+      cell.style.setProperty("--glowColor", glow);
+
+      const pctEl = cell.querySelector(".calPctNum");
+      if(pctEl){
+        pctEl.textContent = pct + "%";
+        pctEl.setAttribute("data-target", String(pct));
+      }
+      const fill = cell.querySelector(".calFill");
+      if(fill) fill.style.width = pct + "%";
+
+      cell.setAttribute("aria-label", `${iso}, ${pct}%`);
+      cell.classList.toggle("isZero", pct===0);
+      cell.classList.toggle("isLow", pct>0 && pct<35);
+    }
+  }catch(e){}
+
+// Quick mark panel + side panels
   try{ renderQuickMarkPanel(); }catch(e){}
   try{ syncSidePanels(); }catch(e){}
 }
@@ -1206,6 +1259,36 @@ function confirmAddHabitModal(){
 
 
 function toggleHabitAt(id, iso, opts={}){
+  const h = habits.find(x=>x.id===id);
+  if(!h) return;
+  const {done: nowDone} = applyHabitMark(id, iso, "toggle");
+
+  showToast(habitKind(h)==='negative'
+    ? (nowDone ? "Marked avoided" : "Marked as slipped")
+    : (nowDone ? "Marked done" : "Marked as missed")
+  );
+
+  lastPulse = { hid: id, iso, mode: nowDone ? "done" : "miss" };
+
+  // Preserve scroll positions for a smoother feel (both matrix + page)
+  const wrap = document.querySelector('.matrixWrap');
+  const scroll = wrap ? {top:wrap.scrollTop, left:wrap.scrollLeft} : null;
+  const pageScrollY = window.scrollY;
+
+  // Main render stays (low risk). Then we sync any other visible panels (Habits box / month cells).
+  render();
+  try{ syncAfterHabitChange(id, iso); }catch(e){}
+
+  if(opts && opts.preserveScroll){
+    requestAnimationFrame(()=>{
+      const w = document.querySelector('.matrixWrap');
+      if(w && scroll){ w.scrollTop = scroll.top; w.scrollLeft = scroll.left; }
+      window.scrollTo({ top: pageScrollY, left: 0, behavior: 'auto' });
+    });
+  }
+  return nowDone;
+}
+){
   const h = habits.find(x=>x.id===id);
   if(!h) return;
   h.datesDone = h.datesDone || [];
