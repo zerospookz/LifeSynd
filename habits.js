@@ -334,7 +334,7 @@ function renderYearHeatmap(gridEl, cardEl, habitsList, yearOffset){
     <div class="yearPickerRow">
       <div class="yearPicker">
         <div class="yearPickerLabel">Habit</div>
-        <select id="yearHabitSelect" class="yearSelect">${options}</select>
+        <div class="selectWrap"><select id="yearHabitSelect" class="premiumSelect">${options}</select></div>
       </div>
     </div>
   `;
@@ -497,9 +497,9 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
       </div>
       <label class="allTimePick">
         <span class="small">Habit</span>
-        <select id="allTimeHabitPick" class="select">
+        <div class="selectWrap"><select id="allTimeHabitPick" class="premiumSelect">
           ${H.map(h=>`<option value="${escapeHtml(h.id)}" ${h.id===selId?'selected':''}>${escapeHtml(h.name||'Habit')}</option>`).join('')}
-        </select>
+        </select></div>
       </label>
     </div>
   `;
@@ -2275,12 +2275,12 @@ function renderListInAnalytics(){
           <div class="small">All‑time habits</div>
           <div class="small muted">Sorted by</div>
         </div>
-        <select id="allListSort" class="select">
+        <div class="selectWrap"><select id="allListSort" class="premiumSelect">
           <option value="consistency" ${allSortKey==='consistency'?'selected':''}>Consistency</option>
           <option value="improvement" ${allSortKey==='improvement'?'selected':''}>Most improved (30d)</option>
           <option value="streak" ${allSortKey==='streak'?'selected':''}>Best streak</option>
           <option value="name" ${allSortKey==='name'?'selected':''}>Name</option>
-        </select>
+        </select></div>
       </div>
       <div class="lifeGrid">${rows}</div>
     `;
