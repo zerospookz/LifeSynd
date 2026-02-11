@@ -3803,3 +3803,16 @@ img.pulseOnce{
   .overallTrend .trendBar{ height:9px; }
   .overallTrend .trendPill{ padding:6px 10px; }
 }
+
+/* Premium Overall Trend Bar: extra-small screens */
+
+@media (max-width: 420px){
+  .overallTrend .trendTop{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .overallTrend .trendRight{
+    white-space: normal;
+  }
+}
