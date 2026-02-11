@@ -73,6 +73,37 @@ function computePctForIso(iso){
   return Math.round((done/total)*100);
 }
 
+
+// Sync UI bits after marking from any view (week/month/day details)
+function syncAfterHabitChange(hid, iso){
+  try{
+    const h = habits.find(x=>x.id===hid);
+    if(h){
+      const set = new Set(h.datesDone||[]);
+      const done = set.has(iso);
+      const todayIso = today();
+      const missed = (!done && iso < todayIso);
+
+      // Week matrix cells (desktop)
+      document.querySelectorAll(`.matrixCell[data-hid="${hid}"][data-iso="${iso}"]`).forEach(cell=>{
+        cell.classList.toggle("done", done);
+        cell.classList.toggle("missed", missed);
+      });
+
+      // Mobile week dots / rows if present
+      document.querySelectorAll(`[data-hid="${hid}"][data-iso="${iso}"]`).forEach(el=>{
+        if(el.classList && (el.classList.contains("weekDot") || el.classList.contains("mobileWeekDot"))){
+          el.classList.toggle("done", done);
+          el.classList.toggle("missed", missed);
+        }
+      });
+    }
+  }catch(e){}
+
+  // Quick mark panel + side panels
+  try{ renderQuickMarkPanel(); }catch(e){}
+  try{ syncSidePanels(); }catch(e){}
+}
 function ensureDayDetailsModal(){
   if(dayDetailsModalEl) return dayDetailsModalEl;
   const modal = document.createElement("div");
@@ -3119,7 +3150,8 @@ function render(){
   renderInsights();
   renderStreakSummary();
   renderHero();
-  renderFocusCard();
+  // focus hint shown only inside Habits box
+
   syncSidePanels();
   renderQuickMarkPanel();
 
@@ -3240,9 +3272,7 @@ function wireHabitsLayout(){
       panels.forEach(p=>p.classList.toggle("active", p.getAttribute("data-panel")===tab));
       // Swap the content inside Habits page (grid vs table view)
       try{ render(); }catch(e){}
-      // On desktop, keep all visible via CSS
-      if(tab==="stats"){ try{ renderFocusCard(); }catch(e){} }
-    });
+      // On desktop, keep all visible via CSS});
   });
 }
 

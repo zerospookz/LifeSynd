@@ -4107,3 +4107,14 @@ img.pulseOnce{
 .hmHintInHabits{
   margin-top:14px;
 }
+
+
+/* hmBadge state coloring (so the box is colored no matter where you mark from) */
+.hmCard.is-done .hmBadge{
+  background: color-mix(in srgb, var(--accent) 26%, rgba(255,255,255,.10));
+  border-color: color-mix(in srgb, var(--accent) 40%, rgba(255,255,255,.12));
+}
+.hmCard.is-missed .hmBadge{
+  background: rgba(255,77,79,.10);
+  border-color: rgba(255,77,79,.30);
+}
