@@ -1119,6 +1119,19 @@ function habitHue(id){
 
 
 
+
+function getHabitTheme(hOrId){
+  const h = (typeof hOrId === "string") ? habits.find(x=>x.id===hOrId) : hOrId;
+  const hue = habitHue(h?.id);
+  const accent = `hsl(${hue} 70% 55%)`;
+  const variant = (()=>{
+    if(hue >= 90 && hue <= 160) return "green";
+    if(hue >= 20 && hue <= 60) return "orange";
+    return "purple";
+  })();
+  return {hue, accent, variant};
+}
+
 function fmtWeekday(iso){
   const d=new Date(iso+"T00:00:00");
   return d.toLocaleDateString(undefined,{weekday:"short"});
@@ -3035,7 +3048,7 @@ function renderStreakSummary(){
       ${top.map(x=>{
         const pct = Math.round((x.s.current / maxCurrent) * 100);
         return `
-          <div class="streakItem">
+          <div class="streakItem" data-hid="${x.h.id}" style="--accent:${getHabitTheme(x.h).accent}">
             <div class="streakMeta">
               <div class="streakName">${escapeHtml(x.h.name)}</div>
               <div class="streakSub">Best ${x.s.best}</div>
@@ -3085,16 +3098,10 @@ function renderQuickMarkPanel(){
   const rows = H.map(h=>{
     const done = (h.datesDone||[]).includes(iso);
     const missed = (!done && iso < todayIso);
-    const hue = habitHue(h.id);
-    const accent = `hsl(${hue} 70% 55%)`;
+    const theme = getHabitTheme(h);
+    const accent = theme.accent;
     const isNeg = habitKind(h)==='negative';
-
-    // Map hue -> a soft variant label (used only for subtle background bias)
-    const variant = (()=>{
-      if(hue >= 90 && hue <= 160) return "green";
-      if(hue >= 20 && hue <= 60) return "orange";
-      return "purple";
-    })();
+    const variant = theme.variant;
 
     return `
       <article class="hmCard hmCard--${variant}  ${missed ? "is-missed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
