@@ -2378,9 +2378,15 @@ function renderQuickMarkPanel(){
     const missed = (!done && iso < todayIso);
     // Keep the Quick Mark tile color in sync with the Analytics matrix.
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
+    const isNeg = habitKind(h)==='negative';
+    const negIcon = isNeg ? `
+      <svg class="qmX" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    ` : "";
     return `
       <div class="qmRow ${done ? "isDone" : ""} ${missed ? "isMissed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
-        <div class="qmDot" aria-hidden="true"></div>
+        <div class="qmDot ${isNeg ? "isNeg" : ""}" aria-hidden="true">${negIcon}</div>
         <div class="qmMain">
           <div class="qmName">${escapeHtml(h.name||"Habit")}</div>
           <div class="qmMeta">${habitDoneText(h, done)}</div>

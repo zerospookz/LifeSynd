@@ -2905,6 +2905,11 @@ img.pulseOnce{
   border-color:color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,.08))}
 #habitQuickMark .qmDot{width:10px;height:10px;border-radius:50%;background:transparent;border:2px solid color-mix(in srgb, var(--accent) 75%, rgba(255,255,255,.2));box-shadow:0 0 0 4px rgba(0,0,0,.18) inset;flex:0 0 auto}
 #habitQuickMark .qmRow.isDone .qmDot{background:var(--accent);border-color:transparent}
+
+/* Negative habit marker: use an X icon instead of the dot */
+#habitQuickMark .qmDot.isNeg{width:14px;height:14px;border:none;border-radius:0;background:transparent;box-shadow:none;display:grid;place-items:center;color:color-mix(in srgb, var(--accent) 78%, rgba(255,255,255,.35));}
+#habitQuickMark .qmRow.isDone .qmDot.isNeg{color:var(--accent);background:transparent;border:none}
+#habitQuickMark .qmDot.isNeg .qmX{width:14px;height:14px;display:block;filter:drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 55%, transparent));}
 #habitQuickMark .qmMain{min-width:0;flex:1 1 auto}
 #habitQuickMark .qmName{font-weight:650;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #habitQuickMark .qmMeta{font-size:12px;opacity:.7;margin-top:2px}
