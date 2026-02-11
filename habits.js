@@ -374,6 +374,171 @@ function renderYearHeatmap(gridEl, cardEl, habitsList, yearOffset){
   if(help) help.style.display = 'none';
 }
 
+// ---------- All-time (multi-year) view ----------
+
+function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
+  if(!gridEl) return;
+  const H = (habitsList||[]).slice();
+  if(!H.length){
+    gridEl.innerHTML = '<p class="empty">Add a habit to see analytics.</p>';
+    return;
+  }
+
+  // Habit selector (persisted)
+  let selId = localStorage.getItem('habitsAllHabitId') || '';
+  if(!selId || !H.some(h=>h.id===selId)) selId = H[0].id;
+  const selected = H.find(h=>h.id===selId) || H[0];
+
+  const todayIso = today();
+  const createdIso = (selected && typeof selected.created === 'string' && selected.created.length===10) ? selected.created : todayIso;
+  const earliestIso = ((selected.datesDone||[]).concat([createdIso]).sort()[0]) || createdIso;
+  const earliestYear = Number(String(earliestIso).slice(0,4)) || (new Date().getFullYear());
+  const currentYear = new Date(todayIso + 'T00:00:00').getFullYear();
+
+  const accent = `hsl(${habitHue(selected.id)} 70% 55%)`;
+
+  function yearSummary(h, year){
+    const b = { start: new Date(year,0,1), end: new Date(year,11,31) };
+    // clamp window to created..today
+    const startIso = (createdIso > isoDate(b.start)) ? createdIso : isoDate(b.start);
+    const endIsoRaw = isoDate(b.end);
+    const endIso = (endIsoRaw < todayIso) ? endIsoRaw : todayIso;
+    const startD = new Date(startIso+'T00:00:00');
+    const endD = new Date(endIso+'T00:00:00');
+    let eligible = Math.floor((endD-startD)/86400000)+1;
+    if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+    const done = countDoneInBounds(h, { start:startD, end:endD });
+    const pct = eligible ? Math.round((done/eligible)*100) : 0;
+    return { eligible, done, pct, startIso, endIso };
+  }
+
+  function renderMonthHeat(h, year, monthIdx, windowStartIso, windowEndIso){
+    const mb = monthBoundsFor(year, monthIdx);
+    let ms = isoDate(mb.start);
+    let me = isoDate(mb.end);
+    // clamp to window
+    if(ms < windowStartIso) ms = windowStartIso;
+    if(me > windowEndIso) me = windowEndIso;
+    const startD = new Date(ms+'T00:00:00');
+    const endD = new Date(me+'T00:00:00');
+    const set = new Set(h.datesDone||[]);
+
+    // Build Monday-first calendar for the month
+    const first = new Date(year, monthIdx, 1);
+    const last = new Date(year, monthIdx+1, 0);
+    const monthStartIso = isoDate(first);
+    const monthEndIso = isoDate(last);
+
+    // compute month completion for title
+    const mStartIso = (ms > monthStartIso) ? ms : monthStartIso;
+    const mEndIso = (me < monthEndIso) ? me : monthEndIso;
+    const mStartD = new Date(mStartIso+'T00:00:00');
+    const mEndD = new Date(mEndIso+'T00:00:00');
+    let eligible = Math.floor((mEndD-mStartD)/86400000)+1;
+    if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+    const done = countDoneInBounds(h, { start:mStartD, end:mEndD });
+    const pct = eligible ? Math.round((done/eligible)*100) : 0;
+    const lvl = intensityLevel(pct);
+
+    // Monday-first offset
+    const dow = (d)=> (d.getDay()+6)%7; // Mon=0
+    const startOffset = dow(first);
+    const daysInMonth = last.getDate();
+    const totalCells = startOffset + daysInMonth;
+    const rows = Math.ceil(totalCells/7);
+    const cellCount = rows*7;
+
+    const cells = [];
+    for(let i=0;i<cellCount;i++){
+      const dayNum = i - startOffset + 1;
+      if(dayNum < 1 || dayNum > daysInMonth){
+        cells.push('<div class="yCell empty"></div>');
+        continue;
+      }
+      const iso = isoDate(new Date(year, monthIdx, dayNum));
+      // outside clamp window
+      if(iso < ms || iso > me){
+        cells.push('<div class="yCell empty"></div>');
+        continue;
+      }
+      const doneDay = set.has(iso);
+      const isToday = iso === todayIso;
+      const isPast = iso < todayIso;
+      const cls = ['yCell', `lvl${lvl}`];
+      if(doneDay) cls.push('done');
+      else if(isPast) cls.push('missed');
+      if(isToday) cls.push('today');
+      cells.push(`<div class="${cls.join(' ')}" title="${iso}" style="--habit-accent:${accent}"></div>`);
+    }
+
+    let mName = '';
+    try{ mName = new Intl.DateTimeFormat(undefined,{month:'short'}).format(new Date(year, monthIdx, 1)).toUpperCase(); }
+    catch(_){ mName = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][monthIdx]; }
+
+    return `
+      <div class="monthCard lvl${lvl}" style="--habit-accent:${accent}">
+        <div class="monthHead">
+          <div class="monthTitle">${mName}</div>
+          <div class="monthMeta">${done}/${eligible}</div>
+        </div>
+        <div class="yHeat">${cells.join('')}</div>
+      </div>
+    `;
+  }
+
+  const years = [];
+  for(let y=currentYear; y>=earliestYear; y--) years.push(y);
+
+  const selector = `
+    <div class="allTimeTop">
+      <div class="allTimeTitle">
+        <div class="kicker">All time</div>
+        <div class="headline">${escapeHtml(selected.name||'Habit')}</div>
+      </div>
+      <label class="allTimePick">
+        <span class="small">Habit</span>
+        <select id="allTimeHabitPick" class="select">
+          ${H.map(h=>`<option value="${escapeHtml(h.id)}" ${h.id===selId?'selected':''}>${escapeHtml(h.name||'Habit')}</option>`).join('')}
+        </select>
+      </label>
+    </div>
+  `;
+
+  const blocks = years.map((y, idx)=>{
+    const s = yearSummary(selected, y);
+    const open = (y===currentYear);
+    const months = Array.from({length:12}, (_,m)=>renderMonthHeat(selected, y, m, s.startIso, s.endIso)).join('');
+    return `
+      <details class="yearBlock" ${open?'open':''}>
+        <summary>
+          <div class="ybLeft">
+            <div class="ybYear">${y}</div>
+            <div class="ybMeta">${s.pct}% • ${s.done}/${s.eligible} days</div>
+          </div>
+          <div class="ybChevron" aria-hidden="true">▾</div>
+        </summary>
+        <div class="ybBody">${months}</div>
+      </details>
+    `;
+  }).join('');
+
+  gridEl.classList.add('allTimeYears');
+  gridEl.innerHTML = selector + `<div class="yearsStack">${blocks}</div>`;
+
+  const pick = gridEl.querySelector('#allTimeHabitPick');
+  if(pick){
+    pick.addEventListener('change', ()=>{
+      localStorage.setItem('habitsAllHabitId', pick.value);
+      renderAnalytics();
+      renderListInAnalytics();
+    });
+  }
+
+  // All-time grid is view-only
+  const help = cardEl?.querySelector('.matrixHelp');
+  if(help) help.style.display = 'none';
+}
+
 function getCurrentViewMode(){
   try{ return localStorage.getItem("habitsViewMode") || "grid"; }catch(e){ return "grid"; }
 }
@@ -1087,13 +1252,33 @@ function renderAnalytics(){
   const segIndex = ({ week:0, month:1, year:2, all:3 })[analyticsView] ?? 0;
 
   // Overall (shared) underline bar stats
-  const totalCells = Math.max(1, (H||[]).length * (dates||[]).length);
-  let doneCells = 0;
-  (H||[]).forEach(h=>{
-    const set = new Set(h.datesDone||[]);
-    (dates||[]).forEach(iso=>{ if(set.has(iso)) doneCells++; });
-  });
-  const achievedPct = Math.round((doneCells / totalCells) * 100);
+  let achievedPct = 0;
+  if(analyticsView === 'all'){
+    // True lifetime % (from each habit's first tracked day -> today)
+    const tIso = today();
+    let totalEligible = 0;
+    let totalDone = 0;
+    (H||[]).forEach(h=>{
+      const createdIso = (h && typeof h.created==='string' && h.created.length===10) ? h.created : tIso;
+      const earliestIso = ((h.datesDone||[]).concat([createdIso]).sort()[0]) || createdIso;
+      const startD = new Date(earliestIso+'T00:00:00');
+      const endD = new Date(tIso+'T00:00:00');
+      let eligible = Math.floor((endD-startD)/86400000)+1;
+      if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+      const done = countDoneInBounds(h, { start:startD, end:endD });
+      totalEligible += eligible;
+      totalDone += done;
+    });
+    achievedPct = Math.round((totalDone / Math.max(1,totalEligible)) * 100);
+  } else {
+    const totalCells = Math.max(1, (H||[]).length * (dates||[]).length);
+    let doneCells = 0;
+    (H||[]).forEach(h=>{
+      const set = new Set(h.datesDone||[]);
+      (dates||[]).forEach(iso=>{ if(set.has(iso)) doneCells++; });
+    });
+    achievedPct = Math.round((doneCells / totalCells) * 100);
+  }
 
   let deltaPct = 0;
   let hasDelta = analyticsView !== "all";
@@ -1271,25 +1456,33 @@ function renderAnalytics(){
     });
   });
 
-  // calendar navigation
-  card.querySelector("#calPrev").addEventListener("click", ()=>{
-    analyticsOffsetDays -= step;
-    analyticsOffsets[analyticsView] = analyticsOffsetDays;
-    saveAnalyticsOffsets();
-    // legacy key no longer used
-    renderAnalytics();
-    // In list mode, the list content is rendered outside the matrix builder.
-    // Rebuild it here as well so switching periods doesn't "blank" the list.
-    renderListInAnalytics();
-  });
-  card.querySelector("#calNext").addEventListener("click", ()=>{
-    analyticsOffsetDays += step;
-    analyticsOffsets[analyticsView] = analyticsOffsetDays;
-    saveAnalyticsOffsets();
-    // legacy key no longer used
-    renderAnalytics();
-    renderListInAnalytics();
-  });
+  // calendar navigation (All-time uses years accordion instead)
+  const prevBtn = card.querySelector("#calPrev");
+  const nextBtn = card.querySelector("#calNext");
+  const rangeEl = card.querySelector("#rangeLabel");
+  if(analyticsView === 'all'){
+    if(rangeEl) rangeEl.textContent = 'All time';
+    [prevBtn,nextBtn].forEach(b=>{
+      if(!b) return;
+      b.disabled = true;
+      b.classList.add('disabled');
+    });
+  } else {
+    prevBtn?.addEventListener("click", ()=>{
+      analyticsOffsetDays -= step;
+      analyticsOffsets[analyticsView] = analyticsOffsetDays;
+      saveAnalyticsOffsets();
+      renderAnalytics();
+      renderListInAnalytics();
+    });
+    nextBtn?.addEventListener("click", ()=>{
+      analyticsOffsetDays += step;
+      analyticsOffsets[analyticsView] = analyticsOffsetDays;
+      saveAnalyticsOffsets();
+      renderAnalytics();
+      renderListInAnalytics();
+    });
+  }
   // "Today" button removed by request. Keep null-safe logic in case older markup exists.
   const todayBtn = card.querySelector("#calToday");
   if(todayBtn){
@@ -1418,6 +1611,14 @@ function renderAnalytics(){
   // ------------------------
   if(analyticsView === "year" && viewMode === "grid"){
     renderYearHeatmap(grid, card, H, analyticsOffsetDays);
+    return;
+  }
+
+  // ------------------------
+  // All-time: collapsible years (per habit)
+  // ------------------------
+  if(analyticsView === "all" && viewMode === "grid"){
+    renderAllTimeYearsGrid(grid, card, H);
     return;
   }
 
@@ -1806,9 +2007,9 @@ function renderListInAnalytics(){
       return { startIso: isoDate(b.start), endIso: isoDate(b.end), label, kind:"week" };
     }
 
-    // all-time: show last 30 days as a useful default
-    const b = getBoundsForView("all", off);
-    return { startIso: isoDate(b.start), endIso: isoDate(b.end), label:"Last 30 days", kind:"all" };
+    // All-time: lifetime stats (from habit creation -> today)
+    // (offset doesn't apply; we keep it truly "all time")
+    return { startIso: "", endIso: todayIso, label:"All time", kind:"all" };
   }
 
   const period = getListPeriod();
@@ -1818,7 +2019,137 @@ function renderListInAnalytics(){
   // Cap the end at today for current/future periods.
   const browseEndIso = (periodEndIso < todayIso) ? periodEndIso : todayIso;
 
-  const rows = H.map((h)=>{
+  // ----- All-time list view: lifetime cards + sorting + badges -----
+  const allSortKey = (()=>{
+    try{ return localStorage.getItem('habitsAllListSort') || 'consistency'; }catch(_){ return 'consistency'; }
+  })();
+
+  function calcLifetime(h){
+    const tIso = todayIso;
+    const createdIso = (h && typeof h.created === 'string' && h.created.length===10) ? h.created : tIso;
+    const earliestIso = ((h.datesDone||[]).concat([createdIso]).sort()[0]) || createdIso;
+    const startIso = earliestIso;
+    const endIso = tIso;
+    const startD = new Date(startIso+'T00:00:00');
+    const endD = new Date(endIso+'T00:00:00');
+    let eligible = Math.floor((endD-startD)/86400000)+1;
+    if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+    const done = countDoneInBounds(h, { start:startD, end:endD });
+    const pct = eligible ? Math.round((done/eligible)*100) : 0;
+    return { startIso, endIso, eligible, done, pct };
+  }
+
+  function pctInLastDays(h, days, endIso){
+    const endD = new Date(endIso+'T00:00:00');
+    const startD = new Date(endD);
+    startD.setDate(startD.getDate() - (days-1));
+    const startIso = isoDate(startD);
+    const done = countDoneInBounds(h, { start:startD, end:endD });
+    return Math.round((done / Math.max(1, days)) * 100);
+  }
+
+  function buildMiniTimeline(h, months=12){
+    const out = [];
+    const end = new Date(todayIso+'T00:00:00');
+    for(let i=months-1;i>=0;i--){
+      const d = new Date(end.getFullYear(), end.getMonth()-i, 1);
+      const year = d.getFullYear();
+      const m = d.getMonth();
+      const mb = monthBoundsFor(year, m);
+      let ms = isoDate(mb.start);
+      let me = isoDate(mb.end);
+      // Clamp to habit creation and today
+      const createdIso = (h && typeof h.created === 'string' && h.created.length===10) ? h.created : ms;
+      if(ms < createdIso) ms = createdIso;
+      if(me > todayIso) me = todayIso;
+      const startD = new Date(ms+'T00:00:00');
+      const endD = new Date(me+'T00:00:00');
+      let eligible = Math.floor((endD-startD)/86400000)+1;
+      if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+      const done = eligible ? countDoneInBounds(h, { start:startD, end:endD }) : 0;
+      const pct = eligible ? Math.round((done/eligible)*100) : 0;
+      out.push({ year, m, pct, eligible });
+    }
+    return out;
+  }
+
+  // Precompute metrics for sorting + badges
+  const metrics = H.map(h=>{
+    const life = calcLifetime(h);
+    const last30 = pctInLastDays(h, 30, todayIso);
+    const prevEnd = new Date(todayIso+'T00:00:00');
+    prevEnd.setDate(prevEnd.getDate()-30);
+    const prev30 = pctInLastDays(h, 30, isoDate(prevEnd));
+    const improvement = last30 - prev30;
+    return { h, life, last30, prev30, improvement, timeline: buildMiniTimeline(h, 12) };
+  });
+
+  // Badges
+  const bestConsistency = metrics.reduce((a,b)=> (b.life.pct > a.life.pct ? b : a), metrics[0]);
+  const bestImproved = metrics.reduce((a,b)=> (b.improvement > a.improvement ? b : a), metrics[0]);
+  const needsAttention = metrics.reduce((a,b)=> (b.last30 < a.last30 ? b : a), metrics[0]);
+
+  function sortMetrics(list){
+    const arr = list.slice();
+    const key = String(allSortKey||'consistency');
+    if(key==='name') arr.sort((a,b)=> String(a.h.name||'').localeCompare(String(b.h.name||'')));
+    else if(key==='streak') arr.sort((a,b)=> (calcStreaksInWindow(b.h, b.life.startIso, b.life.endIso).best - calcStreaksInWindow(a.h, a.life.startIso, a.life.endIso).best));
+    else if(key==='improvement') arr.sort((a,b)=> (b.improvement - a.improvement));
+    else arr.sort((a,b)=> (b.life.pct - a.life.pct));
+    return arr;
+  }
+
+  const sorted = (period.kind==='all') ? sortMetrics(metrics) : null;
+
+  const rows = (period.kind==='all' ? sorted.map((m)=>{
+    const h = m.h;
+    const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
+    const streaks = calcStreaksInWindow(h, m.life.startIso, m.life.endIso);
+
+    // Badge assignment
+    const badge = (()=>{
+      if(bestConsistency && h.id===bestConsistency.h.id) return { t:'Most consistent', cls:'bGood' };
+      if(bestImproved && h.id===bestImproved.h.id && bestImproved.improvement>0) return { t:'Most improved', cls:'bUp' };
+      if(needsAttention && h.id===needsAttention.h.id) return { t:'Needs attention', cls:'bWarn' };
+      return null;
+    })();
+
+    const segs = m.timeline.map(seg=>{
+      const lvl = intensityLevel(seg.pct);
+      let title = '';
+      try{ title = new Intl.DateTimeFormat(undefined,{month:'short', year:'numeric'}).format(new Date(seg.year, seg.m, 1)); }catch(_){ title=''; }
+      return `<span class="tlSeg lvl${lvl}" title="${escapeHtml(title)}"></span>`;
+    }).join('');
+
+    return `
+      <div class="lifeCard" style="--accent:${accent}">
+        <div class="lifeTop">
+          <div class="lifeTitle">
+            <strong>${escapeHtml(h.name||'Habit')}</strong>
+            ${badge ? `<span class="lifeBadge ${badge.cls}">${escapeHtml(badge.t)}</span>` : ''}
+          </div>
+          <div class="lifePct">${m.life.pct}%</div>
+        </div>
+
+        <div class="lifeSub">
+          <span class="small">${habitKind(h)==='negative' ? 'Avoidance' : 'Completion'}</span>
+          <span class="dotSep">•</span>
+          <span class="small">${m.life.done} / ${m.life.eligible} days</span>
+          <span class="dotSep">•</span>
+          <span class="small">Current streak: <b>${streaks.current}</b></span>
+          <span class="dotSep">•</span>
+          <span class="small">Best streak: <b>${streaks.best}</b></span>
+        </div>
+
+        <div class="miniTimeline" aria-hidden="true">${segs}</div>
+
+        <div class="lifeFoot">
+          <div class="small">Last 30d: <b>${m.last30}%</b></div>
+          <div class="small">Δ vs prev 30d: <b class="${m.improvement>=0?'up':'down'}">${m.improvement>=0?'+':''}${m.improvement}%</b></div>
+        </div>
+      </div>
+    `;
+  }).join('') : H.map((h)=>{
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     const createdIso = (h && typeof h.created === "string" && h.created.length===10) ? h.created : periodStartIso;
     const startIso = (createdIso > periodStartIso) ? createdIso : periodStartIso;
@@ -1926,7 +2257,33 @@ function renderListInAnalytics(){
     `;
   }).join("");
 
-  habitListEl.innerHTML = `<div class="habitTable">${rows}</div>`;
+  if(period.kind === 'all'){
+    habitListEl.innerHTML = `
+      <div class="allListHeader">
+        <div class="allListMeta">
+          <div class="small">All‑time habits</div>
+          <div class="small muted">Sorted by</div>
+        </div>
+        <select id="allListSort" class="select">
+          <option value="consistency" ${allSortKey==='consistency'?'selected':''}>Consistency</option>
+          <option value="improvement" ${allSortKey==='improvement'?'selected':''}>Most improved (30d)</option>
+          <option value="streak" ${allSortKey==='streak'?'selected':''}>Best streak</option>
+          <option value="name" ${allSortKey==='name'?'selected':''}>Name</option>
+        </select>
+      </div>
+      <div class="lifeGrid">${rows}</div>
+    `;
+
+    const sel = habitListEl.querySelector('#allListSort');
+    if(sel){
+      sel.addEventListener('change', ()=>{
+        try{ localStorage.setItem('habitsAllListSort', sel.value); }catch(_){ }
+        renderListInAnalytics();
+      });
+    }
+  } else {
+    habitListEl.innerHTML = `<div class="habitTable">${rows}</div>`;
+  }
 }
 
 

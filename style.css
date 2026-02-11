@@ -2868,6 +2868,7 @@ img.pulseOnce{
   color: var(--muted2);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
+.rangeNav .navBtn.disabled{opacity:.45;pointer-events:none}
 .rangeLabel{
   padding: 8px 12px;
   border-radius: 999px;
@@ -3148,3 +3149,57 @@ img.pulseOnce{
 .hyrSeg.lvl4{background: color-mix(in oklab, var(--accent) 68%, rgba(255,255,255,0.08))}
 .hyrMeta{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color: rgba(255,255,255,0.65);font-weight:700}
 .hyrMeta b{color: rgba(255,255,255,0.86)}
+
+/* -------------------------
+   All-time (collapsible years)
+-------------------------- */
+.allTimeYears{display:block}
+.allTimeTop{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:2px 0 12px 0}
+.allTimeTitle .kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color: rgba(255,255,255,0.55);font-weight:900}
+.allTimeTitle .headline{font-size:18px;font-weight:950;margin-top:2px}
+.allTimePick{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.yearsStack{display:flex;flex-direction:column;gap:12px}
+.yearBlock{border-radius:20px;border:1px solid rgba(255,255,255,0.10);background: rgba(255,255,255,0.03);overflow:hidden}
+.yearBlock summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 12px;cursor:pointer}
+.yearBlock summary::-webkit-details-marker{display:none}
+.ybYear{font-size:16px;font-weight:950}
+.ybMeta{margin-top:2px;font-size:12px;color: rgba(255,255,255,0.60);font-weight:800}
+.ybChevron{opacity:.75;transition: transform .14s ease;font-weight:900}
+.yearBlock[open] .ybChevron{transform: rotate(180deg)}
+.ybBody{padding:12px 12px 14px 12px}
+.ybBody .monthCard{background: rgba(255,255,255,0.02)}
+
+/* -------------------------
+   All-time list view (lifetime cards)
+-------------------------- */
+.allListHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 12px 0}
+.allListMeta .muted{color: rgba(255,255,255,0.55)}
+.lifeGrid{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px}
+.lifeCard{border-radius:20px;border:1px solid rgba(255,255,255,0.10);background: rgba(255,255,255,0.03);padding:12px 12px;display:flex;flex-direction:column;gap:10px;position:relative}
+.lifeCard::after{content:"";position:absolute;inset:0;border-radius:20px;box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 18%, rgba(255,255,255,0.06));pointer-events:none}
+.lifeTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.lifeTitle{display:flex;align-items:center;gap:10px;min-width:0}
+.lifeTitle strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lifePct{font-weight:950;font-size:18px;color: rgba(255,255,255,0.90)}
+.lifeSub{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color: rgba(255,255,255,0.65);font-weight:800}
+.dotSep{opacity:.5}
+.miniTimeline{display:flex;gap:6px;align-items:center}
+.tlSeg{flex:1;height:10px;border-radius:999px;background: rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.10)}
+.tlSeg.lvl0{opacity:.30}
+.tlSeg.lvl1{background: color-mix(in oklab, var(--accent) 18%, rgba(255,255,255,0.08))}
+.tlSeg.lvl2{background: color-mix(in oklab, var(--accent) 32%, rgba(255,255,255,0.08))}
+.tlSeg.lvl3{background: color-mix(in oklab, var(--accent) 48%, rgba(255,255,255,0.08))}
+.tlSeg.lvl4{background: color-mix(in oklab, var(--accent) 68%, rgba(255,255,255,0.08))}
+.lifeFoot{display:flex;align-items:center;justify-content:space-between;gap:12px;color: rgba(255,255,255,0.70);font-weight:800}
+.lifeFoot .up{color: rgba(76, 217, 100, 0.95)}
+.lifeFoot .down{color: rgba(255, 107, 107, 0.95)}
+.lifeBadge{font-size:11px;font-weight:950;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background: rgba(0,0,0,0.22);white-space:nowrap}
+.lifeBadge.bGood{box-shadow: inset 0 0 0 1px rgba(76,217,100,0.28)}
+.lifeBadge.bUp{box-shadow: inset 0 0 0 1px rgba(64,156,255,0.28)}
+.lifeBadge.bWarn{box-shadow: inset 0 0 0 1px rgba(255,193,7,0.28)}
+
+@media (max-width: 720px){
+  .allTimeTop{flex-direction:column;align-items:flex-start}
+  .allTimePick{align-items:flex-start;width:100%}
+  .allTimePick .select{width:100%}
+}
