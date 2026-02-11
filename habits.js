@@ -1748,9 +1748,17 @@ function renderAnalytics(){
       return Math.round((done/total)*100);
     }
 
+
+    function getMonthCols(){
+      const w = window.innerWidth || 9999;
+      if(w <= 420) return 3;
+      if(w <= 720) return 4;
+      return 7;
+    }
     // Calendar start offset (Mon=0..Sun=6)
+    const cols = getMonthCols();
     const first = new Date(monthStart);
-    const offset = (first.getDay() + 6) % 7;
+    const offset = (cols === 7) ? ((first.getDay() + 6) % 7) : 0;
 
     let html = '<div class="monthCal" role="grid" aria-label="Month calendar">';
     html += '<div class="monthCalDow" aria-hidden="true">' + weekdayNames.map(n=>`<div class="dow">${escapeHtml(n)}</div>`).join('') + '</div>';

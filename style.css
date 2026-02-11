@@ -3586,3 +3586,25 @@ img.pulseOnce{
   .calCell.calDayCard:hover{ transform:none; }
   .calCell.calDayCard:hover .shine{ animation:none; }
 }
+
+
+/* ===== Premium Month Calendar: Mobile layout improvements ===== */
+@media (max-width: 720px){
+  /* Use 4 columns for readability on phones */
+  .monthCalDow{ display:none; }
+  .monthCalGrid{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
+
+  .monthCal{ --gap:10px; --cardH:92px; --radius:16px; }
+  .calCell.calDayCard{ padding:12px; }
+  .calNum{ font-size:28px; }
+  .calPctNum{ font-size:13px; }
+  .calBar{ height:11px; }
+}
+@media (max-width: 420px){
+  /* Small phones: 3 columns */
+  .monthCalGrid{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+
+  .monthCal{ --gap:10px; --cardH:90px; --radius:16px; }
+  .calCell.calDayCard{ padding:12px; }
+  .calNum{ font-size:28px; }
+}
