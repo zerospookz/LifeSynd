@@ -3365,3 +3365,14 @@ img.pulseOnce{
   .yHeat{grid-template-columns: repeat(7, minmax(0, 1fr));}
   .yCell{min-width:0}
 }
+
+
+/* --- Mobile fix: Year summary should not overflow --- */
+@media (max-width: 560px){
+  .yearSummary{flex-direction: column; align-items: stretch;}
+  .yearSummaryStats{min-width: 0 !important; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr));}
+  .yearSelect{min-width: 0; width: 100%;}
+}
+@media (max-width: 380px){
+  .yearSummaryStats{grid-template-columns: 1fr;}
+}
