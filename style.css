@@ -3376,3 +3376,43 @@ img.pulseOnce{
 @media (max-width: 380px){
   .yearSummaryStats{grid-template-columns: 1fr;}
 }
+
+
+/* ===== Habits: Ultra-clean minimal habit cards ===== */
+.lifeCard--minimal{
+  padding:14px 14px 12px 14px;
+}
+.lifeCard--minimal .lifeTop{
+  align-items:flex-start;
+}
+.lifeCard--minimal .lifePct{
+  font-size:22px;
+  font-weight:700;
+}
+.lifeKpis{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+.lifeKpi{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.06);
+  font-size:12.5px;
+  opacity:0.95;
+}
+.lifeKpi b{font-weight:700;}
+.kpiIcon{opacity:0.9}
+.lifeTrend{
+  margin-top:10px;
+  font-size:12px;
+  opacity:0.8;
+}
+.lifeTrend.up{opacity:0.95;}
+.lifeTrend.down{opacity:0.95;}
+.lifeTrend b{font-weight:700;}

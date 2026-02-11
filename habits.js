@@ -2325,51 +2325,33 @@ function renderListInAnalytics(){
     const h = m.h;
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     const streaks = calcStreaksInWindow(h, m.life.startIso, m.life.endIso);
-
-    // Badge assignment
-    const badge = (()=>{
-      if(bestConsistency && h.id===bestConsistency.h.id) return { t:'Most consistent', cls:'bGood' };
-      if(bestImproved && h.id===bestImproved.h.id && bestImproved.improvement>0) return { t:'Most improved', cls:'bUp' };
-      if(needsAttention && h.id===needsAttention.h.id) return { t:'Needs attention', cls:'bWarn' };
-      return null;
-    })();
-
-    const segs = m.timeline.map(seg=>{
-      const lvl = intensityLevel(seg.pct);
-      let title = '';
-      try{ title = new Intl.DateTimeFormat(undefined,{month:'short', year:'numeric'}).format(new Date(seg.year, seg.m, 1)); }catch(_){ title=''; }
-      return `<span class="tlSeg lvl${lvl}" title="${escapeHtml(title)}"></span>`;
-    }).join('');
+    const segs = '';
 
     return `
-      <div class="lifeCard" style="--accent:${accent}">
+      <div class="lifeCard lifeCard--minimal" style="--accent:${accent}">
         <div class="lifeTop">
           <div class="lifeTitle">
             <strong>${escapeHtml(h.name||'Habit')}</strong>
-            ${badge ? `<span class="lifeBadge ${badge.cls}">${escapeHtml(badge.t)}</span>` : ''}
           </div>
           <div class="lifePct">${m.life.pct}%</div>
         </div>
 
-        <div class="lifeSub">
-          <span class="small">${habitKind(h)==='negative' ? 'Avoidance' : 'Completion'}</span>
-          <span class="dotSep">•</span>
-          <span class="small">${m.life.done} / ${m.life.eligible} days</span>
-          <span class="dotSep">•</span>
-          <span class="small">Current streak: <b>${streaks.current}</b></span>
-          <span class="dotSep">•</span>
-          <span class="small">Best streak: <b>${streaks.best}</b></span>
+        <div class="lifeKpis">
+          <div class="lifeKpi"><span class="kpiIcon">🔥</span><span><b>${streaks.current}</b> day streak</span></div>
+          <div class="lifeKpi"><span class="kpiIcon">📅</span><span><b>${m.life.done}</b> / ${m.life.eligible} days</span></div>
         </div>
 
-        <div class="miniTimeline" aria-hidden="true">${segs}</div>
-
-        <div class="lifeFoot">
-          <div class="small">Last 30d: <b>${m.last30}%</b></div>
-          <div class="small">Δ vs prev 30d: <b class="${m.improvement>=0?'up':'down'}">${m.improvement>=0?'+':''}${m.improvement}%</b></div>
+        <div class="lifeTrend ${m.improvement>=2?'up':(m.improvement<=-2?'down':'')}">
+          ${
+            m.improvement>=2
+              ? `Improving <b>+${m.improvement}%</b>`
+              : (m.improvement<=-2
+                  ? `Declining <b>${m.improvement}%</b>`
+                  : `Stable`)
+          }
         </div>
       </div>
-    `;
-  }).join('') : H.map((h)=>{
+    `;  }).join('') : H.map((h)=>{
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     const createdIso = (h && typeof h.created === "string" && h.created.length===10) ? h.created : periodStartIso;
     const startIso = (createdIso > periodStartIso) ? createdIso : periodStartIso;
