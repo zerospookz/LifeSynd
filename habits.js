@@ -32,7 +32,7 @@ function saveAnalyticsOffsets() {
 }
 
 let analyticsOffsetDays = Number(analyticsOffsets[analyticsView]) || 0;
-let analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || "mark"; // mark | erase
+let analyticsPaintMode = (localStorage.getItem("habitsAnalyticsPaintMode")==="mark" || localStorage.getItem("habitsAnalyticsPaintMode")==="erase") ? localStorage.getItem("habitsAnalyticsPaintMode") : null; // mark | erase
 let lastPulse = null; // {hid, iso, mode:"done"|"miss"} for subtle mark animation
 
 function rangeDates(rangeDays, offsetDays, dir="backward"){
@@ -1902,9 +1902,17 @@ function renderAnalytics(){
     // - erase: always remove/clear done marks
     // Pull the latest mode from storage in case it was changed without reloading.
 
-    try{ analyticsPaintMode = localStorage.getItem("habitsAnalyticsPaintMode") || analyticsPaintMode || "mark"; }catch(_e){}
+    let storedMode = null;
+    try{
+      const m = localStorage.getItem("habitsAnalyticsPaintMode");
+      storedMode = (m==="mark"||m==="erase") ? m : null;
+    }catch(_e){}
+    analyticsPaintMode = storedMode;
 
-    targetDone = (analyticsPaintMode !== "erase");
+    // If no explicit mode is set, choose based on the starting cell:
+    // - start on empty -> mark
+    // - start on done  -> erase
+    targetDone = storedMode ? (storedMode !== "erase") : (!cell.classList.contains("done"));
 
 
     // Arm paint mode only after a short hold. If user releases quickly, it's just a tap.
