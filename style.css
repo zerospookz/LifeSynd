@@ -3078,12 +3078,13 @@ img.pulseOnce{
    Habits: Month calendar + month drawer (Dribbble-style)
 ---------------------- */
 .monthCal{width:100%}
-.monthCalDow{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin: 10px 0 12px 0}
+.monthCalDow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin: 10px 0 12px 0}
 .monthCalDow .dow{font-size:12px;color: rgba(255,255,255,0.55);text-align:center}
-.monthCalGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+.monthCalGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
 
 .calCell{
   position:relative;
+  min-width:0;
   min-height: 66px;
   border-radius:14px;
   border: 1px solid rgba(255,255,255,0.10);
