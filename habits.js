@@ -3036,7 +3036,7 @@ function renderQuickMarkPanel(){
     return `
       <article class="hmCard hmCard--${variant} ${done ? "is-done" : ""} ${missed ? "is-missed" : ""}" data-hid="${h.id}" style="--accent:${accent}">
         <div class="hmLeft">
-          <span class="hmStatus ${isNeg ? "hmStatus--neg" : "hmStatus--idle"}" aria-hidden="true">${isNeg ? "✕" : ""}</span>
+          <span class="hmStatus ${isNeg ? "hmStatus--neg" : (done ? "hmStatus--pos-done" : "hmStatus--empty")}" aria-hidden="true">${isNeg ? "✕" : (done ? "✓" : "")}</span>
           <div class="hmText">
             <div class="hmName">${escapeHtml(h.name||"Habit")}</div>
             <div class="hmMeta">${habitDoneText(h, done)}</div>
