@@ -1756,22 +1756,53 @@ function renderAnalytics(){
     html += '<div class="monthCalDow" aria-hidden="true">' + weekdayNames.map(n=>`<div class="dow">${escapeHtml(n)}</div>`).join('') + '</div>';
     html += '<div class="monthCalGrid">';
     for(let i=0;i<offset;i++) html += '<div class="calCell empty" aria-hidden="true"></div>';
-    for(const iso of monthDates){
+        let dayIndex = 0;
+for(const iso of monthDates){
       const day = Number(iso.slice(8,10));
       const pct = pctForIso(iso);
       const isToday = iso === todayIso;
       const isWeekend = isWeekendIso(iso);
       const isSelected = (monthSelectedIso === iso);
       const pctCls = (pct===0) ? "isZero" : (pct<35 ? "isLow" : "");
+      const bar = `hsl(${(pct*120)/100}, 88%, 55%)`;
+      const glow = `hsla(${(pct*120)/100}, 92%, 58%, .70)`;
       html += `
-        <button class="calCell ${isToday?"today":""} ${isWeekend?"weekend":""} ${isSelected?"selected":""} ${pctCls}" type="button" data-iso="${iso}" style="--pct:${pct/100}" aria-label="${iso}, ${pct}%">
-          <div class="calDay">${day}</div>
-          <div class="calPct">${pct}%</div>
+        <button class="calCell calDayCard ${isToday?"today":""} ${isWeekend?"weekend":""} ${isSelected?"selected":""} ${pctCls}" type="button" data-iso="${iso}" aria-label="${iso}, ${pct}%" style="--barColor:${bar}; --glowColor:${glow}; --delay:${(dayIndex++)*35}ms;">
+          <span class="shine" aria-hidden="true"></span>
+          <div class="calTop">
+            <div class="calNum">${day}</div>
+            <div class="calPctNum" data-target="${pct}">0%</div>
+          </div>
+          <div class="calBar" aria-hidden="true">
+            <div class="calFill" style="width:${pct}%"></div>
+          </div>
         </button>
       `;
     }
     html += '</div></div>';
     grid.innerHTML = html;
+
+    // Animate % count-up for month cards (respects reduced motion).
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!reduceMotion){
+      grid.querySelectorAll('.calCell .calPctNum[data-target]').forEach(el=>{
+        const to = Number(el.getAttribute('data-target')||'0')||0;
+        const duration = 650;
+        const start = performance.now();
+        function tick(now){
+          const t = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          const val = Math.round(to * eased);
+          el.textContent = val + '%';
+          if(t < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }else{
+      grid.querySelectorAll('.calCell .calPctNum[data-target]').forEach(el=>{
+        el.textContent = (el.getAttribute('data-target')||'0') + '%';
+      });
+    }
 
     // Click a day → open details modal + set selected state
     grid.querySelectorAll('.calCell[data-iso]').forEach(btn=>{
@@ -2325,33 +2356,51 @@ function renderListInAnalytics(){
     const h = m.h;
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     const streaks = calcStreaksInWindow(h, m.life.startIso, m.life.endIso);
-    const segs = '';
+
+    // Badge assignment
+    const badge = (()=>{
+      if(bestConsistency && h.id===bestConsistency.h.id) return { t:'Most consistent', cls:'bGood' };
+      if(bestImproved && h.id===bestImproved.h.id && bestImproved.improvement>0) return { t:'Most improved', cls:'bUp' };
+      if(needsAttention && h.id===needsAttention.h.id) return { t:'Needs attention', cls:'bWarn' };
+      return null;
+    })();
+
+    const segs = m.timeline.map(seg=>{
+      const lvl = intensityLevel(seg.pct);
+      let title = '';
+      try{ title = new Intl.DateTimeFormat(undefined,{month:'short', year:'numeric'}).format(new Date(seg.year, seg.m, 1)); }catch(_){ title=''; }
+      return `<span class="tlSeg lvl${lvl}" title="${escapeHtml(title)}"></span>`;
+    }).join('');
 
     return `
-      <div class="lifeCard lifeCard--minimal" style="--accent:${accent}">
+      <div class="lifeCard" style="--accent:${accent}">
         <div class="lifeTop">
           <div class="lifeTitle">
             <strong>${escapeHtml(h.name||'Habit')}</strong>
+            ${badge ? `<span class="lifeBadge ${badge.cls}">${escapeHtml(badge.t)}</span>` : ''}
           </div>
           <div class="lifePct">${m.life.pct}%</div>
         </div>
 
-        <div class="lifeKpis">
-          <div class="lifeKpi"><span class="kpiIcon">🔥</span><span><b>${streaks.current}</b> day streak</span></div>
-          <div class="lifeKpi"><span class="kpiIcon">📅</span><span><b>${m.life.done}</b> / ${m.life.eligible} days</span></div>
+        <div class="lifeSub">
+          <span class="small">${habitKind(h)==='negative' ? 'Avoidance' : 'Completion'}</span>
+          <span class="dotSep">•</span>
+          <span class="small">${m.life.done} / ${m.life.eligible} days</span>
+          <span class="dotSep">•</span>
+          <span class="small">Current streak: <b>${streaks.current}</b></span>
+          <span class="dotSep">•</span>
+          <span class="small">Best streak: <b>${streaks.best}</b></span>
         </div>
 
-        <div class="lifeTrend ${m.improvement>=2?'up':(m.improvement<=-2?'down':'')}">
-          ${
-            m.improvement>=2
-              ? `Improving <b>+${m.improvement}%</b>`
-              : (m.improvement<=-2
-                  ? `Declining <b>${m.improvement}%</b>`
-                  : `Stable`)
-          }
+        <div class="miniTimeline" aria-hidden="true">${segs}</div>
+
+        <div class="lifeFoot">
+          <div class="small">Last 30d: <b>${m.last30}%</b></div>
+          <div class="small">Δ vs prev 30d: <b class="${m.improvement>=0?'up':'down'}">${m.improvement>=0?'+':''}${m.improvement}%</b></div>
         </div>
       </div>
-    `;  }).join('') : H.map((h)=>{
+    `;
+  }).join('') : H.map((h)=>{
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     const createdIso = (h && typeof h.created === "string" && h.created.length===10) ? h.created : periodStartIso;
     const startIso = (createdIso > periodStartIso) ? createdIso : periodStartIso;
