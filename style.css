@@ -4021,3 +4021,18 @@ img.pulseOnce{
   background: color-mix(in srgb, var(--accent) 28%, rgba(255,255,255,.10));
   border-color: color-mix(in srgb, var(--accent) 40%, rgba(255,255,255,.12));
 }
+
+
+/* Negative habit indicator (red X) */
+.hmStatus--neg{
+  width:22px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  font-size:14px;
+  font-weight:900;
+  color:#ff4d4f;
+  background: rgba(255,77,79,.12);
+  border:1px solid rgba(255,77,79,.45);
+  box-shadow: 0 0 12px rgba(255,77,79,.35);
+}
