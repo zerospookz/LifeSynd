@@ -3354,3 +3354,14 @@ img.pulseOnce{
   border-color: rgba(140,180,255,0.30);
 }
 .btnSmall:active{transform: translateY(1px)}
+
+
+/* --- Mobile fixes: Year view month cards should not overflow --- */
+@media (max-width: 560px){
+  .yearMonths{
+    grid-template-columns: 1fr !important;
+  }
+  .monthCard{min-width:0}
+  .yHeat{grid-template-columns: repeat(7, minmax(0, 1fr));}
+  .yCell{min-width:0}
+}
