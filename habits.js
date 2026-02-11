@@ -1577,11 +1577,23 @@ function renderAnalytics(){
       </div>
 
       <div class="overallTrend ${hasDelta ? (isUp?"up":"down") : "neutral"}">
-        <div class="trendMeta">
-          ${hasDelta ? `<span class="trendDelta">${isUp?"Up":"Down"} ${deltaAbs}% from the period before</span>` : `<span class="trendDelta">All-time view</span>`}
+        <div class="trendAccent" aria-hidden="true"></div>
+
+        <div class="trendTop">
+          <div class="trendLeft">
+            <span class="trendPill">
+              <span class="trendDot" aria-hidden="true"></span>
+              <span class="trendDelta">
+                ${hasDelta ? `${isUp?"Up":"Down"} ${deltaAbs}% from the period before` : `All-time view`}
+              </span>
+            </span>
+          </div>
+          <div class="trendRight"><b class="trendPct">${achievedPct}%</b> achieved</div>
         </div>
-        <div class="trendBar" aria-hidden="true"><div class="trendFill" style="width:${deltaAbs}%"></div></div>
-        <div class="trendAchieved"><b>${achievedPct}%</b> achieved</div>
+
+        <div class="trendBar" aria-label="progress bar">
+          <div class="trendFill" style="width:${achievedPct>=100 ? "calc(100% + 2px)" : achievedPct+"%"}"></div>
+        </div>
       </div>
     </div>
 
