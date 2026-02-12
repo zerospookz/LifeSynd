@@ -166,13 +166,7 @@ function syncAfterHabitChange(hid, iso){
   // Main summaries (streaks/insights/hero) if present
   try{ if(document.getElementById("streakSummary")) { handled = true; renderStreakSummary(); } }catch(e){}
   try{ if(document.getElementById("insights") || document.getElementById("insightsCard")) { handled = true; renderInsights(); } }catch(e){}
-  // Hero (desktop topbar) lives in #habitsHero on this page.
-  try{
-    if(document.getElementById("habitsHero") || document.getElementById("heroCard") || document.getElementById("hero")){
-      handled = true;
-      renderHero();
-    }
-  }catch(e){}
+  try{ if(document.getElementById("heroCard") || document.getElementById("hero")) { handled = true; renderHero(); } }catch(e){}
 
   // Quick mark panel
   try{ if(document.getElementById("habitQuickMark")) { handled = true; renderQuickMarkPanel(); } }catch(e){}
@@ -1440,7 +1434,6 @@ function miniHeatHtml(h){
 
 
 function renderAnalytics(){
-  try{ renderHero(); }catch(e){ console.error(e); }
   const card = document.getElementById("habitAnalytics");
   if(!card) return;
 
@@ -3808,51 +3801,56 @@ function setHeroWheel(el, pct){
 
 
 
-
 function renderHero(){
-  // Desktop topbar is now shipped as static markup in habits.html inside #habitsHeroDesktop.
-  // We only sync its state (active tabs, range label, grid/list).
-  updateHeroTopbarState();
-}
-
-
-function updateHeroTopbarState(){
-    const host = document.querySelector("#habitsHeroDesktop .topbar-wrap.habitsHeader") || document.querySelector(".topbar-wrap.habitsHeader");
-  if(!host) return;
-
-  // Active segmented button
-  host.querySelectorAll(".segBtn").forEach(btn=>{
-    const v = btn.dataset.view;
-    btn.classList.toggle("is-active", v === analyticsView);
-  });
-
-  // Range label
-  const lbl = host.querySelector("#rangeLabel");
-  if(lbl) lbl.textContent = formatRangeLabel(analyticsView, analyticsOffsetDays);
-
-  // View mode tabs (grid/list)
-  const vm = getCurrentViewMode();
-  host.querySelectorAll(".tabBtn").forEach(btn=>{
-    btn.classList.toggle("active", btn.dataset.settab === vm);
-  });
-}
-
-
-// Ensure the desktop topbar is mounted even if the initial render path only
-// re-renders parts of the page. We intentionally keep this lightweight and
-// idempotent (renderHero() simply replaces #habitsHero innerHTML).
-(function ensureHabitsHeroMounted(){
-  const mount = ()=>{
-    try{ renderHero(); }catch(e){ console.error(e); }
-  };
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", mount, { once:true });
-  }else{
-    mount();
+  const el = document.getElementById("habitsHero");
+  if(!el) return;
+  const isDesktop = window.matchMedia("(min-width: 901px)").matches;
+  if(!isDesktop){
+    // On smaller screens we keep the compact app bar.
+    el.innerHTML = '';
+    return;
   }
-  // Some browsers/layouts can delay sizes; run once more on load.
-  window.addEventListener("load", mount, { once:true });
-})();
+
+  const rangeLabel = formatRangeLabel(analyticsView, analyticsOffsetDays);
+
+  el.innerHTML = `
+    <div class="topbar-wrap habitsHeader">
+      <div class="topbar">
+        <div class="row row-top">
+          <div class="segmented" role="tablist" aria-label="Habits range">
+            <button class="seg segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
+            <button class="seg segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
+            <button class="seg segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
+            <button class="seg segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All&nbsp;Time</button>
+          </div>
+          <button class="add-habit btn secondary habitsAddBtn" id="addHabitDesktop" type="button">
+            <span class="plus" aria-hidden="true">+</span>
+            Add Habit
+          </button>
+        </div>
+
+        <div class="row row-bottom">
+          <button class="icon-btn btn ghost navBtn" id="calPrev" type="button" aria-label="Previous"><span class="chev" aria-hidden="true">‹</span></button>
+          <div class="date-pill rangeLabel" id="rangeLabel">${rangeLabel}</div>
+          <button class="icon-btn btn ghost navBtn" id="calNext" type="button" aria-label="Next"><span class="chev" aria-hidden="true">›</span></button>
+
+          <div class="right-tools habitsRightControls" aria-label="View">
+            <button class="tool-btn tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view"><span class="grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+            <button class="tool-btn tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span></button>
+          </div>
+        </div>
+
+        <div class="monthInline" id="monthInline" aria-hidden="true">
+          <div class="monthInlineHeader">
+            <div class="monthInlineTitle">This month</div>
+            <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
+          </div>
+          <div class="monthInlineBody" id="monthInlineBody"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 // Floating "New habit" action
 (() => {

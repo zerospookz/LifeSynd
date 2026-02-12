@@ -1169,16 +1169,8 @@ font-weight: 750;
    Desktop Habits topbar redesign
    (keeps existing JS hooks)
    ============================== */
-.habitsHero{ margin: 18px 0 14px; }
-
-@media (max-width: 720px){
-  /* Mobile has its own app bar; hide the desktop topbar markup. */
-  .topbar-wrap.habitsHeader{ display:none !important; }
-}
-
-@media (min-width: 721px){
+@media (min-width: 901px){
   .habitsHeader.topbar-wrap{ margin-bottom: 14px; }
-  .habitsHeader.topbar-wrap{ width: min(1200px, 92vw); }
 
   .habitsHeader.topbar-wrap .topbar{
     padding: 22px;
@@ -1211,7 +1203,6 @@ font-weight: 750;
     box-shadow: 0 10px 20px rgba(0,0,0,.25);
     cursor: pointer;
   }
-  .habitsHeader.topbar-wrap .segmented .seg.is-active,
   .habitsHeader.topbar-wrap .segmented .seg.active{
     color: rgba(255,255,255,.92);
     background: linear-gradient(135deg, rgba(140,70,255,.95), rgba(255,80,190,.85));
@@ -1694,15 +1685,11 @@ body.habitsViewList .listInGrid{ display:block; }
 
 .habitsTopbar{
   display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:flex-start;
-  gap:14px;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
   margin-bottom:16px;
 }
-
-.habitsHeroDesktop{ width: 100%; }
-
 .habitsTopControls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .controlGroup{display:flex;flex-direction:column;gap:6px}
 .microLabel{
@@ -4816,7 +4803,3 @@ img.pulseOnce{
     opacity: .72;
   }
 }
-
-
-/* Desktop hero container inside header */
-.habitsHeroDesktop{ margin-top: 16px; }

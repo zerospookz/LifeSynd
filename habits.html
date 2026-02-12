@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-
 <html><head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<link href="manifest.webmanifest" rel="manifest"/>
-<meta content="#0b0f1a" name="theme-color"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<meta name="theme-color" content="#0b0f1a"/>
 <title>Habits</title>
 <link href="style.css" rel="stylesheet"/>
 <link href="favicon.ico" rel="icon"/></head>
@@ -11,7 +10,7 @@
 <div class="layout">
 <aside class="sidebar">
 <div class="brand">
-<img alt="LifeSync logo" class="logoMark" src="icons/brand-mark-128.png"/>
+<img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
 <div>
 <div class="brandTitle">LifeSync</div>
 <div class="brandSub">Command center</div>
@@ -19,7 +18,7 @@
 </div>
 <nav class="nav">
 <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
-<a href="habits.html"><span class="left"><span class="iconWrap"><img alt="Habits" class="navIcon" src="icons/habits.png?v=6"/></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
+<a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
 <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
 <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
 <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
@@ -34,43 +33,6 @@
 <h1 class="pageTitle">Habits</h1>
 <p class="subtitle">Streaks, consistency and recovery.</p>
 </div>
-<div class="habitsHeroDesktop" id="habitsHeroDesktop">
-<div class="topbar-wrap habitsHeader">
-<div class="topbar">
-<div class="row row-top">
-<div aria-label="Habits range" class="segmented" role="tablist">
-<button class="seg segBtn" data-view="week" type="button">Week</button>
-<button class="seg segBtn" data-view="month" type="button">Month</button>
-<button class="seg segBtn" data-view="year" type="button">Year</button>
-<button class="seg segBtn" data-view="all" type="button">All Time</button>
-</div>
-<button class="add-habit" id="addHabitDesktop" type="button">
-<span aria-hidden="true" class="plus">+</span>
-        Add Habit
-      </button>
-</div>
-<div class="row row-bottom">
-<button aria-label="Previous" class="icon-btn" id="calPrev" type="button">
-<span aria-hidden="true" class="chev">‹</span>
-</button>
-<div class="date-pill rangeLabel" id="rangeLabel"></div>
-<button aria-label="Next" class="icon-btn" id="calNext" type="button">
-<span aria-hidden="true" class="chev">›</span>
-</button>
-<div aria-label="View" class="right-tools habitsRightControls">
-<button aria-label="Grid" class="tool-btn tabBtn" data-settab="grid" type="button">
-<span aria-hidden="true" class="grid">
-<i></i><i></i><i></i><i></i>
-</span>
-</button>
-<button aria-label="Menu" class="tool-btn tabBtn" data-settab="list" type="button">
-<span aria-hidden="true" class="burger"><i></i><i></i><i></i></span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</div>
 <!-- Top-right search / new habit removed: the primary "Add Habit" action lives in the Habits filter header below. -->
 </header>
 <!-- Mobile app bar -->
@@ -81,83 +43,93 @@
 </div>
 </header>
 <div class="habitsLayout">
-<div class="habitsMain">
+  <div class="habitsMain">
 <section class="habitsHero" id="habitsHero"></section>
+
 <!-- View-mode (grid/table) controls are rendered inside the Habits header (habitsHero).
      The inline buttons below were an older fallback and would duplicate the controls,
      so they have been removed. -->
 <section class="tabPanel active" data-panel="grid">
-<div class="card analyticsCard" id="habitAnalytics"></div>
+  <div class="card analyticsCard" id="habitAnalytics"></div>
 </section>
+
 <!-- List view is rendered INSIDE the analytics card (matrix area) to match the Dribbble demo.
      We keep the old panel removed to avoid the "new page" feel and duplicated scroll areas. -->
-<section class="tabPanel" data-panel="stats" hidden="">
-<div class="grid insightsGrid">
-<div class="card" id="insights"></div>
-<div class="card" id="streakSummary"></div>
-</div>
+
+<section class="tabPanel" data-panel="stats" hidden>
+  <div class="grid insightsGrid">
+    <div class="card" id="insights"></div>
+        <div class="card" id="streakSummary"></div>
+  </div>
 </section>
-</div>
-<aside class="habitsRight">
+  </div>
+  <aside class="habitsRight">
+
 <div class="habitsSideGrid">
-<div class="card habitsQuickMarkCard" id="habitQuickMark"></div>
-<div class="habitsSideStack">
-<div class="card" id="streakSummarySide"></div>
-<div class="card" id="insightsSide"></div>
+  <div class="card habitsQuickMarkCard" id="habitQuickMark"></div>
+  <div class="habitsSideStack">
+    <div class="card" id="streakSummarySide"></div>
+    <div class="card" id="insightsSide"></div>
+  </div>
 </div>
-</div>
+
 </aside>
 </div>
 </div>
-<nav aria-label="Primary" class="bottomNav">
-<a href="dashboard.html">🏠<span>Dashboard</span></a>
-<a class="active" href="habits.html"><span class="iconWrap"><img alt="Habits" class="navIcon" src="icons/habits.png?v=6"/></span><span>Habits</span></a>
-<a href="workouts.html">🏋️<span>Workouts</span></a>
-<a href="nutrition.html">🍎<span>Nutrition</span></a>
-<a href="finances.html">💰<span>Finances</span></a>
+<nav class="bottomNav" aria-label="Primary">
+  <a href="dashboard.html">🏠<span>Dashboard</span></a>
+  <a class="active" href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>
+  <a href="workouts.html">🏋️<span>Workouts</span></a>
+  <a href="nutrition.html">🍎<span>Nutrition</span></a>
+  <a href="finances.html">💰<span>Finances</span></a>
 </nav>
-</main></div>
+</div>
+</main>
+</div>
+
 <!-- Add habit modal (used on phone screens instead of browser prompt) -->
-<div aria-hidden="true" class="modal" id="addHabitModal" inert="">
-<div class="modalBackdrop" data-close=""></div>
-<div aria-label="New habit" aria-modal="true" class="modalSheet" role="dialog">
-<div class="modalHeader">
-<div class="modalTitle">New habit</div>
-<button aria-label="Close" class="iconBtn" id="addHabitClose">✕</button>
+<div class="modal" id="addHabitModal" aria-hidden="true" inert>
+  <div class="modalBackdrop" data-close></div>
+  <div class="modalSheet" role="dialog" aria-modal="true" aria-label="New habit">
+    <div class="modalHeader">
+      <div class="modalTitle">New habit</div>
+      <button class="iconBtn" id="addHabitClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modalBody">
+      <div class="segRow" style="justify-content:flex-start; margin-bottom: 10px;">
+        <div class="seg segWide" id="habitKindSeg" role="tablist" aria-label="Habit type">
+          <button class="segBtn active" type="button" data-kind="positive" role="tab" aria-selected="true">
+            <svg class="segIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/>
+              <path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Positive</span>
+          </button>
+          <button class="segBtn" type="button" data-kind="negative" role="tab" aria-selected="false">
+            <svg class="segIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/>
+              <path d="M8 12h8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Negative</span>
+          </button>
+        </div>
+      </div>
+      <input class="input modalInput" id="addHabitModalInput" placeholder="Habit name (e.g., Water 5 cups)" maxlength="28" />
+      <div class="small">Keep it short and measurable.</div>
+    </div>
+    <div class="modalActions">
+      <button class="btn ghost" id="addHabitCancel">Cancel</button>
+      <button class="btn primary" id="addHabitConfirm">Create</button>
+    </div>
+  </div>
 </div>
-<div class="modalBody">
-<div class="segRow" style="justify-content:flex-start; margin-bottom: 10px;">
-<div aria-label="Habit type" class="seg segWide" id="habitKindSeg" role="tablist">
-<button aria-selected="true" class="segBtn active" data-kind="positive" role="tab" type="button">
-<svg aria-hidden="true" class="segIcon" focusable="false" viewbox="0 0 24 24">
-<circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" stroke-width="2.2"></circle>
-<path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6"></path>
-</svg>
-<span>Positive</span>
-</button>
-<button aria-selected="false" class="segBtn" data-kind="negative" role="tab" type="button">
-<svg aria-hidden="true" class="segIcon" focusable="false" viewbox="0 0 24 24">
-<circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" stroke-width="2.2"></circle>
-<path d="M8 12h8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6"></path>
-</svg>
-<span>Negative</span>
-</button>
-</div>
-</div>
-<input class="input modalInput" id="addHabitModalInput" maxlength="28" placeholder="Habit name (e.g., Water 5 cups)"/>
-<div class="small">Keep it short and measurable.</div>
-</div>
-<div class="modalActions">
-<button class="btn ghost" id="addHabitCancel">Cancel</button>
-<button class="btn primary" id="addHabitConfirm">Create</button>
-</div>
-</div>
-</div>
+
 <!-- Floating New Habit button (Dribbble-inspired) -->
-<button aria-label="New habit" class="fabNewHabit" id="fabNewHabit" type="button">
-<span aria-hidden="true" class="fabCircle"><span class="fabPlus"></span></span>
-<span class="fabText">New habit</span>
+<button class="fabNewHabit" id="fabNewHabit" type="button" aria-label="New habit">
+  <span class="fabCircle" aria-hidden="true"><span class="fabPlus"></span></span>
+  <span class="fabText">New habit</span>
 </button>
+
 <script src="app.js"></script>
 <script src="ui.js"></script><script src="habits.js"></script>
 </body></html>
