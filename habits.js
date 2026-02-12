@@ -443,33 +443,6 @@ function fmtDowShortMD(iso){
   }
 }
 
-// Format range label for the top bar (used on desktop hero).
-// Week/All: "Thu, 2/5 – Wed, 2/11"
-// Month: "February 2026"
-// Year: "2026"
-function formatRangeLabel(view, offset){
-  const v = (view||"week").toLowerCase();
-  try{
-    if(v === "month"){
-      const b = getBoundsForView("month", Number(offset)||0);
-      return new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start);
-    }
-    if(v === "year"){
-      const b = getBoundsForView("year", Number(offset)||0);
-      return String(b.start.getFullYear());
-    }
-  }catch(_){ /* fallback below */ }
-
-  const b = getBoundsForView(v, Number(offset)||0);
-  const startIso = isoDate(b.start);
-  const endIso   = isoDate(b.end);
-  return `${fmtDowShortMD(startIso)} – ${fmtDowShortMD(endIso)}`;
-}
-
-// Back-compat alias (some builds referenced this name).
-const frontRangeLabel = formatRangeLabel;
-
-
 
 // ----------------------
 // Period comparison (for underline trend bar)
@@ -1436,9 +1409,6 @@ function miniHeatHtml(h){
 function renderAnalytics(){
   const card = document.getElementById("habitAnalytics");
   if(!card) return;
-
-  // Keep the desktop topbar in sync with the current view/range.
-  try{ renderHero(); }catch(_){ }
   const H = getFilteredHabits();
 
   // Keep the body + header toggles in sync even when we re-render ONLY the analytics card
@@ -1714,7 +1684,66 @@ function renderAnalytics(){
   const deltaAbs = Math.min(100, Math.abs(deltaPct));
   const isUp = deltaPct >= 0;
 
-  card.innerHTML = `<div class="overallTrend ${hasDelta ? (isUp?"up":"down") : "neutral"}">
+  card.innerHTML = `
+    <div class="habitsHeader">
+      <div class="habitsHeaderRow1">
+        <div class="seg segWide habitsRangeSeg" role="tablist" aria-label="Habits range" style="--seg-index:${segIndex}">
+          <div class="segIndicator" aria-hidden="true"></div>
+          <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
+          <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
+          <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
+          <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
+        </div>
+        <button class="btn secondary habitsAddBtn" id="addHabitDesktop" type="button">+ Add Habit</button>
+      </div>
+
+      <div class="habitsHeaderRow2">
+        <div class="habitsDateSlot">
+          <div class="habitsDateRow" id="habitsDateRow">
+            <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
+            <div class="rangeLabel" id="rangeLabel">${rangeLabel}</div>
+            <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
+          </div>
+
+          <!-- Month list panel: replaces the date row when the list icon is pressed (Month view only). -->
+          <div class="monthInline" id="monthInline" aria-hidden="true">
+            <div class="monthInlineHeader">
+              <div class="monthInlineTitle">This month</div>
+              <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="monthInlineBody" id="monthInlineBody"></div>
+          </div>
+        </div>
+        <div class="habitsRightControls">
+          <div class="viewToggles" aria-label="View">
+            <!-- Grid icon: 2 columns x 3 rows (6 cells) -->
+            <button class="tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view">
+              <span class="tabIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect x="5" y="4" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="13" y="4" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="5" y="9.5" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="13" y="9.5" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="5" y="15" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                  <rect x="13" y="15" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+            </button>
+            <!-- List icon: 3 lines with different lengths (short / medium / long) -->
+            <button class="tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view">
+              <span class="tabIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M6 7h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M6 17h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overallTrend ${hasDelta ? (isUp?"up":"down") : "neutral"}">
         <div class="trendAccent" aria-hidden="true"></div>
 
         <div class="trendTop">
@@ -1748,16 +1777,17 @@ function renderAnalytics(){
   `;
 
   const grid = card.querySelector("#matrixGrid");
-  // Desktop header is rendered outside the analytics card.
-  const monthInline = document.getElementById("monthInline");
-  const monthInlineBody = document.getElementById("monthInlineBody");
-  const monthInlineTitle = document.querySelector(".monthInlineTitle");
-  const monthInlineClose = document.getElementById("monthInlineClose");
+  const monthInline = card.querySelector("#monthInline");
+  const monthInlineBody = card.querySelector("#monthInlineBody");
+  const monthInlineTitle = card.querySelector(".monthInlineTitle");
+  const monthInlineClose = card.querySelector("#monthInlineClose");
+  const habitsDateRow = card.querySelector("#habitsDateRow");
 
   function setMonthInline(open){
     if(!monthInline) return;
     monthInline.classList.toggle("open", !!open);
     monthInline.setAttribute("aria-hidden", open ? "false" : "true");
+    if(habitsDateRow) habitsDateRow.classList.toggle("hidden", !!open);
   }
 
   if(monthInlineClose){
@@ -1765,7 +1795,7 @@ function renderAnalytics(){
   }
 
   // Desktop Add Habit button (FAB handles mobile)
-  const addBtn = document.getElementById("addHabitDesktop") || card.querySelector("#addHabitDesktop");
+  const addBtn = card.querySelector("#addHabitDesktop");
   if(addBtn){
     addBtn.addEventListener("click", (e)=>{
       e.preventDefault();
@@ -1777,7 +1807,7 @@ function renderAnalytics(){
   // Requirement: the calendar grid and the list must be mutually exclusive.
   // The list icon should ALWAYS switch to list mode (and hide the calendar),
   // even in Month view.
-  (document.querySelectorAll(".habitsHeader [data-settab]")?.length ? document.querySelectorAll(".habitsHeader [data-settab]") : card.querySelectorAll("[data-settab]")).forEach(btn=>{
+  card.querySelectorAll("[data-settab]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const t = (btn.getAttribute("data-settab") || "grid").toLowerCase();
       // Always close the Month inline panel when switching modes.
@@ -1787,7 +1817,7 @@ function renderAnalytics(){
   });
 
   // view toggle
-  (document.querySelectorAll(".habitsHeader [data-view]")?.length ? document.querySelectorAll(".habitsHeader [data-view]") : card.querySelectorAll("[data-view]")).forEach(btn=>{
+  card.querySelectorAll("[data-view]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const v = btn.dataset.view;
       if(!v || v===analyticsView) return;
@@ -1805,9 +1835,9 @@ function renderAnalytics(){
   });
 
   // calendar navigation (All-time uses years accordion instead)
-  const prevBtn = document.getElementById("calPrev") || card.querySelector("#calPrev");
-  const nextBtn = document.getElementById("calNext") || card.querySelector("#calNext");
-  const rangeEl = document.getElementById("rangeLabel") || card.querySelector("#rangeLabel");
+  const prevBtn = card.querySelector("#calPrev");
+  const nextBtn = card.querySelector("#calNext");
+  const rangeEl = card.querySelector("#rangeLabel");
   if(analyticsView === 'all'){
     if(rangeEl) rangeEl.textContent = 'All time';
     [prevBtn,nextBtn].forEach(b=>{
@@ -3804,52 +3834,9 @@ function setHeroWheel(el, pct){
 function renderHero(){
   const el = document.getElementById("habitsHero");
   if(!el) return;
-  const isDesktop = window.matchMedia("(min-width: 901px)").matches;
-  if(!isDesktop){
-    // On smaller screens we keep the compact app bar.
-    el.innerHTML = '';
-    return;
-  }
-
-  const rangeLabel = formatRangeLabel(analyticsView, analyticsOffsetDays);
-
-  el.innerHTML = `
-    <div class="topbar-wrap habitsHeader">
-      <div class="topbar">
-        <div class="row row-top">
-          <div class="segmented" role="tablist" aria-label="Habits range">
-            <button class="seg segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
-            <button class="seg segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
-            <button class="seg segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
-            <button class="seg segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All&nbsp;Time</button>
-          </div>
-          <button class="add-habit btn secondary habitsAddBtn" id="addHabitDesktop" type="button">
-            <span class="plus" aria-hidden="true">+</span>
-            Add Habit
-          </button>
-        </div>
-
-        <div class="row row-bottom">
-          <button class="icon-btn btn ghost navBtn" id="calPrev" type="button" aria-label="Previous"><span class="chev" aria-hidden="true">‹</span></button>
-          <div class="date-pill rangeLabel" id="rangeLabel">${rangeLabel}</div>
-          <button class="icon-btn btn ghost navBtn" id="calNext" type="button" aria-label="Next"><span class="chev" aria-hidden="true">›</span></button>
-
-          <div class="right-tools habitsRightControls" aria-label="View">
-            <button class="tool-btn tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view"><span class="grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
-            <button class="tool-btn tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span></button>
-          </div>
-        </div>
-
-        <div class="monthInline" id="monthInline" aria-hidden="true">
-          <div class="monthInlineHeader">
-            <div class="monthInlineTitle">This month</div>
-            <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
-          </div>
-          <div class="monthInlineBody" id="monthInlineBody"></div>
-        </div>
-      </div>
-    </div>
-  `;
+  // No inline "New habit" field in the page header.
+  // Creating habits should happen via the floating action button (FAB) + modal.
+  el.innerHTML = '';
 }
 
 // Floating "New habit" action
@@ -3861,3 +3848,4 @@ function renderHero(){
     openAddHabit(fab);
   });
 })();
+
