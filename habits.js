@@ -443,6 +443,33 @@ function fmtDowShortMD(iso){
   }
 }
 
+// Format range label for the top bar (used on desktop hero).
+// Week/All: "Thu, 2/5 – Wed, 2/11"
+// Month: "February 2026"
+// Year: "2026"
+function formatRangeLabel(view, offset){
+  const v = (view||"week").toLowerCase();
+  try{
+    if(v === "month"){
+      const b = getBoundsForView("month", Number(offset)||0);
+      return new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start);
+    }
+    if(v === "year"){
+      const b = getBoundsForView("year", Number(offset)||0);
+      return String(b.start.getFullYear());
+    }
+  }catch(_){ /* fallback below */ }
+
+  const b = getBoundsForView(v, Number(offset)||0);
+  const startIso = isoDate(b.start);
+  const endIso   = isoDate(b.end);
+  return `${fmtDowShortMD(startIso)} – ${fmtDowShortMD(endIso)}`;
+}
+
+// Back-compat alias (some builds referenced this name).
+const frontRangeLabel = formatRangeLabel;
+
+
 
 // ----------------------
 // Period comparison (for underline trend bar)
@@ -3834,4 +3861,3 @@ function renderHero(){
     openAddHabit(fab);
   });
 })();
-
