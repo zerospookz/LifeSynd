@@ -250,10 +250,13 @@ function openDayDetails(iso){
 
     const currentlyDone = (h.datesDone||[]).includes(iso);
     if(act==="toggle"){
-      setHabitDoneForIso(hid, iso, !currentlyDone);
+      applyHabitMark(hid, iso, "toggle");
     }else if(act==="clear"){
-      setHabitDoneForIso(hid, iso, false);
+      applyHabitMark(hid, iso, "set", false);
     }
+
+    // Sync the rest of the Habits UI (streaks, side list, week grid, month cell) without refresh
+    try{ syncAfterHabitChange(hid, iso); }catch(_e){}
 
     // Update modal row UI
     const nowDone = (h.datesDone||[]).includes(iso);
