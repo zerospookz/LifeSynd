@@ -3670,6 +3670,33 @@ img.pulseOnce{
     position: relative;
   }
 
+  /* hold-to-delete loading bar on the whole row */
+  .mwRow.holding{
+    border-color: color-mix(in oklab, var(--habit-accent) 18%, rgba(255,255,255,.10));
+  }
+  .mwRow.holding::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius: 22px;
+    background: linear-gradient(90deg,
+      color-mix(in oklab, var(--habit-accent) 55%, transparent),
+      color-mix(in oklab, var(--habit-accent) 25%, transparent));
+    transform-origin: left center;
+    transform: scaleX(var(--hold, 0));
+    opacity: .75;
+    pointer-events:none;
+    mix-blend-mode: screen;
+  }
+  .mwRow.holding::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius: 22px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    pointer-events:none;
+  }
+
   .mwTop{
     display: flex;
     align-items: center;
@@ -3714,13 +3741,12 @@ img.pulseOnce{
   .mwDays{
     margin-top: 10px;
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.028));
-    border: 1px solid rgba(255,255,255,.065);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
   .mwCol{
@@ -3743,7 +3769,8 @@ img.pulseOnce{
 
   /* Override the matrix cell look to match the mobile pill style */
   .mwPanel .mwDay.matrixCell{
-    width: 36px;
+    width: 100%;
+    max-width: 36px;
     height: 18px;
     border-radius: 999px;
     padding: 0;

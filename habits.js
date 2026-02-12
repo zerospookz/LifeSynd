@@ -1427,16 +1427,20 @@ function renderAnalytics(){
     let raf = null;
     let holdStart = 0;
     const HOLD_MS = 2500;
+    const holdTarget = labelEl.closest('.mwRow') || labelEl;
 
     function clearHold(){
       if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
       if(raf){ cancelAnimationFrame(raf); raf = null; }
+      holdTarget.classList.remove("holding");
+      holdTarget.style.removeProperty("--hold");
       labelEl.classList.remove("holding");
       labelEl.style.removeProperty("--hold");
     }
 
     function tick(){
       const t = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
+      holdTarget.style.setProperty("--hold", String(t));
       labelEl.style.setProperty("--hold", String(t));
       if(t < 1) raf = requestAnimationFrame(tick);
     }
@@ -1444,6 +1448,7 @@ function renderAnalytics(){
     labelEl.addEventListener("pointerdown", (ev)=>{
       if(ev.button != null && ev.button !== 0) return;
       holdStart = performance.now();
+      holdTarget.classList.add("holding");
       labelEl.classList.add("holding");
       tick();
       holdTimer = setTimeout(()=>{
