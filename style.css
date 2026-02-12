@@ -129,7 +129,7 @@ a{color:inherit}
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap: 8px;
   text-decoration:none;
   color: var(--muted);
   padding: 12px 12px;
@@ -263,7 +263,7 @@ a{color:inherit}
 .dashStack{display:flex;flex-direction:column;gap:14px}
 
 .miniList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.miniRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.02)}
+.miniRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding: 10px 10px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.02)}
 .miniLeft{display:flex;flex-direction:column;gap:2px;min-width:0}
 .miniTitle{font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .miniMeta{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3743,15 +3743,15 @@ img.pulseOnce{
 
   /* Override the matrix cell look to match the mobile pill style */
   .mwPanel .mwDay.matrixCell{
-    width: 22px;
-    height: 22px;
+    width: 36px;
+    height: 18px;
     border-radius: 999px;
     padding: 0;
     background: rgba(255,255,255,.035);
     border: 1px solid rgba(255,255,255,.075);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.06),
-      0 10px 20px rgba(0,0,0,.22);
+      0 8px 18px rgba(0,0,0,.20);
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
