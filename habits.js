@@ -3808,57 +3808,16 @@ function setHeroWheel(el, pct){
 
 
 
+
 function renderHero(){
-  const el = document.getElementById("habitsHeroDesktop") || document.getElementById("habitsHero");
-  if(!el) return;
-
-  // If the hero already contains markup (we now ship a static baseline in habits.html),
-  // only update state. Otherwise, inject the markup once.
-  if(!el.querySelector(".topbar-wrap.habitsHeader")){
-    el.innerHTML = `
-      <div class="topbar-wrap habitsHeader">
-        <div class="topbar">
-          <div class="row row-top">
-            <div class="segmented" role="tablist" aria-label="Habits range">
-              <button class="seg segBtn" data-view="week" type="button">Week</button>
-              <button class="seg segBtn" data-view="month" type="button">Month</button>
-              <button class="seg segBtn" data-view="year" type="button">Year</button>
-              <button class="seg segBtn" data-view="all" type="button">All Time</button>
-            </div>
-            <button class="add-habit" id="addHabitDesktop" type="button">
-              <span class="plus" aria-hidden="true">+</span>
-              Add Habit
-            </button>
-          </div>
-
-          <div class="row row-bottom">
-            <button class="icon-btn" id="calPrev" type="button" aria-label="Previous"><span class="chev" aria-hidden="true">‹</span></button>
-            <div class="date-pill rangeLabel" id="rangeLabel"></div>
-            <button class="icon-btn" id="calNext" type="button" aria-label="Next"><span class="chev" aria-hidden="true">›</span></button>
-
-            <div class="right-tools habitsRightControls" aria-label="View">
-              <button class="tool-btn tabBtn" data-settab="grid" type="button" aria-label="Grid"><span class="grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
-              <button class="tool-btn tabBtn" data-settab="list" type="button" aria-label="Menu"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span></button>
-            </div>
-          </div>
-
-          <div class="monthInline" id="monthInline" aria-hidden="true">
-            <div class="monthInlineHeader">
-              <div class="monthInlineTitle">This month</div>
-              <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
-            </div>
-            <div class="monthInlineBody" id="monthInlineBody"></div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
+  // Desktop topbar is now shipped as static markup in habits.html inside #habitsHeroDesktop.
+  // We only sync its state (active tabs, range label, grid/list).
   updateHeroTopbarState();
 }
 
+
 function updateHeroTopbarState(){
-  const host = document.querySelector(".topbar-wrap.habitsHeader");
+    const host = document.querySelector("#habitsHeroDesktop .topbar-wrap.habitsHeader") || document.querySelector(".topbar-wrap.habitsHeader");
   if(!host) return;
 
   // Active segmented button

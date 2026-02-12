@@ -34,20 +34,7 @@
 <h1 class="pageTitle">Habits</h1>
 <p class="subtitle">Streaks, consistency and recovery.</p>
 </div>
-<div class="habitsHeroDesktop" id="habitsHeroDesktop"></div>
-
-<!-- Top-right search / new habit removed: the primary "Add Habit" action lives in the Habits filter header below. -->
-</header>
-<!-- Mobile app bar -->
-<header class="habitsAppbar">
-<div class="appbarRow">
-<div class="appbarTitle">Habits</div>
-<div class="appbarRight"></div>
-</div>
-</header>
-<div class="habitsLayout">
-<div class="habitsMain">
-<section class="habitsHero" id="habitsHero">
+<div class="habitsHeroDesktop" id="habitsHeroDesktop">
 <div class="topbar-wrap habitsHeader">
 <div class="topbar">
 <div class="row row-top">
@@ -72,23 +59,30 @@
 </button>
 <div aria-label="View" class="right-tools habitsRightControls">
 <button aria-label="Grid" class="tool-btn tabBtn" data-settab="grid" type="button">
-<span aria-hidden="true" class="grid"><i></i><i></i><i></i><i></i></span>
+<span aria-hidden="true" class="grid">
+<i></i><i></i><i></i><i></i>
+</span>
 </button>
 <button aria-label="Menu" class="tool-btn tabBtn" data-settab="list" type="button">
 <span aria-hidden="true" class="burger"><i></i><i></i><i></i></span>
 </button>
 </div>
 </div>
-<div aria-hidden="true" class="monthInline" id="monthInline">
-<div class="monthInlineHeader">
-<div class="monthInlineTitle">This month</div>
-<button aria-label="Close" class="iconBtn" id="monthInlineClose" type="button">✕</button>
-</div>
-<div class="monthInlineBody" id="monthInlineBody"></div>
 </div>
 </div>
 </div>
-</section>
+<!-- Top-right search / new habit removed: the primary "Add Habit" action lives in the Habits filter header below. -->
+</header>
+<!-- Mobile app bar -->
+<header class="habitsAppbar">
+<div class="appbarRow">
+<div class="appbarTitle">Habits</div>
+<div class="appbarRight"></div>
+</div>
+</header>
+<div class="habitsLayout">
+<div class="habitsMain">
+<section class="habitsHero" id="habitsHero"></section>
 <!-- View-mode (grid/table) controls are rendered inside the Habits header (habitsHero).
      The inline buttons below were an older fallback and would duplicate the controls,
      so they have been removed. -->
@@ -123,8 +117,6 @@
 <a href="finances.html">💰<span>Finances</span></a>
 </nav>
 </main></div>
-
-
 <!-- Add habit modal (used on phone screens instead of browser prompt) -->
 <div aria-hidden="true" class="modal" id="addHabitModal" inert="">
 <div class="modalBackdrop" data-close=""></div>
