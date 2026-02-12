@@ -166,7 +166,13 @@ function syncAfterHabitChange(hid, iso){
   // Main summaries (streaks/insights/hero) if present
   try{ if(document.getElementById("streakSummary")) { handled = true; renderStreakSummary(); } }catch(e){}
   try{ if(document.getElementById("insights") || document.getElementById("insightsCard")) { handled = true; renderInsights(); } }catch(e){}
-  try{ if(document.getElementById("heroCard") || document.getElementById("hero")) { handled = true; renderHero(); } }catch(e){}
+  // Hero (desktop topbar) lives in #habitsHero on this page.
+  try{
+    if(document.getElementById("habitsHero") || document.getElementById("heroCard") || document.getElementById("hero")){
+      handled = true;
+      renderHero();
+    }
+  }catch(e){}
 
   // Quick mark panel
   try{ if(document.getElementById("habitQuickMark")) { handled = true; renderQuickMarkPanel(); } }catch(e){}
@@ -3847,6 +3853,22 @@ function renderHero(){
     </div>
   `;
 }
+
+// Ensure the desktop topbar is mounted even if the initial render path only
+// re-renders parts of the page. We intentionally keep this lightweight and
+// idempotent (renderHero() simply replaces #habitsHero innerHTML).
+(function ensureHabitsHeroMounted(){
+  const mount = ()=>{
+    try{ renderHero(); }catch(e){ console.error(e); }
+  };
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", mount, { once:true });
+  }else{
+    mount();
+  }
+  // Some browsers/layouts can delay sizes; run once more on load.
+  window.addEventListener("load", mount, { once:true });
+})();
 
 // Floating "New habit" action
 (() => {
