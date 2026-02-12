@@ -3677,7 +3677,7 @@ img.pulseOnce{
 
   /* hold-to-delete loading bar on the whole row (visible + glow) */
   .mwRow.holding{
-    border-color: color-mix(in oklab, var(--habit-accent) 18%, rgba(255,255,255,.10));
+    border-color: rgba(255,255,255,.18);
   }
 
   /* main fill */
@@ -3686,31 +3686,29 @@ img.pulseOnce{
     position:absolute;
     inset:0;
     border-radius: 22px;
+    /* Strong, obvious fill from left to right. Uses RGB var set in JS for compatibility. */
     background: linear-gradient(90deg,
-      color-mix(in oklab, var(--habit-accent) 78%, transparent),
-      color-mix(in oklab, var(--habit-accent) 52%, transparent));
+      rgba(var(--habit-rgb, 124,92,255), 0.62),
+      rgba(var(--habit-rgb, 124,92,255), 0.22));
     transform-origin: left center;
     transform: scaleX(var(--hold, 0));
-    opacity: .92;
+    opacity: 1;
     pointer-events:none;
     z-index: 0;
     box-shadow:
-      0 0 22px color-mix(in oklab, var(--habit-accent) 38%, transparent),
-      0 16px 40px color-mix(in oklab, var(--habit-accent) 22%, transparent);
+      0 0 20px rgba(var(--habit-rgb,124,92,255), 0.35),
+      0 18px 46px rgba(var(--habit-rgb,124,92,255), 0.22);
   }
 
-  /* leading-edge glow */
+  /* subtle glow while holding (no fancy calc() multiplications for compatibility) */
   .mwRow.holding::before{
     content:"";
     position:absolute;
     inset:0;
     border-radius: 22px;
-    background: linear-gradient(90deg,
-      transparent calc((var(--hold, 0) * 100%) - 18px),
-      color-mix(in oklab, var(--habit-accent) 72%, transparent) calc(var(--hold, 0) * 100%),
-      transparent calc((var(--hold, 0) * 100%) + 18px));
-    filter: blur(7px);
-    opacity: .95;
+    background: rgba(var(--habit-rgb,124,92,255), 0.08);
+    filter: blur(8px);
+    opacity: 1;
     pointer-events:none;
     z-index: 1;
     mix-blend-mode: screen;

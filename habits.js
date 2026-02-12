@@ -1488,6 +1488,33 @@ function renderAnalytics(){
   
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
 
+  // Helper: convert HSL to RGB (0..255). Used for mobile hold-to-delete fill so it
+  // renders consistently even on browsers without `color-mix()`.
+  function __hslToRgb(h, s, l){
+    h = ((Number(h)||0)%360 + 360) % 360;
+    s = Math.max(0, Math.min(100, Number(s)||0)) / 100;
+    l = Math.max(0, Math.min(100, Number(l)||0)) / 100;
+
+    const c = (1 - Math.abs(2*l - 1)) * s;
+    const hp = h / 60;
+    const x = c * (1 - Math.abs((hp % 2) - 1));
+    let r1=0,g1=0,b1=0;
+
+    if(0<=hp && hp<1){ r1=c; g1=x; b1=0; }
+    else if(1<=hp && hp<2){ r1=x; g1=c; b1=0; }
+    else if(2<=hp && hp<3){ r1=0; g1=c; b1=x; }
+    else if(3<=hp && hp<4){ r1=0; g1=x; b1=c; }
+    else if(4<=hp && hp<5){ r1=x; g1=0; b1=c; }
+    else if(5<=hp && hp<6){ r1=c; g1=0; b1=x; }
+
+    const m = l - c/2;
+    return {
+      r: Math.round((r1+m)*255),
+      g: Math.round((g1+m)*255),
+      b: Math.round((b1+m)*255),
+    };
+  }
+
   // Map views to window sizes. We keep ranges bounded for performance.
   function getAnalyticsConfig(view){
     const v = (view||"").toLowerCase();
@@ -2220,8 +2247,14 @@ for(const iso of monthDates){
       (H||[]).forEach(h=>{
         const row = document.createElement('div');
         row.className = 'mwRow';
-        const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
+        const hue = habitHue(h.id);
+        const accent = `hsl(${hue} 70% 55%)`;
         row.style.setProperty('--habit-accent', accent);
+
+        // Also provide RGB so CSS can render the hold-to-delete progress reliably
+        // even if the browser doesn't support `color-mix()`.
+        const rgb = __hslToRgb(hue, 70, 55);
+        row.style.setProperty('--habit-rgb', `${rgb.r},${rgb.g},${rgb.b}`);
 
         const set = new Set(h.datesDone||[]);
         let doneCount = 0;
