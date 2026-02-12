@@ -55,11 +55,6 @@
 --tb-txt: rgba(255,255,255,.92);
 --tb-muted: rgba(255,255,255,.70);
 
-
-  /* Habits topbar mobile palette (<=560px). Change only these for small-screen colors. */
-  --tbm-bg1:#221a3c;
-  --tbm-bg2:#1a1533;
-  --tbm-muted:rgba(255,255,255,.6);
 }
 
 /* Big-screen typography + spacing scale */
@@ -4693,7 +4688,14 @@ img.pulseOnce{
    - Scoped to .habitsTopbarV2 so it won't affect other segmented controls
    - Recolor via :root --tb-* variables
 ================================ */
-.habitsTopbarV2{ margin-bottom: 14px; }
+.habitsTopbarV2{
+  margin-bottom: 14px;
+  /* Local (scoped) vars for the Habits topbar.
+     On mobile we switch to the compact palette the user provided. */
+  --bg1:#221a3c;
+  --bg2:#1a1533;
+  --muted:rgba(255,255,255,.60);
+}
 .habitsTopbarV2 .glassTopbar{
   padding:22px;
   border-radius:26px;
@@ -4881,24 +4883,32 @@ img.pulseOnce{
 ================================ */
 @media (max-width: 560px){
   .habitsTopbarV2 .glassTopbar{
+    width:min(520px, 100%);
+    margin:0 auto;
     padding:20px;
     border-radius:30px;
     background:
       radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.10), transparent 55%),
       linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0)),
-      linear-gradient(180deg, var(--tbm-bg1), var(--tbm-bg2));
+      linear-gradient(180deg, var(--bg1), var(--bg2));
     border:1px solid rgba(255,255,255,.08);
     box-shadow:0 20px 60px rgba(0,0,0,.60);
   }
 
   .habitsTopbarV2 .row{ gap:14px; }
-  .habitsTopbarV2 .row-top{ gap:14px; }
+  /* On small screens the top row becomes a single full-width segmented control. */
+  .habitsTopbarV2 .row-top{
+    gap:14px;
+    flex-direction:column;
+    align-items:stretch;
+  }
 
   /* Hide desktop Add button on small screens (FAB already exists in the app). */
   .habitsTopbarV2 #addHabitDesktop{ display:none !important; }
 
   /* Tabs: pill container with horizontal scroll */
   .habitsTopbarV2 .segmented{
+    width:100%;
     gap:10px;
     padding:8px;
     border-radius:24px;
@@ -4916,7 +4926,7 @@ img.pulseOnce{
     border-radius:999px;
     border:1px solid rgba(255,255,255,.12);
     background:rgba(0,0,0,.15);
-    color:var(--tbm-muted);
+    color:var(--muted);
     font-weight:600;
     font-size:14px;
     letter-spacing:0;
