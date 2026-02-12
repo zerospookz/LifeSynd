@@ -1685,6 +1685,7 @@ body.habitsViewList .listInGrid{ display:block; }
   opacity: .95;
   animation: arcSweep 1.05s linear infinite;
   mix-blend-mode: screen;
+    z-index: 0;
 }
 @keyframes arcSweep{
   to{ transform: rotate(360deg); }
@@ -3669,6 +3670,10 @@ img.pulseOnce{
     overflow: hidden;
     position: relative;
   }
+  .mwRow > *{
+    position: relative;
+    z-index: 1;
+  }
 
   /* hold-to-delete loading bar on the whole row */
   .mwRow.holding{
@@ -3687,6 +3692,7 @@ img.pulseOnce{
     opacity: .75;
     pointer-events:none;
     mix-blend-mode: screen;
+    z-index: 0;
   }
   .mwRow.holding::before{
     content:"";
@@ -3708,6 +3714,7 @@ img.pulseOnce{
     display: flex;
     align-items: center;
     gap: 10px;
+    touch-action: none; /* allow long-press without scroll cancel */
     min-width: 0;
   }
 

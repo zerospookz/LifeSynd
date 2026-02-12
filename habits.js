@@ -1428,6 +1428,7 @@ function renderAnalytics(){
     let holdStart = 0;
     const HOLD_MS = 2500;
     const holdTarget = labelEl.closest('.mwRow') || labelEl;
+    let activePointerId = null;
 
     function clearHold(){
       if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
@@ -1436,6 +1437,13 @@ function renderAnalytics(){
       holdTarget.style.removeProperty("--hold");
       labelEl.classList.remove("holding");
       labelEl.style.removeProperty("--hold");
+
+      if(activePointerId != null){
+        try{ labelEl.releasePointerCapture(activePointerId); }catch(e){}
+        activePointerId = null;
+      }
+      window.removeEventListener("pointerup", clearHold, true);
+      window.removeEventListener("pointercancel", clearHold, true);
     }
 
     function tick(){
@@ -1447,10 +1455,22 @@ function renderAnalytics(){
 
     labelEl.addEventListener("pointerdown", (ev)=>{
       if(ev.button != null && ev.button !== 0) return;
+
+      // Prevent scroll/cancel while holding on mobile
+      ev.preventDefault();
+
+      activePointerId = ev.pointerId;
+      try{ labelEl.setPointerCapture(activePointerId); }catch(e){}
+
       holdStart = performance.now();
       holdTarget.classList.add("holding");
       labelEl.classList.add("holding");
       tick();
+
+      // Ensure we always clear even if pointer leaves the element
+      window.addEventListener("pointerup", clearHold, true);
+      window.addEventListener("pointercancel", clearHold, true);
+
       holdTimer = setTimeout(()=>{
         clearHold();
         habits = (habits||[]).filter(x=>x.id!==habit.id);
@@ -1458,9 +1478,10 @@ function renderAnalytics(){
         showToast("Habit removed");
         render();
       }, HOLD_MS);
-    });
-    ["pointerup","pointercancel","pointerleave"].forEach(evt=>{
-      labelEl.addEventListener(evt, clearHold);
+    }, { passive:false });
+
+    ["pointerleave"].forEach(evt=>{
+      labelEl.addEventListener(evt, ()=>{ /* no-op: pointer capture handles it */ });
     });
   }
 
