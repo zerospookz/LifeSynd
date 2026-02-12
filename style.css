@@ -1171,12 +1171,12 @@ font-weight: 750;
    ============================== */
 .habitsHero{ margin: 18px 0 14px; }
 
-@media (max-width: 900px){
+@media (max-width: 720px){
   /* Mobile has its own app bar; hide the desktop topbar markup. */
   .topbar-wrap.habitsHeader{ display:none !important; }
 }
 
-@media (min-width: 901px){
+@media (min-width: 721px){
   .habitsHeader.topbar-wrap{ margin-bottom: 14px; }
   .habitsHeader.topbar-wrap{ width: min(1200px, 92vw); }
 
