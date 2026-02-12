@@ -4217,3 +4217,42 @@ img.pulseOnce{
   background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 65%, #22c55e), var(--accent));
   box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 25%, transparent);
 }
+
+
+/* ===== Habits cards: right square should reflect habit color (like grid) ===== */
+.hmCard .hmBadge{
+  /* base: lightly tinted by habit accent */
+  background: radial-gradient(140px 90px at 30% 25%,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    rgba(255,255,255,.08)
+  );
+  border-color: color-mix(in srgb, var(--accent) 28%, rgba(255,255,255,.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 10px 25px rgba(0,0,0,.35);
+}
+
+/* done = stronger fill */
+.hmCard.is-done .hmBadge{
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 40%, rgba(255,255,255,.10)),
+    color-mix(in srgb, var(--accent) 18%, rgba(0,0,0,.22))
+  );
+  border-color: color-mix(in srgb, var(--accent) 46%, rgba(255,255,255,.12));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.05),
+    0 0 24px color-mix(in srgb, var(--accent) 35%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 10px 25px rgba(0,0,0,.35);
+}
+
+/* missed/slipped = red-tinted square */
+.hmCard.is-missed .hmBadge{
+  background: linear-gradient(135deg, rgba(255,77,79,.22), rgba(0,0,0,.18));
+  border-color: rgba(255,77,79,.35);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.04),
+    0 0 24px rgba(255,77,79,.20),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 10px 25px rgba(0,0,0,.35);
+}
