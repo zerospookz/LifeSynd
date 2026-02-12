@@ -3936,14 +3936,39 @@ img.pulseOnce{
   height:52px;
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.10);
+  /* Default (NOT marked): neutral so it doesn't inherit the card tint */
+  background: rgba(10,12,18,.72);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 0 0 1px rgba(0,0,0,.22),
     0 10px 25px rgba(0,0,0,.35);
   position:relative;
   z-index:1;
   cursor:pointer;
 }
+
+/* Marked (done or missed): tinted with the habit accent */
+.hmBadge.is-on{
+  border-color: rgba(255,255,255,.14);
+  background:
+    radial-gradient(80px 60px at 30% 25%, rgba(255,255,255,.18), transparent 62%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 70%, rgba(255,255,255,.10)),
+      color-mix(in srgb, var(--accent) 35%, rgba(0,0,0,.22))
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(0,0,0,.18),
+    0 10px 25px rgba(0,0,0,.35),
+    0 0 34px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Missed gets a slightly more muted treatment */
+.hmCard.is-missed .hmBadge.is-on{
+  filter: saturate(.90) brightness(.92);
+}
+
 
 /* Variants: hue-based (accent still comes from data) */
 .hmCard--green{

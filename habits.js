@@ -3127,7 +3127,7 @@ function renderQuickMarkPanel(){
             <div class="hmMeta">${habitDoneText(h, done)}</div>
           </div>
         </div>
-        <button class="hmBadge hmToggle " type="button" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}"></button>
+        <button class="hmBadge hmToggle ${ (done || missed) ? "is-on" : "is-off" }" type="button" aria-label="${habitActionText(h, done)}" title="${habitActionText(h, done)}"></button>
       </article>
     `;
   }).join("");
