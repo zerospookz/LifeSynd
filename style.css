@@ -4400,7 +4400,9 @@ img.pulseOnce{
   }
 
   .matrixHeaderRow{
-    padding: 12px 14px;
+    /* IMPORTANT: keep header columns perfectly aligned with the rows.
+       Any horizontal padding here shifts the grid columns and creates the perceived offset. */
+    padding: 0;
     border-radius: 18px;
     margin-bottom: 12px;
   }
