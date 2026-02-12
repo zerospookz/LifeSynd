@@ -3663,6 +3663,7 @@ img.pulseOnce{
 
   .mwRow{
     padding: 12px 14px 10px;
+    isolation: isolate;
     border-radius: 22px;
     background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
     border: 1px solid rgba(255,255,255,.07);
@@ -3686,18 +3687,19 @@ img.pulseOnce{
     position:absolute;
     inset:0;
     border-radius: 22px;
-    /* Strong, obvious fill from left to right. Uses RGB var set in JS for compatibility. */
+    /* Red "loading" fill (left -> right) */
     background: linear-gradient(90deg,
-      rgba(var(--habit-rgb, 124,92,255), 0.62),
-      rgba(var(--habit-rgb, 124,92,255), 0.22));
+      rgba(255, 66, 66, 0.78),
+      rgba(255, 66, 66, 0.18));
     transform-origin: left center;
     transform: scaleX(var(--hold, 0));
     opacity: 1;
     pointer-events:none;
     z-index: 0;
+    will-change: transform;
     box-shadow:
-      0 0 20px rgba(var(--habit-rgb,124,92,255), 0.35),
-      0 18px 46px rgba(var(--habit-rgb,124,92,255), 0.22);
+      0 0 18px rgba(255, 66, 66, 0.35),
+      0 18px 44px rgba(255, 66, 66, 0.22);
   }
 
   /* subtle glow while holding (no fancy calc() multiplications for compatibility) */
@@ -3706,8 +3708,9 @@ img.pulseOnce{
     position:absolute;
     inset:0;
     border-radius: 22px;
-    background: rgba(var(--habit-rgb,124,92,255), 0.08);
-    filter: blur(8px);
+    /* Soft red glow while holding */
+    background: rgba(255, 66, 66, 0.10);
+    filter: blur(10px);
     opacity: 1;
     pointer-events:none;
     z-index: 1;
