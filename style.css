@@ -472,9 +472,7 @@ input:focus,select:focus{
 /* Visual spacer column between the sticky date rail and the habit grid */
 .matrixSpacer{
   width: var(--between, 12px);
-  /* Cancel the grid-gap on both sides so the spacer itself defines the distance */
-  margin-left: calc(var(--mgap, 8px) * -1);
-  margin-right: calc(var(--mgap, 8px) * -1);
+  /* keep it purely structural (no negative margins) so header + rows align perfectly */
 }
 .matrixRow{display:grid;gap: var(--mgap, 8px);align-items:center}
 .matrixCorner{
