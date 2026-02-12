@@ -4256,3 +4256,42 @@ img.pulseOnce{
     inset 0 1px 0 rgba(255,255,255,.10),
     0 10px 25px rgba(0,0,0,.35);
 }
+
+
+/* ===== Habits badges: stronger glow when marked (matches grid emphasis) ===== */
+.hmCard.is-done .hmBadge{
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.06),
+    0 0 18px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 42px color-mix(in srgb, var(--accent) 35%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 12px 28px rgba(0,0,0,.38);
+}
+
+.hmCard.is-missed .hmBadge{
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.05),
+    0 0 18px rgba(255,77,79,.40),
+    0 0 44px rgba(255,77,79,.22),
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 12px 28px rgba(0,0,0,.38);
+}
+
+/* Optional halo layer (non-intrusive) */
+.hmCard.is-done .hmBadge::after,
+.hmCard.is-missed .hmBadge::after{
+  content:"";
+  position:absolute;
+  inset:-14px;
+  border-radius: 22px;
+  pointer-events:none;
+  filter: blur(14px);
+  opacity:.85;
+  z-index:-1;
+}
+.hmCard.is-done .hmBadge::after{
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 70%);
+}
+.hmCard.is-missed .hmBadge::after{
+  background: radial-gradient(circle at 50% 50%, rgba(255,77,79,.55), transparent 70%);
+}
