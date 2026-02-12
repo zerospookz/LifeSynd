@@ -1440,6 +1440,7 @@ function miniHeatHtml(h){
 
 
 function renderAnalytics(){
+  try{ renderHero(); }catch(e){ console.error(e); }
   const card = document.getElementById("habitAnalytics");
   if(!card) return;
 
@@ -3810,49 +3811,73 @@ function setHeroWheel(el, pct){
 function renderHero(){
   const el = document.getElementById("habitsHero");
   if(!el) return;
-  // Always render the desktop topbar markup, and let CSS decide whether it is
-  // visible. This avoids cases where matchMedia or resize timing clears the
-  // hero and it never comes back.
-  const rangeLabel = formatRangeLabel(analyticsView, analyticsOffsetDays);
 
-  el.innerHTML = `
-    <div class="topbar-wrap habitsHeader">
-      <div class="topbar">
-        <div class="row row-top">
-          <div class="segmented" role="tablist" aria-label="Habits range">
-            <button class="seg segBtn ${analyticsView==="week"?"is-active":""}" data-view="week" type="button">Week</button>
-            <button class="seg segBtn ${analyticsView==="month"?"is-active":""}" data-view="month" type="button">Month</button>
-            <button class="seg segBtn ${analyticsView==="year"?"is-active":""}" data-view="year" type="button">Year</button>
-            <button class="seg segBtn ${analyticsView==="all"?"is-active":""}" data-view="all" type="button">All&nbsp;Time</button>
+  // If the hero already contains markup (we now ship a static baseline in habits.html),
+  // only update state. Otherwise, inject the markup once.
+  if(!el.querySelector(".topbar-wrap.habitsHeader")){
+    el.innerHTML = `
+      <div class="topbar-wrap habitsHeader">
+        <div class="topbar">
+          <div class="row row-top">
+            <div class="segmented" role="tablist" aria-label="Habits range">
+              <button class="seg segBtn" data-view="week" type="button">Week</button>
+              <button class="seg segBtn" data-view="month" type="button">Month</button>
+              <button class="seg segBtn" data-view="year" type="button">Year</button>
+              <button class="seg segBtn" data-view="all" type="button">All Time</button>
+            </div>
+            <button class="add-habit" id="addHabitDesktop" type="button">
+              <span class="plus" aria-hidden="true">+</span>
+              Add Habit
+            </button>
           </div>
-          <button class="add-habit" id="addHabitDesktop" type="button">
-            <span class="plus" aria-hidden="true">+</span>
-            Add Habit
-          </button>
-        </div>
 
-        <div class="row row-bottom">
-          <button class="icon-btn" id="calPrev" type="button" aria-label="Previous"><span class="chev" aria-hidden="true">‹</span></button>
-          <div class="date-pill rangeLabel" id="rangeLabel">${rangeLabel}</div>
-          <button class="icon-btn" id="calNext" type="button" aria-label="Next"><span class="chev" aria-hidden="true">›</span></button>
+          <div class="row row-bottom">
+            <button class="icon-btn" id="calPrev" type="button" aria-label="Previous"><span class="chev" aria-hidden="true">‹</span></button>
+            <div class="date-pill rangeLabel" id="rangeLabel"></div>
+            <button class="icon-btn" id="calNext" type="button" aria-label="Next"><span class="chev" aria-hidden="true">›</span></button>
 
-          <div class="right-tools habitsRightControls" aria-label="View">
-            <button class="tool-btn tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view"><span class="grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
-            <button class="tool-btn tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span></button>
+            <div class="right-tools habitsRightControls" aria-label="View">
+              <button class="tool-btn tabBtn" data-settab="grid" type="button" aria-label="Grid"><span class="grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+              <button class="tool-btn tabBtn" data-settab="list" type="button" aria-label="Menu"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span></button>
+            </div>
           </div>
-        </div>
 
-        <div class="monthInline" id="monthInline" aria-hidden="true">
-          <div class="monthInlineHeader">
-            <div class="monthInlineTitle">This month</div>
-            <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
+          <div class="monthInline" id="monthInline" aria-hidden="true">
+            <div class="monthInlineHeader">
+              <div class="monthInlineTitle">This month</div>
+              <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="monthInlineBody" id="monthInlineBody"></div>
           </div>
-          <div class="monthInlineBody" id="monthInlineBody"></div>
         </div>
       </div>
-    </div>
-  `;
+    `;
+  }
+
+  updateHeroTopbarState();
 }
+
+function updateHeroTopbarState(){
+  const host = document.querySelector(".topbar-wrap.habitsHeader");
+  if(!host) return;
+
+  // Active segmented button
+  host.querySelectorAll(".segBtn").forEach(btn=>{
+    const v = btn.dataset.view;
+    btn.classList.toggle("is-active", v === analyticsView);
+  });
+
+  // Range label
+  const lbl = host.querySelector("#rangeLabel");
+  if(lbl) lbl.textContent = formatRangeLabel(analyticsView, analyticsOffsetDays);
+
+  // View mode tabs (grid/list)
+  const vm = getCurrentViewMode();
+  host.querySelectorAll(".tabBtn").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.settab === vm);
+  });
+}
+
 
 // Ensure the desktop topbar is mounted even if the initial render path only
 // re-renders parts of the page. We intentionally keep this lightweight and
