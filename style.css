@@ -54,6 +54,12 @@
 --tb-stroke2: rgba(255,255,255,.14);
 --tb-txt: rgba(255,255,255,.92);
 --tb-muted: rgba(255,255,255,.70);
+
+
+  /* Habits topbar mobile palette (<=560px). Change only these for small-screen colors. */
+  --tbm-bg1:#221a3c;
+  --tbm-bg2:#1a1533;
+  --tbm-muted:rgba(255,255,255,.6);
 }
 
 /* Big-screen typography + spacing scale */
@@ -4867,4 +4873,129 @@ img.pulseOnce{
   background: rgba(0,0,0,.14);
   border: 1px solid rgba(255,255,255,.10);
   border-radius: 18px;
+}
+
+
+/* ================================
+   Habits Topbar V2 — Mobile layout (matches provided mock)
+================================ */
+@media (max-width: 560px){
+  .habitsTopbarV2 .glassTopbar{
+    padding:20px;
+    border-radius:30px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.10), transparent 55%),
+      linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0)),
+      linear-gradient(180deg, var(--tbm-bg1), var(--tbm-bg2));
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 20px 60px rgba(0,0,0,.60);
+  }
+
+  .habitsTopbarV2 .row{ gap:14px; }
+  .habitsTopbarV2 .row-top{ gap:14px; }
+
+  /* Hide desktop Add button on small screens (FAB already exists in the app). */
+  .habitsTopbarV2 #addHabitDesktop{ display:none !important; }
+
+  /* Tabs: pill container with horizontal scroll */
+  .habitsTopbarV2 .segmented{
+    gap:10px;
+    padding:8px;
+    border-radius:24px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width:none;
+  }
+  .habitsTopbarV2 .segmented::-webkit-scrollbar{ display:none; }
+
+  .habitsTopbarV2 .seg{
+    padding:10px 16px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.15);
+    color:var(--tbm-muted);
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0;
+    white-space:nowrap;
+    flex:0 0 auto;
+    box-shadow:none;
+  }
+  .habitsTopbarV2 .seg.is-active{
+    color:#fff;
+    border:0;
+    background:linear-gradient(90deg,#7d4cff,#ff4fb3);
+    box-shadow:0 8px 22px rgba(255,79,179,.20);
+  }
+
+  /* Bottom row: icons left, date nav right */
+  .habitsTopbarV2 .row-bottom{
+    margin-top:16px;
+    padding-top:0;
+    border-top:none;
+    align-items:center;
+  }
+
+  /* Put view tools on the left */
+  .habitsTopbarV2 .right-tools{
+    margin-left:0;
+    order:0;
+    gap:12px;
+  }
+
+  .habitsTopbarV2 .tool-btn{
+    width:56px;
+    height:56px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    box-shadow:none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* Calendar/date nav to the right */
+  .habitsTopbarV2 .habitsDateSlot{
+    margin-left:auto;
+    order:1;
+  }
+
+  .habitsTopbarV2 .habitsDateRow{ gap:10px; }
+
+  .habitsTopbarV2 .icon-btn{
+    width:38px;
+    height:38px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.16);
+    box-shadow:none;
+  }
+
+  .habitsTopbarV2 .chev{ font-size:20px; }
+
+  .habitsTopbarV2 .date-pill{
+    height:56px;
+    padding:0 18px;
+    border-radius:999px;
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:650;
+    font-size:14px;
+    white-space:nowrap;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 360px){
+  .habitsTopbarV2 .tool-btn{ width:50px; height:50px; }
+  .habitsTopbarV2 .date-pill{ height:50px; font-size:13px; padding:0 14px; }
+  .habitsTopbarV2 .icon-btn{ width:32px; height:32px; }
+  .habitsTopbarV2 .chev{ font-size:18px; }
 }
