@@ -518,19 +518,34 @@ input:focus,select:focus{
   --habit-accent: var(--accent);
   width: 100%;
   justify-self: stretch;
+
+  /* Make header tiles exactly the same footprint as grid cells to avoid any perceived offset */
+  height: var(--cell, 54px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   border-radius: 12px;
   border: 1px solid color-mix(in oklab, var(--habit-accent) 22%, rgba(255,255,255,.08));
   background: color-mix(in oklab, var(--habit-accent) 10%, rgba(255,255,255,.03));
-  padding: 10px 10px;
+
+  padding: 0; /* <- critical for perfect alignment */
   font-size: .8rem;
   font-weight: 650;
   letter-spacing: -.01em;
-  /* Keep labels readable even for very bright accents */
+
   color: rgba(255,255,255,.92);
+  overflow: hidden;
+  text-align: center;
+}
+
+.matrixHabit > span{
+  display:block;
+  padding: 0 8px;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: center;
 }
 .matrixDate{
   position: sticky;
