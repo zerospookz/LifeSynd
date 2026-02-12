@@ -3804,13 +3804,9 @@ function setHeroWheel(el, pct){
 function renderHero(){
   const el = document.getElementById("habitsHero");
   if(!el) return;
-  const isDesktop = window.matchMedia("(min-width: 901px)").matches;
-  if(!isDesktop){
-    // On smaller screens we keep the compact app bar.
-    el.innerHTML = '';
-    return;
-  }
-
+  // Always render the desktop topbar markup, and let CSS decide whether it is
+  // visible. This avoids cases where matchMedia or resize timing clears the
+  // hero and it never comes back.
   const rangeLabel = formatRangeLabel(analyticsView, analyticsOffsetDays);
 
   el.innerHTML = `
@@ -3818,21 +3814,21 @@ function renderHero(){
       <div class="topbar">
         <div class="row row-top">
           <div class="segmented" role="tablist" aria-label="Habits range">
-            <button class="seg segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
-            <button class="seg segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
-            <button class="seg segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
-            <button class="seg segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All&nbsp;Time</button>
+            <button class="seg segBtn ${analyticsView==="week"?"is-active":""}" data-view="week" type="button">Week</button>
+            <button class="seg segBtn ${analyticsView==="month"?"is-active":""}" data-view="month" type="button">Month</button>
+            <button class="seg segBtn ${analyticsView==="year"?"is-active":""}" data-view="year" type="button">Year</button>
+            <button class="seg segBtn ${analyticsView==="all"?"is-active":""}" data-view="all" type="button">All&nbsp;Time</button>
           </div>
-          <button class="add-habit btn secondary habitsAddBtn" id="addHabitDesktop" type="button">
+          <button class="add-habit" id="addHabitDesktop" type="button">
             <span class="plus" aria-hidden="true">+</span>
             Add Habit
           </button>
         </div>
 
         <div class="row row-bottom">
-          <button class="icon-btn btn ghost navBtn" id="calPrev" type="button" aria-label="Previous"><span class="chev" aria-hidden="true">‹</span></button>
+          <button class="icon-btn" id="calPrev" type="button" aria-label="Previous"><span class="chev" aria-hidden="true">‹</span></button>
           <div class="date-pill rangeLabel" id="rangeLabel">${rangeLabel}</div>
-          <button class="icon-btn btn ghost navBtn" id="calNext" type="button" aria-label="Next"><span class="chev" aria-hidden="true">›</span></button>
+          <button class="icon-btn" id="calNext" type="button" aria-label="Next"><span class="chev" aria-hidden="true">›</span></button>
 
           <div class="right-tools habitsRightControls" aria-label="View">
             <button class="tool-btn tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view"><span class="grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>

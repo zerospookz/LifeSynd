@@ -1169,8 +1169,16 @@ font-weight: 750;
    Desktop Habits topbar redesign
    (keeps existing JS hooks)
    ============================== */
+.habitsHero{ margin: 18px 0 14px; }
+
+@media (max-width: 900px){
+  /* Mobile has its own app bar; hide the desktop topbar markup. */
+  .topbar-wrap.habitsHeader{ display:none !important; }
+}
+
 @media (min-width: 901px){
   .habitsHeader.topbar-wrap{ margin-bottom: 14px; }
+  .habitsHeader.topbar-wrap{ width: min(1200px, 92vw); }
 
   .habitsHeader.topbar-wrap .topbar{
     padding: 22px;
@@ -1203,6 +1211,7 @@ font-weight: 750;
     box-shadow: 0 10px 20px rgba(0,0,0,.25);
     cursor: pointer;
   }
+  .habitsHeader.topbar-wrap .segmented .seg.is-active,
   .habitsHeader.topbar-wrap .segmented .seg.active{
     color: rgba(255,255,255,.92);
     background: linear-gradient(135deg, rgba(140,70,255,.95), rgba(255,80,190,.85));
