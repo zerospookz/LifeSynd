@@ -1427,12 +1427,16 @@ function renderAnalytics(){
     let raf = null;
     let holdStart = 0;
     const HOLD_MS = 2500;
-    const holdTarget = labelEl.closest('.mwRow') || labelEl;
+    // NOTE: on mobile weekly we sometimes bind before the element is inserted into the DOM,
+    // so `closest('.mwRow')` would be null if computed eagerly here. Resolve the target
+    // lazily on pointerdown/tick.
+    const getHoldTarget = ()=> labelEl.closest('.mwRow') || labelEl;
     let activePointerId = null;
 
     function clearHold(){
       if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
       if(raf){ cancelAnimationFrame(raf); raf = null; }
+      const holdTarget = getHoldTarget();
       holdTarget.classList.remove("holding");
       holdTarget.style.removeProperty("--hold");
       labelEl.classList.remove("holding");
@@ -1448,6 +1452,7 @@ function renderAnalytics(){
 
     function tick(){
       const t = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
+      const holdTarget = getHoldTarget();
       holdTarget.style.setProperty("--hold", String(t));
       labelEl.style.setProperty("--hold", String(t));
       if(t < 1) raf = requestAnimationFrame(tick);
@@ -1463,6 +1468,7 @@ function renderAnalytics(){
       try{ labelEl.setPointerCapture(activePointerId); }catch(e){}
 
       holdStart = performance.now();
+      const holdTarget = getHoldTarget();
       holdTarget.classList.add("holding");
       labelEl.classList.add("holding");
       tick();
