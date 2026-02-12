@@ -2179,19 +2179,14 @@ for(const iso of monthDates){
       const panel = document.createElement('div');
       panel.className = 'mwPanel';
 
-      // DOW header
-      const dow = document.createElement('div');
-      dow.className = 'mwDow';
-      (dates||[]).forEach(iso=>{
+      // Per-row weekday labels are rendered above the circles, so we don't need a global DOW header.
+      const weekdayLabels = (dates||[]).map(iso=>{
         const d = new Date(iso+"T00:00:00");
         let w = '';
         try{ w = new Intl.DateTimeFormat(undefined,{weekday:'narrow'}).format(d); }
         catch(_){ w = ['S','M','T','W','T','F','S'][d.getDay()] || ''; }
-        const s = document.createElement('span');
-        s.textContent = String(w).toUpperCase();
-        dow.appendChild(s);
+        return String(w).toUpperCase();
       });
-      panel.appendChild(dow);
 
       const list = document.createElement('div');
       list.className = 'mwList';
@@ -2221,9 +2216,19 @@ for(const iso of monthDates){
         const days = document.createElement('div');
         days.className = 'mwDays';
 
-        (dates||[]).forEach(iso=>{
+        // 7 columns; each column contains the weekday label and the circle button.
+        (dates||[]).forEach((iso, idx)=>{
+          const col = document.createElement('div');
+          col.className = 'mwCol';
+
+          const lbl = document.createElement('div');
+          lbl.className = 'mwLbl';
+          lbl.textContent = weekdayLabels[idx] || '';
+          col.appendChild(lbl);
+
           const btn = document.createElement('button');
           btn.type = 'button';
+          // keep matrixCell + data attrs so existing tap/paint logic keeps working
           btn.className = 'mwDay matrixCell';
           btn.style.setProperty('--habit-accent', accent);
           const done = set.has(iso);
@@ -2236,26 +2241,15 @@ for(const iso of monthDates){
           btn.dataset.hid = h.id;
           btn.dataset.iso = iso;
           btn.setAttribute('aria-label', `Toggle ${h.name} on ${iso}`);
-          days.appendChild(btn);
+          col.appendChild(btn);
+
+          days.appendChild(col);
         });
         row.appendChild(days);
 
         list.appendChild(row);
       });
       panel.appendChild(list);
-
-      // Inline add button (uses the same modal flow)
-      const fab = document.createElement('button');
-      fab.className = 'mwFab';
-      fab.type = 'button';
-      fab.setAttribute('aria-label','Add habit');
-      fab.innerHTML = `
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-        </svg>
-      `;
-      fab.addEventListener('click', ()=> openAddHabit(fab));
-      panel.appendChild(fab);
 
       grid.appendChild(panel);
     } else {
