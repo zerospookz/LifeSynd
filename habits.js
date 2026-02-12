@@ -1685,63 +1685,53 @@ function renderAnalytics(){
   const isUp = deltaPct >= 0;
 
   card.innerHTML = `
-    <div class="habitsHeader">
-      <div class="habitsHeaderRow1">
-        <div class="seg segWide habitsRangeSeg" role="tablist" aria-label="Habits range" style="--seg-index:${segIndex}">
-          <div class="segIndicator" aria-hidden="true"></div>
-          <button class="segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
-          <button class="segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
-          <button class="segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
-          <button class="segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
-        </div>
-        <button class="btn secondary habitsAddBtn" id="addHabitDesktop" type="button">+ Add Habit</button>
-      </div>
-
-      <div class="habitsHeaderRow2">
-        <div class="habitsDateSlot">
-          <div class="habitsDateRow" id="habitsDateRow">
-            <button class="btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">‹</button>
-            <div class="rangeLabel" id="rangeLabel">${rangeLabel}</div>
-            <button class="btn ghost navBtn" id="calNext" type="button" aria-label="Next">›</button>
+    <div class="topbar-wrap habitsHeader">
+      <div class="topbar">
+        <div class="row row-top">
+          <div class="segmented" role="tablist" aria-label="Habits range">
+            <button class="seg segBtn ${analyticsView==="week"?"active":""}" data-view="week" type="button">Week</button>
+            <button class="seg segBtn ${analyticsView==="month"?"active":""}" data-view="month" type="button">Month</button>
+            <button class="seg segBtn ${analyticsView==="year"?"active":""}" data-view="year" type="button">Year</button>
+            <button class="seg segBtn ${analyticsView==="all"?"active":""}" data-view="all" type="button">All Time</button>
           </div>
 
-          <!-- Month list panel: replaces the date row when the list icon is pressed (Month view only). -->
-          <div class="monthInline" id="monthInline" aria-hidden="true">
-            <div class="monthInlineHeader">
-              <div class="monthInlineTitle">This month</div>
-              <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
-            </div>
-            <div class="monthInlineBody" id="monthInlineBody"></div>
-          </div>
+          <button class="add-habit btn secondary habitsAddBtn" id="addHabitDesktop" type="button">
+            <span class="plus" aria-hidden="true">+</span>
+            Add Habit
+          </button>
         </div>
-        <div class="habitsRightControls">
-          <div class="viewToggles" aria-label="View">
-            <!-- Grid icon: 2 columns x 3 rows (6 cells) -->
-            <button class="tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view">
-              <span class="tabIcon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <rect x="5" y="4" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
-                  <rect x="13" y="4" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
-                  <rect x="5" y="9.5" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
-                  <rect x="13" y="9.5" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
-                  <rect x="5" y="15" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
-                  <rect x="13" y="15" width="6" height="5" rx="1.4" stroke="currentColor" stroke-width="2"/>
-                </svg>
-              </span>
+
+        <div class="row row-bottom">
+          <button class="icon-btn btn ghost navBtn" id="calPrev" type="button" aria-label="Previous">
+            <span class="chev" aria-hidden="true">‹</span>
+          </button>
+
+          <div class="date-pill rangeLabel" id="rangeLabel">${rangeLabel}</div>
+
+          <button class="icon-btn btn ghost navBtn" id="calNext" type="button" aria-label="Next">
+            <span class="chev" aria-hidden="true">›</span>
+          </button>
+
+          <div class="right-tools habitsRightControls" aria-label="View">
+            <button class="tool-btn tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view">
+              <span class="grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
             </button>
-            <!-- List icon: 3 lines with different lengths (short / medium / long) -->
-            <button class="tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view">
-              <span class="tabIcon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M6 7h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M6 17h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </span>
+            <button class="tool-btn tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view">
+              <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
             </button>
           </div>
         </div>
+
+        <!-- Month list panel: replaces the date row when the list icon is pressed (Month view only). -->
+        <div class="monthInline" id="monthInline" aria-hidden="true">
+          <div class="monthInlineHeader">
+            <div class="monthInlineTitle">This month</div>
+            <button class="iconBtn" id="monthInlineClose" type="button" aria-label="Close">✕</button>
+          </div>
+          <div class="monthInlineBody" id="monthInlineBody"></div>
+        </div>
       </div>
+    </div>
 
       <div class="overallTrend ${hasDelta ? (isUp?"up":"down") : "neutral"}">
         <div class="trendAccent" aria-hidden="true"></div>
