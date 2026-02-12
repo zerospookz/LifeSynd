@@ -3809,7 +3809,7 @@ function setHeroWheel(el, pct){
 
 
 function renderHero(){
-  const el = document.getElementById("habitsHero");
+  const el = document.getElementById("habitsHeroDesktop") || document.getElementById("habitsHero");
   if(!el) return;
 
   // If the hero already contains markup (we now ship a static baseline in habits.html),

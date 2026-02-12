@@ -4812,3 +4812,7 @@ img.pulseOnce{
     opacity: .72;
   }
 }
+
+
+/* Desktop hero container inside header */
+.habitsHeroDesktop{ margin-top: 16px; }
