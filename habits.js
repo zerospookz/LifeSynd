@@ -1686,7 +1686,7 @@ function renderAnalytics(){
 
   card.innerHTML = `
     <div class="habitsHeader habitsTopbarV2">
-      <div class="topbar">
+      <div class="glassTopbar">
         <div class="row row-top">
           <div class="segmented" role="tablist" aria-label="Habits range">
             <button class="seg ${analyticsView==="week"?"is-active":""}" data-view="week" type="button">Week</button>

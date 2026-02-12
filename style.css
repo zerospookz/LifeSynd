@@ -4688,7 +4688,7 @@ img.pulseOnce{
    - Recolor via :root --tb-* variables
 ================================ */
 .habitsTopbarV2{ margin-bottom: 14px; }
-.habitsTopbarV2 .topbar{
+.habitsTopbarV2 .glassTopbar{
   padding:22px;
   border-radius:26px;
   background:
