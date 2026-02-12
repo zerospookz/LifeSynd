@@ -441,16 +441,16 @@ input:focus,select:focus{
   content: "";
   position: absolute;
   inset: 0;
-  width: calc(var(--dateCol, 190px) + 12px);
+  width: calc(var(--dateCol, 190px) + var(--between, 12px));
   background: linear-gradient(90deg, rgba(255,255,255,.035), rgba(255,255,255,0));
   border-radius: 18px;
   pointer-events: none;
   opacity: .45;
 }
-.matrixGrid{display:grid;gap:8px;min-width:100%;--cell:54px;--dateCol:190px}
+.matrixGrid{display:grid;--mgap:8px;gap:var(--mgap);min-width:100%;--cell:54px;--dateCol:190px;--between:12px}
 .matrixHeaderRow{
   display:grid;
-  gap:8px;
+  gap: var(--mgap, 8px);
   position: sticky;
   top: 0;
   z-index: 3;
@@ -459,7 +459,8 @@ input:focus,select:focus{
   background: linear-gradient(180deg, rgba(15,23,42,.72), rgba(2,6,23,.52));
   border: 1px solid rgba(255,255,255,.06);
   border-radius: 16px;
-  padding: 10px 12px;
+  /* IMPORTANT: no horizontal padding here, иначе header колоните се разминават с редовете */
+  padding: 0;
   margin-bottom: 10px;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.06),
@@ -467,7 +468,15 @@ input:focus,select:focus{
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
-.matrixRow{display:grid;gap:8px;align-items:center}
+
+/* Visual spacer column between the sticky date rail and the habit grid */
+.matrixSpacer{
+  width: var(--between, 12px);
+  /* Cancel the grid-gap on both sides so the spacer itself defines the distance */
+  margin-left: calc(var(--mgap, 8px) * -1);
+  margin-right: calc(var(--mgap, 8px) * -1);
+}
+.matrixRow{display:grid;gap: var(--mgap, 8px);align-items:center}
 .matrixCorner{
   position: sticky;
   left: 0;
@@ -637,6 +646,7 @@ font-weight: 750;
   justify-self: center;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.07);
+  /* default = neutral/grey until marked */
   background: rgba(255,255,255,.04);
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
@@ -649,12 +659,29 @@ font-weight: 750;
 }
 
 .matrixCell.missed{
-  background: color-mix(in oklab, var(--habit-accent) 12%, rgba(255,255,255,.03));
-  opacity: .65;
+  /* keep unmarked states neutral (no accent) */
+  background: rgba(255,255,255,.03);
+  border-color: rgba(255,255,255,.06);
+  opacity: .60;
 }
 .matrixCell:hover{
   transform: translateY(-2px);
   filter: brightness(1.10);
+  /* hover on empty/missed stays neutral */
+  border-color: rgba(255,255,255,.14);
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.matrixCell.done:hover{
+  border-color: color-mix(in oklab, var(--habit-accent) 55%, rgba(255,255,255,.14));
+  box-shadow:
+    0 12px 28px color-mix(in oklab, var(--habit-accent) 35%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+.matrixCell.done:hover{
+  /* only completed cells get the accent hover */
   border-color: color-mix(in oklab, var(--habit-accent) 45%, rgba(255,255,255,.12));
   box-shadow:
     0 10px 24px color-mix(in oklab, var(--habit-accent) 35%, transparent),
@@ -1388,8 +1415,8 @@ font-weight: 750;
   }
 }
 .matrixWrap{ padding: 14px; }
-.matrixGrid{ gap: 10px; }
-.matrixHeaderRow, .matrixRow{ gap: 10px; }
+.matrixGrid{ --mgap: 10px; }
+.matrixHeaderRow, .matrixRow{ gap: var(--mgap, 10px); }
 .matrixCell{touch-action:none; width: var(--cell, 54px); border-radius: 14px; }
 .matrixCorner, .matrixHabit, .matrixDate{ border-radius: 14px; }
 .matrixHabit{ text-align:center; }

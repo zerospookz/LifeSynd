@@ -1981,22 +1981,27 @@ for(const iso of monthDates){
 
   if(!isMobile){
     const dateCol = 190;
+    const between = 12; // visual spacer between date column and first habit cell
     // compute cell size to fill available width when there are few H
     const wrapEl = card.querySelector(".matrixWrap");
     const wrapW = wrapEl?.clientWidth || 360;
     const gap = 8;
     const maxCell = 74;
     const minCell = 44;
-    const avail = Math.max(0, wrapW - dateCol - gap*(H.length+1));
+    // Available width for habit cells: wrapper minus date column minus the visual spacer,
+    // minus gaps between (date|spacer|cells) columns.
+    const avail = Math.max(0, wrapW - dateCol - between - gap*(H.length+2));
     const cell = Math.max(minCell, Math.min(maxCell, Math.floor(avail / Math.max(1, H.length))));
     // Set sizing vars on both the grid and its scroll wrapper.
     // The wrapper uses these to paint a subtle background strip behind the sticky date column.
     grid.style.setProperty("--dateCol", dateCol+"px");
     grid.style.setProperty("--cell", cell+"px");
+    grid.style.setProperty("--between", between+"px");
     wrapEl?.style.setProperty("--dateCol", dateCol+"px");
     wrapEl?.style.setProperty("--cell", cell+"px");
+    wrapEl?.style.setProperty("--between", between+"px");
 
-    const colTemplate = `var(--dateCol) repeat(${H.length}, var(--cell))`;
+    const colTemplate = `var(--dateCol) var(--between) repeat(${H.length}, var(--cell))`;
 
     // header row
     const header = document.createElement("div");
@@ -2014,6 +2019,11 @@ for(const iso of monthDates){
       </div>
     `;
     header.appendChild(corner);
+
+    // spacer column to create a little breathing room between the sticky date rail and the grid
+    const hSpacer = document.createElement("div");
+    hSpacer.className = "matrixSpacer";
+    header.appendChild(hSpacer);
 
     H.forEach(h=>{
       const el = document.createElement("div");
@@ -2040,6 +2050,11 @@ for(const iso of monthDates){
       dateEl.className = "matrixDate";
       dateEl.innerHTML = `<div class="d1">${fmtMonthDay(iso)}</div><div class="d2">${fmtWeekday(iso)}</div>`;
       row.appendChild(dateEl);
+
+      // spacer column (visual only)
+      const rSpacer = document.createElement("div");
+      rSpacer.className = "matrixSpacer";
+      row.appendChild(rSpacer);
 
       H.forEach(h=>{
         const cell = document.createElement("div");
