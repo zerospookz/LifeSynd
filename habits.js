@@ -159,9 +159,28 @@ function syncAfterHabitChange(hid, iso){
     }
   }catch(e){}
 
-// Quick mark panel + side panels
-  try{ if(document.getElementById("habitQuickMark")) handled = true; renderQuickMarkPanel(); }catch(e){}
-  try{ if(document.getElementById("streakSummarySide") || document.getElementById("insightsSide") || document.getElementById("streakSummary") || document.getElementById("insightsCard")) handled = true; syncSidePanels(); }catch(e){}
+  // Keep every summary panel live (no page refresh needed).
+  // IMPORTANT: syncSidePanels() only COPIES the already-rendered main cards.
+  // So we must re-render the sources first whenever habit state changes.
+
+  // Main summaries (streaks/insights/hero) if present
+  try{ if(document.getElementById("streakSummary")) { handled = true; renderStreakSummary(); } }catch(e){}
+  try{ if(document.getElementById("insights") || document.getElementById("insightsCard")) { handled = true; renderInsights(); } }catch(e){}
+  try{ if(document.getElementById("heroCard") || document.getElementById("hero")) { handled = true; renderHero(); } }catch(e){}
+
+  // Quick mark panel
+  try{ if(document.getElementById("habitQuickMark")) { handled = true; renderQuickMarkPanel(); } }catch(e){}
+
+  // Side panels mirror
+  try{
+    if(document.getElementById("streakSummarySide") || document.getElementById("insightsSide")){
+      handled = true;
+      syncSidePanels();
+    }
+  }catch(e){}
+
+  // List view inside Analytics card (when active)
+  try{ if(document.getElementById("habitList")) { handled = true; renderListInAnalytics(); } }catch(e){}
   return handled;
 }
 function ensureDayDetailsModal(){
