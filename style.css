@@ -3614,6 +3614,176 @@ img.pulseOnce{
   .calNum{ font-size:28px; }
   .calPctNum{ font-size:14px; }
 }
+
+/* ---------------------------------------------
+   Habits: Mobile Weekly (<= 900px)
+   Card list layout with 7-day pill buttons.
+   Keeps existing interactions by styling `.matrixCell`.
+----------------------------------------------*/
+
+@media (max-width: 900px){
+  .matrixGrid.mobileWeekly{
+    padding: 0;
+  }
+
+  .mwPanel{
+    width: 100%;
+    padding: 16px 14px 78px;
+    border-radius: 26px;
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 24px 70px rgba(0,0,0,.55);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .mwPanel::before{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    background:
+      radial-gradient(700px 210px at 50% 0%, rgba(255,255,255,.12), transparent 55%),
+      radial-gradient(260px 260px at 14% 88%, rgba(124, 92, 255,.10), transparent 60%),
+      radial-gradient(240px 240px at 90% 82%, rgba(91, 140, 255,.10), transparent 60%);
+    pointer-events:none;
+  }
+
+  .mwDow{
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 2px 0 12px;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    font-weight: 650;
+    font-size: 12px;
+    color: rgba(255,255,255,.52);
+  }
+
+  .mwList{
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mwRow{
+    padding: 12px 14px 10px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+    border: 1px solid rgba(255,255,255,.07);
+    box-shadow: 0 10px 26px rgba(0,0,0,.28);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .mwTop{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mwLeft{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .mwDot{
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--habit-accent);
+    box-shadow:
+      0 0 0 6px rgba(255,255,255,.02),
+      0 10px 22px color-mix(in oklab, var(--habit-accent) 22%, transparent);
+  }
+
+  .mwName{
+    font-size: 16px;
+    font-weight: 650;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+  }
+
+  .mwCount{
+    font-size: 13px;
+    font-weight: 650;
+    color: rgba(255,255,255,.62);
+    min-width: 44px;
+    text-align: right;
+  }
+
+  .mwDays{
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+  }
+
+  /* Override the matrix cell look to match the mobile pill style */
+  .mwPanel .mwDay.matrixCell{
+    width: 100%;
+    height: 22px;
+    border-radius: 999px;
+    padding: 0;
+    background: rgba(255,255,255,.045);
+    border: 1px solid rgba(255,255,255,.07);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .15s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+
+  .mwPanel .mwDay.matrixCell:active{ transform: scale(.99); }
+
+  .mwPanel .mwDay.matrixCell.done{
+    background:
+      radial-gradient(circle at 30% 30%,
+        color-mix(in oklab, var(--habit-accent) 78%, #fff 0%),
+        color-mix(in oklab, var(--habit-accent) 65%, transparent) 60%),
+      rgba(255,255,255,.04);
+    border-color: color-mix(in oklab, var(--habit-accent) 30%, rgba(255,255,255,.10));
+    box-shadow:
+      0 0 0 7px color-mix(in oklab, var(--habit-accent) 18%, transparent),
+      0 14px 28px color-mix(in oklab, var(--habit-accent) 18%, transparent),
+      inset 0 1px 0 rgba(255,255,255,.10);
+  }
+
+  /* Keep missed as neutral on mobile list */
+  .mwPanel .mwDay.matrixCell.missed{
+    background: rgba(255,255,255,.03);
+  }
+
+  .mwFab{
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    width: 62px;
+    height: 62px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.18);
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,.30), rgba(255,255,255,.08) 40%, transparent 75%),
+      linear-gradient(180deg, rgba(124, 92, 255,.95), rgba(91, 140, 255,.92));
+    color: white;
+    display: grid;
+    place-items: center;
+    box-shadow:
+      0 16px 50px rgba(124,92,255,.38),
+      0 10px 28px rgba(0,0,0,.35);
+  }
+}
 @media (max-width: 520px){
   .monthCal{ --gap:10px; --cardH:92px; --radius:16px; }
   .calCell.calDayCard{ padding:12px; }

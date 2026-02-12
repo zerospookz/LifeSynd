@@ -2100,80 +2100,169 @@ for(const iso of monthDates){
       grid.appendChild(row);
     });
   } else {
-    // Mobile: Dribbble-style weekly list (circles)
-    grid.classList.add('mobileWeekTable');
+    // Mobile: Weekly view gets a card list layout (habit rows with 7 pill buttons)
+    // Keep ALL existing interactions by rendering the day pills as `.matrixCell` nodes with data-hid/iso.
+    grid.classList.add('mobileWeekly');
     grid.innerHTML = '';
 
-    // Day-of-week header (S M T W T F S)
-    const head = document.createElement('div');
-    head.className = 'mwtHead';
-    const dowRow = document.createElement('div');
-    dowRow.className = 'mwtDowRow';
-    (dates||[]).forEach(iso=>{
-      const d = new Date(iso+"T00:00:00");
-      let w = '';
-      try{ w = new Intl.DateTimeFormat(undefined,{weekday:'narrow'}).format(d); }
-      catch(_){ w = ['S','M','T','W','T','F','S'][d.getDay()] || ''; }
-      const c = document.createElement('div');
-      c.className = 'mwtDow';
-      c.textContent = String(w).toUpperCase();
-      dowRow.appendChild(c);
-    });
-    // fraction spacer
-    dowRow.appendChild(Object.assign(document.createElement('div'), { className: 'mwtFracHead' }));
-    head.appendChild(dowRow);
-    grid.appendChild(head);
+    function renderMobileWeekTable(){
+      grid.classList.add('mobileWeekTable');
+      grid.innerHTML = '';
 
-    // Habit rows
-    (H||[]).forEach(h=>{
-      const row = document.createElement('div');
-      row.className = 'mwtRow';
-      row.style.setProperty('--habit-accent', `hsl(${habitHue(h.id)} 70% 55%)`);
-
-      const left = document.createElement('div');
-      left.className = 'mwtLabel';
-      left.title = h.name;
-      left.innerHTML = `
-        <span class="mwtDot" aria-hidden="true"></span>
-        <span class="mwtName">${escapeHtml(h.name)}</span>
-      `;
-      bindHoldToDelete(left, h);
-      row.appendChild(left);
-
-      const cellsWrap = document.createElement('div');
-      cellsWrap.className = 'mwtCells';
-
-      const set = new Set(h.datesDone||[]);
-      let doneCount = 0;
-
+      // Day-of-week header
+      const head = document.createElement('div');
+      head.className = 'mwtHead';
+      const dowRow = document.createElement('div');
+      dowRow.className = 'mwtDowRow';
       (dates||[]).forEach(iso=>{
-        const cell = document.createElement('div');
-        cell.className = 'mwtCell matrixCell';
-        cell.style.setProperty('--habit-accent', `hsl(${habitHue(h.id)} 70% 55%)`);
-        const done = set.has(iso);
-        if(done){ cell.classList.add('done'); doneCount++; }
-        else if(iso < todayIso) cell.classList.add('missed');
-        if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
-          cell.classList.add('justChanged');
-          if(lastPulse.mode==='miss') cell.classList.add('pulseMiss');
-        }
-        cell.dataset.hid = h.id;
-        cell.dataset.iso = iso;
-        cellsWrap.appendChild(cell);
+        const d = new Date(iso+"T00:00:00");
+        let w = '';
+        try{ w = new Intl.DateTimeFormat(undefined,{weekday:'narrow'}).format(d); }
+        catch(_){ w = ['S','M','T','W','T','F','S'][d.getDay()] || ''; }
+        const c = document.createElement('div');
+        c.className = 'mwtDow';
+        c.textContent = String(w).toUpperCase();
+        dowRow.appendChild(c);
       });
+      dowRow.appendChild(Object.assign(document.createElement('div'), { className: 'mwtFracHead' }));
+      head.appendChild(dowRow);
+      grid.appendChild(head);
 
-      // Right-side mini fraction (e.g., 3/6)
-      const frac = document.createElement('div');
-      frac.className = 'mwtFrac';
-      frac.textContent = `${doneCount}/${Math.max(1,(dates||[]).length)}`;
-      cellsWrap.appendChild(frac);
+      (H||[]).forEach(h=>{
+        const row = document.createElement('div');
+        row.className = 'mwtRow';
+        row.style.setProperty('--habit-accent', `hsl(${habitHue(h.id)} 70% 55%)`);
 
-      row.appendChild(cellsWrap);
+        const left = document.createElement('div');
+        left.className = 'mwtLabel';
+        left.title = h.name;
+        left.innerHTML = `
+          <span class="mwtDot" aria-hidden="true"></span>
+          <span class="mwtName">${escapeHtml(h.name)}</span>
+        `;
+        bindHoldToDelete(left, h);
+        row.appendChild(left);
 
-      grid.appendChild(row);
-    });
+        const cellsWrap = document.createElement('div');
+        cellsWrap.className = 'mwtCells';
 
-    // Mobile weekly list doesn't need the swipe pager on the matrix wrapper.
+        const set = new Set(h.datesDone||[]);
+        let doneCount = 0;
+
+        (dates||[]).forEach(iso=>{
+          const cell = document.createElement('div');
+          cell.className = 'mwtCell matrixCell';
+          cell.style.setProperty('--habit-accent', `hsl(${habitHue(h.id)} 70% 55%)`);
+          const done = set.has(iso);
+          if(done){ cell.classList.add('done'); doneCount++; }
+          else if(iso < todayIso) cell.classList.add('missed');
+          if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
+            cell.classList.add('justChanged');
+            if(lastPulse.mode==='miss') cell.classList.add('pulseMiss');
+          }
+          cell.dataset.hid = h.id;
+          cell.dataset.iso = iso;
+          cellsWrap.appendChild(cell);
+        });
+
+        const frac = document.createElement('div');
+        frac.className = 'mwtFrac';
+        frac.textContent = `${doneCount}/${Math.max(1,(dates||[]).length)}`;
+        cellsWrap.appendChild(frac);
+        row.appendChild(cellsWrap);
+        grid.appendChild(row);
+      });
+    }
+
+    // Only the weekly range uses the new layout. (Month/Year have their own UIs.)
+    if(analyticsView === 'week'){
+      const panel = document.createElement('div');
+      panel.className = 'mwPanel';
+
+      // DOW header
+      const dow = document.createElement('div');
+      dow.className = 'mwDow';
+      (dates||[]).forEach(iso=>{
+        const d = new Date(iso+"T00:00:00");
+        let w = '';
+        try{ w = new Intl.DateTimeFormat(undefined,{weekday:'narrow'}).format(d); }
+        catch(_){ w = ['S','M','T','W','T','F','S'][d.getDay()] || ''; }
+        const s = document.createElement('span');
+        s.textContent = String(w).toUpperCase();
+        dow.appendChild(s);
+      });
+      panel.appendChild(dow);
+
+      const list = document.createElement('div');
+      list.className = 'mwList';
+
+      (H||[]).forEach(h=>{
+        const row = document.createElement('div');
+        row.className = 'mwRow';
+        const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
+        row.style.setProperty('--habit-accent', accent);
+
+        const set = new Set(h.datesDone||[]);
+        let doneCount = 0;
+
+        const top = document.createElement('div');
+        top.className = 'mwTop';
+        top.innerHTML = `
+          <div class="mwLeft" title="${escapeHtml(h.name)}">
+            <span class="mwDot" aria-hidden="true"></span>
+            <div class="mwName">${escapeHtml(h.name)}</div>
+          </div>
+          <div class="mwCount">${(h.datesDone||[]).filter(x=> dates.includes(x)).length}/${Math.max(1, dates.length)}</div>
+        `;
+        // Hold-to-delete on the left label
+        bindHoldToDelete(top.querySelector('.mwLeft'), h);
+        row.appendChild(top);
+
+        const days = document.createElement('div');
+        days.className = 'mwDays';
+
+        (dates||[]).forEach(iso=>{
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'mwDay matrixCell';
+          btn.style.setProperty('--habit-accent', accent);
+          const done = set.has(iso);
+          if(done){ btn.classList.add('done'); doneCount++; }
+          else if(iso < todayIso) btn.classList.add('missed');
+          if(lastPulse && lastPulse.hid===h.id && lastPulse.iso===iso){
+            btn.classList.add('justChanged');
+            if(lastPulse.mode==='miss') btn.classList.add('pulseMiss');
+          }
+          btn.dataset.hid = h.id;
+          btn.dataset.iso = iso;
+          btn.setAttribute('aria-label', `Toggle ${h.name} on ${iso}`);
+          days.appendChild(btn);
+        });
+        row.appendChild(days);
+
+        list.appendChild(row);
+      });
+      panel.appendChild(list);
+
+      // Inline add button (uses the same modal flow)
+      const fab = document.createElement('button');
+      fab.className = 'mwFab';
+      fab.type = 'button';
+      fab.setAttribute('aria-label','Add habit');
+      fab.innerHTML = `
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      `;
+      fab.addEventListener('click', ()=> openAddHabit(fab));
+      panel.appendChild(fab);
+
+      grid.appendChild(panel);
+    } else {
+      // Fallback: keep the existing compact mobile table for other ranges
+      renderMobileWeekTable();
+    }
+
     const wrap = card.querySelector('.matrixWrap');
     if(wrap) wrap.dataset.swipeBound = '1';
   }
