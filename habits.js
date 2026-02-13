@@ -1684,8 +1684,46 @@ function renderAnalytics(){
   const deltaAbs = Math.min(100, Math.abs(deltaPct));
   const isUp = deltaPct >= 0;
 
-  card.innerHTML = `
-    <div class="habitsHeader habitsTopbarV2">
+  // Mobile (phone) header uses a compact single-line segmented control + premium date pill
+  // inspired by the provided CodePen snippet.
+  const mobileHeader = (typeof isMobile !== "undefined" && !!isMobile);
+
+  const headerTop = mobileHeader ? `
+      <div class="habitsMobileNav stage">
+        <div class="panel" role="group" aria-label="Time range and navigation">
+          <div class="segmented" data-segmented role="tablist" aria-label="Habits range">
+            <button class="seg ${analyticsView==="week"?"active":""}" aria-pressed="${analyticsView==="week"?"true":"false"}" data-view="week" type="button">Week</button>
+            <button class="seg ${analyticsView==="month"?"active":""}" aria-pressed="${analyticsView==="month"?"true":"false"}" data-view="month" type="button">Month</button>
+            <button class="seg ${analyticsView==="year"?"active":""}" aria-pressed="${analyticsView==="year"?"true":"false"}" data-view="year" type="button">Year</button>
+            <button class="seg ${analyticsView==="all"?"active":""}" aria-pressed="${analyticsView==="all"?"true":"false"}" data-view="all" type="button">All Time</button>
+            <div class="seg-highlight" aria-hidden="true"></div>
+          </div>
+
+          <div class="bottom-row">
+            <div class="pill-group" aria-label="View options">
+              <button class="pill tabBtn ${getCurrentViewMode()==="grid"?"active":""}" data-settab="grid" type="button" aria-label="Grid view" title="Grid view">
+                <span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              </button>
+              <button class="pill tabBtn ${getCurrentViewMode()==="list"?"active":""}" data-settab="list" type="button" aria-label="List view" title="List view">
+                <span class="lines" aria-hidden="true"><i></i><i></i><i></i></span>
+              </button>
+            </div>
+
+            <div class="date-pill" role="group" aria-label="Date range navigation">
+              <button class="arrow-btn" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
+                <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+              </button>
+
+              <div class="date-text" id="rangeLabel" aria-live="polite">${rangeLabel}</div>
+
+              <button class="arrow-btn" id="calNext" type="button" aria-label="Next range" data-nav="next">
+                <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+  ` : `
       <div class="glassTopbar">
         <div class="row row-top">
           <div class="segmented" role="tablist" aria-label="Habits range">
@@ -1729,6 +1767,11 @@ function renderAnalytics(){
           </div>
         </div>
       </div>
+  `;
+
+  card.innerHTML = `
+    <div class="habitsHeader habitsTopbarV2 ${mobileHeader?"habitsHeaderMobile":""}">
+      ${headerTop}
 
       <div class="overallTrend ${hasDelta ? (isUp?"up":"down") : "neutral"}">
         <div class="trendAccent" aria-hidden="true"></div>
@@ -1769,6 +1812,59 @@ function renderAnalytics(){
   const monthInlineTitle = card.querySelector(".monthInlineTitle");
   const monthInlineClose = card.querySelector("#monthInlineClose");
   const habitsDateRow = card.querySelector("#habitsDateRow");
+
+  // --- Mobile segmented highlight (single-line) ---
+  if(mobileHeader){
+    const segmented = card.querySelector('[data-segmented]');
+    const highlight = segmented ? segmented.querySelector('.seg-highlight') : null;
+    const segButtons = segmented ? Array.from(segmented.querySelectorAll('.seg')) : [];
+
+    function placeHighlight(btn, animate = true){
+      if(!btn || !highlight) return;
+      highlight.style.width = `${btn.offsetWidth}px`;
+      highlight.style.height = `${btn.offsetHeight}px`;
+      highlight.style.transform = `translate(${btn.offsetLeft}px, ${btn.offsetTop}px)`;
+      if(!animate){
+        const saved = highlight.style.transition;
+        highlight.style.transition = 'none';
+        requestAnimationFrame(()=>{ highlight.style.transition = saved || ''; });
+      }
+    }
+
+    function setActive(btn){
+      segButtons.forEach(b=>{
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.classList.toggle('is-active', active); // keep compatibility
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      placeHighlight(btn);
+    }
+
+    // init + keep aligned
+    const activeBtn = segmented ? segmented.querySelector('.seg.active') || segmented.querySelector('.seg.is-active') : null;
+    if(activeBtn) placeHighlight(activeBtn, false);
+    segButtons.forEach(btn=>btn.addEventListener('click', ()=>setActive(btn)));
+
+    // Add a single global resize handler (avoid stacking listeners on rerenders)
+    if(!window.__habitsMobileSegResizeBound){
+      window.__habitsMobileSegResizeBound = true;
+      window.addEventListener('resize', ()=>{
+        try{
+          const host = document.getElementById('habitAnalytics');
+          if(!host) return;
+          const seg = host.querySelector('.habitsHeaderMobile [data-segmented]');
+          if(!seg) return;
+          const hi = seg.querySelector('.seg-highlight');
+          const act = seg.querySelector('.seg.active') || seg.querySelector('.seg.is-active');
+          if(!hi || !act) return;
+          hi.style.width = `${act.offsetWidth}px`;
+          hi.style.height = `${act.offsetHeight}px`;
+          hi.style.transform = `translate(${act.offsetLeft}px, ${act.offsetTop}px)`;
+        }catch(_){/* ignore */}
+      });
+    }
+  }
 
   function setMonthInline(open){
     if(!monthInline) return;
