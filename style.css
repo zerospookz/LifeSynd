@@ -5134,23 +5134,75 @@ html, body{
 
 
 
-/* ===== Habits mobile date overflow hard fix ===== */
-@media (max-width: 520px){
+/* ===== Habits: small-screen single-line tabs + compact date row (match design) ===== */
+@media (max-width: 420px){
 
-  .habitsTopbarV2{
-    padding-left:16px !important;
-    padding-right:16px !important;
-    overflow:hidden;
+  /* Segmented: keep 1 line, fit 4 buttons (no swipe) */
+  .habitsTopbarV2 .segmented{
+    display:flex !important;
+    gap: 6px !important;
+    padding: 6px !important;
+    overflow: hidden !important;
   }
 
+  .habitsTopbarV2 .segmented .seg{
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    font-size: clamp(11px, 3.2vw, 13px) !important;
+    letter-spacing: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* "All Time" tends to overflow */
+  .habitsTopbarV2 .segmented .seg:last-of-type{
+    font-size: clamp(10.5px, 3.0vw, 12px) !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  .habitsTopbarV2 .segmented .seg-highlight{
+    height: 40px !important;
+  }
+
+  /* Bottom row compact */
   .habitsTopbarV2 .habitsDateRow{
-    width:100%;
-    max-width:100%;
+    gap: 8px !important;
   }
 
+  .habitsTopbarV2 .pill-group{
+    gap: 8px !important;
+  }
+
+  .habitsTopbarV2 .pill{
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Date pill: arrows as normal (NOT absolute inside) */
   .habitsTopbarV2 .habitsDateRow .date-pill{
-    max-width:100%;
-    box-sizing:border-box;
+    position: relative !important;
+    padding: 0 6px !important;
+    gap: 6px !important;
+    height: 40px !important;
   }
 
+  /* Override older "absolute arrows" rules */
+  .habitsTopbarV2 #calPrev,
+  .habitsTopbarV2 #calNext{
+    position: static !important;
+    transform: none !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+  }
+
+  .habitsTopbarV2 .date-text{
+    min-width: 0 !important;
+    font-size: 12.5px !important;
+    gap: 4px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    justify-content: center !important;
+  }
 }
