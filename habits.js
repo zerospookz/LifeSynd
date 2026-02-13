@@ -1617,7 +1617,7 @@ function renderAnalytics(){
   }catch(_){ /* keep fallback */ }
 
   // Mobile date display (for the CodePen header)
-// - Week: "Sun, 2/8 – Sat, 2/14"
+// - Week (mobile): "Feb 8–14"
 // - Month: "February 2026"
 // - Year:  "2026"
 // - All:   "All time"
@@ -1633,9 +1633,28 @@ function renderAnalytics(){
       const b = getBoundsForView("year", analyticsOffsetDays);
       mobileDateHTML = `<span class="date-start">${b.start.getFullYear()}</span>`;
     }else{
-      const s = fmtDowShortMD(dates[0]);
-      const e = fmtDowShortMD(dates[dates.length-1]);
-      mobileDateHTML = `<span class="date-start">${s}</span><span class="dash">–</span><span class="date-end">${e}</span>`;
+      // Mobile Week: short range label (no weekday), e.g. "Feb 2–8" or "Feb 28 – Mar 5".
+      if(isMobile && analyticsView === "week"){
+        const startD = new Date(dates[0] + "T00:00:00");
+        const endD   = new Date(dates[dates.length-1] + "T00:00:00");
+        const sameMonth = (startD.getFullYear() === endD.getFullYear()) && (startD.getMonth() === endD.getMonth());
+
+        const monthFmt = new Intl.DateTimeFormat(undefined, { month: "short" });
+        const sm = monthFmt.format(startD);
+        const em = monthFmt.format(endD);
+        const sd = startD.getDate();
+        const ed = endD.getDate();
+
+        const label = sameMonth
+          ? `${sm} ${sd}–${ed}`
+          : `${sm} ${sd} – ${em} ${ed}`;
+
+        mobileDateHTML = `<span class="date-start">${label}</span>`;
+      }else{
+        const s = fmtDowShortMD(dates[0]);
+        const e = fmtDowShortMD(dates[dates.length-1]);
+        mobileDateHTML = `<span class="date-start">${s}</span><span class="dash">–</span><span class="date-end">${e}</span>`;
+      }
     }
   }catch(_){
 
