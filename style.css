@@ -4928,7 +4928,7 @@ img.pulseOnce{
     margin-top:12px;
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:8px;
     position:relative;
     z-index:2;
   }
@@ -4936,12 +4936,12 @@ img.pulseOnce{
   /* icon pills */
   .habitsHeaderMobile .pill-group{
     display:flex;
-    gap:10px;
+    gap:8px;
   }
 
   .habitsHeaderMobile .pill{
-    width:44px;
-    height:44px;
+    width:40px;
+    height:40px;
     display:grid;
     place-items:center;
     border-radius:999px;
@@ -4975,7 +4975,7 @@ img.pulseOnce{
   .habitsHeaderMobile .dots{
     display:grid;
     grid-template-columns: repeat(2, 9px);
-    gap:6px;
+    gap:5px;
   }
   .habitsHeaderMobile .dots i{
     width:9px; height:9px;
@@ -5084,6 +5084,17 @@ img.pulseOnce{
   .habitsHeaderMobile button:focus-visible{
     outline: 2px solid rgba(94,231,255,.55);
     outline-offset: 2px;
+  }
+
+  /* Extra squeeze for very small phones (e.g. 320–360px) */
+  @media (max-width: 360px){
+    .habitsHeaderMobile .segmented{ gap:6px; padding:7px; }
+    .habitsHeaderMobile .seg{ font-size: 13px; height:42px; }
+    .habitsHeaderMobile .pill-group{ gap:7px; }
+    .habitsHeaderMobile .pill{ width:38px; height:38px; }
+    .habitsHeaderMobile .date-pill{ height:46px; padding:0 9px; }
+    .habitsHeaderMobile .arrow-btn{ width:34px; height:34px; }
+    .habitsHeaderMobile .date-text{ font-size: 13px; }
   }
 }
 
