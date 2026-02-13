@@ -5131,3 +5131,26 @@ html, body{
   .habitsTopbarV2 #calPrev{ left: 10px; }
   .habitsTopbarV2 #calNext{ right: 10px; }
 }
+
+
+
+/* ===== Habits mobile date overflow hard fix ===== */
+@media (max-width: 520px){
+
+  .habitsTopbarV2{
+    padding-left:16px !important;
+    padding-right:16px !important;
+    overflow:hidden;
+  }
+
+  .habitsTopbarV2 .habitsDateRow{
+    width:100%;
+    max-width:100%;
+  }
+
+  .habitsTopbarV2 .habitsDateRow .date-pill{
+    max-width:100%;
+    box-sizing:border-box;
+  }
+
+}
