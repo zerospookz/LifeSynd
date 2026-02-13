@@ -4946,37 +4946,23 @@ img.pulseOnce{
 
   
   .habitsHeaderMobile .pill{
-    width:44px;
-    height:44px;
-    display:grid;
-    place-items:center;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.12);
-    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-    box-shadow:
-      0 12px 30px rgba(0,0,0,.34),
-      inset 0 1px 0 rgba(255,255,255,.12);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    cursor:pointer;
-    transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
-    position:relative;
-    overflow:hidden;
-  }
+  width:44px;
+  height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.25),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  cursor:pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
 
-  /* subtle sheen like the reference */
-  .habitsHeaderMobile .pill::before{
-    content:"";
-    position:absolute;
-    inset:-1px;
-    background:
-      radial-gradient(60px 42px at 30% 20%, rgba(255,255,255,.14), transparent 60%),
-      radial-gradient(70px 50px at 80% 0%, rgba(255,255,255,.10), transparent 60%);
-    opacity:.85;
-    pointer-events:none;
-  }
-
-  .habitsHeaderMobile .pill > *{ position:relative; z-index:1; }
 
   .habitsHeaderMobile .pill.active{
     background: linear-gradient(135deg, rgba(176,90,255,.52), rgba(255,79,216,.34));
@@ -5013,17 +4999,21 @@ img.pulseOnce{
 
   /* lines icon (thicker + centered like reference) */
   .habitsHeaderMobile .lines{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:6px;
-  }
-  .habitsHeaderMobile .lines i{
-    width:20px; height:3px;
-    border-radius:999px;
-    background: rgba(255,255,255,.64);
-    box-shadow: 0 0 12px rgba(94,231,255,.10);
-  }
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.habitsHeaderMobile .lines i{
+  width:18px;
+  height:3px;
+  border-radius:999px;
+  background: rgba(255,255,255,.62);
+  box-shadow: 0 0 14px rgba(94,231,255,.10);
+}
+.habitsHeaderMobile .lines i:nth-child(2){ width:14px; opacity:.9; }
+.habitsHeaderMobile .lines i:nth-child(3){ width:18px; opacity:.75; }
+
   .habitsHeaderMobile .lines i:nth-child(2){ width:16px; opacity:.92; }
   .habitsHeaderMobile .lines i:nth-child(3){ width:20px; opacity:.78; }
 
