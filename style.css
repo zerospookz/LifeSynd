@@ -5083,3 +5083,51 @@ html, body{
   .habitsDateRow #calPrev{ left: 8px; }
   .habitsDateRow #calNext{ right: 8px; }
 }
+
+
+
+/* ===== Habits: Mobile tabs + compact date row (fix) ===== */
+@media (max-width: 520px){
+  /* 4 range buttons visible (no swipe) */
+  .habitsTopbarV2 .segmented{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px !important;
+    width: 100%;
+  }
+  .habitsTopbarV2 .segmented .seg{
+    width: 100%;
+    justify-content:center;
+    font-size: 14px;
+    padding: 10px 0 !important;
+    height: auto !important;
+    border-radius: 999px !important;
+    white-space: nowrap;
+  }
+
+  /* date row: put arrows "inside" the pill to save width */
+  .habitsTopbarV2 .habitsDateRow{
+    position: relative;
+    gap: 0 !important;
+  }
+  .habitsTopbarV2 .habitsDateRow .date-pill{
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    padding-left: 44px;
+    padding-right: 44px;
+    text-align: center;
+  }
+  .habitsTopbarV2 #calPrev,
+  .habitsTopbarV2 #calNext{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+  }
+  .habitsTopbarV2 #calPrev{ left: 10px; }
+  .habitsTopbarV2 #calNext{ right: 10px; }
+}
