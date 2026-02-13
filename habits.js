@@ -42,6 +42,90 @@ let analyticsOffsetDays = Number(analyticsOffsets[analyticsView]) || 0;
 let analyticsPaintMode = (localStorage.getItem("habitsAnalyticsPaintMode")==="mark" || localStorage.getItem("habitsAnalyticsPaintMode")==="erase") ? localStorage.getItem("habitsAnalyticsPaintMode") : null; // mark | erase
 let lastPulse = null; // {hid, iso, mode:"done"|"miss"} for subtle mark animation
 
+// --- Milestones (dopamine boost) ---
+// Mobile-only celebration when a habit hits a streak milestone (7 / 30 / 100).
+const __HABIT_MILESTONES = [7, 30, 100];
+
+function isMobileNow(){
+  try{ return window.matchMedia && window.matchMedia("(max-width: 900px)").matches; }catch(e){ return false; }
+}
+
+let __milestoneState = (() => {
+  try{
+    const raw = localStorage.getItem("habitsMilestones");
+    const obj = raw ? JSON.parse(raw) : null;
+    return (obj && typeof obj === "object") ? obj : {};
+  }catch(e){ return {}; }
+})();
+
+function __saveMilestoneState(){
+  try{ localStorage.setItem("habitsMilestones", JSON.stringify(__milestoneState)); }catch(e){}
+}
+
+function __milestoneKey(hid, n){ return `${hid}::${n}`; }
+
+function __hasMilestone(hid, n){
+  return !!__milestoneState[__milestoneKey(hid, n)];
+}
+
+function __setMilestone(hid, n){
+  __milestoneState[__milestoneKey(hid, n)] = Date.now();
+  __saveMilestoneState();
+}
+
+function __celebrateMilestone(habitName, n){
+  // One overlay at a time.
+  const existing = document.getElementById("milestoneOverlay");
+  if(existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "milestoneOverlay";
+  overlay.className = "milestoneOverlay";
+  overlay.innerHTML = `
+    <div class="milestoneCard" role="status" aria-live="polite">
+      <div class="milestoneIcon">🏆</div>
+      <div class="milestoneTitle">${n}-day streak!</div>
+      <div class="milestoneSub">${escapeHtml(habitName || "Habit")}</div>
+      <div class="milestoneConfetti" aria-hidden="true"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // Confetti pieces
+  const wrap = overlay.querySelector(".milestoneConfetti");
+  const pieces = 26;
+  for(let i=0;i<pieces;i++){
+    const p = document.createElement("span");
+    p.className = "confettiPiece";
+    p.style.left = (Math.random()*100).toFixed(2) + "%";
+    p.style.animationDelay = (Math.random()*0.25).toFixed(3) + "s";
+    p.style.transform = `translateY(-10px) rotate(${Math.random()*180}deg)`;
+    wrap.appendChild(p);
+  }
+
+  // Auto close
+  const close = ()=> { overlay.classList.add("out"); setTimeout(()=>overlay.remove(), 260); };
+  overlay.addEventListener("click", close);
+  setTimeout(close, 2200);
+}
+
+function maybeCelebrateMilestone(h){
+  try{
+    if(!h || !isMobileNow()) return;
+    const s = streakFor(h);
+    const cur = Number(s && s.current) || 0;
+
+    // fire only on exact hit (prevents repeated celebration while staying above)
+    for(const n of __HABIT_MILESTONES){
+      if(cur === n && !__hasMilestone(h.id, n)){
+        __setMilestone(h.id, n);
+        __celebrateMilestone(h.name, n);
+        break;
+      }
+    }
+  }catch(e){}
+}
+
 // Month view selected day + quick day details modal
 let monthSelectedIso = null;
 let dayDetailsModalEl = null;
@@ -279,6 +363,8 @@ function openDayDetails(iso){
 
     // Update modal row UI
     const nowDone = (h.datesDone||[]).includes(iso);
+    // Milestone celebration (mobile)
+    if(nowDone){ try{ maybeCelebrateMilestone(h); }catch(_e){} }
     const nowMissed = (!nowDone && iso < today());
     row.querySelector(".dayStatus").textContent = nowDone ? "Done" : (nowMissed ? "Missed" : "—");
     row.querySelector(".dayStatus").className = `dayStatus ${nowDone ? "isDone":""} ${nowMissed ? "isMissed":""}`;
@@ -1315,6 +1401,9 @@ function toggleHabitAt(id, iso, opts={}){
 
   // Targeted UI updates (no full render)
   try{ syncAfterHabitChange(id, iso); }catch(e){}
+
+  // Milestone celebration (mobile)
+  if(nowDone){ try{ maybeCelebrateMilestone(h); }catch(_e){} }
 
   return nowDone;
 }
