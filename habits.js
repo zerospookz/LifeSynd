@@ -1616,17 +1616,29 @@ function renderAnalytics(){
     }
   }catch(_){ /* keep fallback */ }
 
-  // Mobile date display (for the CodePen header: needs start/end spans so centering works)
+  // Mobile date display (for the CodePen header)
+// - Week: "Sun, 2/8 – Sat, 2/14"
+// - Month: "February 2026"
+// - Year:  "2026"
+// - All:   "All time"
   let mobileDateHTML = "";
   try{
     if(analyticsView === "all"){
       mobileDateHTML = `<span class="date-start">All time</span>`;
+    }else if(analyticsView === "month"){
+      const b = getBoundsForView("month", analyticsOffsetDays);
+      const label = new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start);
+      mobileDateHTML = `<span class="date-start">${label}</span>`;
+    }else if(analyticsView === "year"){
+      const b = getBoundsForView("year", analyticsOffsetDays);
+      mobileDateHTML = `<span class="date-start">${b.start.getFullYear()}</span>`;
     }else{
       const s = fmtDowShortMD(dates[0]);
       const e = fmtDowShortMD(dates[dates.length-1]);
       mobileDateHTML = `<span class="date-start">${s}</span><span class="dash">–</span><span class="date-end">${e}</span>`;
     }
   }catch(_){
+
     mobileDateHTML = `<span class="date-start">${rangeLabel}</span>`;
   }
   const segIndex = ({ week:0, month:1, year:2, all:3 })[analyticsView] ?? 0;

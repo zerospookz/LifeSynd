@@ -5073,10 +5073,8 @@ img.pulseOnce{
 
   /* Important: use end-ellipsis (not center-crop) so the start date is always visible */
   .habitsHeaderMobile .date-text{
-    position:absolute;
-    left:50%;
-    transform: translateX(-50%);
-    max-width: calc(100% - 96px);
+    flex:1;
+    min-width:0;
     display:block;
     text-align:center;
     font-size: 14px;
@@ -5084,7 +5082,6 @@ img.pulseOnce{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    pointer-events:none;
   }
 
   .habitsHeaderMobile .dash{ color: rgba(255,255,255,.40); }
