@@ -5009,3 +5009,29 @@ img.pulseOnce{
   .habitsTopbarV2 .icon-btn{ width:32px; height:32px; }
   .habitsTopbarV2 .chev{ font-size:18px; }
 }
+
+
+
+/* ===== Mobile Layout Hard Fix (Habits overflow / sidebar gap) ===== */
+@media (max-width: 900px){
+  .layout{
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar{
+    display: none !important;
+  }
+
+  .habitsLayout{
+    grid-template-columns: 1fr !important;
+  }
+
+  .habitsRight{
+    display:none !important;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+html, body{
+  overflow-x: hidden;
+}
