@@ -4820,8 +4820,13 @@ img.pulseOnce{
    - Only applies on small screens
    -------------------------------------------------------------------------- */
 @media (max-width: 520px){
+  /* Hide the desktop glass topbar when the mobile nav is present */
+  .habitsHeaderMobile .glassTopbar{ display:none; }
+
+  /* CodePen: CSS (360 x 800 optimized) — scoped to Habits mobile header */
   .habitsHeaderMobile{
-    /* Local vars (kept close to the CodePen look) */
+    --text: rgba(255,255,255,.92);
+    --muted: rgba(255,255,255,.62);
     --stroke: rgba(255,255,255,.10);
     --shadow: 0 22px 70px rgba(0,0,0,.55);
     --shadow2: 0 10px 28px rgba(0,0,0,.35);
@@ -4831,9 +4836,7 @@ img.pulseOnce{
     --r: 24px;
   }
 
-  /* Hide the desktop glass topbar when the mobile nav is present */
-  .habitsHeaderMobile .glassTopbar{ display:none; }
-
+  /* stage */
   .habitsHeaderMobile .habitsMobileNav.stage{ width:100%; }
 
   .habitsHeaderMobile .panel{
@@ -4846,8 +4849,10 @@ img.pulseOnce{
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     overflow:hidden;
+    color: var(--text);
   }
 
+  /* premium sheen */
   .habitsHeaderMobile .panel::before{
     content:"";
     position:absolute;
@@ -4859,6 +4864,7 @@ img.pulseOnce{
     opacity:.9;
   }
 
+  /* --- Segmented: single line --- */
   .habitsHeaderMobile .segmented{
     position:relative;
     display:flex;
@@ -4878,24 +4884,27 @@ img.pulseOnce{
     border:0;
     background:transparent;
     border-radius:999px;
-    color: rgba(255,255,255,.62);
+    color: var(--muted);
     font-weight: 650;
-    font-size: 13.5px;
+    font-size: 13.5px; /* tuned for 360px */
     letter-spacing:.12px;
     cursor:pointer;
     position:relative;
     z-index:2;
     transition: color .18s ease, transform .18s ease;
   }
+
+  .habitsHeaderMobile .seg:hover{ color: rgba(255,255,255,.82); }
   .habitsHeaderMobile .seg:active{ transform: scale(.99); }
   .habitsHeaderMobile .seg.active{ color: rgba(255,255,255,.96); }
 
+  /* Highlight: NO OFFSET issues (positioned via JS using offsetLeft) */
   .habitsHeaderMobile .seg-highlight{
     position:absolute;
     top:0;
     left:0;
-    height:44px;
-    width:60px;
+    height:44px; /* will be set by JS */
+    width:60px;  /* will be set by JS */
     border-radius:999px;
     background: linear-gradient(135deg, var(--accent1), var(--accent2));
     box-shadow:
@@ -4907,19 +4916,25 @@ img.pulseOnce{
     transition: transform .26s cubic-bezier(.2,.9,.2,1), width .26s cubic-bezier(.2,.9,.2,1);
   }
 
+  /* --- Bottom row --- */
   .habitsHeaderMobile .bottom-row{
     margin-top:12px;
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:10px;
     position:relative;
     z-index:2;
   }
 
-  .habitsHeaderMobile .pill-group{ display:flex; gap:10px; }
+  /* icon pills */
+  .habitsHeaderMobile .pill-group{
+    display:flex;
+    gap:10px;
+  }
+
   .habitsHeaderMobile .pill{
-    width:46px;
-    height:46px;
+    width:44px;
+    height:44px;
     display:grid;
     place-items:center;
     border-radius:999px;
@@ -4931,33 +4946,50 @@ img.pulseOnce{
     cursor:pointer;
     transition: transform .18s ease, border-color .18s ease, background .18s ease;
   }
-  
-  .habitsHeaderMobile .pill.active{
-    border-color: rgba(255,255,255,.20);
-    background: linear-gradient(135deg, rgba(176,90,255,.55), rgba(255,79,216,.35));
-    box-shadow: 0 12px 30px rgba(176,90,255,.22), inset 0 1px 0 rgba(255,255,255,.14);
-  }
-.habitsHeaderMobile .pill:active{ transform: translateY(0) scale(.99); }
 
+  .habitsHeaderMobile .pill:hover{
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,.18);
+    background: rgba(255,255,255,.07);
+  }
+  .habitsHeaderMobile .pill:active{ transform: translateY(0) scale(.99); }
+
+  /* grid icon */
   .habitsHeaderMobile .dots{
     display:grid;
-    grid-template-columns: repeat(2, 9px);
-    gap:7px;
+    grid-template-columns: repeat(2, 8px);
+    gap:6px;
   }
-  .habitsHeaderMobile .dots i{ width:9px; height:9px; border-radius:4px; background: rgba(255,255,255,.58); box-shadow: 0 0 16px rgba(176,90,255,.18); }
+  .habitsHeaderMobile .dots i{
+    width:8px; height:8px;
+    border-radius:3px;
+    background: rgba(255,255,255,.58);
+    box-shadow: 0 0 18px rgba(176,90,255,.16);
+  }
   .habitsHeaderMobile .dots i:nth-child(1){ background: rgba(94,231,255,.78); }
   .habitsHeaderMobile .dots i:nth-child(2){ background: rgba(255,79,216,.78); }
   .habitsHeaderMobile .dots i:nth-child(3){ background: rgba(255,255,255,.64); }
   .habitsHeaderMobile .dots i:nth-child(4){ background: rgba(176,90,255,.78); }
 
-  .habitsHeaderMobile .lines{ display:flex; flex-direction:column; gap:6px; }
-  .habitsHeaderMobile .lines i{ width:20px; height:3px; border-radius:999px; background: rgba(255,255,255,.74); box-shadow: 0 0 14px rgba(94,231,255,.12); }
-  .habitsHeaderMobile .lines i:nth-child(2){ width:16px; opacity:.9; }
+  /* lines icon */
+  .habitsHeaderMobile .lines{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .habitsHeaderMobile .lines i{
+    width:18px; height:2px;
+    border-radius:999px;
+    background: rgba(255,255,255,.62);
+    box-shadow: 0 0 14px rgba(94,231,255,.10);
+  }
+  .habitsHeaderMobile .lines i:nth-child(2){ width:14px; opacity:.9; }
   .habitsHeaderMobile .lines i:nth-child(3){ width:18px; opacity:.75; }
 
+  /* --- Date pill with premium arrows --- */
   .habitsHeaderMobile .date-pill{
     flex:1;
-    height:50px;
+    height:44px;
     border-radius:999px;
     border:1px solid rgba(255,255,255,.10);
     background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
@@ -4966,13 +4998,13 @@ img.pulseOnce{
     align-items:center;
     justify-content:space-between;
     gap:8px;
-    padding:0 10px;
+    padding:0 8px;
     min-width:0;
   }
 
   .habitsHeaderMobile .arrow-btn{
-    width:38px;
-    height:38px;
+    width:34px;
+    height:34px;
     border-radius:999px;
     border:1px solid rgba(255,255,255,.12);
     background: rgba(255,255,255,.06);
@@ -4982,15 +5014,20 @@ img.pulseOnce{
     transition: transform .18s ease, border-color .18s ease, background .18s ease;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 8px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.10);
+    box-shadow:
+      0 8px 18px rgba(0,0,0,.22),
+      inset 0 1px 0 rgba(255,255,255,.10);
   }
-  .habitsHeaderMobile .arrow-btn.disabled,
-  .habitsHeaderMobile .arrow-btn:disabled{
-    opacity:.45;
-    cursor:not-allowed;
-    pointer-events:none;
+
+  .habitsHeaderMobile .arrow-btn:hover{
+    background: rgba(255,255,255,.12);
+    border-color: rgba(255,255,255,.22);
+    transform: translateY(-1px);
   }
-  .habitsHeaderMobile .arrow-btn:active{ transform: translateY(0) scale(.92); background: rgba(255,255,255,.18); }
+  .habitsHeaderMobile .arrow-btn:active{
+    transform: translateY(0) scale(.92);
+    background: rgba(255,255,255,.18);
+  }
 
   .habitsHeaderMobile .arrow-icon{
     width:16px;
@@ -5006,15 +5043,23 @@ img.pulseOnce{
 
   .habitsHeaderMobile .date-text{
     flex:1;
-    display:block;
-    text-align:center;
-    padding:0 6px;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1;
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    font-size: 13px;
+    font-weight: 650;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
+    min-width:0;
+  }
+
+  .habitsHeaderMobile .dash{ color: rgba(255,255,255,.40); }
+
+  /* focus */
+  .habitsHeaderMobile button:focus-visible{
+    outline: 2px solid rgba(94,231,255,.55);
+    outline-offset: 2px;
   }
 }
 

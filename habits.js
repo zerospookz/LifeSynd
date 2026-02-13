@@ -1615,6 +1615,20 @@ function renderAnalytics(){
       rangeLabel = String(b.start.getFullYear());
     }
   }catch(_){ /* keep fallback */ }
+
+  // Mobile date display (for the CodePen header: needs start/end spans so centering works)
+  let mobileDateHTML = "";
+  try{
+    if(analyticsView === "all"){
+      mobileDateHTML = `<span class="date-start">All time</span>`;
+    }else{
+      const s = fmtDowShortMD(dates[0]);
+      const e = fmtDowShortMD(dates[dates.length-1]);
+      mobileDateHTML = `<span class="date-start">${s}</span><span class="dash">–</span><span class="date-end">${e}</span>`;
+    }
+  }catch(_){
+    mobileDateHTML = `<span class="date-start">${rangeLabel}</span>`;
+  }
   const segIndex = ({ week:0, month:1, year:2, all:3 })[analyticsView] ?? 0;
 
   // Overall (shared) underline bar stats
@@ -1714,7 +1728,7 @@ function renderAnalytics(){
                 <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
               </button>
 
-              <div class="date-text" id="rangeLabel" aria-live="polite">${rangeLabel}</div>
+              <div class="date-text" id="rangeLabel" aria-live="polite">${mobileDateHTML}</div>
 
               <button class="arrow-btn" id="calNext" type="button" aria-label="Next range" data-nav="next">
                 <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
@@ -1815,53 +1829,71 @@ function renderAnalytics(){
 
   // --- Mobile segmented highlight (single-line) ---
   if(mobileHeader){
-    const segmented = card.querySelector('[data-segmented]');
-    const highlight = segmented ? segmented.querySelector('.seg-highlight') : null;
-    const segButtons = segmented ? Array.from(segmented.querySelectorAll('.seg')) : [];
+    // CodePen: JS (perfect highlight alignment, no offset issues) — scoped to this Habits header
+    const segmented = card.querySelector("[data-segmented]");
+    if(segmented){
+      const segButtons = [...segmented.querySelectorAll(".seg")];
+      const highlight = segmented.querySelector(".seg-highlight");
 
-    function placeHighlight(btn, animate = true){
-      if(!btn || !highlight) return;
-      highlight.style.width = `${btn.offsetWidth}px`;
-      highlight.style.height = `${btn.offsetHeight}px`;
-      highlight.style.transform = `translate(${btn.offsetLeft}px, ${btn.offsetTop}px)`;
-      if(!animate){
-        const saved = highlight.style.transition;
-        highlight.style.transition = 'none';
-        requestAnimationFrame(()=>{ highlight.style.transition = saved || ''; });
+      function placeHighlight(btn, animate = true){
+        // size highlight to button exactly
+        highlight.style.width = `${btn.offsetWidth}px`;
+        highlight.style.height = `${btn.offsetHeight}px`;
+
+        // move highlight to the button position (accounts for padding + gap automatically)
+        highlight.style.transform = `translate(${btn.offsetLeft}px, ${btn.offsetTop}px)`;
+
+        // disable animation on first paint to prevent initial jump
+        if(!animate){
+          const saved = highlight.style.transition;
+          highlight.style.transition = "none";
+          requestAnimationFrame(() => {
+            highlight.style.transition = saved || "transform .26s cubic-bezier(.2,.9,.2,1), width .26s cubic-bezier(.2,.9,.2,1)";
+          });
+        }
       }
-    }
 
-    function setActive(btn){
-      segButtons.forEach(b=>{
-        const active = b === btn;
-        b.classList.toggle('active', active);
-        b.classList.toggle('is-active', active); // keep compatibility
-        b.setAttribute('aria-pressed', active ? 'true' : 'false');
-      });
-      placeHighlight(btn);
-    }
+      function setActive(btn){
+        segButtons.forEach(b => {
+          const active = b === btn;
+          b.classList.toggle("active", active);
+          b.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        placeHighlight(btn);
+      }
 
-    // init + keep aligned
-    const activeBtn = segmented ? segmented.querySelector('.seg.active') || segmented.querySelector('.seg.is-active') : null;
-    if(activeBtn) placeHighlight(activeBtn, false);
-    segButtons.forEach(btn=>btn.addEventListener('click', ()=>setActive(btn)));
+      segButtons.forEach(btn => btn.addEventListener("click", () => setActive(btn)));
 
-    // Add a single global resize handler (avoid stacking listeners on rerenders)
-    if(!window.__habitsMobileSegResizeBound){
-      window.__habitsMobileSegResizeBound = true;
-      window.addEventListener('resize', ()=>{
-        try{
-          const host = document.getElementById('habitAnalytics');
+      // init
+      const initBtn = segmented.querySelector(".seg.active") || segButtons[0];
+      if(initBtn && highlight) placeHighlight(initBtn, false);
+
+      // keep aligned on resize/orientation change (single global handler)
+      if(!window.__habitsMobileSegResizeBound){
+        window.__habitsMobileSegResizeBound = true;
+        window.addEventListener("resize", () => {
+          const host = document.getElementById("habitAnalytics");
           if(!host) return;
-          const seg = host.querySelector('.habitsHeaderMobile [data-segmented]');
+          const seg = host.querySelector(".habitsHeaderMobile [data-segmented]");
           if(!seg) return;
-          const hi = seg.querySelector('.seg-highlight');
-          const act = seg.querySelector('.seg.active') || seg.querySelector('.seg.is-active');
-          if(!hi || !act) return;
-          hi.style.width = `${act.offsetWidth}px`;
-          hi.style.height = `${act.offsetHeight}px`;
-          hi.style.transform = `translate(${act.offsetLeft}px, ${act.offsetTop}px)`;
-        }catch(_){/* ignore */}
+          const hi = seg.querySelector(".seg-highlight");
+          const active = seg.querySelector(".seg.active");
+          if(active && hi){
+            hi.style.width = `${active.offsetWidth}px`;
+            hi.style.height = `${active.offsetHeight}px`;
+            hi.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
+          }
+        });
+      }
+
+      // optional: tiny press feedback on arrows
+      card.querySelectorAll(".arrow-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          btn.animate(
+            [{ transform: "translateY(0) scale(1)" }, { transform: "translateY(0) scale(.92)" }, { transform: "translateY(0) scale(1)" }],
+            { duration: 170, easing: "ease-out" }
+          );
+        });
       });
     }
   }
