@@ -4854,7 +4854,7 @@ img.pulseOnce{
     box-shadow: var(--shadow);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    overflow:hidden;
+    overflow:visible;
     color: var(--text);
     width: 100%;
   }
@@ -4945,26 +4945,30 @@ img.pulseOnce{
   }
 
   
-  .habitsHeaderMobile .pill{
+    .habitsHeaderMobile .pill{
   width:44px;
   height:44px;
+  aspect-ratio: 1 / 1;
   display:flex;
   align-items:center;
   justify-content:center;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
+  border-radius:50% !important;
+  border:1px solid rgba(255,255,255,.14);
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow:
-    0 8px 20px rgba(0,0,0,.25),
-    inset 0 1px 0 rgba(255,255,255,.08);
+    0 10px 24px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.10);
   cursor:pointer;
-  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  overflow: visible;
+  transform: translateZ(0);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
 }
 
 
   .habitsHeaderMobile .pill.active{
+    border-radius:50% !important;
     background: linear-gradient(135deg, rgba(176,90,255,.52), rgba(255,79,216,.34));
     border-color: rgba(255,255,255,.20);
     box-shadow:
@@ -4974,6 +4978,7 @@ img.pulseOnce{
   }
 
   .habitsHeaderMobile .pill:hover{
+    border-radius:50% !important;
     transform: translateY(-1px);
     border-color: rgba(255,255,255,.20);
     background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
