@@ -5035,3 +5035,51 @@ img.pulseOnce{
 html, body{
   overflow-x: hidden;
 }
+
+
+
+/* ===== Habits: show all 4 range buttons + compact date nav on small screens ===== */
+@media (max-width: 520px){
+  /* Range segmented control: no horizontal scroll, 2x2 grid */
+  .habitsHero .segmented{
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    scrollbar-width: auto !important;
+    padding: 8px !important;
+    gap: 8px !important;
+  }
+  .habitsHero .segmented .seg{
+    flex: 1 1 calc(50% - 8px) !important;
+    justify-content: center;
+    padding: 10px 10px !important;
+    font-size: 13px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Date row: put arrows inside the date pill to save space */
+  .habitsDateRow{
+    position: relative;
+    width: 100%;
+    justify-content: center;
+    gap: 0 !important;
+  }
+  .habitsDateRow #rangeLabel{
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+    padding-left: 44px !important;
+    padding-right: 44px !important;
+  }
+  .habitsDateRow #calPrev,
+  .habitsDateRow #calNext{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 !important;
+    width: 36px;
+    height: 36px;
+  }
+  .habitsDateRow #calPrev{ left: 8px; }
+  .habitsDateRow #calNext{ right: 8px; }
+}
