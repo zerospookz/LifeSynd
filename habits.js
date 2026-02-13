@@ -1704,9 +1704,21 @@ function renderAnalytics(){
         <div class="row row-bottom">
           <div class="habitsDateSlot">
             <div class="row habitsDateRow" id="habitsDateRow">
-              <button class="icon-btn" id="calPrev" type="button" aria-label="Previous"><span class="chev">‹</span></button>
-              <div class="date-pill" id="rangeLabel">${rangeLabel}</div>
-              <button class="icon-btn" id="calNext" type="button" aria-label="Next"><span class="chev">›</span></button>
+              <div class="date-pill" role="group" aria-label="Date range navigation">
+                <button class="arrow-btn" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
+                  <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true">
+                    <path d="M15 6l-6 6 6 6" />
+                  </svg>
+                </button>
+
+                <div class="date-text" id="rangeLabel" aria-live="polite">${rangeLabel}</div>
+
+                <button class="arrow-btn" id="calNext" type="button" aria-label="Next range" data-nav="next">
+                  <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <!-- Month list panel: replaces the date row when the list icon is pressed (Month view only). -->
