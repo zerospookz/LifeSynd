@@ -1866,7 +1866,11 @@ function renderAnalytics(){
 
       // init
       const initBtn = segmented.querySelector(".seg.active") || segButtons[0];
-      if(initBtn && highlight) placeHighlight(initBtn, false);
+      if(initBtn && highlight){
+        // First paint (no animation) then re-place after layout settles
+        placeHighlight(initBtn, false);
+        requestAnimationFrame(() => requestAnimationFrame(() => placeHighlight(initBtn, false)));
+      }
 
       // keep aligned on resize/orientation change (single global handler)
       if(!window.__habitsMobileSegResizeBound){

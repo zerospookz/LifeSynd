@@ -4836,12 +4836,18 @@ img.pulseOnce{
     --r: 24px;
   }
 
-  /* stage */
-  .habitsHeaderMobile .habitsMobileNav.stage{ width:100%; }
+  /* stage
+     CodePen uses fixed 360px. In-app we want full phone width so the date text
+     doesn't get chopped from both sides.
+  */
+  .habitsHeaderMobile .habitsMobileNav.stage{ width:100%; max-width:none; }
+  /* give a little extra horizontal room inside the card */
+  .habitsHeaderMobile .habitsMobileNav{ margin: 0 -6px; }
 
   .habitsHeaderMobile .panel{
     position:relative;
     padding:14px;
+    width:100%;
     border-radius: var(--r);
     background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
     border: 1px solid var(--stroke);
@@ -4850,6 +4856,7 @@ img.pulseOnce{
     -webkit-backdrop-filter: blur(14px);
     overflow:hidden;
     color: var(--text);
+    width: 100%;
   }
 
   /* premium sheen */
@@ -4947,6 +4954,16 @@ img.pulseOnce{
     transition: transform .18s ease, border-color .18s ease, background .18s ease;
   }
 
+  /* Active icon pill (matches the reference screenshot a bit closer) */
+  .habitsHeaderMobile .pill.active{
+    background: linear-gradient(135deg, rgba(176,90,255,.40), rgba(255,79,216,.26));
+    border-color: rgba(255,255,255,.18);
+    box-shadow:
+      0 12px 26px rgba(0,0,0,.32),
+      0 0 18px rgba(176,90,255,.18),
+      inset 0 1px 0 rgba(255,255,255,.12);
+  }
+
   .habitsHeaderMobile .pill:hover{
     transform: translateY(-1px);
     border-color: rgba(255,255,255,.18);
@@ -4957,12 +4974,12 @@ img.pulseOnce{
   /* grid icon */
   .habitsHeaderMobile .dots{
     display:grid;
-    grid-template-columns: repeat(2, 8px);
+    grid-template-columns: repeat(2, 9px);
     gap:6px;
   }
   .habitsHeaderMobile .dots i{
-    width:8px; height:8px;
-    border-radius:3px;
+    width:9px; height:9px;
+    border-radius:4px;
     background: rgba(255,255,255,.58);
     box-shadow: 0 0 18px rgba(176,90,255,.16);
   }
@@ -4978,18 +4995,18 @@ img.pulseOnce{
     gap:6px;
   }
   .habitsHeaderMobile .lines i{
-    width:18px; height:2px;
+    width:20px; height:3px;
     border-radius:999px;
     background: rgba(255,255,255,.62);
     box-shadow: 0 0 14px rgba(94,231,255,.10);
   }
-  .habitsHeaderMobile .lines i:nth-child(2){ width:14px; opacity:.9; }
-  .habitsHeaderMobile .lines i:nth-child(3){ width:18px; opacity:.75; }
+  .habitsHeaderMobile .lines i:nth-child(2){ width:16px; opacity:.9; }
+  .habitsHeaderMobile .lines i:nth-child(3){ width:20px; opacity:.75; }
 
   /* --- Date pill with premium arrows --- */
   .habitsHeaderMobile .date-pill{
     flex:1;
-    height:44px;
+    height:50px;
     border-radius:999px;
     border:1px solid rgba(255,255,255,.10);
     background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
@@ -4997,14 +5014,14 @@ img.pulseOnce{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:8px;
-    padding:0 8px;
+    gap:10px;
+    padding:0 10px;
     min-width:0;
   }
 
   .habitsHeaderMobile .arrow-btn{
-    width:34px;
-    height:34px;
+    width:38px;
+    height:38px;
     border-radius:999px;
     border:1px solid rgba(255,255,255,.12);
     background: rgba(255,255,255,.06);
@@ -5017,6 +5034,13 @@ img.pulseOnce{
     box-shadow:
       0 8px 18px rgba(0,0,0,.22),
       inset 0 1px 0 rgba(255,255,255,.10);
+  }
+
+  .habitsHeaderMobile .arrow-btn.disabled,
+  .habitsHeaderMobile .arrow-btn:disabled{
+    opacity: .45;
+    cursor: default;
+    transform: none !important;
   }
 
   .habitsHeaderMobile .arrow-btn:hover{
@@ -5041,13 +5065,13 @@ img.pulseOnce{
     filter: drop-shadow(0 0 7px rgba(176,90,255,.35));
   }
 
+  /* Important: use end-ellipsis (not center-crop) so the start date is always visible */
   .habitsHeaderMobile .date-text{
     flex:1;
-    display:flex;
-    justify-content:center;
-    gap:6px;
-    font-size: 13px;
-    font-weight: 650;
+    display:block;
+    text-align:center;
+    font-size: 14px;
+    font-weight: 700;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
