@@ -6585,9 +6585,16 @@ html, body{
 }
 
 
-/* === Mobile Habits: range label should not clip from the left (show start + ellipsis) === */
+
+
+/* === Mobile Habits: smart range label alignment === */
 @media (max-width: 768px){
   .hh-date{
-    justify-content: flex-start !important;
+    justify-content: center;
+    text-align: center;
+  }
+  .hh-date.is-long{
+    justify-content: flex-start;
+    text-align: left;
   }
 }
