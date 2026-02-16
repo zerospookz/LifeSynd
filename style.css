@@ -6437,3 +6437,7 @@ html, body{
 }
 
 .dashInsights{ padding: 8px 8px 40px !important; }
+
+/* Habits: place Insights under the main grid (not in right rail) */
+.habitsInsightsBelow{ margin-top: 14px; }
+.habitsInsightsBelow .dashInsights{ width:100%; }
