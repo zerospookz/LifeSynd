@@ -566,10 +566,8 @@ function getBoundsForView(view, offset){
   }
 
   // week
-  const end = new Date(base);
-  const start = new Date(base);
-  start.setDate(end.getDate()-6);
-  return { start, end };
+  // week (calendar week starting Monday)
+  return getMondayWeekBounds(base);
 }
 
 // Calendar week bounds where the week starts on Monday (Mon..Sun)
@@ -2466,8 +2464,9 @@ for(const iso of monthDates){
     grid.appendChild(header);
     requestAnimationFrame(()=>adaptDayLabels(header));
 
-    // rows
-    dates.forEach(iso=>{
+    // rows (show most recent at top)
+    const __datesForRows = (dates||[]).slice().sort().reverse();
+    __datesForRows.forEach(iso=>{
       const row = document.createElement("div");
       row.className = "matrixRow" + (iso===todayIso ? " today" : "");
       row.style.gridTemplateColumns = colTemplate;
@@ -2518,14 +2517,13 @@ for(const iso of monthDates){
       head.className = 'mwtHead';
       const dowRow = document.createElement('div');
       dowRow.className = 'mwtDowRow';
-      (dates||[]).forEach(iso=>{
-        const d = new Date(iso+"T00:00:00");
-        let w = '';
-        try{ w = new Intl.DateTimeFormat(undefined,{weekday:'narrow'}).format(d); }
-        catch(_){ w = ['S','M','T','W','T','F','S'][d.getDay()] || ''; }
+      (dates||[]).forEach((iso, idx)=>{
+        // Small screens: enforce MTWTFSS labels regardless of locale
+        const forced = ['M','T','W','T','F','S','S'];
+        let w = forced[idx] || '';
         const c = document.createElement('div');
         c.className = 'mwtDow';
-        c.textContent = String(w).toUpperCase();
+        c.textContent = w;
         dowRow.appendChild(c);
       });
       dowRow.appendChild(Object.assign(document.createElement('div'), { className: 'mwtFracHead' }));
@@ -2584,12 +2582,9 @@ for(const iso of monthDates){
       panel.className = 'mwPanel';
 
       // Per-row weekday labels are rendered above the circles, so we don't need a global DOW header.
-      const weekdayLabels = (dates||[]).map(iso=>{
-        const d = new Date(iso+"T00:00:00");
-        let w = '';
-        try{ w = new Intl.DateTimeFormat(undefined,{weekday:'narrow'}).format(d); }
-        catch(_){ w = ['S','M','T','W','T','F','S'][d.getDay()] || ''; }
-        return String(w).toUpperCase();
+      const weekdayLabels = (dates||[]).map((_iso, idx)=>{
+        // Small screens: enforce MTWTFSS labels regardless of locale
+        return (['M','T','W','T','F','S','S'][idx] || '');
       });
 
       const list = document.createElement('div');
