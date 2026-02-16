@@ -2239,7 +2239,7 @@ function renderAnalytics(){
         highlight.style.height = `${btn.offsetHeight}px`;
 
         // move highlight to the button position (accounts for padding + gap automatically)
-        highlight.style.transform = `translate(${btn.offsetLeft}px, ${btn.offsetTop}px)`;
+        highlight.style.transform = `translate3d(${btn.offsetLeft}px, ${btn.offsetTop}px, 0)`;
 
         // disable animation on first paint to prevent initial jump
         if(!animate){
@@ -2268,6 +2268,25 @@ function renderAnalytics(){
         // First paint (no animation) then re-place after layout settles
         placeHighlight(initBtn, false);
         requestAnimationFrame(() => requestAnimationFrame(() => placeHighlight(initBtn, false)));
+        // Safari: re-align after fonts/layout settle and on bfcache restore
+        setTimeout(() => { try{ placeHighlight(initBtn, false); }catch(_e){} }, 80);
+        if(!window.__habitsMobileSegPageShowBound){
+          window.__habitsMobileSegPageShowBound = true;
+          window.addEventListener("pageshow", () => {
+            try{
+              const host = document.getElementById("habitAnalytics");
+              const seg = host?.querySelector(".habitsHeaderMobile [data-segmented], .habitsMobileNav.stage [data-segmented]");
+              const hi2 = seg?.querySelector(".seg-highlight");
+              const act2 = seg?.querySelector(".active");
+              if(act2 && hi2){
+                hi2.style.width = `${act2.offsetWidth}px`;
+                hi2.style.height = `${act2.offsetHeight}px`;
+                hi2.style.transform = `translate3d(${act2.offsetLeft}px, ${act2.offsetTop}px, 0)`;
+              }
+            }catch(_e){}
+          });
+        }
+
       }
 
       // keep aligned on resize/orientation change (single global handler)
@@ -2283,7 +2302,7 @@ function renderAnalytics(){
           if(active && hi){
             hi.style.width = `${active.offsetWidth}px`;
             hi.style.height = `${active.offsetHeight}px`;
-            hi.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
+            hi.style.transform = `translate3d(${active.offsetLeft}px, ${active.offsetTop}px, 0)`;
           }
         });
       }

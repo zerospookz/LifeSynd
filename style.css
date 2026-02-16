@@ -7085,3 +7085,29 @@ html, body{
     transform: scale(.98);
   }
 }
+
+
+/* === iOS Safari: remove edge "bubble" backgrounds on date arrows === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 768px){
+    .habitsMobileNav.stage .date-pill .arrow-btn{
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent;
+      width: 28px !important;
+      height: 28px !important;
+      padding: 0 !important;
+      border-radius: 0 !important; /* avoid half-circle clipping artifacts */
+    }
+    .habitsMobileNav.stage .date-pill .arrow-btn:before,
+    .habitsMobileNav.stage .date-pill .arrow-btn:after{ content:none !important; }
+  }
+}
+
+/* Slider highlight: more stable on Safari */
+.habitsHeaderMobile [data-segmented] .seg-highlight,
+.habitsMobileNav.stage [data-segmented] .seg-highlight{
+  will-change: transform, width, height;
+}
