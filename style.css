@@ -5127,6 +5127,94 @@ img.pulseOnce{
     outline-offset: 2px;
   }
 
+  /* Phone-style top controls (low-res only): match the provided CodePen look
+     with 2 round chips + a taller center pill.
+  */
+  @media (max-width: 420px){
+    .habitsHeaderMobile .panel{
+      padding: 18px 16px 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 30px 90px rgba(0,0,0,.55);
+    }
+
+    .habitsHeaderMobile .bottom-row{
+      margin-top: 14px;
+      gap: 14px;
+    }
+
+    .habitsHeaderMobile .pill-group{ gap: 14px; }
+
+    .habitsHeaderMobile .pill{
+      width:56px;
+      height:56px;
+      border-radius: 999px !important;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.14);
+    }
+    .habitsHeaderMobile .pill:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.11);
+      border-color: rgba(255,255,255,.16);
+    }
+    .habitsHeaderMobile .pill:active{ transform: translateY(0px) scale(.98); }
+
+    /* Active chip gets the purple gradient like the reference */
+    .habitsHeaderMobile .pill.active{
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,.22), transparent 45%),
+        linear-gradient(135deg, rgba(189,120,255,.55), rgba(255,96,196,.25));
+      border-color: rgba(255,255,255,.18);
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.16);
+    }
+
+    /* Make the dot/line icons match the snippet proportions */
+    .habitsHeaderMobile .dots{ width:26px; height:26px; grid-template-columns: repeat(2, 1fr); gap:6px; }
+    .habitsHeaderMobile .dots i{ width:auto; height:auto; border-radius: 7px; }
+    .habitsHeaderMobile .lines{ width:26px; gap:6px; }
+    .habitsHeaderMobile .lines i{ height:4px; }
+
+    /* Center date pill */
+    .habitsHeaderMobile .date-pill{
+      height: 64px;
+      padding: 8px;
+      gap: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow:
+        0 18px 50px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.10);
+    }
+
+    .habitsHeaderMobile .arrow-btn{
+      width:48px;
+      height:48px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.07);
+      box-shadow: none;
+    }
+    .habitsHeaderMobile .arrow-btn:hover{ background: rgba(255,255,255,.10); transform: translateY(-1px); }
+    .habitsHeaderMobile .arrow-btn:active{ transform: translateY(0) scale(.98); }
+
+    .habitsHeaderMobile .date-text{
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: .2px;
+      text-shadow: 0 6px 22px rgba(0,0,0,.35);
+    }
+  }
+
   /* Extra squeeze for very small phones (e.g. 320–360px) */
   @media (max-width: 360px){
     .habitsHeaderMobile .segmented{ gap:6px; padding:7px; }
