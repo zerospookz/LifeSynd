@@ -6534,3 +6534,11 @@ html, body{
     flex: 1;
   }
 }
+
+
+/* === Hide embedded Insights on phone === */
+@media (max-width: 768px){
+  .habitsInsightsBelow{
+    display: none !important;
+  }
+}
