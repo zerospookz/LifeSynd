@@ -3872,6 +3872,10 @@ img.pulseOnce{
   .monthCalDow{ display:none; }
   .monthCalGrid{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
 
+  /* Give the calendar breathing room above the fixed bottom bar + floating + button.
+     Otherwise the last days of the month can sit under the FAB and become hard to tap on phones. */
+  .monthCal{ padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+
   .monthCal{ --gap:10px; --cardH:92px; --radius:16px; }
   .calCell.calDayCard{ padding:12px; }
   .calNum{ font-size:28px; }
@@ -3881,6 +3885,9 @@ img.pulseOnce{
 @media (max-width: 420px){
   /* Small phones: 3 columns */
   .monthCalGrid{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+
+  /* Slightly more space on very small phones */
+  .monthCal{ padding-bottom: calc(136px + env(safe-area-inset-bottom)); }
 
   .monthCal{ --gap:10px; --cardH:90px; --radius:16px; }
   .calCell.calDayCard{ padding:12px; }
