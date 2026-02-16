@@ -6049,8 +6049,30 @@ html, body{
   .dashInsights .bento{ grid-template-columns:1fr; }
 }
 
+/* Strong mobile overrides (some WebViews/Safari report wider layout widths) */
+@media (max-width: 720px){
+  .dashInsights{ width:100% !important; max-width:100% !important; padding: 6px 6px 22px !important; }
+  .dashInsights .dash__head{ padding: 6px 4px 12px !important; }
+  .dashInsights .bento{ grid-template-columns: 1fr !important; gap: 12px !important; }
+  .dashInsights .tile{ padding: 14px !important; border-radius: 16px !important; }
+  .dashInsights .tile--hero{ grid-template-columns: 1fr !important; }
+  .dashInsights .score{ font-size: 54px !important; }
+  .dashInsights .range{ gap: 8px !important; }
+  .dashInsights .range__btn{ padding: 9px 0 !important; border-radius: 12px !important; }
+  .dashInsights .bar{ height: 210px !important; }
+}
+
+@media (max-width: 420px){
+  .dashInsights .dash__head{ align-items:center !important; }
+  .dashInsights .brand{ gap: 10px !important; }
+  .dashInsights .brand__title{ font-size: 20px !important; }
+  .dashInsights .brand__kicker{ font-size: 10px !important; }
+  .dashInsights .meta{ grid-template-columns: 1fr 1fr; gap: 10px !important; }
+}
+
 .dashInsights .tile{
   position:relative;
+  min-width: 0;
   border-radius: 18px;
   padding: 18px;
   border: 1px solid rgba(255,255,255,.09);
