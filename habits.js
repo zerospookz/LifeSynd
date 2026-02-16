@@ -510,13 +510,13 @@ function rangeDates(rangeDays, offsetDays, dir="backward"){
     for(let i=0;i<rangeDays;i++){
       const x=new Date(base);
       x.setDate(base.getDate()+i);
-      res.push(x.toISOString().slice(0,10));
+      res.push(isoLocal(x));
     }
   }else{
     for(let i=rangeDays-1;i>=0;i--){
       const x=new Date(base);
       x.setDate(base.getDate()-i);
-      res.push(x.toISOString().slice(0,10));
+      res.push(isoLocal(x));
     }
   }
   return res;
@@ -587,7 +587,7 @@ function datesFromBounds(bounds){
   const out = [];
   const d = new Date(bounds.start);
   while(d <= bounds.end){
-    out.push(d.toISOString().slice(0,10));
+    out.push(isoLocal(d));
     d.setDate(d.getDate()+1);
   }
   return out;
@@ -618,8 +618,14 @@ function fmtDowShortMD(iso){
 // ----------------------
 // Period comparison (for underline trend bar)
 // ----------------------
+function isoLocal(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function isoDate(d){
-  return d.toISOString().slice(0,10);
+  return isoLocal(d);
 }
 function utcDate(y,m,d){
   return new Date(Date.UTC(y,m,d));
@@ -1510,7 +1516,7 @@ function streakFor(h){
   let current=0;
   let d=new Date(end);
   while(true){
-    const iso=d.toISOString().slice(0,10);
+    const iso=isoLocal(d);
     if(set.has(iso)){ current++; d.setDate(d.getDate()-1); }
     else break;
   }
@@ -1518,7 +1524,7 @@ function streakFor(h){
   const now=new Date();
   for(let i=365;i>=0;i--){
     const dd=new Date(now); dd.setDate(dd.getDate()-i);
-    const iso=dd.toISOString().slice(0,10);
+    const iso=isoLocal(dd);
     if(set.has(iso)){ cur++; best=Math.max(best,cur); } else cur=0;
   }
   return {current,best};
@@ -1539,7 +1545,7 @@ function completionRate(days){
     for(let i=0;i<days;i++){
       const d=new Date(start);
       d.setDate(start.getDate()+i);
-      const iso=d.toISOString().slice(0,10);
+      const iso=isoLocal(d);
       if(set.has(iso)) done++;
     }
   }
@@ -1558,7 +1564,7 @@ function miniHeatHtml(h){
   // We render oldest -> newest so streak is meaningful.
   for(let i=days-1;i>=0;i--){
     const d=new Date(now); d.setDate(now.getDate()-i);
-    const iso=d.toISOString().slice(0,10);
+    const iso=isoLocal(d);
     const on=set.has(iso);
 
     streak = on ? Math.min(4, streak+1) : 0; // 0..4
@@ -3075,7 +3081,7 @@ function renderListInAnalytics(){
     if(eligible > 0){
       const d = new Date(startD);
       while(d <= endD){
-        const iso = d.toISOString().slice(0,10);
+        const iso = isoLocal(d);
         if(set.has(iso)) doneCount++;
         d.setDate(d.getDate()+1);
       }
@@ -3214,7 +3220,7 @@ function renderInsights(){
     const window=[];
     for(let i=days-1;i>=0;i--){
       const d=new Date(now); d.setDate(now.getDate()-i);
-      window.push(d.toISOString().slice(0,10));
+      window.push(isoLocal(d));
     }
     let best=null;
     for(const h of H){
@@ -3665,7 +3671,7 @@ function renderQuickMarkPanel(){
       const d = new Date(start);
       let days = 0;
       while(d <= end){
-        const iso2 = d.toISOString().slice(0,10);
+        const iso2 = isoLocal(d);
         // count only eligible days (all days for now)
         days++;
         if(set.has(iso2)) done++;
@@ -4007,7 +4013,7 @@ function setHeroWheel(el, pct){
 
   // Persist previous % per-day so refreshes during the same day animate from
   // the last seen value, but a new day starts fresh.
-  const dayIso = (typeof today === 'function') ? today() : new Date().toISOString().slice(0,10);
+  const dayIso = (typeof today === 'function') ? today() : isoLocal(new Date());
   const LS_KEY = `heroWheelPrevPct:${dayIso}`;
 
   const r = 46;
