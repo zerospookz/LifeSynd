@@ -6604,3 +6604,25 @@ html, body{
   .hh-seg{ -webkit-transform: translateZ(0); }
   .hh-seg .seg-highlight{ transform: translate3d(0,0,0); }
 }
+
+
+/* === Mobile Habits: prevent tab label clipping (e.g., "All Time") === */
+@media (max-width: 768px){
+  .hh-seg{ padding: 6px !important; gap: 6px !important; }
+
+  .hh-tab{
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: 10px 8px !important;
+    font-size: clamp(11px, 3.2vw, 13px) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  /* "All Time" gets slightly smaller so it fits on narrow phones */
+  .hh-tab:last-of-type{
+    font-size: clamp(10.5px, 3.0vw, 12px) !important;
+    letter-spacing: -0.2px !important;
+  }
+}
