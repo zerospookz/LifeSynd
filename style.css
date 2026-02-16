@@ -3711,6 +3711,9 @@ img.pulseOnce{
   /* hold-to-delete loading bar on the whole row (visible + glow) */
   .mwRow.holding{
     border-color: rgba(255,255,255,.18);
+    overflow: hidden;            /* clip hold fill on iOS */
+    border-radius: 22px;         /* match row rounding */
+    isolation: isolate;          /* keep blend/glow contained */
   }
 
   /* main fill */
@@ -3729,10 +3732,8 @@ img.pulseOnce{
     pointer-events:none;
     z-index: 0;
     will-change: transform;
-    box-shadow:
-      0 0 18px rgba(255, 66, 66, 0.35),
-      0 18px 44px rgba(255, 66, 66, 0.22);
-  }
+    box-shadow: inset 0 0 18px rgba(255, 66, 66, 0.28);
+    }
 
   /* subtle glow while holding (no fancy calc() multiplications for compatibility) */
   .mwRow.holding::before{
@@ -3740,13 +3741,12 @@ img.pulseOnce{
     position:absolute;
     inset:0;
     border-radius: 22px;
-    /* Soft red glow while holding */
-    background: rgba(255, 66, 66, 0.10);
-    filter: blur(10px);
+    /* Soft red glow while holding (kept inside the pill) */
+    background: radial-gradient(220px 160px at 12% 50%, rgba(255, 66, 66, 0.22), transparent 70%);
     opacity: 1;
     pointer-events:none;
     z-index: 1;
-    mix-blend-mode: screen;
+    clip-path: inset(0 round 22px);
   }
   .mwTop{
     display: flex;
