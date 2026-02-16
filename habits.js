@@ -2409,11 +2409,14 @@ viewToggleBtn.addEventListener("click", ()=>{
   const prevBtn = card.querySelector("#calPrev");
   const nextBtn = card.querySelector("#calNext");
   const rangeEl = card.querySelector("#rangeLabel");
-  // Fix mobile label clipping: center short labels (e.g., "2026"), left-align long ranges (e.g., "Feb 2–8")
+  // Fix mobile label clipping: center short labels (e.g., "2026"), left-align anything longer ("March 2026", "Feb 2–8")
   try{
     if(rangeEl){
       const t = (rangeEl.textContent||"").trim();
-      const isLong = (t.length > 10) || /[–\-]/.test(t) || /,\s*\d{4}/.test(t);
+      const isYearOnly = /^\d{4}$/.test(t);
+      const isAllTime  = /^all\s*time$/i.test(t);
+      const isRange    = /[–\-]/.test(t) || /,\s*\d{4}/.test(t);
+      const isLong = (!isYearOnly && !isAllTime) && (isRange || t.length > 6);
       rangeEl.classList.toggle("is-long", !!isLong);
     }
   }catch(_e){}

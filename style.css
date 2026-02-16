@@ -6549,7 +6549,6 @@ html, body{
   /* Prevent global .seg-highlight rules from breaking the mobile habits segmented highlight */
   .hh-seg .seg-highlight{
     z-index: 0 !important;
-    height: 100% !important; /* JS will still set exact height/width */
     box-shadow: 0 10px 26px rgba(0,0,0,.28) !important;
   }
   .hh-tab{ z-index: 1 !important; }
@@ -6597,4 +6596,11 @@ html, body{
     justify-content: flex-start;
     text-align: left;
   }
+}
+
+
+/* === iOS Safari: keep segmented highlight behind tabs and avoid clipping artifacts === */
+@supports (-webkit-touch-callout: none){
+  .hh-seg{ -webkit-transform: translateZ(0); }
+  .hh-seg .seg-highlight{ transform: translate3d(0,0,0); }
 }
