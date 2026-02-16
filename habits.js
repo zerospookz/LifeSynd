@@ -2051,7 +2051,7 @@ function renderAnalytics(){
         <div class="hh-card">
 
           <!-- Segmented -->
-          <div class="hh-seg segmented" data-segmented role="tablist" aria-label="Habits range">
+          <div class="hh-seg" data-segmented role="tablist" aria-label="Habits range">
             <button class="hh-tab seg ${analyticsView==="week"?"active":""}" aria-pressed="${analyticsView==="week"?"true":"false"}" data-view="week" type="button">Week</button>
             <button class="hh-tab seg ${analyticsView==="month"?"active":""}" aria-pressed="${analyticsView==="month"?"true":"false"}" data-view="month" type="button">Month</button>
             <button class="hh-tab seg ${analyticsView==="year"?"active":""}" aria-pressed="${analyticsView==="year"?"true":"false"}" data-view="year" type="button">Year</button>
@@ -2336,11 +2336,22 @@ function renderAnalytics(){
   const viewToggleBtn = card.querySelector("#viewToggle");
   if(viewToggleBtn){
     viewToggleBtn.addEventListener("click", ()=>{
+      // iOS-like tap feedback (springy)
+      viewToggleBtn.classList.remove('appleTap');
+      // force reflow so the animation can retrigger reliably
+      void viewToggleBtn.offsetWidth;
+      viewToggleBtn.classList.add('appleTap');
+
       const isList = viewToggleBtn.classList.toggle("is-list");
       viewToggleBtn.setAttribute("aria-pressed", isList ? "true" : "false");
       // Always close Month inline panel when switching modes.
       setMonthInline(false);
       setHabitsViewMode(isList ? "list" : "grid");
+    });
+
+    // cleanup class after animation
+    viewToggleBtn.addEventListener('animationend', (e)=>{
+      if(e.animationName === 'appleTap') viewToggleBtn.classList.remove('appleTap');
     });
   }
 

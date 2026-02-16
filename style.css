@@ -5865,7 +5865,8 @@ html, body{
     background:
       radial-gradient(130% 150% at 20% 10%, rgba(255,59,214,.95), rgba(124,92,255,.85) 60%, rgba(90,167,255,.45));
     box-shadow: 0 10px 26px rgba(0,0,0,.28);
-    transition: transform .26s cubic-bezier(.2,.9,.2,1), width .26s cubic-bezier(.2,.9,.2,1);
+    transition: transform .26s cubic-bezier(.2,.9,.2,1), width .26s cubic-bezier(.2,.9,.2,1), height .26s cubic-bezier(.2,.9,.2,1);
+    will-change: transform, width, height;
     z-index:0;
   }
   .habitsHeaderMobile .hh-tab{
@@ -5946,6 +5947,16 @@ html, body{
   .habitsHeaderMobile .hh-ic--list{ opacity:0; transform: translateY(6px) scale(.92); }
   .habitsHeaderMobile .hh-toggle.is-list .hh-ic--grid{ opacity:0; transform: translateY(-6px) scale(.92); }
   .habitsHeaderMobile .hh-toggle.is-list .hh-ic--list{ opacity:1; transform: translateY(0) scale(1); }
+
+  /* Apple-like tap animation for the grid/list toggle */
+  @keyframes appleTap{
+    0%{ transform: scale(1); }
+    35%{ transform: scale(.90); }
+    100%{ transform: scale(1); }
+  }
+  .habitsHeaderMobile .hh-toggle.appleTap{
+    animation: appleTap 240ms cubic-bezier(.2,.9,.2,1);
+  }
 
   /* Hide old phone header layout pieces when hh header is used */
   .habitsHeaderMobile .habitsMobileNav.stage{ padding: 0; }
