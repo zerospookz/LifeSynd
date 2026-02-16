@@ -5803,3 +5803,23 @@ html, body{
 @media (min-width: 901px){
   .milestoneOverlay{ display:none !important; }
 }
+
+
+
+/* === Mobile month grid tap fix: avoid FAB/bottom bar stealing taps === */
+@media (max-width: 520px){
+  /* If the FAB wrapper is larger than the visible circle it can block taps behind it */
+  .fabWrap, .fab-wrap, .fabContainer, .fab-container{ pointer-events: none !important; }
+  .fab, .fabBtn, .fab-btn, #fab, .floatingAdd, .floating-add{ pointer-events: auto !important; }
+
+  /* Give extra breathing room so last rows are fully tappable above bottom nav + Safari UI */
+  .monthCal, .month-cal, .monthCalendar{ padding-bottom: calc(220px + env(safe-area-inset-bottom)); }
+}
+
+/* When in month view on small screens, lift the FAB a bit to clear the last row */
+@media (max-width: 520px){
+  body.view-month .fab, body.monthView .fab, body.month-view .fab,
+  body.view-month #fab, body.monthView #fab, body.month-view #fab{
+    bottom: calc(110px + env(safe-area-inset-bottom)) !important;
+  }
+}
