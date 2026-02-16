@@ -2084,15 +2084,17 @@ function renderAnalytics(){
               </svg>
             </button>
 
-            <button class="hh-nav" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
-              <span class="hh-chev left" aria-hidden="true"></span>
-            </button>
+            <div class="hh-datePill" role="group" aria-label="Range navigation">
+              <button class="hh-nav hh-nav--inPill" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
+                <span class="hh-chev left" aria-hidden="true"></span>
+              </button>
 
-            <div class="hh-date" id="rangeLabel" aria-live="polite">${mobileDateHTML}</div>
+              <div class="hh-date" id="rangeLabel" aria-live="polite">${mobileDateHTML}</div>
 
-            <button class="hh-nav" id="calNext" type="button" aria-label="Next range" data-nav="next">
-              <span class="hh-chev right" aria-hidden="true"></span>
-            </button>
+              <button class="hh-nav hh-nav--inPill" id="calNext" type="button" aria-label="Next range" data-nav="next">
+                <span class="hh-chev right" aria-hidden="true"></span>
+              </button>
+            </div>
 
           </div>
         </div>

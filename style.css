@@ -6648,3 +6648,62 @@ html, body{
     }
   }
 }
+
+
+/* === iOS Safari: arrows inside the date pill + stronger clipping for active segment === */
+@supports (-webkit-touch-callout: none){
+  /* Force proper clipping of the segmented highlight on Safari */
+  .hh-seg{
+    overflow: hidden !important;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+
+  @media (max-width: 520px){
+    .hh-toolbar{
+      display:flex !important;
+      align-items:center !important;
+      gap:10px !important;
+    }
+
+    /* Date pill contains arrows + label */
+    .hh-datePill{
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 36px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      padding: 0 6px;
+      gap: 6px;
+    }
+
+    /* Inside-pill arrows: transparent, no extra ring */
+    .hh-nav--inPill{
+      width: 30px !important;
+      height: 30px !important;
+      border-radius: 999px !important;
+      border: 0 !important;
+      background: transparent !important;
+    }
+
+    .hh-date{
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      height: 30px !important;
+      border: 0 !important;
+      background: transparent !important;
+      padding: 0 6px !important;
+      justify-content: center !important;
+      text-align: center !important;
+    }
+
+    /* Keep the grid/list toggle as a circle */
+    .hh-icbtn{
+      width: 36px !important;
+      height: 36px !important;
+      flex: 0 0 36px !important;
+    }
+  }
+}
