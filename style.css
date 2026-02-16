@@ -6473,8 +6473,7 @@ html, body{
 .habitsInsightsBelow .dashInsights{ padding-top: 0; }
 
 
-/* === Habits Insights: keep 3 tiles in one row (Time windows + Guidance side-by-side) === */
-.habitsInsightsBelow .dashInsights .tile{ min-width: 0; }
+
 
 @media (min-width: 1024px){
   /* Give the embedded Insights more room so it doesn't wrap */
@@ -6497,5 +6496,41 @@ html, body{
   }
   .habitsInsightsBelow .dashInsights .hero__right{
     align-content: start;
+  }
+}
+
+
+/* === Habits Insights: 3-up row (Consistency | Time windows | Guidance) === */
+.habitsInsightsBelow .dashInsights .tile{ min-width: 0; }
+
+@media (min-width: 1024px){
+  /* More room so 3-up can fit comfortably */
+  .habitsInsightsBelow .dashInsights{
+    max-width: 1500px;
+  }
+
+  /* Force 3 columns (override any global !important rules) */
+  .habitsInsightsBelow .dashInsights .bento{
+    grid-template-columns: 1.45fr 1fr 1fr !important;
+    gap: 18px !important;
+    align-items: stretch !important;
+  }
+
+  /* Keep hero internal layout like the mock */
+  .habitsInsightsBelow .dashInsights .tile--hero{
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 260px !important;
+    gap: 16px !important;
+  }
+
+  /* Make Time windows and Guidance match row height */
+  .habitsInsightsBelow .dashInsights .tile[aria-label="Time windows"],
+  .habitsInsightsBelow .dashInsights .tile[aria-label="Guidance"]{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .habitsInsightsBelow .dashInsights .tile[aria-label="Time windows"] .chips{
+    flex: 1;
   }
 }
