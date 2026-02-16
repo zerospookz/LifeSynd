@@ -2045,7 +2045,57 @@ function renderAnalytics(){
   // inspired by the provided CodePen snippet.
   const mobileHeader = (typeof isMobile !== "undefined" && !!isMobile);
 
-  const headerTop = mobileHeader ? `
+  const isLowPhone = mobileHeader && window.matchMedia && window.matchMedia("(max-width: 520px)").matches;
+
+  const headerTop = mobileHeader ? (isLowPhone ? `      <div class="hh-wrap">
+        <div class="hh-card">
+
+          <!-- Segmented -->
+          <div class="hh-seg segmented" data-segmented role="tablist" aria-label="Habits range">
+            <button class="hh-tab seg ${analyticsView==="week"?"active":""}" aria-pressed="${analyticsView==="week"?"true":"false"}" data-view="week" type="button">Week</button>
+            <button class="hh-tab seg ${analyticsView==="month"?"active":""}" aria-pressed="${analyticsView==="month"?"true":"false"}" data-view="month" type="button">Month</button>
+            <button class="hh-tab seg ${analyticsView==="year"?"active":""}" aria-pressed="${analyticsView==="year"?"true":"false"}" data-view="year" type="button">Year</button>
+            <button class="hh-tab seg ${analyticsView==="all"?"active":""}" aria-pressed="${analyticsView==="all"?"true":"false"}" data-view="all" type="button">All Time</button>
+            <div class="seg-highlight" aria-hidden="true"></div>
+          </div>
+
+          <!-- Toolbar -->
+          <div class="hh-toolbar">
+
+            <!-- GRID ⇄ LIST TOGGLE -->
+            <button class="hh-icbtn hh-toggle ${getCurrentViewMode()==="list"?"is-list":""}" id="viewToggle" aria-label="Toggle view" aria-pressed="${getCurrentViewMode()==="list"?"true":"false"}" type="button">
+              <!-- Grid -->
+              <svg class="hh-ic hh-ic--grid" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                <rect x="4" y="4" width="6" height="6" rx="1.5" class="hh-square"/>
+                <rect x="14" y="4" width="6" height="6" rx="1.5" class="hh-square"/>
+                <rect x="4" y="14" width="6" height="6" rx="1.5" class="hh-square"/>
+                <rect x="14" y="14" width="6" height="6" rx="1.5" class="hh-square"/>
+              </svg>
+
+              <!-- List -->
+              <svg class="hh-ic hh-ic--list" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                <line x1="6" y1="7" x2="20" y2="7" class="hh-line"/>
+                <line x1="6" y1="12" x2="20" y2="12" class="hh-line" opacity=".9"/>
+                <line x1="6" y1="17" x2="20" y2="17" class="hh-line" opacity=".8"/>
+                <circle cx="3.5" cy="7" r="1" class="hh-dot"/>
+                <circle cx="3.5" cy="12" r="1" class="hh-dot" opacity=".9"/>
+                <circle cx="3.5" cy="17" r="1" class="hh-dot" opacity=".8"/>
+              </svg>
+            </button>
+
+            <button class="hh-nav arrow-btn" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
+              <span class="hh-chev left" aria-hidden="true"></span>
+            </button>
+
+            <div class="hh-date" id="rangeLabel" aria-live="polite">${mobileDateHTML}</div>
+
+            <button class="hh-nav arrow-btn" id="calNext" type="button" aria-label="Next range" data-nav="next">
+              <span class="hh-chev right" aria-hidden="true"></span>
+            </button>
+
+          </div>
+        </div>
+      </div>` : `
       <div class="habitsMobileNav stage">
         <div class="panel" role="group" aria-label="Time range and navigation">
           <div class="segmented" data-segmented role="tablist" aria-label="Habits range">
@@ -2084,7 +2134,7 @@ function renderAnalytics(){
           </div>
         </div>
       </div>
-  ` : `
+  `) : `
       <div class="glassTopbar">
         <div class="row row-top">
           <div class="segmented" role="tablist" aria-label="Habits range">
@@ -2281,6 +2331,19 @@ function renderAnalytics(){
       setHabitsViewMode(t);
     });
   });
+
+  // Low-phone header: single grid<->list toggle button
+  const viewToggleBtn = card.querySelector("#viewToggle");
+  if(viewToggleBtn){
+    viewToggleBtn.addEventListener("click", ()=>{
+      const isList = viewToggleBtn.classList.toggle("is-list");
+      viewToggleBtn.setAttribute("aria-pressed", isList ? "true" : "false");
+      // Always close Month inline panel when switching modes.
+      setMonthInline(false);
+      setHabitsViewMode(isList ? "list" : "grid");
+    });
+  }
+
 
   // view toggle
   card.querySelectorAll("[data-view]").forEach(btn=>{
