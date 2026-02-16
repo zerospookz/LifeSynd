@@ -5131,6 +5131,8 @@ img.pulseOnce{
      with 2 round chips + a taller center pill.
   */
   @media (max-width: 420px){
+    /* iOS Safari backdrop-filter can brighten the whole header; tone down the sheen */
+    .habitsHeaderMobile .panel::before{ opacity: .55; }
     .habitsHeaderMobile .panel{
       padding: 18px 16px 12px;
       background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
@@ -5188,7 +5190,8 @@ img.pulseOnce{
       gap: 10px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
+      /* slightly darker so the arrow buttons don't look "white on white" */
+      background: rgba(0,0,0,.22);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       box-shadow:
@@ -5202,7 +5205,10 @@ img.pulseOnce{
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.07);
-      box-shadow: none;
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.14);
+      color: rgba(255,255,255,.92);
     }
     .habitsHeaderMobile .arrow-btn:hover{ background: rgba(255,255,255,.10); transform: translateY(-1px); }
     .habitsHeaderMobile .arrow-btn:active{ transform: translateY(0) scale(.98); }
