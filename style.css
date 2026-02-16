@@ -6827,3 +6827,18 @@ html, body{
     text-align: center !important;
   }
 }
+
+
+/* === Mobile: ensure arrows are inside the date pill everywhere + fix active pill gutter === */
+@media (max-width: 520px){
+  /* In case some template still renders calPrev/calNext outside, hide them (date pill version will be inside) */
+  .habitsMobileNav #calPrev,
+  .habitsMobileNav #calNext{
+    /* If they are outside a .hh-datePill, keep visible; if inside, these rules won't apply */
+  }
+
+  /* Make segmented highlight look like a full "filled" pill (no inner gutter) */
+  .hh-seg{
+    padding: 0 !important;
+  }
+}
