@@ -992,6 +992,11 @@ font-weight: 750;
   #habPrev,#habNext{display:none}
 }
 
+/* Habits: show the new Insights only on large screens */
+@media (max-width: 900px){
+  .insightsGrid{display:none !important;}
+}
+
 
 /* Modern ring (donut) chart */
 .ringChart{
@@ -6365,3 +6370,17 @@ html, body{
   .dashInsights .tile, .dashInsights .chip, .dashInsights .meta__item, .dashInsights .mini, .dashInsights .callout, .dashInsights .trend{ border-radius: 16px; }
 }
 
+
+
+/* === Insights Desktop Layout Upgrade === */
+@media (min-width: 1024px){
+  .dashInsights .bento{
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  /* Hero full width on top */
+  .dashInsights .tile--hero{
+    grid-column: 1 / -1;
+  }
+}
