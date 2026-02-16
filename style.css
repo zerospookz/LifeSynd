@@ -6542,3 +6542,44 @@ html, body{
     display: none !important;
   }
 }
+
+
+/* === Mobile Habits header fixes (Week/Month/Year/All Time pills + date/arrows) === */
+@media (max-width: 768px){
+  /* Prevent global .seg-highlight rules from breaking the mobile habits segmented highlight */
+  .hh-seg .seg-highlight{
+    z-index: 0 !important;
+    height: 100% !important; /* JS will still set exact height/width */
+    box-shadow: 0 10px 26px rgba(0,0,0,.28) !important;
+  }
+  .hh-tab{ z-index: 1 !important; }
+
+  /* Make the pills feel "filled" and evenly sized */
+  .hh-seg{ width: 100%; }
+  .hh-tab{
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: 10px 0 !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+  }
+
+  /* Toolbar: keep arrows + toggles aligned and not overlapping */
+  .hh-toolbar{
+    grid-template-columns: 36px 36px 1fr 36px !important;
+    gap: 8px !important;
+  }
+  .hh-nav, .hh-icbtn{
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .hh-date{
+    height: 36px !important;
+    font-size: 13px !important;
+    padding: 0 12px !important;
+  }
+}
+
+@media (max-width: 420px){
+  .hh-tab{ font-size: 12px !important; }
+}
