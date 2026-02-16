@@ -352,7 +352,124 @@ function syncAfterHabitChange(hid, iso){
 
   // List view inside Analytics card (when active)
   try{ if(document.getElementById("habitList")) { handled = true; renderListInAnalytics(); } }catch(e){}
+
+  // Update the analytics header (overall % + delta + bar) live.
+  // Previously this only updated on full re-render / page refresh.
+  try{
+    if(document.querySelector('.overallTrend')){
+      updateOverallTrendUI();
+      handled = true;
+    }
+  }catch(_e){}
   return handled;
+}
+
+// --- Live update for the analytics header (overallTrend) ---
+function updateOverallTrendUI(){
+  const trend = document.querySelector('.overallTrend');
+  if(!trend) return;
+
+  const view = (window.__habitsAnalyticsView || 'month');
+  const dates = (window.__habitsAnalyticsDates || []).slice();
+
+  // Compute achieved % (same logic as renderAnalyticsCard)
+  let achievedPct = 0;
+  if(view === 'all'){
+    const tIso = today();
+    let totalEligible = 0;
+    let totalDone = 0;
+    (habits||[]).forEach(h=>{
+      const createdIso = (h && typeof h.created==='string' && h.created.length===10) ? h.created : tIso;
+      const earliestIso = ((h.datesDone||[]).concat([createdIso]).sort()[0]) || createdIso;
+      const startD = new Date(earliestIso+'T00:00:00');
+      const endD = new Date(tIso+'T00:00:00');
+      let eligible = Math.floor((endD-startD)/86400000)+1;
+      if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+      const done = countDoneInBounds(h, { start:startD, end:endD });
+      totalEligible += eligible;
+      totalDone += done;
+    });
+    achievedPct = Math.round((totalDone / Math.max(1,totalEligible)) * 100);
+  }else{
+    const totalCells = Math.max(1, (habits||[]).length * (dates||[]).length);
+    let doneCells = 0;
+    (habits||[]).forEach(h=>{
+      const set = new Set(h.datesDone||[]);
+      (dates||[]).forEach(iso=>{ if(set.has(iso)) doneCells++; });
+    });
+    achievedPct = Math.round((doneCells / totalCells) * 100);
+  }
+
+  // Delta vs period before (same logic as renderAnalyticsCard)
+  let hasDelta = (view !== 'all');
+  let deltaPct = 0;
+  if(hasDelta){
+    let curBounds;
+    let prevBounds;
+
+    // Keep comparisons consistent with the rendered dates.
+    const isMob = (typeof isMobileNow==='function') ? isMobileNow() : (window.innerWidth<=900);
+    const od = Number((typeof analyticsOffsets==='object' && analyticsOffsets && analyticsOffsets[view]) ? analyticsOffsets[view] : 0);
+
+    if(isMob && view === 'week'){
+      const weekOffset = Math.round((od||0) / 7);
+      const base = new Date();
+      base.setDate(base.getDate() + weekOffset*7);
+      curBounds = getMondayWeekBounds(base);
+      const prevStart = new Date(curBounds.start);
+      prevStart.setDate(prevStart.getDate() - 7);
+      const prevEnd = new Date(curBounds.end);
+      prevEnd.setDate(prevEnd.getDate() - 7);
+      prevBounds = { start: prevStart, end: prevEnd };
+    }else{
+      curBounds = getBoundsForView(view, od);
+      // Previous period: shift by one unit of the same view
+      if(view === 'month'){
+        prevBounds = getBoundsForView('month', od - 1);
+      }else if(view === 'year'){
+        prevBounds = getBoundsForView('year', od - 1);
+      }else{
+        // rolling week on desktop: previous 7 days
+        const prevStart = new Date(curBounds.start);
+        prevStart.setDate(prevStart.getDate() - 7);
+        const prevEnd = new Date(curBounds.end);
+        prevEnd.setDate(prevEnd.getDate() - 7);
+        prevBounds = { start: prevStart, end: prevEnd };
+      }
+    }
+
+    const curCells = Math.max(1, (habits||[]).length * (dates||[]).length);
+    let curDone = 0;
+    (habits||[]).forEach(h=>{ curDone += countDoneInBounds(h, curBounds); });
+    const curPct = Math.round((curDone / curCells) * 100);
+
+    const prevDates = datesFromBounds(prevBounds);
+    const prevCells = Math.max(1, (habits||[]).length * (prevDates||[]).length);
+    let prevDone = 0;
+    (habits||[]).forEach(h=>{ prevDone += countDoneInBounds(h, prevBounds); });
+    const prevPct = Math.round((prevDone / prevCells) * 100);
+
+    deltaPct = curPct - prevPct;
+  }
+
+  const deltaAbs = Math.abs(deltaPct);
+  const isUp = deltaPct >= 0;
+
+  // Update DOM
+  const deltaEl = trend.querySelector('.trendDelta');
+  const pctEl = trend.querySelector('.trendPct');
+  const fillEl = trend.querySelector('.trendFill');
+  if(pctEl) pctEl.textContent = achievedPct + '%';
+  if(fillEl) fillEl.style.width = (achievedPct>=100 ? 'calc(100% + 2px)' : achievedPct + '%');
+
+  trend.classList.remove('up','down','neutral');
+  if(!hasDelta){
+    trend.classList.add('neutral');
+    if(deltaEl) deltaEl.textContent = 'All-time view';
+  }else{
+    trend.classList.add(isUp ? 'up' : 'down');
+    if(deltaEl) deltaEl.textContent = `${isUp?'Up':'Down'} ${deltaAbs}% from the period before`;
+  }
 }
 function ensureDayDetailsModal(){
   if(dayDetailsModalEl) return dayDetailsModalEl;

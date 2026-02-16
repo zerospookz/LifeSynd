@@ -1536,8 +1536,20 @@ body.habitsViewList .listInGrid{ display:block; }
 .matrixHabit{font-size:.9rem; padding:12px 10px; white-space:normal; line-height:1.05;}
 /* Allow habit names to wrap (no ellipsis/clamp) */
 .matrixHabit span{display:block; white-space:normal; overflow:visible; word-break:break-word;}
-.matrixRow.today .matrixDate{border-color: color-mix(in oklab, var(--accent) 35%, rgba(255,255,255,.12)); background: rgba(255,255,255,.05);}
+.matrixRow.today .matrixDate{
+  border-color: color-mix(in oklab, var(--accent) 55%, rgba(255,255,255,.12));
+  background:
+    radial-gradient(160px 110px at 20% 20%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 70%),
+    rgba(255,255,255,.055);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.35),
+    0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent) inset;
+}
 .matrixRow.today .matrixDate .d1{color: var(--text);}
+/* Subtle row cue for today (keeps it light, not neon) */
+.matrixRow.today .matrixCell{
+  border-color: color-mix(in oklab, var(--accent) 18%, rgba(255,255,255,.10));
+}
 .matrixDate .d1{font-size:1rem;}
 .matrixDate .d2{font-size:.78rem;}
 .analyticsCard #habitAnalytics, #habitAnalytics{width:100%;}
