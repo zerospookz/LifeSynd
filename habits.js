@@ -3425,73 +3425,412 @@ function renderListInAnalytics(){
 
 
 function renderInsights(){
-  const el=document.getElementById("insights");
+  const el = document.getElementById("insights");
   if(!el) return;
-  // Resolve the currently filtered habits locally (don't rely on external scope).
-  const H = getFilteredHabits();
-  const r7=completionRate(7);
-  const r30=completionRate(30);
-  const r60=completionRate(60);
-  const r180=completionRate(180);
 
-  // Weakest habit: lowest completion over last 14 days
-  const weakest = (()=>{
-    if(!H.length) return null;
-    const now=new Date(today()+"T00:00:00");
-    const days=14;
-    const window=[];
-    for(let i=days-1;i>=0;i--){
-      const d=new Date(now); d.setDate(now.getDate()-i);
-      window.push(isoLocal(d));
-    }
-    let best=null;
+  const H = getFilteredHabits();
+  const totalHabits = H.length;
+
+  // Helper: overall completion rate over last N days (completed days across all habits / (N * habits))
+  function completionRateAll(days){
+    if(!totalHabits || !days) return 0;
+    const endIso = today(); // local YYYY-MM-DD
+    const end = new Date(endIso+"T00:00:00");
+    let done = 0;
+    const total = days * totalHabits;
+
     for(const h of H){
-      const set=new Set(h.datesDone||[]);
-      const done=window.reduce((acc,iso)=>acc+(set.has(iso)?1:0),0);
-      const rate=done/days;
-      if(!best || rate < best.rate) best={h, done, days, rate};
+      const set = new Set(h.datesDone || []);
+      for(let i=0;i<days;i++){
+        const d = new Date(end);
+        d.setDate(end.getDate() - i);
+        const iso = isoLocal(d);
+        if(set.has(iso)) done++;
+      }
+    }
+    return Math.round((done / total) * 100);
+  }
+
+  const r7   = completionRateAll(7);
+  const r30  = completionRateAll(30);
+  const r60  = completionRateAll(60);
+  const r180 = completionRateAll(180);
+
+  // Daily completion fraction for last 14 days (0..1) for sparkline/trend.
+  function lastNDailyFractions(n){
+    const end = new Date(today()+"T00:00:00");
+    const out = [];
+    for(let i=n-1;i>=0;i--){
+      const d = new Date(end);
+      d.setDate(end.getDate() - i);
+      const iso = isoLocal(d);
+      let done = 0;
+      for(const h of H){
+        if((h.datesDone||[]).includes(iso)) done++;
+      }
+      out.push(totalHabits ? (done/totalHabits) : 0);
+    }
+    return out;
+  }
+
+  // Current streak: max current streak among habits.
+  function maxCurrentStreak(){
+    let best = 0;
+    const t = today();
+    for(const h of H){
+      const set = new Set(h.datesDone || []);
+      let s = 0;
+      let cur = new Date(t+"T00:00:00");
+      while(set.has(isoLocal(cur))){
+        s++;
+        cur.setDate(cur.getDate()-1);
+      }
+      if(s > best) best = s;
     }
     return best;
-  })();
+  }
 
-  el.innerHTML=`
-    <div class="cardHeader">
-      <h3 class="cardTitle">Insights</h3>
-      <span class="badge">Consistency</span>
-    </div>
-    <div class="consistencyViz">
-      <div class="arcReactor" id="consistencyArc" data-scheme="status" aria-label="180 day completion visualization" role="img">
-        <div class="arcCore">
-          <div class="arcPct">${r180}%</div>
-          <div class="arcLbl">180D</div>
+  function todayDoneCount(){
+    const t = today();
+    let done = 0;
+    for(const h of H){
+      if((h.datesDone||[]).includes(t)) done++;
+    }
+    return done;
+  }
+
+  function coachCopy(scorePct){
+    if(!totalHabits){
+      return {
+        tipBold: "Add a habit.",
+        tipRest: " Create your first habit to see insights.",
+        today: "No activity",
+        next: "Add one small habit."
+      };
+    }
+    if(scorePct >= 70){
+      return {
+        tipBold: "Keep it easy.",
+        tipRest: " Protect momentum with tiny wins on busy days.",
+        today: `${todayDoneCount()} done today`,
+        next: "Do 2 minutes — then stop."
+      };
+    }
+    if(scorePct >= 35){
+      return {
+        tipBold: "Make it smaller.",
+        tipRest: " Reduce the bar so you can win daily.",
+        today: `${todayDoneCount()} done today`,
+        next: "Do 5 minutes — then stop."
+      };
+    }
+    return {
+      tipBold: "Start tiny.",
+      tipRest: " Small actions done daily beat big actions done rarely.",
+      today: `${todayDoneCount()} done today`,
+      next: "Do 2 minutes — then stop."
+    };
+  }
+
+  // Render (uses existing .dashInsights scoped CSS block in style.css)
+  el.innerHTML = `
+    <div class="dashInsights">
+      <header class="dash__head">
+        <div class="brand">
+          <div class="brand__dot"></div>
+          <div>
+            <div class="brand__kicker">INSIGHTS</div>
+            <div class="brand__title">Consistency</div>
+          </div>
         </div>
-      </div>
-      <div class="consistencyMeta">
-        <div class="kpiRow" style="margin:0">
-          <div class="kpi"><div class="kpiLabel">7‑day</div><div class="kpiValue">${r7}%</div></div>
-          <div class="kpi"><div class="kpiLabel">30‑day</div><div class="kpiValue">${r30}%</div></div>
-          <div class="kpi"><div class="kpiLabel">60‑day</div><div class="kpiValue">${r60}%</div></div>
-          <div class="kpi"><div class="kpiLabel">180‑day</div><div class="kpiValue">${r180}%</div></div>
-        </div>
-        <p class="small" style="margin-top:10px">180 days is a strong baseline for long‑term habit formation.</p>
-      </div>
+      </header>
+
+      <main class="bento">
+        <section class="tile tile--hero" aria-label="Consistency overview">
+          <div class="hero__left">
+            <div class="label">Consistency</div>
+            <div class="score"><span id="score">0</span><span class="score__unit">%</span></div>
+
+            <div class="trend" aria-label="Trend">
+              <div class="trend__head">
+                <div class="trend__title">
+                  Trend <span class="trend__status flat" id="trendStatus">→ Steady</span>
+                </div>
+                <div class="trend__meta">
+                  <span class="trend__avg"><span id="avg7">0</span>% avg (7d)</span>
+                  <span class="trend__delta" id="delta">+0% this week</span>
+                </div>
+              </div>
+
+              <svg class="spark" viewBox="0 0 160 44" aria-hidden="true">
+                <path class="spark__area" id="sparkArea" d=""></path>
+                <path class="spark__line" id="sparkLine" d=""></path>
+              </svg>
+              <div class="spark__labels"><span>14d</span><span>Now</span></div>
+            </div>
+
+            <div class="meta">
+              <div class="meta__item">
+                <div class="meta__k">Baseline</div>
+                <div class="meta__v"><span id="baseline">180</span> days</div>
+              </div>
+              <div class="meta__item">
+                <div class="meta__k">Streak</div>
+                <div class="meta__v"><span id="streak">0</span> days</div>
+              </div>
+            </div>
+
+            <div class="cta">
+              <div class="pill">Tap tiles to switch range</div>
+              <div class="hint">Consistency = completed / total days</div>
+            </div>
+          </div>
+
+          <div class="hero__right">
+            <div class="bar" aria-label="Consistency bar">
+              <div class="bar__fill" id="barFill"></div>
+              <div class="marker" id="marker"></div>
+              <div class="bar__ticks"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>
+            </div>
+
+            <div class="range" role="tablist" aria-label="Range selector">
+              <button class="range__btn is-on" data-range="180" type="button">180D</button>
+              <button class="range__btn" data-range="60" type="button">60D</button>
+              <button class="range__btn" data-range="30" type="button">30D</button>
+              <button class="range__btn" data-range="7" type="button">7D</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="tile" aria-label="Time windows">
+          <div class="tile__head">
+            <div class="tile__title">Time windows</div>
+            <div class="tile__sub">Rolling consistency</div>
+          </div>
+
+          <div class="chips">
+            <div class="chip" data-range="7">
+              <div class="chip__k">7-day</div>
+              <div class="chip__v" id="v7">0%</div>
+              <div class="chip__spark" id="spark7" style="--w:0%"></div>
+            </div>
+
+            <div class="chip" data-range="30">
+              <div class="chip__k">30-day</div>
+              <div class="chip__v" id="v30">0%</div>
+              <div class="chip__spark" id="spark30" style="--w:0%"></div>
+            </div>
+
+            <div class="chip" data-range="60">
+              <div class="chip__k">60-day</div>
+              <div class="chip__v" id="v60">0%</div>
+              <div class="chip__spark" id="spark60" style="--w:0%"></div>
+            </div>
+
+            <div class="chip" data-range="180">
+              <div class="chip__k">180-day</div>
+              <div class="chip__v" id="v180">0%</div>
+              <div class="chip__spark" id="spark180" style="--w:0%"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tile" aria-label="Guidance">
+          <div class="tile__head">
+            <div class="tile__title">Guidance</div>
+            <div class="tile__sub">Coach notes</div>
+          </div>
+
+          <div class="callout">
+            <div class="callout__badge">TIP</div>
+            <div class="callout__text" id="tipText">
+              <b>Start tiny.</b> Small actions done daily beat big actions done rarely.
+            </div>
+          </div>
+
+          <div class="mini">
+            <div class="mini__k">Today</div>
+            <div class="mini__v" id="today">No activity</div>
+          </div>
+
+          <div class="mini">
+            <div class="mini__k">Next</div>
+            <div class="mini__v" id="next">Do 2 minutes — stop.</div>
+          </div>
+        </section>
+      </main>
     </div>
-    <p class="small" style="margin-top:12px">Tap to toggle. Drag to paint in the Analytics grid.</p>
   `;
 
-  // Modern segmented "arc reactor" for 60-day consistency.
-  const arc = el.querySelector('#consistencyArc');
-  if(arc) setArcReactor(arc, r180, 5);
-  // Store last computed value so the right-panel copy can re-apply styles.
-  window.__lastConsistency180 = r180;
+  // --- Behavior ---
+  const scoreEl = el.querySelector("#score");
+  const barFill = el.querySelector("#barFill");
+  const marker  = el.querySelector("#marker");
 
-  if(weakest){
-    const hint = el.querySelector('#weakestHintQM');
-    const go = ()=>{ setCarouselIndex(H.findIndex(x=>x.id===weakest.h.id)); };
-    hint?.addEventListener('click', go);
-    hint?.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); go(); } });
+  const baselineEl = el.querySelector("#baseline");
+  const streakEl = el.querySelector("#streak");
+  const todayEl = el.querySelector("#today");
+  const nextEl  = el.querySelector("#next");
+  const tipText = el.querySelector("#tipText");
+
+  const avg7El = el.querySelector("#avg7");
+  const deltaEl = el.querySelector("#delta");
+  const trendStatusEl = el.querySelector("#trendStatus");
+  const sparkLine = el.querySelector("#sparkLine");
+  const sparkArea = el.querySelector("#sparkArea");
+
+  const rangeBtns = el.querySelectorAll(".range__btn");
+  const chips = el.querySelectorAll(".chip");
+
+  const daily14 = lastNDailyFractions(14);
+
+  function avg(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0) / arr.length : 0; }
+
+  function movingAvg(arr, w=3){
+    const out=[];
+    for(let i=0;i<arr.length;i++){
+      const s=Math.max(0, i-Math.floor(w/2));
+      const e=Math.min(arr.length, i+Math.floor(w/2)+1);
+      out.push(avg(arr.slice(s,e)));
+    }
+    return out;
   }
+
+  function renderSparkline(vals01){
+    const w=160, h=44, padX=6, padY=6;
+    const vals=movingAvg(vals01,3);
+    const n=vals.length;
+    const xStep=(w-padX*2)/(n-1);
+
+    const pts=vals.map((v,i)=>{
+      const x=padX+i*xStep;
+      const y=padY+(1-v)*(h-padY*2);
+      return {x,y};
+    });
+
+    const dLine=pts.map((p,i)=>`${i===0?'M':'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+    const dArea=`${dLine} L ${(padX+(n-1)*xStep).toFixed(2)} ${(h-padY).toFixed(2)} L ${padX.toFixed(2)} ${(h-padY).toFixed(2)} Z`;
+
+    const svg=sparkLine.ownerSVGElement;
+    if(svg && !svg.querySelector("#sparkGrad")){
+      const defs=document.createElementNS("http://www.w3.org/2000/svg","defs");
+      defs.innerHTML=`
+        <linearGradient id="sparkGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="var(--red)"/>
+          <stop offset="100%" stop-color="var(--amber)"/>
+        </linearGradient>`;
+      svg.prepend(defs);
+    }
+
+    sparkLine.setAttribute("d", dLine);
+    sparkArea.setAttribute("d", dArea);
+  }
+
+  function updateTrend(done14){
+    const prev7 = done14.slice(0,7);
+    const this7 = done14.slice(7,14);
+    const prevPct = Math.round(avg(prev7)*100);
+    const thisPct = Math.round(avg(this7)*100);
+    const delta = thisPct - prevPct;
+
+    avg7El.textContent = thisPct;
+
+    deltaEl.classList.remove("pos","neg");
+    deltaEl.textContent = `${delta >= 0 ? "+" : ""}${delta}% this week`;
+    deltaEl.classList.add(delta >= 0 ? "pos" : "neg");
+
+    trendStatusEl.classList.remove("up","down","flat");
+    if(delta >= 5){
+      trendStatusEl.textContent = "↑ Improving";
+      trendStatusEl.classList.add("up");
+    }else if(delta <= -5){
+      trendStatusEl.textContent = "↓ Slipping";
+      trendStatusEl.classList.add("down");
+    }else{
+      trendStatusEl.textContent = "→ Steady";
+      trendStatusEl.classList.add("flat");
+    }
+
+    renderSparkline(done14);
+  }
+
+  function animateNumber(elm, to, dur=520){
+    const from = Number(elm.textContent) || 0;
+    const start = performance.now();
+    function tick(t){
+      const k = Math.min(1, (t-start)/dur);
+      const eased = 1 - Math.pow(1-k,3);
+      elm.textContent = Math.round(from + (to-from)*eased);
+      if(k<1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function setMarker(pct){
+    const p = Math.max(0, Math.min(100, pct));
+    marker.style.top = `${100 - p}%`;
+  }
+
+  const rangeData = {
+    7:   { score: r7   },
+    30:  { score: r30  },
+    60:  { score: r60  },
+    180: { score: r180 }
+  };
+
+  function updateWindows(){
+    const setText = (id,val)=>{ const n = el.querySelector('#'+id); if(n) n.textContent = `${val}%`; };
+    setText('v7', r7);
+    setText('v30', r30);
+    setText('v60', r60);
+    setText('v180', r180);
+
+    const setW = (id,val)=>{ const n = el.querySelector('#'+id); if(n) n.style.setProperty('--w', `${Math.max(0,Math.min(100,val))}%`); };
+    setW('spark7', r7);
+    setW('spark30', r30);
+    setW('spark60', r60);
+    setW('spark180', r180);
+  }
+
+  function setActiveRange(r){
+    const rr = Number(r);
+    window.__insightsRange = rr;
+
+    rangeBtns.forEach(b=>b.classList.toggle('is-on', Number(b.dataset.range)===rr));
+
+    const score = rangeData[rr]?.score ?? r180;
+    animateNumber(scoreEl, score);
+
+    barFill.style.height = `${score}%`;
+    setMarker(score);
+
+    baselineEl.textContent = rr;
+    streakEl.textContent = maxCurrentStreak();
+
+    const coach = coachCopy(score);
+    if(tipText){
+      tipText.innerHTML = `<b>${coach.tipBold}</b>${coach.tipRest}`;
+    }
+    todayEl.textContent = coach.today;
+    nextEl.textContent = coach.next;
+
+    window.__lastConsistency180 = r180;
+  }
+
+  rangeBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=> setActiveRange(btn.dataset.range));
+  });
+  chips.forEach(ch=>{
+    ch.addEventListener('click', ()=> setActiveRange(ch.dataset.range));
+  });
+
+  updateWindows();
+  updateTrend(daily14);
+
+  const initial = Number(window.__insightsRange || 180);
+  setActiveRange(initial);
 }
+
 
 function buildArcGradient(pct, segments, onColor, offColor){
   const seg = Math.max(3, Math.min(8, segments||6));
