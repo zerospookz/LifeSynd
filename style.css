@@ -6471,3 +6471,31 @@ html, body{
 /* === Habits embedded Insights: hide header tile (INSIGHTS/Consistency) === */
 .habitsInsightsBelow .dashInsights .dash__head{ display:none; }
 .habitsInsightsBelow .dashInsights{ padding-top: 0; }
+
+
+/* === Habits Insights: keep 3 tiles in one row (Time windows + Guidance side-by-side) === */
+.habitsInsightsBelow .dashInsights .tile{ min-width: 0; }
+
+@media (min-width: 1024px){
+  /* Give the embedded Insights more room so it doesn't wrap */
+  .habitsInsightsBelow .dashInsights{
+    max-width: 1400px;
+  }
+
+  /* Fixed 3-column layout with sensible minimums */
+  .habitsInsightsBelow .dashInsights .bento{
+    grid-template-columns: minmax(520px, 1.55fr) minmax(320px, 1fr) minmax(320px, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  /* Make the Consistency (hero) match the shown internal layout and avoid wrapping */
+  .habitsInsightsBelow .dashInsights .tile--hero{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 16px;
+  }
+  .habitsInsightsBelow .dashInsights .hero__right{
+    align-content: start;
+  }
+}
