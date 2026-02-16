@@ -6883,3 +6883,89 @@ html, body{
     display: none !important;
   }
 }
+
+
+/* === iOS Safari: hide stray header arrows and force arrows INSIDE date pill === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 768px){
+    /* Force toolbar to be 2 items: toggle + date pill */
+    .hh-toolbar{ display:flex !important; align-items:center !important; gap:10px !important; }
+    /* Hide any hh-nav that is not inside the date pill */
+    .hh-toolbar .hh-nav{ display:none !important; }
+    .hh-toolbar .hh-datePill .hh-nav{ display:flex !important; }
+
+    /* Ensure date pill is the only place where prev/next live */
+    .hh-toolbar > #calPrev,
+    .hh-toolbar > #calNext{ display:none !important; }
+
+    .hh-datePill{
+      display:flex !important;
+      align-items:center !important;
+      flex:1 1 auto !important;
+      min-width:0 !important;
+      height:36px !important;
+      border-radius:999px !important;
+      background: rgba(0,0,0,.18) !important;
+      border:1px solid rgba(255,255,255,.10) !important;
+      padding:0 6px !important;
+      gap:6px !important;
+    }
+    .hh-datePill .hh-nav--inPill{
+      width:30px !important;
+      height:30px !important;
+      border:0 !important;
+      background: transparent !important;
+      border-radius:999px !important;
+    }
+    .hh-datePill .hh-date{
+      flex:1 1 auto !important;
+      min-width:0 !important;
+      height:30px !important;
+      border:0 !important;
+      background: transparent !important;
+      padding:0 6px !important;
+      justify-content:center !important;
+      text-align:center !important;
+    }
+
+    /* Active pill gutter: make the container background match inactive pills so no "uncolored" band shows */
+    .hh-seg{
+      background: rgba(255,255,255,.06) !important;
+      border:1px solid rgba(255,255,255,.10) !important;
+      overflow:hidden !important;
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+    }
+  }
+}
+
+
+/* === iOS Safari: refine arrow design inside the date pill === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 768px){
+    .hh-datePill .hh-nav--inPill{
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      opacity: .92;
+    }
+    .hh-datePill .hh-nav--inPill:active{
+      opacity: 1;
+      transform: scale(.97);
+    }
+
+    /* Make chevrons crisp and centered */
+    .hh-datePill .hh-chev{
+      width: 10px;
+      height: 10px;
+      display:inline-block;
+      border-right: 2.4px solid rgba(255,255,255,.92);
+      border-bottom: 2.4px solid rgba(255,255,255,.92);
+      transform-origin: 50% 50%;
+      margin-top: 1px;
+    }
+    .hh-datePill .hh-chev.left{ transform: rotate(135deg); }
+    .hh-datePill .hh-chev.right{ transform: rotate(-45deg); }
+  }
+}
