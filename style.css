@@ -7029,3 +7029,59 @@ html, body{
   .habitsMobileNav.stage .date-pill .arrow-btn#calPrev{ left:8px !important; }
   .habitsMobileNav.stage .date-pill .arrow-btn#calNext{ right:8px !important; }
 }
+
+
+/* === iOS Safari: date-pill arrows should look Apple-clean (no half circles / no edge bubbles) === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 768px){
+    .habitsMobileNav.stage .date-pill{
+      overflow: hidden; /* clip anything at edges */
+    }
+    .habitsMobileNav.stage .date-pill .arrow-btn{
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      opacity: .92;
+    }
+    .habitsMobileNav.stage .date-pill .arrow-btn:active{
+      opacity: 1;
+      transform: translateY(-50%) scale(.96) !important;
+    }
+    .habitsMobileNav.stage .date-pill .arrow-icon{
+      width: 18px;
+      height: 18px;
+    }
+    .habitsMobileNav.stage .date-pill .arrow-icon path{
+      stroke: rgba(255,255,255,.92);
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+}
+
+/* === "More Apple" segmented slider feel === */
+@media (max-width: 900px){
+  /* Smooth springy slider */
+  .habitsHeaderMobile [data-segmented] .seg-highlight,
+  .habitsHeaderMobile .hh-seg .seg-highlight{
+    transition:
+      transform .34s cubic-bezier(.2, .9, .2, 1),
+      width .34s cubic-bezier(.2, .9, .2, 1),
+      height .34s cubic-bezier(.2, .9, .2, 1),
+      filter .34s cubic-bezier(.2, .9, .2, 1);
+    filter: saturate(1.05);
+  }
+
+  /* Subtle press feedback on tabs */
+  .habitsHeaderMobile [data-segmented] button[data-view],
+  .habitsHeaderMobile .hh-tab{
+    transition: transform .14s ease, color .2s ease;
+  }
+  .habitsHeaderMobile [data-segmented] button[data-view]:active,
+  .habitsHeaderMobile .hh-tab:active{
+    transform: scale(.98);
+  }
+}
