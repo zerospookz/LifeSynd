@@ -6868,3 +6868,18 @@ html, body{
     }
   }
 }
+
+
+/* === Mobile: hide legacy date rows/buttons so only the new date pill is used === */
+@media (max-width: 768px){
+  .habitsDateSlot,
+  #habitsDateRow,
+  .habitsDateRow,
+  .date-pill[role="group"],
+  .icon-btn#calPrev,
+  .icon-btn#calNext,
+  .arrow-btn#calPrev,
+  .arrow-btn#calNext{
+    display: none !important;
+  }
+}
