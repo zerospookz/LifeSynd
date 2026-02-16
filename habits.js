@@ -1921,7 +1921,7 @@ function renderAnalytics(){
   try{
     if(analyticsView === "month"){
       const b = getBoundsForView("month", analyticsOffsetDays);
-      rangeLabel = new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start);
+      rangeLabel = new Intl.DateTimeFormat(undefined,{ month:"short", year:"numeric" }).format(b.start);
     }else if(analyticsView === "year"){
       const b = getBoundsForView("year", analyticsOffsetDays);
       rangeLabel = String(b.start.getFullYear());
@@ -1939,7 +1939,7 @@ function renderAnalytics(){
       mobileDateHTML = `<span class="date-start">All time</span>`;
     }else if(analyticsView === "month"){
       const b = getBoundsForView("month", analyticsOffsetDays);
-      const label = new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start);
+      const label = new Intl.DateTimeFormat(undefined,{ month:"short", year:"numeric" }).format(b.start);
       mobileDateHTML = `<span class="date-start">${label}</span>`;
     }else if(analyticsView === "year"){
       const b = getBoundsForView("year", analyticsOffsetDays);
@@ -3130,7 +3130,7 @@ function renderListInAnalytics(){
     if(v === "month"){
       const b = getBoundsForView("month", off);
       let label = "This month";
-      try{ label = new Intl.DateTimeFormat(undefined,{ month:"long", year:"numeric" }).format(b.start); }catch(_){ }
+      try{ label = new Intl.DateTimeFormat(undefined,{ month:"short", year:"numeric" }).format(b.start); }catch(_){ }
       return { startIso: isoDate(b.start), endIso: isoDate(b.end), label, kind:"month" };
     }
 

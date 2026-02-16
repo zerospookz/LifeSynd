@@ -6626,3 +6626,25 @@ html, body{
     letter-spacing: -0.2px !important;
   }
 }
+
+
+/* === iOS Safari: Habits header toolbar layout stability === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 520px){
+    .hh-toolbar{
+      display:flex !important;
+      align-items:center !important;
+      gap:8px !important;
+    }
+    .hh-date{
+      flex:1 1 auto !important;
+      min-width: 0 !important;
+      justify-content: center !important;
+      text-align:center !important;
+      padding: 0 12px !important;
+    }
+    .hh-nav, .hh-icbtn{
+      flex:0 0 36px !important;
+    }
+  }
+}
