@@ -6409,7 +6409,6 @@ html, body{
 }
 
 /* Center main content area inside the layout column so tiles don't look "cut off" on wide screens */
-.content{ margin: 0 auto !important; }
 
 /* Insights: 4-tile layout (split hero into two tiles) */
 .dashInsights .tile--heroLeft .hero__left,
@@ -6429,3 +6428,12 @@ html, body{
     gap: 18px !important;
   }
 }
+
+/* === Insights width + centering fix (avoid right-narrow column) === */
+.dashInsights{
+  width: 100% !important;
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+}
+
+.dashInsights{ padding: 8px 8px 40px !important; }

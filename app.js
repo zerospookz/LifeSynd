@@ -1,61 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <link rel="manifest" href="manifest.webmanifest"/>
+    <meta name="theme-color" content="#0b0f1a"/>
+    <title>Insights</title>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="favicon.ico" rel="icon"/>
+  </head>
+  <body>
 
-(function(){
-  const path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-  document.querySelectorAll('.nav a').forEach(a=>{
-    const href = (a.getAttribute('href')||'').toLowerCase();
-    if(href === path){
-      a.classList.add('active');
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
+          <div>
+            <div class="brandTitle">LifeSync</div>
+            <div class="brandSub">Command center</div>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+          <a class="active" href="analytics.html"><span class="left">📊 <span>Insights</span></span><span class="pill">Consistency</span></a>
+          <a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
+          <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+          <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+          <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+          <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+        </nav>
+        <div class="sidebarFooter">Tip: Consistency = completed / total days.</div>
+      </aside>
 
-      // Icon micro-pulse (runs once per page load / tab open)
-      const img = a.querySelector('img.navIcon, img.navIconBottom');
-      if(img){
-        img.classList.remove('pulseOnce');
-        // restart animation reliably
-        void img.offsetWidth;
-        img.classList.add('pulseOnce');
-      }
-    }
-  });
+      <main class="content">
+        <div class="dash dashInsights">
+          <header class="dash__head">
+            <div class="brand">
+              <div class="brand__dot"></div>
+              <div>
+                <div class="brand__kicker">INSIGHTS</div>
+                <div class="brand__title">Consistency</div>
+              </div>
+            </div>
+          </header>
 
-  // Service Worker (required for background Push Notifications)
-  // Note: service workers work only on https or localhost.
-  if('serviceWorker' in navigator){
-    window.__swReady = navigator.serviceWorker.register('sw.js', { scope: './' })
-      .then(()=> navigator.serviceWorker.ready)
-      .catch(err=>{
-        console.warn('SW register failed', err);
-        return null;
-      });
-  } else {
-    window.__swReady = Promise.resolve(null);
-  }
+          <main class="bento">
 
-  // Keyboard-safe layout (mobile): keep inputs and bottom panels visible when the on-screen
-  // keyboard opens. We do this by setting a CSS var (--kb) to the keyboard height using
-  // VisualViewport (supported on iOS Safari / Chrome Android).
-  (function setupKeyboardSafeArea(){
-    const vv = window.visualViewport;
-    if (!vv) return;
+            <!-- HERO -->
+            <section class="tile tile--heroLeft" aria-label="Consistency overview">
+              <div class="hero__left">
+<div class="label">Consistency</div>
+                <div class="score">
+                  <span id="score">0</span><span class="score__unit">%</span>
+                </div>
 
-    const setVar = ()=>{
-      // Keyboard height ≈ difference between layout viewport and visual viewport.
-      const kb = Math.max(0, (window.innerHeight - vv.height - vv.offsetTop) || 0);
-      document.documentElement.style.setProperty('--kb', kb ? `${Math.round(kb)}px` : '0px');
-    };
+                <!-- Trend -->
+                <div class="trend" aria-label="Trend">
+                  <div class="trend__head">
+                    <div class="trend__title">
+                      Trend <span class="trend__status flat" id="trendStatus">→ Steady</span>
+                    </div>
 
-    vv.addEventListener('resize', setVar);
-    vv.addEventListener('scroll', setVar);
-    window.addEventListener('orientationchange', ()=> setTimeout(setVar, 50));
-    setVar();
+                    <div class="trend__meta">
+                      <span class="trend__avg"><span id="avg7">0</span>% avg (7d)</span>
+                      <span class="trend__delta" id="delta">+0% this week</span>
+                    </div>
+                  </div>
 
-    // When focusing an input, nudge it into view (prevents it from sitting behind the keyboard).
-    document.addEventListener('focusin', (e)=>{
-      const t = e.target;
-      if (!(t instanceof HTMLElement)) return;
-      if (!t.matches('input, textarea, select')) return;
-      setTimeout(()=>{
-        try{ t.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' }); }catch(_){ }
-      }, 60);
-    });
-  })();
-})();
+                  <svg class="spark" viewBox="0 0 160 44" aria-hidden="true">
+                    <path class="spark__area" id="sparkArea" d=""></path>
+                    <path class="spark__line" id="sparkLine" d=""></path>
+                  </svg>
+                  <div class="spark__labels">
+                    <span>14d</span><span>Now</span>
+                  </div>
+                </div>
+
+                <div class="meta">
+                  <div class="meta__item">
+                    <div class="meta__k">Baseline</div>
+                    <div class="meta__v"><span id="baseline">180</span> days</div>
+                  </div>
+                  <div class="meta__item">
+                    <div class="meta__k">Streak</div>
+                    <div class="meta__v"><span id="streak">0</span> days</div>
+                  </div>
+                </div>
+
+                <div class="cta">
+                  <div class="pill">Tap tiles to switch range</div>
+                  <div class="hint">Consistency = completed / total days</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="tile tile--heroRight" aria-label="Range + bar">
+              <div class="hero__right">
+<div class="bar" aria-label="Consistency bar">
+                  <div class="bar__fill" id="barFill"></div>
+                  <div class="marker" id="marker"></div>
+
+                  <div class="bar__ticks">
+                    <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+                  </div>
+                </div>
+
+                <div class="range" role="tablist" aria-label="Range selector">
+                  <button class="range__btn is-on" data-range="180" type="button">180D</button>
+                  <button class="range__btn" data-range="60" type="button">60D</button>
+                  <button class="range__btn" data-range="30" type="button">30D</button>
+                  <button class="range__btn" data-range="7" type="button">7D</button>
+                </div>
+              </div>
+            </section>
+
+<!-- TIME WINDOWS -->
+            <section class="tile" aria-label="Time windows">
+              <div class="tile__head">
+                <div class="tile__title">Time windows</div>
+                <div class="tile__sub">Rolling consistency</div>
+              </div>
+
+              <div class="chips">
+                <div class="chip" data-range="7">
+                  <div class="chip__k">7-day</div>
+                  <div class="chip__v" id="v7">0%</div>
+                  <div class="chip__spark" id="w7" style="--w:0%"></div>
+                </div>
+
+                <div class="chip" data-range="30">
+                  <div class="chip__k">30-day</div>
+                  <div class="chip__v" id="v30">0%</div>
+                  <div class="chip__spark" id="w30" style="--w:0%"></div>
+                </div>
+
+                <div class="chip" data-range="60">
+                  <div class="chip__k">60-day</div>
+                  <div class="chip__v" id="v60">0%</div>
+                  <div class="chip__spark" id="w60" style="--w:0%"></div>
+                </div>
+
+                <div class="chip" data-range="180">
+                  <div class="chip__k">180-day</div>
+                  <div class="chip__v" id="v180">0%</div>
+                  <div class="chip__spark" id="w180" style="--w:0%"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- GUIDANCE -->
+            <section class="tile" aria-label="Guidance">
+              <div class="tile__head">
+                <div class="tile__title">Guidance</div>
+                <div class="tile__sub">Coach notes</div>
+              </div>
+
+              <div class="callout">
+                <div class="callout__badge">TIP</div>
+                <div class="callout__text" id="tipText">
+                  <b>Keep it small.</b> Small actions done daily beat big actions done rarely.
+                </div>
+              </div>
+
+              <div class="mini">
+                <div class="mini__k">Today</div>
+                <div class="mini__v" id="today">No activity</div>
+              </div>
+
+              <div class="mini">
+                <div class="mini__k">Next</div>
+                <div class="mini__v" id="next">Do 2 minutes — stop.</div>
+              </div>
+            </section>
+          </main>
+        </div>
+      </main>
+    </div>
+
+    <nav class="bottomNav" aria-label="Primary">
+      <a href="dashboard.html">🏠<span>Dashboard</span></a>
+      <a href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>
+      <a href="workouts.html">🏋️<span>Workouts</span></a>
+      <a href="nutrition.html">🍎<span>Nutrition</span></a>
+      <a href="finances.html">💰<span>Finances</span></a>
+    </nav>
+
+    <script src="app.js"></script>
+    <script src="ui.js"></script>
+    <script src="insights.js"></script>
+  </body>
+</html>
