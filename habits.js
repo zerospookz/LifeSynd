@@ -64,6 +64,9 @@ function __saveMilestoneState(){
 
 function __milestoneKey(hid, n){ return `${hid}::${n}`; }
 
+// Perfect-week key (mobile week view): one celebration per habit per shown week window.
+function __perfectWeekKey(hid, startIso, endIso){ return `pw::${hid}::${startIso}::${endIso}`; }
+
 function __hasMilestone(hid, n){
   return !!__milestoneState[__milestoneKey(hid, n)];
 }
@@ -73,7 +76,16 @@ function __setMilestone(hid, n){
   __saveMilestoneState();
 }
 
-function __celebrateMilestone(habitName, n){
+function __hasPerfectWeek(hid, startIso, endIso){
+  return !!__milestoneState[__perfectWeekKey(hid, startIso, endIso)];
+}
+
+function __setPerfectWeek(hid, startIso, endIso){
+  __milestoneState[__perfectWeekKey(hid, startIso, endIso)] = Date.now();
+  __saveMilestoneState();
+}
+
+function __celebrateMilestone(habitName, n, titleOverride){
   // One overlay at a time.
   const existing = document.getElementById("milestoneOverlay");
   if(existing) existing.remove();
@@ -84,7 +96,7 @@ function __celebrateMilestone(habitName, n){
   overlay.innerHTML = `
     <div class="milestoneCard" role="status" aria-live="polite">
       <div class="milestoneIcon">🏆</div>
-      <div class="milestoneTitle">${n}-day streak!</div>
+      <div class="milestoneTitle">${escapeHtml(titleOverride || (n+"-day streak!"))}</div>
       <div class="milestoneSub">${escapeHtml(habitName || "Habit")}</div>
       <div class="milestoneConfetti" aria-hidden="true"></div>
     </div>
@@ -184,6 +196,56 @@ function computePctForIso(iso){
   return Math.round((done/total)*100);
 }
 
+// --- Mobile Week: live counter + perfect-week celebration helpers ---
+function __getCurrentWeekDates(){
+  try{
+    const v = window.__habitsAnalyticsView;
+    const d = window.__habitsAnalyticsDates;
+    if(v === 'week' && Array.isArray(d) && d.length) return d.slice();
+  }catch(_e){}
+  // Fallback: compute a Monday-based calendar week on mobile
+  try{
+    if(isMobileNow && isMobileNow() && String(analyticsView||'').toLowerCase()==='week'){
+      const weekOffset = Math.round((Number(analyticsOffsetDays)||0) / 7);
+      const base = new Date();
+      base.setDate(base.getDate() + weekOffset*7);
+      const bounds = getMondayWeekBounds(base);
+      return datesFromBounds(bounds);
+    }
+  }catch(_e){}
+  return [];
+}
+
+function __updateMobileWeekCount(h){
+  try{
+    const dates = __getCurrentWeekDates();
+    if(!dates.length) return;
+    const hid = h && h.id;
+    const row = document.querySelector(`.mwRow[data-hid="${hid}"]`);
+    const el = row ? row.querySelector('.mwCount') : null;
+    if(!el) return;
+    const cnt = (h.datesDone||[]).filter(x=> dates.includes(x)).length;
+    const total = Math.max(1, dates.length);
+    el.textContent = `${cnt}/${total}`;
+  }catch(_e){}
+}
+
+function __maybeCelebratePerfectWeek(h){
+  try{
+    if(!h || !(isMobileNow && isMobileNow())) return;
+    const dates = __getCurrentWeekDates();
+    if(dates.length !== 7) return;
+    const cnt = (h.datesDone||[]).filter(x=> dates.includes(x)).length;
+    if(cnt !== 7) return;
+    const startIso = dates[0];
+    const endIso = dates[dates.length-1];
+    if(startIso && endIso && !__hasPerfectWeek(h.id, startIso, endIso)){
+      __setPerfectWeek(h.id, startIso, endIso);
+      __celebrateMilestone(h.name, 7, 'Perfect week!');
+    }
+  }catch(_e){}
+}
+
 
 // Sync UI bits after marking from any view (week/month/day details)
 function syncAfterHabitChange(hid, iso){
@@ -213,6 +275,31 @@ function syncAfterHabitChange(hid, iso){
           el.classList.toggle("missed", missed);
         }
       });
+
+      // Mobile week layout: update the per-habit counter (e.g. 6/7 -> 7/7) live.
+      try{
+        const view = window.__habitsAnalyticsView;
+        const dates = window.__habitsAnalyticsDates || [];
+        if(view === 'week' && dates.length){
+          const cnt = (h.datesDone||[]).filter(x=> dates.includes(x)).length;
+          const total = Math.max(1, dates.length);
+          const row = document.querySelector(`.mwRow[data-hid="${hid}"]`);
+          const el = row ? row.querySelector('.mwCount') : null;
+          if(el){ el.textContent = `${cnt}/${total}`; handled = true; }
+
+          // Perfect week celebration (mobile only): when the habit reaches 7/7 in the shown week.
+          if(isMobileNow && typeof isMobileNow === 'function'){
+            if(isMobileNow() && view === 'week' && total === 7 && cnt === 7){
+              const startIso = dates[0];
+              const endIso = dates[dates.length-1];
+              if(startIso && endIso && !__hasPerfectWeek(hid, startIso, endIso)){
+                __setPerfectWeek(hid, startIso, endIso);
+                __celebrateMilestone(h.name, 7, 'Perfect week!');
+              }
+            }
+          }
+        }
+      }catch(_e){}
     }
   }catch(e){}
 
@@ -1402,6 +1489,15 @@ function toggleHabitAt(id, iso, opts={}){
   // Targeted UI updates (no full render)
   try{ syncAfterHabitChange(id, iso); }catch(e){}
 
+  // Mobile Week: some browsers/tap paths don't reliably hit all delegated targets.
+  // Force-update the per-row fraction and run perfect-week celebration check.
+  try{
+    if(isMobileNow && isMobileNow() && String(analyticsView||'').toLowerCase()==='week'){
+      __updateMobileWeekCount(h);
+      if(nowDone) __maybeCelebratePerfectWeek(h);
+    }
+  }catch(_e){}
+
   // Milestone celebration (mobile)
   if(nowDone){ try{ maybeCelebrateMilestone(h); }catch(_e){} }
 
@@ -1668,6 +1764,12 @@ function renderAnalytics(){
     // while Year keeps a compact viewport for performance.
     if(isMobile && analyticsView === "year") dates = dates.slice(Math.max(0, dates.length-7));
   }
+
+  // Expose the currently rendered analytics window for targeted UI sync (mobile counters, etc.).
+  try{
+    window.__habitsAnalyticsDates = (dates||[]).slice();
+    window.__habitsAnalyticsView  = analyticsView;
+  }catch(_e){}
 
   const step  = (analyticsView === "week" || analyticsView === "all")
     ? (isMobile ? 7 : cfg.step)
@@ -2492,6 +2594,7 @@ for(const iso of monthDates){
       (H||[]).forEach(h=>{
         const row = document.createElement('div');
         row.className = 'mwRow';
+        row.dataset.hid = h.id;
         const hue = habitHue(h.id);
         const accent = `hsl(${hue} 70% 55%)`;
         row.style.setProperty('--habit-accent', accent);
