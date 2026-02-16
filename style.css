@@ -6042,11 +6042,15 @@ html, body{
 
 .dashInsights .bento{
   display:grid;
-  grid-template-columns: 1.35fr .95fr .95fr;
+  /* Auto-wrap so it NEVER gets stuck in 3 tiny columns on mobile Safari */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
 }
-@media (max-width: 1020px){
-  .dashInsights .bento{ grid-template-columns:1fr; }
+/* Hero: also auto-wrap to avoid narrow split columns */
+.dashInsights .tile--hero{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 /* Strong mobile overrides (some WebViews/Safari report wider layout widths) */
@@ -6075,7 +6079,8 @@ html, body{
   Force the Insights bento to single-column based on input modality, not viewport width.
 */
 @media (hover: none) and (pointer: coarse){
-  .dashInsights{ width:100% !important; max-width:100% !important; margin:0 auto !important; padding: 6px 6px 22px !important; }
+  /* Center it and keep it readable on real phones */
+  .dashInsights{ width:100% !important; max-width: 640px !important; margin:0 auto !important; padding: 6px 10px 24px !important; }
   .dashInsights .dash__head{ padding: 6px 4px 12px !important; }
   .dashInsights .bento{ grid-template-columns: 1fr !important; gap: 12px !important; }
   .dashInsights .tile{ padding: 14px !important; border-radius: 16px !important; }
