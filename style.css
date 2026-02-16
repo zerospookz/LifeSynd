@@ -7111,3 +7111,56 @@ html, body{
 .habitsMobileNav.stage [data-segmented] .seg-highlight{
   will-change: transform, width, height;
 }
+
+
+/* === iOS Safari: nuke any arrow button chrome (works for both header variants) === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 768px){
+    /* Ensure pills clip edges */
+    .habitsMobileNav.stage .date-pill,
+    .hh-datePill{
+      overflow: hidden !important;
+    }
+
+    /* Stage header arrows */
+    .habitsMobileNav.stage .date-pill .arrow-btn{
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      background-color: transparent !important;
+      background-image: none !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      outline: none !important;
+      filter: none !important;
+    }
+
+    /* Low-phone header arrows */
+    .hh-datePill .hh-nav--inPill{
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      background-color: transparent !important;
+      background-image: none !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      outline: none !important;
+      filter: none !important;
+    }
+
+    /* Remove any pseudo-element bubbles from older rules */
+    .habitsMobileNav.stage .date-pill .arrow-btn::before,
+    .habitsMobileNav.stage .date-pill .arrow-btn::after,
+    .hh-datePill .hh-nav--inPill::before,
+    .hh-datePill .hh-nav--inPill::after{
+      content: none !important;
+      display: none !important;
+    }
+
+    /* iOS tap highlight off */
+    .habitsMobileNav.stage .date-pill .arrow-btn,
+    .hh-datePill .hh-nav--inPill{
+      -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+    }
+  }
+}
