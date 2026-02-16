@@ -6583,3 +6583,11 @@ html, body{
 @media (max-width: 420px){
   .hh-tab{ font-size: 12px !important; }
 }
+
+
+/* === Mobile Habits: range label should not clip from the left (show start + ellipsis) === */
+@media (max-width: 768px){
+  .hh-date{
+    justify-content: flex-start !important;
+  }
+}
