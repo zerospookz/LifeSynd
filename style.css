@@ -6070,6 +6070,24 @@ html, body{
   .dashInsights .meta{ grid-template-columns: 1fr 1fr; gap: 10px !important; }
 }
 
+/*
+  Some iOS/Safari contexts can report a large layout width (desktop layout) even on phones.
+  Force the Insights bento to single-column based on input modality, not viewport width.
+*/
+@media (hover: none) and (pointer: coarse){
+  .dashInsights{ width:100% !important; max-width:100% !important; margin:0 auto !important; padding: 6px 6px 22px !important; }
+  .dashInsights .dash__head{ padding: 6px 4px 12px !important; }
+  .dashInsights .bento{ grid-template-columns: 1fr !important; gap: 12px !important; }
+  .dashInsights .tile{ padding: 14px !important; border-radius: 16px !important; }
+  .dashInsights .tile--hero{ grid-template-columns: 1fr !important; }
+  .dashInsights .score{ font-size: 54px !important; }
+  .dashInsights .bar{ height: 210px !important; }
+  .dashInsights .range{ gap: 8px !important; }
+  .dashInsights .range__btn{ padding: 9px 0 !important; border-radius: 12px !important; }
+  /* Prevent horizontal overflow in nested grids */
+  .dashInsights *{ min-width: 0; }
+}
+
 .dashInsights .tile{
   position:relative;
   min-width: 0;
