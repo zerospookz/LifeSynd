@@ -1487,6 +1487,13 @@ body.habitsViewList .listInGrid{ display:block; }
 /* Mobile transpose: enable hold-to-delete progress on the sticky habit-name column too */
 .matrixHabitName{ position: relative; }
 
+/* Make sure the hold-to-delete fill is always clipped inside rounded pills (iOS Safari can render it outside) */
+.matrixHabit,
+.matrixHabitName{
+  overflow: hidden;
+  border-radius: 18px; /* matches the pill rounding so the fill never leaks outside */
+}
+
 /* Hold-to-delete progress (Habits analytics header) */
 .matrixHabit .holdBar,
 .matrixHabitName .holdBar{
@@ -1504,10 +1511,13 @@ body.habitsViewList .listInGrid{ display:block; }
 .matrixHabit .holdBar::after,
 .matrixHabitName .holdBar::after{
   content:"";
-  display:block;
-  height:100%;
-  width: calc(var(--hold, 0) * 100%);
+  position:absolute;
+  inset:0;
+  border-radius:999px;
   background: color-mix(in oklab, var(--habit-accent) 75%, rgba(255,255,255,.35));
+  transform-origin: left center;
+  transform: scaleX(var(--hold, 0));
+  will-change: transform;
 }
 .matrixHabit.holding .holdBar,
 .matrixHabitName.holding .holdBar{ opacity:1; }
