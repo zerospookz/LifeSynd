@@ -6438,6 +6438,31 @@ html, body{
 
 .dashInsights{ padding: 8px 8px 40px !important; }
 
-/* Habits: place Insights under the main grid (not in right rail) */
-.habitsInsightsBelow{ margin-top: 14px; }
 .habitsInsightsBelow .dashInsights{ width:100%; }
+
+
+/* === Habits: Insights block under the grid (wide, 3-up like mock) === */
+.habitsInsightsBelow{
+  margin-top: 14px;
+}
+.habitsInsightsBelow #insights{
+  width: 100%;
+}
+/* Keep Insights content nicely bounded */
+.habitsInsightsBelow .dashInsights{
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+/* Desktop: hero + time windows + guidance side-by-side */
+@media (min-width: 1024px){
+  .habitsInsightsBelow .dashInsights .bento{
+    grid-template-columns: 1.45fr 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  /* Ensure the hero doesn't try to span full width here */
+  .habitsInsightsBelow .dashInsights .tile--hero{
+    grid-column: auto;
+  }
+}
