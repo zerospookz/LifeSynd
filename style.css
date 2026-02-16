@@ -6394,3 +6394,38 @@ html, body{
   padding: 0 !important;
   border-radius: 0 !important;
 }
+
+
+/* === Insights: keep header as card (undo header flatten) === */
+.dashInsights .dash__head .brand{
+  display:flex !important;
+  align-items:center !important;
+  gap:12px !important;
+  padding: 12px 12px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, rgba(99,102,241,.14), rgba(255,255,255,.02)) !important;
+  border: 1px solid rgba(99,102,241,.22) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35) !important;
+}
+
+/* Center main content area inside the layout column so tiles don't look "cut off" on wide screens */
+.content{ margin: 0 auto !important; }
+
+/* Insights: 4-tile layout (split hero into two tiles) */
+.dashInsights .tile--heroLeft .hero__left,
+.dashInsights .tile--heroRight .hero__right{
+  height: 100%;
+}
+
+/* Remove old hero grid behavior if still matched anywhere */
+.dashInsights .tile--hero{
+  display:block;
+}
+
+/* Desktop grid: 2 columns => 4 tiles (2x2) */
+@media (min-width: 1024px){
+  .dashInsights .bento{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+  }
+}
