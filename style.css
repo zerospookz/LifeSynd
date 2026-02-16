@@ -4725,6 +4725,15 @@ img.pulseOnce{
   flex-wrap: wrap;
 }
 
+/* Habits (phone): keep Week/Month/Year/All Time on ONE row even if
+   narrow-phone media queries don't trigger (Safari viewport quirks). */
+.habitsHeaderMobile .segmented{
+  flex-wrap: nowrap !important;
+}
+.habitsHeaderMobile .seg{
+  white-space: nowrap;
+}
+
 .habitsTopbarV2 .seg{
   border:1px solid var(--tb-stroke2);
   background: rgba(0,0,0,.18);
@@ -5055,6 +5064,7 @@ img.pulseOnce{
     box-shadow:
       0 8px 18px rgba(0,0,0,.22),
       inset 0 1px 0 rgba(255,255,255,.10);
+    color: rgba(255,255,255,.92);
   }
 
   .habitsHeaderMobile .arrow-btn.disabled,
@@ -5077,6 +5087,8 @@ img.pulseOnce{
   .habitsHeaderMobile .arrow-icon{
     width:16px;
     height:16px;
+    /* Some browsers don't apply stroke styles from the <svg> element to its <path>.
+       We keep styles here AND explicitly on the path below. */
     stroke: rgba(255,255,255,.92);
     stroke-width: 2.2;
     fill:none;
@@ -5084,6 +5096,14 @@ img.pulseOnce{
     stroke-linejoin:round;
     opacity:.9;
     filter: drop-shadow(0 0 7px rgba(176,90,255,.35));
+  }
+
+  .habitsHeaderMobile .arrow-icon path{
+    stroke: rgba(255,255,255,.92);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   /* Important: use end-ellipsis (not center-crop) so the start date is always visible */
@@ -5442,6 +5462,22 @@ html, body{
   }
   .habitsTopbarV2 #calPrev{ left: 10px; }
   .habitsTopbarV2 #calNext{ right: 10px; }
+}
+
+/* ===== Habits mobile header: ALWAYS keep 4 range buttons in ONE row on phones ===== */
+@media (max-width: 520px){
+  .habitsTopbarV2.habitsHeaderMobile .segmented{
+    display:grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    padding: 7px !important;
+  }
+  .habitsTopbarV2.habitsHeaderMobile .segmented .seg{
+    height: 40px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    letter-spacing: .1px !important;
+  }
 }
 
 

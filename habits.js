@@ -1947,13 +1947,17 @@ function renderAnalytics(){
 
             <div class="date-pill" role="group" aria-label="Date range navigation">
               <button class="arrow-btn" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
-                <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+                <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true" focusable="false">
+                  <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
               </button>
 
               <div class="date-text" id="rangeLabel" aria-live="polite">${mobileDateHTML}</div>
 
               <button class="arrow-btn" id="calNext" type="button" aria-label="Next range" data-nav="next">
-                <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+                <svg viewBox="0 0 24 24" class="arrow-icon" aria-hidden="true" focusable="false">
+                  <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
               </button>
             </div>
           </div>
