@@ -5860,7 +5860,8 @@ html, body{
   }
   .habitsHeaderMobile .hh-seg .seg-highlight{
     position:absolute;
-    top:6px; left:6px;
+    /* JS positions this precisely using offsetLeft/offsetTop (which already include padding) */
+    top:0; left:0;
     border-radius:999px;
     background:
       radial-gradient(130% 150% at 20% 10%, rgba(255,59,214,.95), rgba(124,92,255,.85) 60%, rgba(90,167,255,.45));
@@ -5910,6 +5911,14 @@ html, body{
   }
   .habitsHeaderMobile .hh-icbtn:active,
   .habitsHeaderMobile .hh-nav:active{ transform: scale(.97); }
+
+  /* Apple-like tap animation (used by JS on the grid/list toggle) */
+  .habitsHeaderMobile .hh-toggle.appleTap{ animation: hhAppleTap .19s cubic-bezier(.2,.9,.2,1); }
+  @keyframes hhAppleTap{
+    0%{ transform: scale(1); }
+    45%{ transform: scale(.92); }
+    100%{ transform: scale(1); }
+  }
 
   .habitsHeaderMobile .hh-date{
     height:34px;

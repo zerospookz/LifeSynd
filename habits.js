@@ -2052,10 +2052,11 @@ function renderAnalytics(){
 
           <!-- Segmented -->
           <div class="hh-seg" data-segmented role="tablist" aria-label="Habits range">
-            <button class="hh-tab seg ${analyticsView==="week"?"active":""}" aria-pressed="${analyticsView==="week"?"true":"false"}" data-view="week" type="button">Week</button>
-            <button class="hh-tab seg ${analyticsView==="month"?"active":""}" aria-pressed="${analyticsView==="month"?"true":"false"}" data-view="month" type="button">Month</button>
-            <button class="hh-tab seg ${analyticsView==="year"?"active":""}" aria-pressed="${analyticsView==="year"?"true":"false"}" data-view="year" type="button">Year</button>
-            <button class="hh-tab seg ${analyticsView==="all"?"active":""}" aria-pressed="${analyticsView==="all"?"true":"false"}" data-view="all" type="button">All Time</button>
+            <!-- NOTE: do NOT use the global .seg class here; it conflicts with the main segmented styles -->
+            <button class="hh-tab ${analyticsView==="week"?"active":""}" aria-pressed="${analyticsView==="week"?"true":"false"}" data-view="week" type="button">Week</button>
+            <button class="hh-tab ${analyticsView==="month"?"active":""}" aria-pressed="${analyticsView==="month"?"true":"false"}" data-view="month" type="button">Month</button>
+            <button class="hh-tab ${analyticsView==="year"?"active":""}" aria-pressed="${analyticsView==="year"?"true":"false"}" data-view="year" type="button">Year</button>
+            <button class="hh-tab ${analyticsView==="all"?"active":""}" aria-pressed="${analyticsView==="all"?"true":"false"}" data-view="all" type="button">All Time</button>
             <div class="seg-highlight" aria-hidden="true"></div>
           </div>
 
@@ -2229,7 +2230,8 @@ function renderAnalytics(){
     // CodePen: JS (perfect highlight alignment, no offset issues) — scoped to this Habits header
     const segmented = card.querySelector("[data-segmented]");
     if(segmented){
-      const segButtons = [...segmented.querySelectorAll(".seg")];
+      // Low-res phone header uses .hh-tab (no global .seg class to avoid CSS conflicts)
+      const segButtons = [...segmented.querySelectorAll("button[data-view]")];
       const highlight = segmented.querySelector(".seg-highlight");
 
       function placeHighlight(btn, animate = true){
@@ -2262,7 +2264,7 @@ function renderAnalytics(){
       segButtons.forEach(btn => btn.addEventListener("click", () => setActive(btn)));
 
       // init
-      const initBtn = segmented.querySelector(".seg.active") || segButtons[0];
+      const initBtn = segmented.querySelector(".active") || segButtons[0];
       if(initBtn && highlight){
         // First paint (no animation) then re-place after layout settles
         placeHighlight(initBtn, false);
@@ -2278,13 +2280,32 @@ function renderAnalytics(){
           const seg = host.querySelector(".habitsHeaderMobile [data-segmented]");
           if(!seg) return;
           const hi = seg.querySelector(".seg-highlight");
-          const active = seg.querySelector(".seg.active");
+          const active = seg.querySelector(".active");
           if(active && hi){
             hi.style.width = `${active.offsetWidth}px`;
             hi.style.height = `${active.offsetHeight}px`;
             hi.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
           }
         });
+      }
+
+      // Apple-like tap animation on the Grid/List toggle
+      const vt = card.querySelector("#viewToggle");
+      if(vt){
+        const playTap = () => {
+          try{
+            vt.animate(
+              [{ transform: "scale(1)" }, { transform: "scale(.92)" }, { transform: "scale(1)" }],
+              { duration: 190, easing: "cubic-bezier(.2,.9,.2,1)" }
+            );
+          }catch(_){
+            vt.classList.remove("appleTap");
+            void vt.offsetWidth;
+            vt.classList.add("appleTap");
+          }
+        };
+        vt.addEventListener("pointerdown", playTap, { passive:true });
+        vt.addEventListener("click", playTap);
       }
 
       // optional: tiny press feedback on arrows
