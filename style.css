@@ -6842,3 +6842,29 @@ html, body{
     padding: 0 !important;
   }
 }
+
+
+/* === iOS Safari: force calPrev/calNext to live inside the date pill (no floating side arrows) === */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 768px){
+    /* If any legacy styles position these buttons, neutralize them on mobile */
+    #calPrev, #calNext{
+      position: static !important;
+      inset: auto !important;
+      float: none !important;
+      margin: 0 !important;
+    }
+    .hh-datePill{
+      overflow: hidden !important;
+    }
+    .hh-datePill #calPrev,
+    .hh-datePill #calNext{
+      display:flex !important;
+    }
+    /* Hide any stray prev/next buttons that are NOT inside the date pill */
+    .hh-toolbar > #calPrev,
+    .hh-toolbar > #calNext{
+      display:none !important;
+    }
+  }
+}
