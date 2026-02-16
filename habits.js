@@ -2464,8 +2464,19 @@ for(const iso of monthDates){
     grid.appendChild(header);
     requestAnimationFrame(()=>adaptDayLabels(header));
 
-    // rows (show most recent at top)
-    const __datesForRows = (dates||[]).slice().sort().reverse();
+    // rows
+    // Default: show most recent at top.
+    // Special case (requested): in Desktop Weekly grid, put TODAY at the top,
+    // then show the rest of the week forward (today+1 ... end), then the earlier days.
+    let __datesForRows = (dates||[]).slice().sort();
+    if(String(analyticsView||'').toLowerCase()==='week'){
+      const idx = __datesForRows.indexOf(todayIso);
+      if(idx >= 0){
+        __datesForRows = __datesForRows.slice(idx).concat(__datesForRows.slice(0, idx));
+      }
+    }else{
+      __datesForRows = __datesForRows.slice().reverse();
+    }
     __datesForRows.forEach(iso=>{
       const row = document.createElement("div");
       row.className = "matrixRow" + (iso===todayIso ? " today" : "");
