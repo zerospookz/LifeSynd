@@ -5895,7 +5895,14 @@ html, body{
     align-items:center;
   }
 
-  .habitsHeaderMobile .hh-icbtn,
+  
+  /* Prevent global .arrow-btn styles from affecting the low-phone header nav buttons */
+  .habitsHeaderMobile .hh-nav{
+    position: relative;
+    inset: auto;
+    min-width:34px;
+  }
+.habitsHeaderMobile .hh-icbtn,
   .habitsHeaderMobile .hh-nav{
     width:34px;
     height:34px;
@@ -5913,12 +5920,21 @@ html, body{
   .habitsHeaderMobile .hh-nav:active{ transform: scale(.97); }
 
   /* Apple-like tap animation (used by JS on the grid/list toggle) */
-  .habitsHeaderMobile .hh-toggle.appleTap{ animation: hhAppleTap .19s cubic-bezier(.2,.9,.2,1); }
-  @keyframes hhAppleTap{
+  .habitsHeaderMobile .hh-toggle.appleTap{ animation: appleTap .19s cubic-bezier(.2,.9,.2,1); }
+  @keyframes appleTap{
     0%{ transform: scale(1); }
     45%{ transform: scale(.92); }
     100%{ transform: scale(1); }
   }
+
+  /* Icon swap micro-animation when switching Grid <-> List */
+  .habitsHeaderMobile .hh-toggle.swap .hh-ic--grid{ animation: hhIconOut .22s cubic-bezier(.2,.9,.2,1); }
+  .habitsHeaderMobile .hh-toggle.swap.is-list .hh-ic--list{ animation: hhIconIn .22s cubic-bezier(.2,.9,.2,1); }
+  .habitsHeaderMobile .hh-toggle.swap:not(.is-list) .hh-ic--grid{ animation: hhIconIn .22s cubic-bezier(.2,.9,.2,1); }
+  .habitsHeaderMobile .hh-toggle.swap:not(.is-list) .hh-ic--list{ animation: hhIconOut .22s cubic-bezier(.2,.9,.2,1); }
+
+  @keyframes hhIconIn{ 0%{ transform: translateY(6px) scale(.92); opacity:0; } 100%{ transform: translateY(0) scale(1); opacity:1; } }
+  @keyframes hhIconOut{ 0%{ transform: translateY(0) scale(1); opacity:1; } 100%{ transform: translateY(-6px) scale(.92); opacity:0; } }
 
   .habitsHeaderMobile .hh-date{
     height:34px;

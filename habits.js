@@ -2084,13 +2084,13 @@ function renderAnalytics(){
               </svg>
             </button>
 
-            <button class="hh-nav arrow-btn" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
+            <button class="hh-nav" id="calPrev" type="button" aria-label="Previous range" data-nav="prev">
               <span class="hh-chev left" aria-hidden="true"></span>
             </button>
 
             <div class="hh-date" id="rangeLabel" aria-live="polite">${mobileDateHTML}</div>
 
-            <button class="hh-nav arrow-btn" id="calNext" type="button" aria-label="Next range" data-nav="next">
+            <button class="hh-nav" id="calNext" type="button" aria-label="Next range" data-nav="next">
               <span class="hh-chev right" aria-hidden="true"></span>
             </button>
 
@@ -2356,7 +2356,14 @@ function renderAnalytics(){
   // Low-phone header: single grid<->list toggle button
   const viewToggleBtn = card.querySelector("#viewToggle");
   if(viewToggleBtn){
-    viewToggleBtn.addEventListener("click", ()=>{
+    
+    // trigger press feedback immediately on touch (iOS)
+    viewToggleBtn.addEventListener("pointerdown", ()=>{
+      viewToggleBtn.classList.remove('appleTap');
+      void viewToggleBtn.offsetWidth;
+      viewToggleBtn.classList.add('appleTap');
+    }, {passive:true});
+viewToggleBtn.addEventListener("click", ()=>{
       // iOS-like tap feedback (springy)
       viewToggleBtn.classList.remove('appleTap');
       // force reflow so the animation can retrigger reliably
@@ -2364,6 +2371,9 @@ function renderAnalytics(){
       viewToggleBtn.classList.add('appleTap');
 
       const isList = viewToggleBtn.classList.toggle("is-list");
+      viewToggleBtn.classList.remove("swap");
+      void viewToggleBtn.offsetWidth;
+      viewToggleBtn.classList.add("swap");
       viewToggleBtn.setAttribute("aria-pressed", isList ? "true" : "false");
       // Always close Month inline panel when switching modes.
       setMonthInline(false);
