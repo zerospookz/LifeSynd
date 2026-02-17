@@ -1116,17 +1116,8 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
       <div class="allTimeInsights">
         <div class="atGrid">
           <div class="atCard big">
-            <div class="atCardTitle">Overall</div>
-            <div class="atRadialWrap" style="--habit-accent:${accent}">
-              <svg class="atRingSvg" viewBox="0 0 120 120" aria-hidden="true">
-                <circle class="atRingBg" cx="60" cy="60" r="${ringR}"></circle>
-                <circle class="atRingFg" cx="60" cy="60" r="${ringR}"
-                        stroke-dasharray="${ringC}" stroke-dashoffset="${ringOff}"></circle>
-              </svg>
-              <div class="atRingText">
-                <div class="atRingPct">${pct}%</div>
-                <div class="atRingLab">consistency</div>
-              </div>
+            <div class="atCardTitle">Overall</div><div class="atBig">${pct}% consistency</div>
+            
             </div>
             <div class="atSub">${done}/${eligible} days • <span class="muted">${escapeHtml(rangeText)}</span></div>
           </div>
