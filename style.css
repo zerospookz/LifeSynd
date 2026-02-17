@@ -7409,3 +7409,146 @@ html, body{
 .monthCard.lvl3{ }
 .monthCard.lvl4{ }
  
+
+
+/* =========================
+   ALL TIME - new mode toggle + insights view
+   ========================= */
+
+.allTimeTop{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.allTimeMode{
+  margin-top:10px;
+  display:inline-flex;
+  gap:6px;
+  padding:6px;
+  border-radius:999px;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.segBtn{
+  appearance:none;
+  border:0;
+  background: transparent;
+  color: rgba(255,255,255,.75);
+  font-weight:700;
+  font-size:12px;
+  padding:8px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  letter-spacing:.2px;
+}
+
+.segBtn.active{
+  color: rgba(255,255,255,.95);
+  background: radial-gradient(120% 140% at 20% 0%, rgba(255,255,255,.10) 0%, rgba(255,255,255,.06) 40%, rgba(255,255,255,.04) 100%);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.segBtn:focus{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.10);
+}
+
+.allTimeInsights{
+  margin-top: 14px;
+}
+
+.atGrid{
+  display:grid;
+  gap:12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items:stretch;
+}
+
+.atCard{
+  border-radius: 16px;
+  padding: 12px 12px;
+  background: radial-gradient(120% 140% at 20% 0%, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 45%, rgba(255,255,255,.02) 100%);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 10px 28px rgba(0,0,0,.28);
+}
+
+.atCard.big{ grid-column: span 2; }
+.atCard.wide{ grid-column: span 2; }
+
+.atCardTitle{
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  opacity: .78;
+}
+
+.atKpi{
+  margin-top: 8px;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -.5px;
+}
+
+.atBig{
+  margin-top: 8px;
+  font-size: 40px;
+  font-weight: 950;
+  letter-spacing: -1px;
+}
+
+.atSub{
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: .75;
+}
+
+.atSub .muted, .muted{ opacity: .7; }
+
+.atBars{ margin-top: 10px; display:flex; flex-direction:column; gap:8px; }
+
+.atBarRow{
+  display:grid;
+  grid-template-columns: 46px 1fr 36px;
+  gap:10px;
+  align-items:center;
+}
+
+.atBarLab{
+  font-size: 12px;
+  opacity: .75;
+}
+
+.atBarVal{
+  font-size: 12px;
+  opacity: .75;
+  text-align:right;
+}
+
+.atBarTrack{
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  overflow:hidden;
+}
+
+.atBarFill{
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,.15), var(--habit-accent, rgba(120,170,255,.35)));
+}
+
+@media (max-width: 980px){
+  .atGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .atCard.big, .atCard.wide{ grid-column: span 2; }
+}
+@media (max-width: 520px){
+  .atGrid{ grid-template-columns: 1fr; }
+  .atCard.big, .atCard.wide{ grid-column: span 1; }
+  .allTimeTop{ align-items:stretch; }
+}

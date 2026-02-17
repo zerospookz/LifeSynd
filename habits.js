@@ -994,6 +994,168 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
 
   const accent = `hsl(${habitHue(selected.id)} 70% 55%)`;
 
+  // All-time view mode (heatmap vs insights)
+  let allMode = "heatmap";
+  try{ allMode = (localStorage.getItem('habitsAllMode') || 'heatmap'); }catch(e){ allMode = 'heatmap'; }
+  if(allMode !== 'heatmap' && allMode !== 'insights') allMode = 'heatmap';
+
+  function setAllMode(m){
+    allMode = (m==='insights') ? 'insights' : 'heatmap';
+    try{ localStorage.setItem('habitsAllMode', allMode); }catch(e){}
+  }
+
+  function clampWindowForAllTime(){
+    const todayIso2 = todayIso;
+    const createdIso2 = createdIso;
+    const earliestIso2 = earliestIso;
+    // window start: created or earliest done
+    const startIso = (createdIso2 > earliestIso2) ? createdIso2 : earliestIso2;
+    const endIso = todayIso2;
+    return { startIso, endIso };
+  }
+
+  function countEligibleDays(startIso, endIso){
+    const s = new Date(startIso+'T00:00:00');
+    const e = new Date(endIso+'T00:00:00');
+    let eligible = Math.floor((e-s)/86400000)+1;
+    if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
+    return eligible;
+  }
+
+  function calcLongestMissStreak(habit, startIso, endIso){
+    const doneSet = new Set(habit.datesDone||[]);
+    const start = new Date(startIso+'T00:00:00');
+    const end = new Date(endIso+'T00:00:00');
+    let best = 0, cur = 0;
+    const d = new Date(start);
+    while(d <= end){
+      const k = isoDate(d);
+      if(!doneSet.has(k)){ cur++; best = Math.max(best, cur); }
+      else cur = 0;
+      d.setDate(d.getDate()+1);
+    }
+    return best;
+  }
+
+  function weekdayDoneCounts(habit, startIso, endIso){
+    const doneSet = new Set(habit.datesDone||[]);
+    const start = new Date(startIso+'T00:00:00');
+    const end = new Date(endIso+'T00:00:00');
+    const counts = [0,0,0,0,0,0,0]; // Mon..Sun
+    const d = new Date(start);
+    while(d <= end){
+      const k = isoDate(d);
+      if(doneSet.has(k)){
+        const monFirst = (d.getDay()+6)%7;
+        counts[monFirst] += 1;
+      }
+      d.setDate(d.getDate()+1);
+    }
+    return counts;
+  }
+
+  function lastNDaysDone(habit, n){
+    const doneSet = new Set(habit.datesDone||[]);
+    const end = new Date(todayIso+'T00:00:00');
+    const start = new Date(end);
+    start.setDate(start.getDate()-(n-1));
+    let done = 0;
+    const d = new Date(start);
+    while(d <= end){
+      if(doneSet.has(isoDate(d))) done++;
+      d.setDate(d.getDate()+1);
+    }
+    return { done, eligible: n };
+  }
+
+  function renderAllTimeInsights(habit){
+    const w = clampWindowForAllTime();
+    const eligible = countEligibleDays(w.startIso, w.endIso);
+    const done = countDoneInBounds(habit, { start: new Date(w.startIso+'T00:00:00'), end: new Date(w.endIso+'T00:00:00') });
+    const pct = eligible ? Math.round((done/eligible)*100) : 0;
+
+    const streaks = calcStreaksInWindow(habit, w.startIso, w.endIso);
+    const missBest = calcLongestMissStreak(habit, w.startIso, w.endIso);
+
+    const last7 = lastNDaysDone(habit, 7);
+    const last30 = lastNDaysDone(habit, 30);
+    const last90 = lastNDaysDone(habit, 90);
+
+    const wdays = weekdayDoneCounts(habit, w.startIso, w.endIso);
+    const wMax = Math.max(1, ...wdays);
+
+    const labels = (()=>{
+      try{
+        const base = new Date('2024-01-01T00:00:00'); // Monday
+        return Array.from({length:7}, (_,i)=>new Intl.DateTimeFormat(undefined,{weekday:'short'}).format(new Date(base.getTime()+i*86400000)));
+      }catch(e){ return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; }
+    })();
+
+    const bars = wdays.map((v,i)=>{
+      const pctW = Math.round((v/wMax)*100);
+      return `<div class="atBarRow">
+        <div class="atBarLab">${escapeHtml(labels[i])}</div>
+        <div class="atBarTrack"><div class="atBarFill" style="width:${pctW}%;--habit-accent:${accent}"></div></div>
+        <div class="atBarVal">${v}</div>
+      </div>`;
+    }).join('');
+
+    const rangeText = `${w.startIso} → ${w.endIso}`;
+
+    return `
+      <div class="allTimeInsights">
+        <div class="atGrid">
+          <div class="atCard big">
+            <div class="atCardTitle">Overall</div>
+            <div class="atBig">${pct}%</div>
+            <div class="atSub">${done}/${eligible} days • <span class="muted">${escapeHtml(rangeText)}</span></div>
+          </div>
+
+          <div class="atCard">
+            <div class="atCardTitle">Current streak</div>
+            <div class="atKpi">${streaks.current}</div>
+            <div class="atSub muted">days</div>
+          </div>
+
+          <div class="atCard">
+            <div class="atCardTitle">Best streak</div>
+            <div class="atKpi">${streaks.best}</div>
+            <div class="atSub muted">days</div>
+          </div>
+
+          <div class="atCard">
+            <div class="atCardTitle">Longest miss</div>
+            <div class="atKpi">${missBest}</div>
+            <div class="atSub muted">days</div>
+          </div>
+
+          <div class="atCard">
+            <div class="atCardTitle">Last 7 days</div>
+            <div class="atKpi">${Math.round((last7.done/last7.eligible)*100)}%</div>
+            <div class="atSub">${last7.done}/${last7.eligible} done</div>
+          </div>
+
+          <div class="atCard">
+            <div class="atCardTitle">Last 30 days</div>
+            <div class="atKpi">${Math.round((last30.done/last30.eligible)*100)}%</div>
+            <div class="atSub">${last30.done}/${last30.eligible} done</div>
+          </div>
+
+          <div class="atCard">
+            <div class="atCardTitle">Last 90 days</div>
+            <div class="atKpi">${Math.round((last90.done/last90.eligible)*100)}%</div>
+            <div class="atSub">${last90.done}/${last90.eligible} done</div>
+          </div>
+
+          <div class="atCard wide">
+            <div class="atCardTitle">By weekday</div>
+            <div class="atBars">${bars}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function yearSummary(h, year){
     const b = { start: new Date(year,0,1), end: new Date(year,11,31) };
     // clamp window to created..today
@@ -1092,6 +1254,10 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
       <div class="allTimeTitle">
         <div class="kicker">All time</div>
         <div class="headline">${escapeHtml(selected.name||'Habit')}</div>
+        <div class="allTimeMode" role="tablist" aria-label="All time view">
+          <button class="segBtn ${allMode==='heatmap'?'active':''}" type="button" data-mode="heatmap">Heatmap</button>
+          <button class="segBtn ${allMode==='insights'?'active':''}" type="button" data-mode="insights">Insights</button>
+        </div>
       </div>
       <label class="allTimePick">
         <span class="small">Habit</span>
@@ -1121,7 +1287,7 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
   }).join('');
 
   gridEl.classList.add('allTimeYears');
-  gridEl.innerHTML = selector + `<div class="yearsStack">${blocks}</div>`;
+  gridEl.innerHTML = selector + (allMode==='insights' ? renderAllTimeInsights(selected) : `<div class="yearsStack">${blocks}</div>`);
 
   const pick = gridEl.querySelector('#allTimeHabitPick');
   if(pick){
@@ -1131,6 +1297,17 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
       renderListInAnalytics();
     });
   }
+
+  // Mode toggle (heatmap / insights)
+  const modeBtns = Array.from(gridEl.querySelectorAll('.segBtn[data-mode]'));
+  modeBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const m = btn.getAttribute('data-mode') || 'heatmap';
+      setAllMode(m);
+      renderAnalytics();
+      renderListInAnalytics();
+    });
+  });
 
   // All-time grid is view-only
   const help = cardEl?.querySelector('.matrixHelp');
