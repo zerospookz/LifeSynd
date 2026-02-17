@@ -2466,7 +2466,7 @@ viewToggleBtn.addEventListener("click", ()=>{
   // Swipe navigation on small screens (no arrows)
   (function(){
     try{
-      const mq = window.matchMedia("(max-width: 420px)");
+      const mq = window.matchMedia("(max-width: 600px)");
       const coarse = window.matchMedia("(pointer: coarse)");
       if(!(mq.matches || coarse.matches)) return;
       if(!rangeEl) return;
@@ -2477,6 +2477,9 @@ viewToggleBtn.addEventListener("click", ()=>{
         || rangeEl.closest(".habitsTopbarV2")
         || rangeEl.parentElement;
       if(!swipeEl) return;
+
+      // Help Safari not hijack horizontal drags.
+      try{ swipeEl.style.touchAction = "pan-y"; }catch(_e){}
 
       let sx=0, sy=0, tracking=false, locked=false;
       const THRESH = 45;
@@ -2521,6 +2524,53 @@ viewToggleBtn.addEventListener("click", ()=>{
         if(dx < 0) nextBtn?.click();
         else prevBtn?.click();
       }, {passive:true});
+
+      // Desktop fallback: allow mouse/trackpad drag on narrow windows.
+      // (Useful when the window is narrow but the device isn't touch.)
+      let psx=0, psy=0, ptracking=false, plocked=false;
+      const PTHRESH = 55;
+
+      swipeEl.addEventListener("pointerdown", (e)=>{
+        // Keep touch swipes handled by the touch* listeners to avoid double-firing on iOS.
+        if(e.pointerType === "touch") return;
+        if(e.pointerType === "mouse" && e.button !== 0) return;
+        psx = e.clientX;
+        psy = e.clientY;
+        ptracking = true;
+        plocked = false;
+        try{ swipeEl.setPointerCapture(e.pointerId); }catch(_e){}
+      });
+
+      swipeEl.addEventListener("pointermove", (e)=>{
+        if(!ptracking) return;
+        const dx = e.clientX - psx;
+        const dy = e.clientY - psy;
+
+        if(!plocked){
+          if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
+            plocked = true;
+          } else if(Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)){
+            ptracking = false;
+            return;
+          }
+        }
+
+        if(plocked) e.preventDefault?.();
+      });
+
+      function pointerEnd(e){
+        if(!ptracking) return;
+        ptracking = false;
+        const dx = e.clientX - psx;
+        const dy = e.clientY - psy;
+        if(Math.abs(dx) < PTHRESH) return;
+        if(Math.abs(dx) < Math.abs(dy) * 1.2) return;
+        if(dx < 0) nextBtn?.click();
+        else prevBtn?.click();
+      }
+
+      swipeEl.addEventListener("pointerup", pointerEnd);
+      swipeEl.addEventListener("pointercancel", ()=>{ ptracking=false; });
     }catch(_e){}
   })();
 

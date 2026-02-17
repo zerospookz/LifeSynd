@@ -6781,6 +6781,29 @@ html, body{
 
 /* === Habits (phone): toolbar should be 2 pills (toggle + date pill with arrows inside) === */
 @media (max-width: 520px){
+  /* Phone UX: swipe navigation only (no arrows anywhere) */
+  #calPrev,
+  #calNext,
+  .hh-nav--inPill,
+  .habitsHeaderMobile .arrow-btn,
+  .habitsTopbarV2 #calPrev,
+  .habitsTopbarV2 #calNext,
+  .habitsDateRow #calPrev,
+  .habitsDateRow #calNext,
+  .habitsMobileNav #calPrev,
+  .habitsMobileNav #calNext{
+    display: none !important;
+  }
+
+  /* Re-center the label when arrows are removed */
+  .hh-datePill{
+    padding: 0 12px !important;
+    gap: 0 !important;
+  }
+  .hh-date{
+    padding: 0 !important;
+  }
+
   .hh-toolbar{
     display:flex !important;
     align-items:center !important;
@@ -7170,26 +7193,40 @@ html, body{
   }
 }
 
-/* === Small phones: swipe navigation (no arrows) === */
-@media (max-width: 420px){
-  /* Hide the prev/next buttons; navigation happens via swipe */
+/* === Small screens (phones): swipe navigation (no arrows) === */
+@media (max-width: 600px), (hover: none) and (pointer: coarse){
+  /* Hide any prev/next arrow buttons/icons; navigation happens via swipe */
   .hh-datePill #calPrev,
   .hh-datePill #calNext,
   .habitsMobileNav.stage .date-pill #calPrev,
   .habitsMobileNav.stage .date-pill #calNext,
   .habitsHeaderMobile #calPrev,
-  .habitsHeaderMobile #calNext{
+  .habitsHeaderMobile #calNext,
+  .habitsDateRow #calPrev,
+  .habitsDateRow #calNext,
+  .habitsTopbarV2 #calPrev,
+  .habitsTopbarV2 #calNext,
+  .hh-datePill .hh-nav--inPill,
+  .habitsHeaderMobile .arrow-btn,
+  .habitsHeaderMobile .arrow-icon,
+  .habitsHeaderMobile .arrow-btn svg,
+  .hh-datePill svg,
+  .habitsMobileNav.stage .date-pill svg{
     display:none !important;
   }
 
-  /* Remove reserved space that was kept for arrows */
-  .hh-datePill .hh-date{
+  /* Remove reserved space that was kept for arrows so label stays centered */
+  .hh-datePill .hh-date,
+  .habitsMobileNav.stage .date-pill{
     padding-left: 14px !important;
     padding-right: 14px !important;
   }
 
-  .habitsMobileNav.stage .date-pill{
-    padding-left: 14px !important;
-    padding-right: 14px !important;
+  /* Make horizontal swipes more reliable on Safari (avoid browser taking over) */
+  .hh-datePill,
+  .habitsMobileNav.stage .date-pill,
+  .habitsDateRow,
+  .habitsTopbarV2{
+    touch-action: pan-y !important;
   }
 }
