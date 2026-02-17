@@ -892,12 +892,19 @@ function renderYearHeatmap(gridEl, cardEl, habitsList, yearOffset){
     for(let i=0;i<offset;i++){
       html += '<div class="yCell empty" aria-hidden="true"></div>';
     }
+    let filled = offset;
     for(const dIso of monthDates){
       // Respect habit created/start window
       const inWindow = (dIso >= startIso && dIso <= endIso);
       const isDone = inWindow && doneSet.has(dIso);
       const isToday = dIso === todayIso;
       html += '<div class="yCell '+(isDone?'done':'')+' '+(isToday?'today':'')+' '+(!inWindow?'disabled':'')+'" title="'+dIso+': '+(isDone?'done':'not done')+'"></div>';
+      filled++;
+    }
+    // Keep every month card the same height: always render a 6-row (42-cell) grid.
+    // This avoids months with 4/5 weeks being shorter than 6-week months.
+    for(let i=filled;i<42;i++){
+      html += '<div class="yCell empty" aria-hidden="true"></div>';
     }
     html += '</div>';
     return html;
@@ -1035,7 +1042,8 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
     const startOffset = dow(first);
     const daysInMonth = last.getDate();
     const totalCells = startOffset + daysInMonth;
-    const rows = Math.ceil(totalCells/7);
+    // Keep all month cards the same height (6 rows) for a cleaner, aligned year grid.
+    const rows = 6;
     const cellCount = rows*7;
 
     const cells = [];
