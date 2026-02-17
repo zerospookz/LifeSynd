@@ -1,62 +1,33 @@
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nutrition</title>
-<link rel="stylesheet" href="style.css"></head>
-<body>
-<div class="layout">
-  <aside class="sidebar">
-    <div class="brand">
-      <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
-      <div>
-        <div class="brandTitle">LifeSync</div>
-        <div class="brandSub">Command center</div>
-      </div>
-    </div>
-
-    <nav class="nav">
-      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
-      <a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
-      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
-      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
-      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
-      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
-    </nav>
-
-    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
-  </aside>
-
-  <main class="content">
-    <div class="topbar">
-      <div>
-        <div class="pageTitleRow"><img class="topbarLogo" src="icons/brand-mark-128.png" alt="LifeSync"><h1 class="pageTitle">Nutrition</h1></div>
-        <p class="subtitle">Simple logging that stays out of your way.</p>
-      </div>
-      <div class="actionsRow">
-        <a class="btn secondary" href="dashboard.html">Home</a>
-      </div>
-    </div>
-
-    
-<div class="card soft">
-  <div class="cardHeader"><h3 class="cardTitle">Add meal</h3><span class="badge">Calories</span></div>
-  <div class="actionsRow">
-    <input id="meal" placeholder="Meal">
-    <input id="cal" type="number" placeholder="Calories">
-    <button onclick="addMeal()">Add</button>
-  </div>
-</div>
-<div id="mealList"></div>
-
-  </main>
-</div>
-
-<nav class="bottomNav" aria-label="Primary">
-  <a href="dashboard.html">🏠<span>Dashboard</span></a>
-  <a href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>
-  <a href="workouts.html">🏋️<span>Workouts</span></a>
-  <a class="active" href="nutrition.html">🍎<span>Nutrition</span></a>
-  <a href="finances.html">💰<span>Finances</span></a>
-</nav>
-<script src="app.js"></script>
-<script src="ui.js"></script><script src="nutrition.js"></script>
-</body></html>
+{
+  "name": "LifeSync",
+  "short_name": "LifeSync",
+  "start_url": "index.html?v=10",
+  "display": "standalone",
+  "background_color": "#0b0f1a",
+  "theme_color": "#0b0f1a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

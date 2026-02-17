@@ -1,15 +1,62 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nutrition</title>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
+      </div>
+    </div>
 
-let meals=JSON.parse(localStorage.getItem("meals")||"[]");
-function save(){localStorage.setItem("meals",JSON.stringify(meals));}
-function addMeal(){
- if(!meal.value||!cal.value) return;
- meals.unshift({name:meal.value,cal:+cal.value});
- meal.value=""; cal.value="";
- save(); render(); showToast("Meal added");
-}
-function render(){
- mealList.innerHTML="";
- if(!meals.length){ mealList.innerHTML='<p class="empty">No meals logged yet.</p>'; return; }
- meals.forEach(m=>mealList.innerHTML+=`<div class="card">${m.name} – ${m.cal} kcal</div>`);
-}
-render();
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
+
+    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <div class="pageTitleRow"><img class="topbarLogo" src="icons/brand-mark-128.png" alt="LifeSync"><h1 class="pageTitle">Nutrition</h1></div>
+        <p class="subtitle">Simple logging that stays out of your way.</p>
+      </div>
+      <div class="actionsRow">
+        <a class="btn secondary" href="dashboard.html">Home</a>
+      </div>
+    </div>
+
+    
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Add meal</h3><span class="badge">Calories</span></div>
+  <div class="actionsRow">
+    <input id="meal" placeholder="Meal">
+    <input id="cal" type="number" placeholder="Calories">
+    <button onclick="addMeal()">Add</button>
+  </div>
+</div>
+<div id="mealList"></div>
+
+  </main>
+</div>
+
+<nav class="bottomNav" aria-label="Primary">
+  <a href="dashboard.html">🏠<span>Dashboard</span></a>
+  <a href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>
+  <a href="workouts.html">🏋️<span>Workouts</span></a>
+  <a class="active" href="nutrition.html">🍎<span>Nutrition</span></a>
+  <a href="finances.html">💰<span>Finances</span></a>
+</nav>
+<script src="app.js"></script>
+<script src="ui.js"></script><script src="nutrition.js"></script>
+</body></html>
