@@ -860,11 +860,6 @@ function renderYearHeatmap(gridEl, cardEl, habitsList, yearOffset){
 
     const done = countDoneInBounds(habit, { start: new Date(mStartIso+"T00:00:00"), end: new Date(mEndIso+"T00:00:00") });
     const pct = eligible ? Math.round((done/eligible)*100) : 0;
-
-    // Radial progress ring
-    const ringR = 44;
-    const ringC = Math.round(2 * Math.PI * ringR);
-    const ringOff = Math.round(ringC * (1 - (pct/100)));
     monthStats.push({ m, eligible, done, pct });
   }
 
@@ -1079,11 +1074,6 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
     const done = countDoneInBounds(habit, { start: new Date(w.startIso+'T00:00:00'), end: new Date(w.endIso+'T00:00:00') });
     const pct = eligible ? Math.round((done/eligible)*100) : 0;
 
-    // Radial progress ring
-    const ringR = 44;
-    const ringC = Math.round(2 * Math.PI * ringR);
-    const ringOff = Math.round(ringC * (1 - (pct/100)));
-
     const streaks = calcStreaksInWindow(habit, w.startIso, w.endIso);
     const missBest = calcLongestMissStreak(habit, w.startIso, w.endIso);
 
@@ -1116,9 +1106,8 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
       <div class="allTimeInsights">
         <div class="atGrid">
           <div class="atCard big">
-            <div class="atCardTitle">Overall</div><div class="atBig">${pct}% consistency</div>
-            
-            </div>
+            <div class="atCardTitle">Overall</div>
+            <div class="atBig">${pct}%</div>
             <div class="atSub">${done}/${eligible} days • <span class="muted">${escapeHtml(rangeText)}</span></div>
           </div>
 
@@ -1179,11 +1168,6 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
     if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
     const done = countDoneInBounds(h, { start:startD, end:endD });
     const pct = eligible ? Math.round((done/eligible)*100) : 0;
-
-    // Radial progress ring
-    const ringR = 44;
-    const ringC = Math.round(2 * Math.PI * ringR);
-    const ringOff = Math.round(ringC * (1 - (pct/100)));
     return { eligible, done, pct, startIso, endIso };
   }
 
@@ -1213,11 +1197,6 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
     if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
     const done = countDoneInBounds(h, { start:mStartD, end:mEndD });
     const pct = eligible ? Math.round((done/eligible)*100) : 0;
-
-    // Radial progress ring
-    const ringR = 44;
-    const ringC = Math.round(2 * Math.PI * ringR);
-    const ringOff = Math.round(ringC * (1 - (pct/100)));
     const lvl = intensityLevel(pct);
 
     // Monday-first offset
@@ -3518,11 +3497,6 @@ function renderListInAnalytics(){
     if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
     const done = countDoneInBounds(h, { start:startD, end:endD });
     const pct = eligible ? Math.round((done/eligible)*100) : 0;
-
-    // Radial progress ring
-    const ringR = 44;
-    const ringC = Math.round(2 * Math.PI * ringR);
-    const ringOff = Math.round(ringC * (1 - (pct/100)));
     return { startIso, endIso, eligible, done, pct };
   }
 
@@ -3555,11 +3529,6 @@ function renderListInAnalytics(){
       if(!Number.isFinite(eligible) || eligible < 0) eligible = 0;
       const done = eligible ? countDoneInBounds(h, { start:startD, end:endD }) : 0;
       const pct = eligible ? Math.round((done/eligible)*100) : 0;
-
-    // Radial progress ring
-    const ringR = 44;
-    const ringC = Math.round(2 * Math.PI * ringR);
-    const ringOff = Math.round(ringC * (1 - (pct/100)));
       out.push({ year, m, pct, eligible });
     }
     return out;

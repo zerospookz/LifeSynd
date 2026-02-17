@@ -4771,11 +4771,18 @@ img.pulseOnce{
 
 .habitsTopbarV2 .row-top{ gap:26px; }
 
-.habitsTopbarV2 
+.habitsTopbarV2 .segmented{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  flex-wrap: wrap;
+}
 
 /* Habits (phone): keep Week/Month/Year/All Time on ONE row even if
    narrow-phone media queries don't trigger (Safari viewport quirks). */
-.habitsHeaderMobile 
+.habitsHeaderMobile .segmented{
+  flex-wrap: nowrap !important;
+}
 .habitsHeaderMobile .seg{
   white-space: nowrap;
 }
@@ -4927,7 +4934,17 @@ img.pulseOnce{
   }
 
   /* --- Segmented: single line --- */
-  .habitsHeaderMobile 
+  .habitsHeaderMobile .segmented{
+    position:relative;
+    display:flex;
+    gap:8px;
+    padding:8px;
+    border-radius:999px;
+    background: rgba(0,0,0,.22);
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    overflow:hidden;
+  }
 
   .habitsHeaderMobile .seg{
     flex:1;
@@ -5259,7 +5276,7 @@ img.pulseOnce{
 
   /* Extra squeeze for very small phones (e.g. 320–360px) */
   @media (max-width: 360px){
-    .habitsHeaderMobile 
+    .habitsHeaderMobile .segmented{ gap:6px; padding:7px; }
     .habitsHeaderMobile .seg{ font-size: 13px; height:42px; }
 
     .habitsHeaderMobile .pill-group{ gap:7px; }
@@ -5369,8 +5386,19 @@ img.pulseOnce{
   .habitsTopbarV2 #addHabitDesktop{ display:none !important; }
 
   /* Tabs: pill container with horizontal scroll */
-  .habitsTopbarV2 
-  .habitsTopbarV2 
+  .habitsTopbarV2 .segmented{
+    width:100%;
+    gap:10px;
+    padding:8px;
+    border-radius:24px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width:none;
+  }
+  .habitsTopbarV2 .segmented::-webkit-scrollbar{ display:none; }
 
   .habitsTopbarV2 .seg{
     padding:10px 16px;
@@ -5492,8 +5520,21 @@ html, body{
 /* ===== Habits: show all 4 range buttons + compact date nav on small screens ===== */
 @media (max-width: 520px){
   /* Range segmented control: no horizontal scroll, 2x2 grid */
-  .habitsHero 
-  .habitsHero 
+  .habitsHero .segmented{
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    scrollbar-width: auto !important;
+    padding: 8px !important;
+    gap: 8px !important;
+  }
+  .habitsHero .segmented .seg{
+    flex: 1 1 calc(50% - 8px) !important;
+    justify-content: center;
+    padding: 10px 10px !important;
+    font-size: 13px !important;
+    white-space: nowrap !important;
+  }
 
   /* Date row: put arrows inside the date pill to save space */
   .habitsDateRow{
@@ -5527,8 +5568,21 @@ html, body{
 /* ===== Habits: Mobile tabs + compact date row (fix) ===== */
 @media (max-width: 520px){
   /* 4 range buttons visible (no swipe) */
-  .habitsTopbarV2 
-  .habitsTopbarV2 
+  .habitsTopbarV2 .segmented{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px !important;
+    width: 100%;
+  }
+  .habitsTopbarV2 .segmented .seg{
+    width: 100%;
+    justify-content:center;
+    font-size: 14px;
+    padding: 10px 0 !important;
+    height: auto !important;
+    border-radius: 999px !important;
+    white-space: nowrap;
+  }
 
   /* date row: put arrows "inside" the pill to save width */
   .habitsTopbarV2 .habitsDateRow{
@@ -5559,8 +5613,18 @@ html, body{
 
 /* ===== Habits mobile header: ALWAYS keep 4 range buttons in ONE row on phones ===== */
 @media (max-width: 520px){
-  .habitsTopbarV2.habitsHeaderMobile 
-  .habitsTopbarV2.habitsHeaderMobile 
+  .habitsTopbarV2.habitsHeaderMobile .segmented{
+    display:grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    padding: 7px !important;
+  }
+  .habitsTopbarV2.habitsHeaderMobile .segmented .seg{
+    height: 40px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    letter-spacing: .1px !important;
+  }
 }
 
 
@@ -5569,14 +5633,31 @@ html, body{
 @media (max-width: 420px){
 
   /* Segmented: keep 1 line, fit 4 buttons (no swipe) */
-  .habitsTopbarV2 
+  .habitsTopbarV2 .segmented{
+    display:flex !important;
+    gap: 6px !important;
+    padding: 6px !important;
+    overflow: hidden !important;
+  }
 
-  .habitsTopbarV2 
+  .habitsTopbarV2 .segmented .seg{
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    font-size: clamp(11px, 3.2vw, 13px) !important;
+    letter-spacing: 0 !important;
+    padding: 0 !important;
+  }
 
   /* "All Time" tends to overflow */
-  .habitsTopbarV2 
+  .habitsTopbarV2 .segmented .seg:last-of-type{
+    font-size: clamp(10.5px, 3.0vw, 12px) !important;
+    letter-spacing: -0.2px !important;
+  }
 
-  .habitsTopbarV2 
+  .habitsTopbarV2 .segmented .seg-highlight{
+    height: 40px !important;
+  }
 
   /* Bottom row compact */
   .habitsTopbarV2 .habitsDateRow{
@@ -7470,63 +7551,4 @@ html, body{
   .atGrid{ grid-template-columns: 1fr; }
   .atCard.big, .atCard.wide{ grid-column: span 1; }
   .allTimeTop{ align-items:stretch; }
-}
-
-
-
-.atRadialWrap{
-  position:relative;
-  width: 132px;
-  height: 132px;
-  margin: 6px 0 2px 0;
-  display:grid;
-  place-items:center;
-}
-
-.atRingSvg{
-  width: 132px;
-  height: 132px;
-  transform: rotate(-90deg);
-  filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
-}
-
-.atRingBg{
-  fill: none;
-  stroke: rgba(255,255,255,.10);
-  stroke-width: 12;
-}
-
-.atRingFg{
-  fill: none;
-  stroke: var(--habit-accent, rgba(120,170,255,.85));
-  stroke-width: 12;
-  stroke-linecap: round;
-  transition: stroke-dashoffset .35s ease;
-}
-
-.atRingText{
-  position:absolute;
-  inset:0;
-  display:grid;
-  place-items:center;
-  text-align:center;
-  pointer-events:none;
-}
-
-.atRingPct{
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: .2px;
-  line-height: 1.05;
-}
-
-.atRingLab{
-  margin-top: 2px;
-  font-size: 12px;
-  opacity: .70;
-}
-
-@media (max-width: 520px){
-  .atRadialWrap, .atRingSvg{ width: 120px; height: 120px; }
-  .atRingPct{ font-size: 26px; }
 }
