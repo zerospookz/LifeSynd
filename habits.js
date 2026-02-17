@@ -2839,17 +2839,15 @@ for(const iso of monthDates){
     // Special case (requested): in Desktop Weekly grid, put TODAY at the top,
     // then show the rest of the week forward (today+1 ... end), then the earlier days.
     let __datesForRows = (dates||[]).slice().sort();
-    if(String(analyticsView||'').toLowerCase()==='week'){
-      const idx = __datesForRows.indexOf(todayIso);
-      if(idx >= 0){
-        __datesForRows = __datesForRows.slice(idx).concat(__datesForRows.slice(0, idx));
-      }
-    }else{
+    const __isWeekView = (String(analyticsView||'').toLowerCase() === 'week');
+    // Keep calendar order (Mon..Sun) even when TODAY is inside the window.
+    // We style past/today rows instead of reordering them.
+    if(!__isWeekView){
       __datesForRows = __datesForRows.slice().reverse();
     }
     __datesForRows.forEach(iso=>{
       const row = document.createElement("div");
-      row.className = "matrixRow" + (iso===todayIso ? " today" : "");
+      row.className = "matrixRow" + (iso===todayIso ? " today" : "") + (iso < todayIso ? " past" : "");
       row.style.gridTemplateColumns = colTemplate;
 
       const dateEl = document.createElement("div");
