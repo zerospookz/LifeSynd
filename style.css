@@ -7248,3 +7248,163 @@ html, body{
     touch-action: pan-y !important;
   }
 }
+
+
+/* =========================
+   YEAR VIEW - redesigned (premium cards + clean heatmap)
+   ========================= */
+.yearView{
+  display:block;
+}
+
+.yearPickerRow{
+  margin-bottom: 12px;
+}
+
+.yearSummary{
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: radial-gradient(120% 140% at 15% 0%, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 45%, rgba(255,255,255,.02) 100%);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  overflow:hidden;
+}
+
+.yearSummary .yearKicker{
+  letter-spacing:.16em;
+  font-size: 11px;
+  opacity:.7;
+}
+
+.yearSummary .yearHabitName{
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.yearSummaryStats .yStat{
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+/* Months grid */
+.yearMonths{
+  margin-top: 12px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
+}
+
+@media (max-width: 1100px){
+  .yearMonths{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 820px){
+  .yearMonths{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px){
+  .yearMonths{ grid-template-columns: 1fr; }
+}
+
+/* Month card = glass card */
+.monthCard{
+  position: relative;
+  border-radius: 18px;
+  background: radial-gradient(120% 140% at 20% 0%, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 45%, rgba(255,255,255,.02) 100%);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  overflow: hidden;
+  padding: 12px;
+}
+
+.monthCard::before{
+  content:"";
+  position:absolute; inset:0;
+  background: radial-gradient(70% 60% at 18% 10%, color-mix(in oklab, var(--habit-accent, rgba(130,170,255,.9)) 18%, transparent) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+.monthHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.monthTitle{
+  font-weight: 750;
+  font-size: 14px;
+  letter-spacing: .2px;
+  opacity: .95;
+}
+
+.monthMeta{
+  font-size: 12px;
+  opacity: .65;
+}
+
+/* Heatmap grid */
+.yHeat{
+  position: relative;
+  z-index: 1;
+  display:grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* Day tile */
+.yCell{
+  aspect-ratio: 1 / 1;
+  border-radius: 9px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  transition: transform .12s ease, background .12s ease, border-color .12s ease, opacity .12s ease;
+}
+
+@media (hover:hover){
+  .yCell:not(.disabled):not(.empty):hover{
+    transform: translateY(-1px);
+    background: rgba(255,255,255,.06);
+    border-color: rgba(255,255,255,.12);
+  }
+}
+
+/* Empty pads */
+.yCell.empty{
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Disabled (outside habit window or future) */
+.yCell.disabled{
+  opacity: .35;
+  filter: saturate(.8);
+}
+
+/* Done = accent fill (fallback first, then enhanced where supported) */
+.yCell.done{
+  background: rgba(120,170,255,.18);
+  border-color: rgba(120,170,255,.26);
+}
+@supports (background: color-mix(in oklab, white, black)) {
+  .yCell.done{
+    background: color-mix(in oklab, var(--habit-accent, rgba(120,170,255,.8)) 28%, rgba(255,255,255,.04));
+    border-color: color-mix(in oklab, var(--habit-accent, rgba(120,170,255,.8)) 40%, rgba(255,255,255,.10));
+  }
+}
+
+
+/* Today ring */
+.yCell.today{
+  border-color: rgba(255,255,255,.70);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.14) inset;
+}
+
+/* Month intensity (subtle) */
+.monthCard.lvl0{ filter: saturate(.95); }
+.monthCard.lvl1{ }
+.monthCard.lvl2{ }
+.monthCard.lvl3{ }
+.monthCard.lvl4{ }
+ 
