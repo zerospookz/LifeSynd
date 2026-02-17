@@ -2462,6 +2462,68 @@ viewToggleBtn.addEventListener("click", ()=>{
       renderListInAnalytics();
     });
   }
+
+  // Swipe navigation on small screens (no arrows)
+  (function(){
+    try{
+      const mq = window.matchMedia("(max-width: 420px)");
+      const coarse = window.matchMedia("(pointer: coarse)");
+      if(!(mq.matches || coarse.matches)) return;
+      if(!rangeEl) return;
+
+      const swipeEl = rangeEl.closest(".hh-datePill")
+        || rangeEl.closest(".habitsMobileNav")
+        || rangeEl.closest(".habitsDateRow")
+        || rangeEl.closest(".habitsTopbarV2")
+        || rangeEl.parentElement;
+      if(!swipeEl) return;
+
+      let sx=0, sy=0, tracking=false, locked=false;
+      const THRESH = 45;
+
+      swipeEl.addEventListener("touchstart", (e)=>{
+        if(e.touches.length!==1) return;
+        const t = e.touches[0];
+        sx = t.clientX;
+        sy = t.clientY;
+        tracking = true;
+        locked = false;
+      }, {passive:true});
+
+      swipeEl.addEventListener("touchmove", (e)=>{
+        if(!tracking || e.touches.length!==1) return;
+        const t = e.touches[0];
+        const dx = t.clientX - sx;
+        const dy = t.clientY - sy;
+
+        if(!locked){
+          if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2){
+            locked = true;
+          } else if(Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)){
+            tracking = false;
+            return;
+          }
+        }
+
+        if(locked && e.cancelable) e.preventDefault();
+      }, {passive:false});
+
+      swipeEl.addEventListener("touchend", (e)=>{
+        if(!tracking) return;
+        tracking = false;
+        const t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+        if(!t) return;
+        const dx = t.clientX - sx;
+        const dy = t.clientY - sy;
+        if(Math.abs(dx) < THRESH) return;
+        if(Math.abs(dx) < Math.abs(dy) * 1.2) return;
+
+        if(dx < 0) nextBtn?.click();
+        else prevBtn?.click();
+      }, {passive:true});
+    }catch(_e){}
+  })();
+
   // "Today" button removed by request. Keep null-safe logic in case older markup exists.
   const todayBtn = card.querySelector("#calToday");
   if(todayBtn){

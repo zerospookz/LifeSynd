@@ -7169,3 +7169,27 @@ html, body{
     }
   }
 }
+
+/* === Small phones: swipe navigation (no arrows) === */
+@media (max-width: 420px){
+  /* Hide the prev/next buttons; navigation happens via swipe */
+  .hh-datePill #calPrev,
+  .hh-datePill #calNext,
+  .habitsMobileNav.stage .date-pill #calPrev,
+  .habitsMobileNav.stage .date-pill #calNext,
+  .habitsHeaderMobile #calPrev,
+  .habitsHeaderMobile #calNext{
+    display:none !important;
+  }
+
+  /* Remove reserved space that was kept for arrows */
+  .hh-datePill .hh-date{
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .habitsMobileNav.stage .date-pill{
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}
