@@ -1,15 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Workouts</title>
+<link rel="icon" href="./favicon.ico"/>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="workouts_v3.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
+      </div>
+    </div>
 
-function showToast(msg){
-  const t=document.createElement("div");
-  t.className="toast";
-  t.textContent="✓ "+msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2000);
-}
-function isoToday(){
-  const d=new Date();
-  const y=d.getFullYear();
-  const m=String(d.getMonth()+1).padStart(2,'0');
-  const day=String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
+
+    <div class="sidebarFooter">Tip: Drag workouts between days to adjust your week.</div>
+  </aside>
+
+  <main class="content">
+    <!-- Top-left title + date controls (matches Habits style) -->
+    <header class="habitsTopbar workoutsTopbar">
+      <div class="habitsTitleBlock workoutsTitleBlock">
+        <div class="workoutsTitleRow">
+          <h1 class="pageTitle">Workouts</h1>
+          <div class="workoutsDateControls">
+            <!-- Unified period picker (replaces Month / Date / Drag-to-range pills) -->
+            <button class="datePill periodPill" id="periodBtn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Pick a period">
+              <span class="pillIcon" aria-hidden="true">📅</span>
+              <span class="pillText" id="periodBtnText">Period</span>
+              <span class="pillCaret" aria-hidden="true">▾</span>
+            </button>
+          </div>
+        </div>
+        <p class="subtitle">Month plan · <span id="wMonthLabel">—</span></p>
+      </div>
+
+      <div class="habitsTopControls workoutsTopControls">
+        <button class="btn secondary" id="todayBtn">Today</button>
+      </div>
+    </header>
+
+    <section class="month-grid" id="monthGrid">
+      <!-- JS fills days -->
+    </section>
+
+    <!-- Period picker popover (dialog) -->
+    <div class="periodOverlay" id="periodOverlay" hidden></div>
+    <div class="periodPop" id="periodPop" hidden role="dialog" aria-modal="true" aria-label="Pick period">
+      <div class="periodHead">
+        <div class="periodTitle">Pick period</div>
+        <button class="pillX" id="periodClose" type="button" aria-label="Close">×</button>
+      </div>
+
+      <div class="periodBody">
+        <!-- Single range field + full size range picker -->
+        <div class="periodRow">
+          <label class="pwMetaLabel" for="periodRange">Period</label>
+          <input id="periodRange" class="dateField" type="text" readonly placeholder="Pick a date range" />
+        </div>
+
+        <div class="rangePicker" id="rangePicker" aria-label="Date range picker">
+          <div class="rangePresets" role="listbox" aria-label="Presets">
+            <button type="button" class="presetBtn" data-preset="today">Today</button>
+            <button type="button" class="presetBtn" data-preset="yesterday">Yesterday</button>
+            <button type="button" class="presetBtn" data-preset="thisWeek">This week</button>
+            <button type="button" class="presetBtn" data-preset="lastWeek">Last week</button>
+            <button type="button" class="presetBtn" data-preset="past2w">Past 2 weeks</button>
+            <button type="button" class="presetBtn" data-preset="last30">Last 30 days</button>
+            <button type="button" class="presetBtn" data-preset="next7">Next 7 days</button>
+            <button type="button" class="presetBtn" data-preset="next30">Next 30 days</button>
+            <button type="button" class="presetBtn" data-preset="thisMonth">This month</button>
+            <button type="button" class="presetBtn" data-preset="lastMonth">Last month</button>
+          </div>
+
+          <div class="rangeCal">
+            <div class="rangeCalHead">
+              <button type="button" class="calNav" id="rpPrev" aria-label="Previous month">‹</button>
+              <div class="calHeadLabel" id="rpLabel">—</div>
+              <button type="button" class="calNav" id="rpNext" aria-label="Next month">›</button>
+            </div>
+
+            <div class="rangeMonths" id="rpMonths">
+              <div class="monthPane" data-pane="0">
+                <div class="monthTitle" id="rpM0">—</div>
+                <div class="dowRow" aria-hidden="true">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+                <div class="monthGridSm" id="rpGrid0"></div>
+              </div>
+
+              <div class="monthPane" data-pane="1">
+                <div class="monthTitle" id="rpM1">—</div>
+                <div class="dowRow" aria-hidden="true">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+                <div class="monthGridSm" id="rpGrid1"></div>
+              </div>
+            </div>
+
+            <div class="rangeHint">Click a start date, then an end date. The selected period will show in the big calendar after Apply.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="periodFoot">
+        <button class="btn secondary" id="periodClear" type="button">Clear range</button>
+        <button class="btn" id="periodApply" type="button">Apply</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+
+<nav class="bottomNav" aria-label="Primary">
+  <a href="dashboard.html">🏠<span>Dashboard</span></a>
+  <a href="habits.html"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span><span>Habits</span></a>
+  <a class="active" href="workouts.html">🏋️<span>Workouts</span></a>
+  <a href="nutrition.html">🍎<span>Nutrition</span></a>
+  <a href="finances.html">💰<span>Finances</span></a>
+</nav>
+
+<script src="app.js"></script>
+<script src="ui.js"></script>
+<script src="workouts.js"></script>
+<script src="workouts_v3.js"></script>
+</body>
+</html>

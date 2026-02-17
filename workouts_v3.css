@@ -1,810 +1,3406 @@
-/* LifeSync Workouts (Workouts page)
- * - Structured sessions (workouts/exercises/sets)
- * - Weekly planner integration (uses planner.js keys)
- * - Rest timer
- * - PRs + history
- * - Backwards compatible with legacy flat set log (localStorage: workoutData)
- */
+:root{
+  --w3-bg:#f8f9fb;
+  --w3-surface:#ffffff;
+  --w3-surface2:#eef0f4;
+  --w3-border:#e5e7eb;
+  --w3-muted:#6b7280;
+  --w3-accent:#22c55e;
+  --w3-danger:#ef4444;
+  --w3-shadow: 0 8px 24px rgba(0,0,0,.05);
+  --w3-r12:12px;
+  --w3-r16:16px;
+  --w3-text-xs:12px;
+  --w3-text-sm:14px;
+  --w3-text-md:16px;
+  --w3-text-lg:18px;
+  --w3-text-xxl:28px;
+}
 
-(function () {
-  // -------------------- Storage keys --------------------
-  const LEGACY_KEY = "workoutData";          // array<{ex,sets,reps,weight,date}>
-  const W_KEY = "workoutsV2";               // array<Workout>
-  const EX_KEY = "workoutExercisesV2";      // array<Exercise>
-  const SET_KEY = "workoutSetsV2";          // array<ExerciseSet>
-  const TIMER_KEY = "workoutRestTimerV2";   // Rest timer state
-  const TPL_KEY = "workoutTemplates";       // planner.js uses this key (object)
-  const PLAN_KEY = "plannedWorkouts";       // planner.js uses this key (object)
+/* Prefer dark native form controls (select popups) where supported */
+:root{ color-scheme: dark; }
 
-  // -------------------- Helpers --------------------
-  function jget(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key) || ""); }
-    catch { return fallback; }
+/* Week planner modal: dark native <select> + options (best-effort; some browsers limit option styling) */
+#w3PlanModal select.w3-modalInput{
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  background-clip: padding-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+#w3PlanModal select.w3-modalInput option{
+  background: #0b1020;
+  color: #e9ecff;
+}
+
+#w3PlanModal select.w3-modalInput:disabled{
+  opacity: .65;
+  background: rgba(255,255,255,0.04);
+}
+
+.w3-sideTiles{display:none;}
+
+/* Desktop-only utility column container (Today Summary) */
+.w3-todayDock{ display:none; }
+
+/* Workouts header: title + month/date pickers (Habits-style) */
+.workoutsTitleRow{
+  display:flex;
+  align-items:flex-end;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.workoutsDateControls{
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+}
+
+/* Range pill: range is selected directly inside the calendar (press a day, drag to another day). */
+.rangePill{ padding-right:10px; }
+.rangePill .pillText{ white-space:nowrap; }
+.rangePill .pillX{
+  margin-left:10px;
+  width:28px;
+  height:28px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.25);
+  color: rgba(255,255,255,0.9);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  cursor:pointer;
+}
+.rangePill .pillX:hover{ background: rgba(255,255,255,0.06); }
+.rangePill .pillX:active{ transform: translateY(1px); }
+.rangePill.is-hidden .pillX{ display:none; }
+
+@media (max-width: 520px){
+  .workoutsTitleRow{ flex-direction:column; align-items:flex-start; }
+  .workoutsDateControls{ width:100%; align-items:stretch; }
+  .periodPill{ width:100%; justify-content:space-between; }
+  .periodPill .pillText{ flex:1; }
+}
+
+/* Range filter: desktop uses date inputs; mobile uses dual-thumb slider */
+.rangeWrap{ display:flex; align-items:flex-end; gap:10px; }
+.rangeDates{ display:flex; align-items:flex-end; gap:10px; }
+.rangeSlider{ display:none; }
+
+.rangeSliderTop{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+
+.rangeLabel{ font-size:12px; opacity:0.85; }
+.rangeValue{ font-size:12px; opacity:0.9; margin-left:auto; }
+
+.dualRange{
+  position:relative;
+  height:34px;
+  margin-top:8px;
+  border-radius:14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow:hidden;
+}
+
+.dualRange input[type="range"]{
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:34px;
+  margin:0;
+  background:transparent;
+  pointer-events:none; /* thumbs handle pointer events */
+  -webkit-appearance:none;
+}
+
+.dualRange input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+  border: 1px solid rgba(0,0,0,0.25);
+  pointer-events:auto;
+}
+
+.dualRange input[type="range"]::-moz-range-thumb{
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.25);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+  pointer-events:auto;
+}
+
+.dualTrack{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  opacity:0.7;
+}
+
+.workoutsDateControls .controlGroup{ margin:0; }
+
+@media (max-width: 700px){
+  .workoutsDateControls{ width:100%; flex-wrap:wrap; align-items:stretch; }
+  .workoutsDateControls .datePill{ flex:1; min-width: 150px; }
+  .rangeWrap{ width:100%; }
+  .rangeDates{ display:none; }
+  .rangeSlider{ display:block; width:100%; }
+  #clearRangeBtn{ height:44px; }
+}
+
+.w3-page{
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.w3-num{
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.w3-header{
+  display:grid;
+  grid-template-columns: 1fr auto;
+  align-items:center;
+  gap:12px;
+  margin-bottom: 12px;
+}
+
+.w3-iconBtn{
+  width:40px;
+  height:40px;
+  border-radius: 12px;
+  border:1px solid var(--w3-border);
+  background: var(--w3-surface);
+  color:#111827;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  font-size:18px;
+}
+
+/* Exercise menu (⋮) — glassy to match background */
+.w3-exMenuBtn{
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.w3-exMenuBtn:hover{
+  background: rgba(15, 23, 42, 0.48);
+}
+
+/* Three-dots glyph: consistent across platforms (no font-dependent ⋮) */
+.w3-dots{
+  display:block;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.90);
+  box-shadow:
+    0 -7px 0 rgba(255,255,255,0.75),
+    0  7px 0 rgba(255,255,255,0.75);
+}
+
+.w3-exMenuBtn:active .w3-dots{
+  background: rgba(255,255,255,0.95);
+  box-shadow:
+    0 -7px 0 rgba(255,255,255,0.82),
+    0  7px 0 rgba(255,255,255,0.82);
+}
+
+.w3-exMenuBtn:active{ transform: translateY(0.5px); }
+
+.w3-hPage{
+  font-size: var(--w3-text-xxl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.w3-muted{
+  font-size: var(--w3-text-sm);
+  color: var(--w3-muted);
+}
+
+.w3-meta{
+  display:flex;
+  gap:10px;
+  margin: 10px 0 18px;
+  flex-wrap: wrap;
+}
+
+.w3-chip{
+  background: var(--w3-surface2);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: var(--w3-text-sm);
+}
+
+.w3-exCard{
+  background: var(--w3-surface);
+  border-radius: var(--w3-r16);
+  padding: 14px;
+  box-shadow: var(--w3-shadow);
+  margin-bottom: 14px;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+/* Reorder (drag & drop) */
+.w3-dragGhost{
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0.96;
+  transform: scale(1.02);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+}
+
+.w3-dragPlaceholder{
+  border-radius: var(--w3-r16);
+  border: 1px dashed rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+  margin-bottom: 14px;
+}
+
+body.w3-isReordering{
+  cursor: grabbing;
+}
+
+.w3-exCard.is-dragging{
+  /* class kept on the original node while detached */
+}
+
+/* Small hint when tapping the handle */
+.w3-exCard.w3-reorderHint{
+  outline: 1px solid rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.15);
+}
+
+/* Hold-to-delete feedback */
+.w3-exCard.w3-holdDelete{
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35), var(--w3-shadow);
+}
+
+.w3-exHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 10px;
+}
+
+/* Left side: delete affordance + title/notes */
+.w3-exHeaderLeft{
+  display:flex;
+  align-items:flex-start;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Safe-zone for long-press delete (title area)
+   - prevent text selection / callout
+   - keep normal vertical scrolling elsewhere */
+.w3-exHoldZone{
+  /* Safe zone is ONLY the title/notes area (no buttons) */
+  flex: 1 1 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: pan-y;
+}
+
+/* Right-side header controls (delete affordance + ⋮ menu) */
+.w3-exHeaderRight{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+/* Nicer three-dots icon (no font rendering differences across platforms) */
+.w3-dots{
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  display:block;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 -7px 0 rgba(255,255,255,0.92), 0 7px 0 rgba(255,255,255,0.92);
+}
+
+/* Subtle delete affordance (safe-zone only): trash icon + progress ring.
+   - visible but quiet (so the user discovers it)
+   - fills ONLY while holding (2.5s) */
+.w3-delHint{
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display:grid;
+  place-items:center;
+  /* Hidden by default; shown on hover (desktop) or while holding (mobile/desktop) */
+  opacity: 0;
+  transform: translateY(1px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events:none;
+  animation: none;
+}
+
+/* Glass blur background behind the ring (only becomes visible while holding). */
+.w3-delGlass{
+  position: absolute;
+  inset: -8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  opacity: 0;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: opacity 180ms ease, backdrop-filter 420ms ease, -webkit-backdrop-filter 420ms ease;
+}
+
+.w3-exCard:hover .w3-delHint,
+.w3-exCard:focus-within .w3-delHint{
+  opacity: .9;
+  transform: translateY(0);
+  animation: w3DelHintPulse 10s ease-in-out infinite;
+}
+
+@keyframes w3DelHintPulse{
+  0%, 86%, 100%{ opacity:.32; }
+  90%{ opacity:.62; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .w3-delHint{ animation: none; }
+}
+
+.w3-delIcon{
+  font-size: 15px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 10px rgba(0,0,0,.25));
+}
+
+.w3-delRing{
+  position:absolute;
+  inset: 0;
+}
+
+.w3-delRingTrack{
+  fill: none;
+  stroke: rgba(255,255,255,.20);
+  stroke-width: 3.5;
+}
+
+.w3-delRingProg{
+  fill: none;
+  stroke: rgba(255,107,107,.92);
+  stroke-width: 6;
+  stroke-linecap: round;
+  /* circumference for r=10.5 is ~65.97 */
+  stroke-dasharray: 65.97;
+  stroke-dashoffset: 65.97;
+  transform: rotate(-90deg);
+  transform-origin: 12px 12px;
+}
+
+/* While holding: make the affordance obvious + animate the ring fill */
+.w3-exCard.w3-holdDelete .w3-delHint{
+  opacity: .95;
+  transform: translateY(0) scale(1.03);
+}
+
+/* On hold: activate the glass blur + add a subtle glow so the affordance is obvious. */
+.w3-exCard.w3-holdDelete .w3-delGlass{
+  opacity: 1;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.w3-exCard.w3-holdDelete .w3-delRingProg{
+  filter: drop-shadow(0 0 10px rgba(255,107,107,0.7));
+}
+
+.w3-exCard.w3-holdDelete .w3-delRingProg{
+  animation: w3DelRingFill 2.5s linear forwards;
+}
+
+@keyframes w3DelRingFill{
+  from{ stroke-dashoffset: 65.97; }
+  to{ stroke-dashoffset: 0; }
+}
+
+.w3-hSection{
+  font-size: var(--w3-text-lg);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.w3-exSub{
+  font-size: var(--w3-text-xs);
+  color: var(--w3-muted);
+  margin-top: 2px;
+}
+
+.w3-setLabels{
+  display:grid;
+  grid-template-columns: 56px 28px 1fr 1fr;
+  gap: 8px;
+  margin: 6px 0 8px;
+  font-size: var(--w3-text-xs);
+  color: var(--w3-muted);
+}
+.w3-setLabels > div:nth-child(1){ visibility:hidden; }
+.w3-setLabels > div:nth-child(3),
+.w3-setLabels > div:nth-child(4){ padding-left:10px; }
+
+.w3-sets{
+  display:flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Hide empty-state quick buttons (Templates/History) on all sizes */
+.w3-emptyQuick{ display:none !important; }
+
+
+/* Increment 2: Swipe actions (Apple-style) */
+.w3-swipeWrap{
+  position:relative;
+  overflow:hidden;
+  border-radius:var(--w3-r12);
+}
+
+.w3-swipeAction{
+  position:absolute;
+  top:0; bottom:0;
+  width:104px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:-0.01em;
+  text-transform: uppercase;
+  user-select:none;
+  pointer-events:none;
+  border-radius: 14px;
+  margin: 6px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(8px);
+}
+
+.w3-swipeAction.left{
+  left:0;
+  background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(59,130,246,.92));
+}
+.w3-swipeAction.right{
+  right:0;
+  background: linear-gradient(135deg, rgba(239,68,68,.95), rgba(244,63,94,.92));
+}
+
+.w3-setRow{
+  touch-action: pan-y;
+  transition: transform .25s ease;
+  position:relative;
+}
+
+.w3-hoverActions{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  gap:6px;
+  opacity:0;
+  pointer-events:none;
+  transition: opacity .15s ease;
+}
+
+@media (hover:hover){
+  .w3-setRow:hover .w3-hoverActions{
+    opacity:1;
+    pointer-events:auto;
   }
-  function jset(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+}
 
-  function nowIso() { return new Date().toISOString(); }
-  function isoDate(d = new Date()) { return d.toISOString().slice(0, 10); }
-  function uuid() {
-    try {
-      if (crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
-    } catch {}
-    return "id-" + Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+.w3-miniBtn{
+  border:1px solid var(--w3-border);
+  background:var(--w3-surface);
+  border-radius:10px;
+  padding:6px 8px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.w3-miniBtn.danger{
+  border-color: rgba(239,68,68,.35);
+  color: var(--w3-danger);
+}
+
+/* Increment 2: PR glow */
+.w3-setRow.isPR{
+  animation: w3prGlow 1.4s ease-out;
+}
+
+@keyframes w3prGlow{
+  0%{ box-shadow: 0 0 0 rgba(34,197,94,0); }
+  30%{ box-shadow: 0 0 0 6px rgba(34,197,94,.35); }
+  100%{ box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
+.w3-setRow{
+  background: #fff;
+  border: 1px solid var(--w3-border);
+  border-radius: var(--w3-r12);
+  padding: 10px;
+  display:grid;
+  grid-template-columns: 28px 28px 1fr 1fr;
+  align-items:center;
+  gap:8px;
+}
+
+.w3-setRow.isDone{ opacity:.55; }
+
+.w3-setIndex{
+  font-size: var(--w3-text-xs);
+  color: var(--w3-muted);
+}
+
+.w3-check{
+  width:22px;
+  height:22px;
+  border-radius:6px;
+  border: 2px solid var(--w3-border);
+  cursor:pointer;
+}
+
+.w3-check.isDone{
+  background: var(--w3-accent);
+  border-color: var(--w3-accent);
+}
+
+.w3-input{
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--w3-border);
+  font-size: var(--w3-text-md);
+  outline:none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+}
+
+.w3-input:focus{
+  border-color: rgba(34,197,94,.65);
+  box-shadow: 0 0 0 4px rgba(34,197,94,.15);
+}
+
+.w3-addSet{
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed var(--w3-border);
+  background: transparent;
+  font-weight: 600;
+  cursor:pointer;
+}
+
+.w3-btnPrimary{
+  background: var(--w3-accent);
+  color: white;
+  border:none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor:pointer;
+}
+
+.w3-btnSecondary{
+  background: var(--w3-surface);
+  border: 1px solid var(--w3-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor:pointer;
+}
+
+.w3-bottomBar{
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0 4px;
+  display:flex;
+  gap:10px;
+  background: linear-gradient(to top, var(--w3-bg) 75%, rgba(248,249,251,0));
+}
+
+.w3-empty{
+  background: var(--w3-surface);
+  border: 1px solid var(--w3-border);
+  border-radius: var(--w3-r16);
+  padding: 18px;
+  text-align: center;
+}
+.w3-emptyTitle{
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+
+/* Increment 3+: Rest timer as floating clock (v18 redesign) */
+.w3-restClock{
+  position: fixed;
+  right: 18px;
+  bottom: 88px; /* above bottom nav */
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  transition: opacity .22s ease, transform .22s ease;
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 22px;
+
+  /* glass card */
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)),
+    rgba(8, 12, 22, 0.62);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 24px 70px rgba(0,0,0,.50);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* subtle moving sheen when active */
+.w3-restClock::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background: linear-gradient(120deg,
+    transparent 0%,
+    rgba(255,255,255,0.10) 35%,
+    rgba(255,255,255,0.05) 55%,
+    transparent 75%);
+  transform: translateX(-30%) rotate(8deg);
+  opacity: 0;
+  pointer-events:none;
+}
+
+.w3-restClock.is-on{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.w3-restClock.is-on::before{
+  opacity: .9;
+  animation: w3Sheen 4.2s ease-in-out infinite;
+}
+
+@keyframes w3Sheen{
+  0%{ transform: translateX(-35%) rotate(8deg); }
+  55%{ transform: translateX(35%) rotate(8deg); }
+  100%{ transform: translateX(35%) rotate(8deg); }
+}
+
+.w3-restDial{
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.w3-restRing{
+  width: 72px;
+  height: 72px;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 14px rgba(99, 102, 241, 0.35));
+}
+
+.w3-restTrack{
+  fill: none;
+  stroke: rgba(255,255,255,0.16);
+  stroke-width: 8;
+}
+
+.w3-restProgress{
+  fill: none;
+  stroke: url(#w3RestGrad);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 251.2; /* 2πr where r=40 */
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset .2s linear;
+}
+
+.w3-restCenter{
+  position: absolute;
+  inset: 0;
+  /* Was a grid; multiple children overlapped in the same cell on mobile.
+     Use a flex column so time + label never overlap. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  pointer-events: none;
+  text-align: center;
+}
+
+.w3-restTime{
+  font-size: 16px;
+  line-height: 1.05;
+  letter-spacing: 0.6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.w3-restLabel{
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 2.0px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.62);
+}
+
+.w3-restMeta{
+  display:flex;
+  flex-direction:column;
+  gap: 2px;
+  min-width: 140px;
+}
+
+.w3-restMetaTitle{
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  color: rgba(255,255,255,0.92);
+}
+
+.w3-restMetaHint{
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+}
+
+.w3-restBtn{
+  justify-self: end;
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,0.92);
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .14s ease, background .14s ease, border-color .14s ease;
+}
+
+.w3-restBtn:hover{
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.22);
+  transform: translateY(-1px);
+}
+
+.w3-restStopIcon{ font-size: 13px; opacity: .9; }
+.w3-restStopText{ font-size: 12px; letter-spacing: 0.01em; }
+
+/* urgent last seconds */
+.w3-restClock.w3-restUrgent .w3-restRing{
+  animation: w3RestUrgent 1s ease-in-out infinite;
+}
+
+@keyframes w3RestUrgent{
+  0%,100%{ transform: rotate(-90deg) scale(1); filter: drop-shadow(0 0 14px rgba(99,102,241,0.35)); }
+  50%{ transform: rotate(-90deg) scale(1.035); filter: drop-shadow(0 0 20px rgba(239,68,68,0.45)); }
+}
+
+.w3-restClock.w3-restDone{
+  animation: w3RestPulse .9s ease-out;
+}
+
+@keyframes w3RestPulse{
+  0%{ box-shadow: 0 0 0 rgba(34,197,94,0); }
+  35%{ box-shadow: 0 0 0 10px rgba(34,197,94,.30); }
+  100%{ box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
+
+/* Small screens: keep it clear of the bottom bar */
+@media (max-width: 700px){
+  .w3-restClock{ right: 12px; bottom: 92px; padding: 12px; grid-template-columns: 68px 1fr auto; }
+  .w3-restDial, .w3-restRing{ width: 68px; height: 68px; }
+  .w3-restCenter{ gap: 2px; }
+  .w3-restTime{ font-size: 15px; }
+  .w3-restLabel{ font-size: 8px; }
+  .w3-restMeta{ min-width: 120px; }
+  .w3-restMetaHint{ display:none; }
+}
+
+/* ===== Rest duration picker (1s .. 5m) ===== */
+.w3-restPicker{
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%) translateY(10px);
+  width: min(420px, calc(100vw - 28px));
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 18px 40px rgba(0,0,0,.38);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.w3-restPicker.is-open{
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.w3-restPickerTop{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.w3-restPickerTitle{
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: rgba(255,255,255,0.92);
+}
+
+.w3-restPickerValue{
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.w3-restPickerClose{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,0.9);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.w3-restPickerRow{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.w3-restPickerRange{
+  flex: 1;
+}
+
+.w3-restPickerSec{
+  width: 86px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.22);
+  color: rgba(255,255,255,0.92);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.w3-restPickerActions{
+  display:flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.w3-restPickerStart{
+  border: 1px solid rgba(34,197,94,.35);
+  background: rgba(34,197,94,.20);
+  color: rgba(255,255,255,0.95);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.w3-restPickerStart:hover{ filter: brightness(1.06); }
+
+
+
+/* ===== Increment 3a: Dark glass card theme for Workouts ===== */
+:root{
+  --glass-bg: rgba(255,255,255,0.08);
+  --glass-bg-2: rgba(255,255,255,0.12);
+  --glass-border: rgba(255,255,255,0.14);
+  --glass-shadow: 0 18px 40px rgba(0,0,0,.35);
+  --text-on-dark: rgba(255,255,255,0.92);
+  --muted-on-dark: rgba(255,255,255,0.55);
+}
+
+/* When your app background is dark/gradient, these look “native” */
+.workouts-page,
+body.dark,
+body[data-theme="dark"]{
+  color: var(--text-on-dark);
+}
+
+.workouts-page .muted{
+  color: var(--muted-on-dark);
+}
+
+.exercise-card{
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Set rows look like embedded pills */
+.set-row{
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.set-input{
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-on-dark);
+}
+
+.set-input::placeholder{
+  color: rgba(255,255,255,0.40);
+}
+
+.set-input:focus{
+  border-color: rgba(34,197,94,.75);
+  box-shadow: 0 0 0 4px rgba(34,197,94,.18);
+}
+
+.icon-btn, .btn-secondary{
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: var(--text-on-dark);
+}
+
+.meta-chip{
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text-on-dark);
+}
+
+.set-index, .set-labels{
+  color: rgba(255,255,255,0.55);
+}
+
+.set-check{
+  border-color: rgba(255,255,255,0.20);
+}
+
+.add-set{
+  color: var(--text-on-dark);
+  border-color: rgba(255,255,255,0.20);
+  background: rgba(255,255,255,0.05);
+}
+
+.bottom-bar{
+  background: linear-gradient(to top, rgba(0,0,0,0.35) 70%, rgba(0,0,0,0));
+}
+
+/* PR glow reads well on dark */
+@keyframes prGlow{
+  0% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+  30% { box-shadow: 0 0 0 7px rgba(34,197,94,.28); }
+  100% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
+
+
+/* ===== Tabs (Today / History / Templates) ===== */
+/* Hide tabs entirely (user request) */
+.w3-tabs{
+  display:flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+
+/* Mobile: tabs are shown at the top; hide the duplicated bottom tiles */
+.w3-sideTiles{ display:none !important; }
+.w3-tabBtn{
+  flex:1;
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+}
+.w3-tabBtn.is-active{
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.20);
+  box-shadow: 0 10px 28px rgba(0,0,0,.22);
+}
+
+/* ===== Modal (replaces ugly prompt) ===== */
+.w3-modalOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.52);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+  z-index: 9999;
+}
+
+.w3-modal{
+  width: min(520px, 100%);
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 22px 60px rgba(0,0,0,.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: rgba(255,255,255,0.92);
+}
+
+.w3-modalTitle{
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+
+.w3-modalLabel{
+  display:block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.60);
+  margin-bottom: 6px;
+}
+
+.w3-modalInput{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.22);
+  color: rgba(255,255,255,0.92);
+  outline: none;
+  font-size: 16px;
+}
+
+.w3-modalInput:focus{
+  border-color: rgba(34,197,94,.75);
+  box-shadow: 0 0 0 4px rgba(34,197,94,.18);
+}
+
+.w3-modalActions{
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.w3-btnGhost{
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.86);
+  cursor: pointer;
+}
+
+
+/* ===== History/Templates helpers ===== */
+.w3-rowMeta{
+  display:flex;
+  gap:10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.w3-linkBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 13px;
+  text-decoration:none;
+  color: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+.w3-emptyCard{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 18px;
+}
+.w3-emptyTitle{
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+/* ===== Increment 4 UI ===== */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:12px 0;
+}
+.tab{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  cursor:pointer;
+}
+.tab.active{
+  background:rgba(34,197,94,.35);
+}
+
+.template-card, .history-card{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:12px;
+}
+
+.tpl-title, .hist-title{
+  font-weight:700;
+  margin-bottom:4px;
+}
+.tpl-sub, .hist-sub{
+  font-size:13px;
+  opacity:.7;
+}
+.tpl-meta, .hist-meta{
+  font-size:13px;
+  margin:6px 0;
+  opacity:.8;
+}
+.tpl-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.tpl-price{
+  font-weight:700;
+}
+
+
+/* ===== Increment 4: History + Templates Marketplace styles ===== */
+.w4-range{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin: 6px 0 12px;
+}
+.w4-pill{
+  appearance:none;
+  border:1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92);
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:13px;
+  cursor:pointer;
+}
+.w4-pill.is-active{
+  background: rgba(34,197,94,0.22);
+  border-color: rgba(34,197,94,0.35);
+}
+
+.w4-day{ margin-top: 12px; }
+.w4-dayTitle{
+  font-weight:800;
+  letter-spacing:-0.01em;
+  margin: 12px 2px 8px;
+  color: rgba(255,255,255,0.78);
+}
+.w4-dayList{ display:flex; flex-direction:column; gap:10px; }
+
+.w4-hCard{
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius:16px;
+  padding:14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.w4-hTop{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.w4-hTitle{ font-weight:800; }
+.w4-hSub{ font-size:13px; opacity:.65; margin-top:2px; }
+.w4-hMeta{ font-size:13px; opacity:.85; margin-top:8px; }
+
+.w4-prBadge{
+  display:inline-block;
+  margin-left:8px;
+  font-size:12px;
+  padding:2px 8px;
+  border-radius:999px;
+  background: rgba(34,197,94,0.22);
+  border: 1px solid rgba(34,197,94,0.35);
+  color: rgba(255,255,255,0.92);
+}
+
+/* Templates grid */
+.w4-tplGrid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:12px;
+  margin-top: 10px;
+}
+.w4-tplCard{
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius:16px;
+  padding:14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.w4-tplTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.w4-tplTitle{ font-weight:900; letter-spacing:-0.01em; }
+.w4-tplSub{ font-size:13px; opacity:.65; margin-top:2px; }
+.w4-tplMeta{ font-size:13px; opacity:.85; margin-top:8px; }
+.w4-tplRating{ font-size:13px; opacity:.85; margin-top:8px; }
+.w4-tplReviews{ opacity:.65; }
+
+.w4-free{
+  font-weight:900;
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  background: rgba(34,197,94,0.22);
+  border: 1px solid rgba(34,197,94,0.35);
+}
+.w4-price{
+  font-weight:900;
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  background: rgba(59,130,246,0.18);
+  border: 1px solid rgba(59,130,246,0.28);
+}
+
+.w4-tplActions{ margin-top: 12px; }
+
+/* Template preview */
+.w4-preview{
+  margin-top: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius:18px;
+  padding:14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.w4-previewTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.w4-previewTitle{ font-weight:900; }
+.w4-previewPrice{ font-weight:900; opacity:.95; }
+.w4-previewSub{ font-size:13px; opacity:.65; margin-top:6px; }
+.w4-previewDesc{ font-size:13px; opacity:.85; margin-top:10px; line-height:1.35; }
+.w4-previewList{ margin-top: 12px; display:flex; flex-direction:column; gap:10px; }
+.w4-prevWorkout{
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.18);
+  border-radius:14px;
+  padding:12px;
+}
+.w4-prevWTitle{ font-weight:800; margin-bottom:8px; }
+.w4-prevEx{ margin-top:8px; }
+.w4-prevExTitle{ font-weight:700; font-size:13px; }
+.w4-prevExMeta{ font-size:13px; opacity:.75; margin-top:2px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.w4-previewActions{ margin-top: 14px; }
+
+
+/* Removed empty top meta panel */
+.w3-meta{display:none !important;}
+
+
+/* ===== Empty workout state (dark/glass) + centered + clickable ===== */
+@keyframes w3FadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* When empty, let the page use remaining height so the empty card can center */
+.w3-page.is-empty{
+  min-height: calc(100vh - 24px);
+  display:flex;
+  flex-direction: column;
+}
+
+/* --- Dock cards: Templates / History (desktop) --- */
+.w3-dockNavCard{
+  cursor: pointer;
+  user-select: none;
+}
+.w3-dockNavCard:focus{
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(120, 120, 255, 0.35);
+}
+.w3-dockNavCard:hover{
+  transform: translateY(-1px);
+}
+.w3-dockBody{
+  padding-top: 10px;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+.w3-dockBig{
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+.w3-dockCta{
+  font-weight: 650;
+  opacity: 0.85;
+}
+
+/* Hide unused content container in empty state */
+.w3-page.is-empty #w3Content{
+  display:none;
+}
+
+/* Center the empty card vertically between tabs and footer */
+.w3-page.is-empty .w3-empty{
+  flex: 1;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding: 22px 16px;
+  animation: w3FadeUp .22s ease both;
+}
+
+.w3-empty{
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  user-select: none;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+}
+
+.w3-empty:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 18px 46px rgba(0,0,0,.42);
+  border-color: rgba(129, 140, 248, 0.35);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.w3-empty:focus{
+  outline: none;
+  border-color: rgba(129, 140, 248, 0.55);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.22), 0 18px 46px rgba(0,0,0,.42);
+}
+
+.w3-emptyIcon{
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 26px;
+  background: rgba(99,102,241,0.16);
+  border: 1px solid rgba(129,140,248,0.25);
+  margin-bottom: 10px;
+}
+
+.w3-emptyTitle{
+  color: #f9fafb;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.w3-empty .w3-muted{
+  color: rgba(226,232,240,0.88);
+  opacity: 1;
+}
+
+/* Button inside empty card */
+.w3-empty .w3-btnSecondary{
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 20px rgba(99,102,241,.35);
+}
+
+.w3-empty .w3-btnSecondary:hover{
+  filter: brightness(1.08);
+}
+
+
+
+/* ===== Empty state: hero card with glow + subtle pattern ===== */
+.w3-empty{
+  position: relative;
+  margin: 18px 0;
+  border-radius: 20px;
+  padding: 36px 18px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 18px 50px rgba(0,0,0,.45);
+  backdrop-filter: blur(12px);
+  text-align: center;
+
+  /* animation (collapsed by default, expanded when page has .is-empty) */
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(10px) scale(.985);
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height .28s ease, opacity .22s ease, transform .28s ease;
+}
+
+/* Full-height hero feel (takes the available vertical space) */
+#w3Page.is-empty .w3-empty{
+  max-height: 1200px;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Use available viewport height when empty (reduces "too much empty space") */
+#w3Page.is-empty #w3Content{ display:none; }
+
+#w3Page.is-empty .w3-empty{
+  min-height: clamp(360px, 56vh, 720px);
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+}
+
+/* subtle background pattern */
+.w3-empty::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(129,140,248,.18) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 34%, rgba(99,102,241,.14) 0 2px, transparent 3px),
+    radial-gradient(circle at 42% 78%, rgba(99,102,241,.10) 0 2px, transparent 3px),
+    radial-gradient(circle at 85% 74%, rgba(129,140,248,.12) 0 2px, transparent 3px);
+  opacity: .55;
+  pointer-events:none;
+}
+
+/* outline glow */
+.w3-empty::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(99,102,241,.55), rgba(129,140,248,.20), rgba(34,197,94,.18));
+  opacity: .35;
+  filter: blur(10px);
+  pointer-events:none;
+}
+
+.w3-empty:focus-visible{
+  outline: 2px solid rgba(129,140,248,.55);
+  outline-offset: 3px;
+}
+
+.w3-emptyIcon{
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 28px;
+  background: rgba(129,140,248,.14);
+  border: 1px solid rgba(129,140,248,.25);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  margin-bottom: 14px;
+  z-index:1;
+}
+
+.w3-emptyTitle{ z-index:1; }
+.w3-empty .w3-muted{ z-index:1; }
+
+/* Empty state layout pieces (Add box + Today summary) */
+.w3-emptyMain{ z-index: 1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.w3-emptyAside{ z-index: 1; width: 100%; max-width: 340px; margin-top: 18px; pointer-events: none; }
+.w3-emptyAside .w3-rpCard{ width: 100%; }
+
+/* Today summary reveal (fade/slide-in on first set) */
+#w3RpToday{
+  transition: opacity .25s ease, transform .25s ease;
+  will-change: opacity, transform;
+}
+#w3RpToday.is-prehide{
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  z-index: 0;
+}
+#w3RpToday.no-anim{
+  transition: none !important;
+}
+
+.w3-empty .w3-btnSecondary{ z-index:1; }
+
+/* Bigger on large screens */
+@media (min-width: 1024px) {
+  #w3Page.is-empty .w3-empty{
+    min-height: clamp(420px, 62vh, 820px);
+    padding: 56px 26px;
   }
-  function clamp(n, min, max) {
-    n = Number(n);
-    if (Number.isNaN(n)) return min;
-    return Math.max(min, Math.min(max, n));
+  .w3-emptyTitle{ font-size: 22px; }
+  .w3-empty .w3-muted{ font-size: 15px; opacity:.92; }
+  .w3-emptyIcon{ width: 72px; height: 72px; font-size: 34px; border-radius: 18px; margin-bottom: 18px; }
+  .w3-empty .w3-btnSecondary{ padding: 12px 22px; font-size: 15px; }
+}
+
+/* Remove bottom gradient line (white line) */
+.w3-bottomBar{
+  background: none !important;
+  box-shadow: none !important;
+  border-top: none !important;
+}
+
+
+
+/* ===== Dark theme for exercise cards + inputs (keep style when adding exercise) ===== */
+.w3-exCard{
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.38) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.w3-exCard h3,
+.w3-exCard .w3-exHeader,
+.w3-exCard .w3-exSub{
+  color: rgba(255,255,255,.92) !important;
+}
+
+.w3-exCard label,
+.w3-exCard .w3-muted{
+  color: rgba(226,232,240,.78) !important;
+}
+
+.w3-input{
+  background: rgba(255,255,255,0.05) !important;
+  color: rgba(255,255,255,0.92) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+.w3-input::placeholder{
+  color: rgba(226,232,240,.55) !important;
+}
+
+/* Buttons in bottom bar + inside cards should stay dark (remove white pills) */
+.w3-btnSecondary{
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.88) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Ensure no light separators/lines appear at the bottom */
+.w3-bottomBar::before,
+.w3-bottomBar::after{
+  content:none !important;
+}
+
+
+
+/* ===== Desktop: move action buttons to right sidebar =====
+   Users often keep the app in a narrower desktop window.
+   Use a lower breakpoint so the 2-column dock layout activates earlier. */
+/* Desktop dock layout: activate earlier because the left sidebar reduces usable width.
+   This keeps Today summary/Templates/History to the RIGHT of the canvas even in a
+   "big screen" app window that isn't full-width. */
+@media (min-width: 720px){
+  .w3-page{
+    max-width: 1600px;
+    padding: 0 18px 24px;
   }
 
-  // -------------------- State --------------------
-  let legacyLog = jget(LEGACY_KEY, []);
-  let workouts = jget(W_KEY, []);
-  let exercises = jget(EX_KEY, []);
-  let sets = jget(SET_KEY, []);
-  let restTimer = jget(TIMER_KEY, { running: false, remainingSec: 0, totalSec: 0 });
-
-  function saveAll() {
-    jset(LEGACY_KEY, legacyLog);
-    jset(W_KEY, workouts);
-    jset(EX_KEY, exercises);
-    jset(SET_KEY, sets);
-    jset(TIMER_KEY, restTimer);
+  /* Desktop canvas: 2 columns (content left, dock right). */
+  .w3-mainGrid{
+    display: grid;
+    grid-template-columns: minmax(520px, 1fr) 360px;
+    gap: 28px;
+    align-items: start;
   }
 
-  // -------------------- Core CRUD API --------------------
-  function createWorkout(input = {}) {
-    const w = {
-      id: uuid(),
-      name: String(input.name || "Workout").trim(),
-      date: input.date || isoDate(),
-      status: "planned",
-      notes: input.notes || "",
-      templateId: input.templateId,
-      createdAt: nowIso(),
-      updatedAt: nowIso()
-    };
-    workouts.unshift(w);
-    saveAll();
-    return w;
+  /* Desktop empty state: visually center Today summary alongside the large empty card */
+  .w3-page.is-empty .w3-emptyWrap{
+    align-items: flex-start;
+    padding-top: 6px;
   }
 
-  function updateWorkout(id, patch = {}) {
-    const w = workouts.find(x => x.id === id);
-    if (!w) throw new Error("Workout not found");
-    Object.assign(w, patch);
-    w.updatedAt = nowIso();
-    saveAll();
-    return w;
+  /* Align the right dock with the empty hero card.
+     The empty wrapper has a small top padding, so mirror it here to keep
+     the top edges of the hero + dock cards perfectly aligned. */
+  .w3-page.is-empty .w3-todayDock{
+    padding-top: 6px;
   }
 
-  function deleteWorkout(id) {
-    workouts = workouts.filter(w => w.id !== id);
-    const exIds = exercises.filter(e => e.workoutId === id).map(e => e.id);
-    exercises = exercises.filter(e => e.workoutId !== id);
-    sets = sets.filter(s => !exIds.includes(s.exerciseId));
-    saveAll();
+  /* Desktop: bottom bar is a mobile affordance; hide it and use the right utility column instead */
+  .w3-bottomBar{ display:none !important; }
+
+  /* Today Summary sits in the right column, next to the workout canvas */
+  .w3-todayDock{
+    display:flex;
+    flex-direction:column;
+    gap: 16px;
+    position: sticky;
+    top: 110px;
+    align-self: start;
   }
 
-  function getWorkout(id) { return workouts.find(w => w.id === id) || null; }
-
-  function listWorkouts(range) {
-    if (!range) return workouts.slice();
-    const { from, to } = range;
-    return workouts.filter(w => w.date >= from && w.date <= to);
+  /* When empty, don't use sticky positioning (it creates a vertical offset vs the hero card).
+     Keep it in normal flow so its top aligns with the empty card's top edge. */
+  .w3-page.is-empty .w3-todayDock{
+    position: relative;
+    top: 0;
+    margin-top: 0;
   }
 
-  function listExercises(workoutId) {
-    return exercises
-      .filter(e => e.workoutId === workoutId)
-      .slice()
-      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  /* When empty: keep the same 2-column layout so Today summary stays in the top-right,
+     aligned with the empty state card (same as when there are exercises). */
+  /* Same 2-column layout when empty (handled by .w3-mainGrid). */
+  /* Empty state: keep the large hero card in the LEFT column.
+     The summary/templates/history column is handled by .w3-todayDock (RIGHT column).
+     So we hide the legacy empty-side container to prevent the hero from shrinking. */
+  .w3-emptyWrap{
+    display:block;
+    min-height: auto;
+    width: 100%;
+    padding-top: 6px;
+  }
+  /* Respect the HTML hidden attribute (UA stylesheet sets display:none, but
+     our desktop rules above would otherwise override it). */
+  .w3-emptyWrap[hidden]{
+    display: none !important;
+  }
+  .w3-emptySide{ display:none; }
+  /* Desktop: remove the big quick-action buttons (Templates/History) from the empty screen */
+  .w3-emptyQuick{ display:none; }
+  .w3-empty{ width: 100%; }
+  .w3-emptyQuick{
+    display:none;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .w3-emptyQuickBtn{
+    width: 100%;
+    text-align:left;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.90);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  }
+  .w3-emptyQuickBtn:hover{
+    transform: translateY(-1px);
+    border-color: rgba(129,140,248,0.55);
+    background: rgba(255,255,255,.07);
+  }
+  .w3-emptyQuickBtn:active{ transform: translateY(0px); }
+
+  /* Desktop: tabs are a mobile-only affordance. Open History/Templates from the dock cards instead. */
+  .w3-tabs{ display:none; }
+  .w3-bottomBar{ display:none !important; }
+  .w3-sideTiles{ display:none !important; }
+  .w3-rpActions{ display:none !important; }
+
+  /* Give the left column cards a touch more breathing room */
+  .w3-exCard{ margin-bottom: 18px; }
+}
+
+/* Dock navigation cards (desktop) */
+.w3-dockNavCard{
+  cursor: pointer;
+}
+.w3-dockNavCard:focus-visible{
+  outline: 2px solid rgba(255,255,255,0.35);
+  outline-offset: 2px;
+}
+.w3-dockBody{
+  padding-top: 8px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+.w3-dockBig{
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  opacity: 0.92;
+}
+.w3-dockCta{
+  font-weight: 600;
+  opacity: 0.65;
+}
+.w3-dockNavCard:hover .w3-dockCta{
+  opacity: 0.9;
+}
+
+/* ===== Mobile: keep bottom bar behavior ===== */
+@media (max-width: 899px){
+  /* Mobile: nudge Today summary down a bit */
+  #w3RpToday{ margin-top: 10px; }
+
+  .w3-page{ display: block; padding: 0; }
+  .w3-bottomBar{
+    position: sticky;
+    bottom: 0;
+    top: auto;
+    grid-column: auto;
+    flex-direction: row;
+    padding: 12px 0 4px;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+
+/* ===== Add-another-exercise placeholder card ===== */
+.w3-addExerciseCard{
+  margin-top: 14px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.04);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  outline: none;
+}
+.w3-addExerciseCard:hover{
+  transform: translateY(-1px);
+  border-color: rgba(129,140,248,0.6);
+  box-shadow: 0 16px 38px rgba(99,102,241,.18), 0 10px 30px rgba(0,0,0,.25);
+}
+.w3-addExerciseCard:focus-visible{
+  border-color: rgba(129,140,248,0.75);
+  box-shadow: 0 0 0 4px rgba(99,102,241,.22), 0 16px 38px rgba(99,102,241,.18);
+}
+
+.w3-addExerciseInner{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding: 16px 16px;
+}
+
+.w3-addExerciseIcon{
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display:grid;
+  place-items:center;
+  font-size: 28px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  background: rgba(99,102,241,0.14);
+  border: 1px solid rgba(99,102,241,0.25);
+  box-shadow: 0 10px 26px rgba(99,102,241,.14);
+}
+
+.w3-addExerciseTitle{
+  color: rgba(255,255,255,0.92);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.w3-addExerciseSub{
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(203,213,225,0.85);
+}
+
+/* Larger feel on big screens */
+@media (min-width: 1024px){
+  .w3-addExerciseInner{ padding: 18px 18px; }
+  .w3-addExerciseIcon{ width: 54px; height: 54px; font-size: 32px; }
+  .w3-addExerciseTitle{ font-size: 16px; }
+  .w3-addExerciseSub{ font-size: 14px; }
+}
+
+
+/* ===== In-card Start / Rest actions ===== */
+.w3-exActions{
+  display:flex;
+  gap:10px;
+  margin: 10px 0 6px;
+}
+.w3-exActions[hidden]{ display:none !important; }
+.w3-exAction{ flex: 0 0 auto; }
+
+.w3-exCard.is-active{
+  outline: 1px solid rgba(129,140,248,0.22);
+  box-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+
+/* Earlier iterations hid the global footer bar on mobile.
+   Keep it available so users can always add exercises/sets on small screens. */
+@media (max-width: 899px){
+  .w3-bottomBar{ display:flex !important; }
+}
+
+/* ============================
+   Responsive overrides (hotfix)
+   ============================ */
+
+/* BIG SCREEN: remove the empty top-right "pill" (an empty fixed bottomBar container)
+   We use Today Summary dock instead. */
+@media (min-width: 900px){
+  .w3-bottomBar{ display:none !important; }
+}
+
+/* SMALL SCREEN: remove the global bottom action bar (buttons are available in-card).
+   This prevents overlap on the empty state and when adding exercises/sets. */
+@media (max-width: 899px){
+  .w3-rpActions{ display:none !important; }
+  .w3-sideTiles{ display:none !important; }
+
+  /* Reserve space for the fixed bottom navigation (global app nav) + the rest timer widget */
+  #w3Content,
+  #w3EmptyWrap{ padding-bottom: 160px; }
+}
+
+/* On phone screens, keep the rest timer above the fixed bottom navigation */
+@media (max-width: 900px){
+  .w3-restClock{
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    right: 14px;
+  }
+}
+
+/* Dark glass exercise cards */
+.w3-exCard{
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: 0 14px 36px rgba(0,0,0,.45) !important;
+}
+.w3-hSection{ color: rgba(255,255,255,0.92); }
+.w3-exSub{ color: rgba(226,232,240,0.70); }
+.w3-setLabels{ color: rgba(226,232,240,0.55); }
+
+/* Make set rows match dark theme */
+.w3-setRow{
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+.w3-addSet{
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px dashed rgba(255,255,255,0.18) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* ============================
+   Plan Workout: Rest clock HUD
+   ============================ */
+.pwRestClock{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 60;
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(17, 24, 39, 0.82);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+  backdrop-filter: blur(14px);
+}
+
+.pwRestRing{
+  width: 44px;
+  height: 44px;
+  display:grid;
+  place-items:center;
+}
+.pwRestSvg{ width: 44px; height: 44px; transform: rotate(-90deg); }
+.pwRestTrack{
+  fill: none;
+  stroke: rgba(255,255,255,0.16);
+  stroke-width: 4;
+}
+.pwRestProg{
+  fill: none;
+  stroke: rgba(129,140,248,0.95);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 113.1;
+  stroke-dashoffset: 113.1;
+  filter: drop-shadow(0 0 8px rgba(129,140,248,0.45));
+}
+
+.pwRestText{ display:flex; flex-direction:column; line-height:1.1; }
+.pwRestLabel{ font-size: 12px; color: rgba(226,232,240,0.75); }
+.pwRestTime{ font-size: 18px; font-weight: 700; letter-spacing: 0.02em; color: rgba(255,255,255,0.95); }
+
+.pwRestClockClose,
+.pwRestClockGear{
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.90);
+  cursor: pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 0;
+}
+
+.pwRestIcon{ width: 18px; height: 18px; display:block; }
+.pwRestClockClose:hover,
+.pwRestClockGear:hover{ background: rgba(255,255,255,0.10); }
+.pwRestClockClose:active,
+.pwRestClockGear:active{ transform: translateY(1px); }
+
+@media (max-width: 900px){
+  .pwRestClock{
+    right: 14px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Rest duration modal */
+.pwModal[hidden]{ display:none !important; }
+.pwModal{ position: fixed; inset: 0; z-index: 80; }
+.pwModalBackdrop{ position:absolute; inset:0; background: rgba(0,0,0,0.55); }
+.pwModalCard{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, calc(100vw - 24px));
+  border-radius: 18px;
+  background: rgba(17, 24, 39, 0.92);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 22px 70px rgba(0,0,0,0.65);
+  backdrop-filter: blur(18px);
+}
+.pwModalHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 14px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.pwModalTitle{ font-weight: 700; color: rgba(255,255,255,0.92); }
+.pwModalBody{ padding: 14px 14px 16px; }
+.pwRestQuick{ display:flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.pwRestCustomRow{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pwRestInput{
+  width: 140px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+}
+.pwHint{ margin-top: 12px; font-size: 12px; color: rgba(226,232,240,0.7); }
+
+
+/* (Deprecated) Desktop tiles sidebar layout removed.
+   The right-side dock (Today summary + Templates + History) replaces this. */
+
+
+
+/* ===== Swipe actions redesign (premium + unobtrusive) ===== */
+.w3-swipeWrap{
+  background: rgba(255,255,255,0.02); /* prevents action showing through as a 'bar' */
+}
+
+.w3-swipeAction{
+  width: 120px;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 16px;
+  margin: 8px;
+  opacity: 0;
+  transform: scale(.98);
+  transition: opacity .16s ease, transform .16s ease, filter .16s ease;
+}
+
+.w3-swipeIcon{
+  width: 28px;
+  height: 28px;
+  display:grid;
+  place-items:center;
+  border-radius: 10px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 6px 14px rgba(0,0,0,.22);
+  font-size: 14px;
+}
+
+.w3-swipeLabel{
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.w3-swipeWrap.isSwipeLeft .w3-swipeAction.left,
+.w3-swipeWrap.isSwipeRight .w3-swipeAction.right{
+  opacity: 1;
+  transform: scale(1);
+}
+
+.w3-swipeAction.left{
+  background: linear-gradient(135deg, rgba(99,102,241,.88), rgba(56,189,248,.65));
+}
+.w3-swipeAction.right{
+  background: linear-gradient(135deg, rgba(244,63,94,.88), rgba(239,68,68,.70));
+}
+
+.w3-setRow{
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+}
+
+/* (Removed) Older desktop right-panel implementation that used a fixed bottomBar.
+   The current design uses the dedicated dock (w3-todayDock) on desktop. */
+
+@media (min-width: 1600px){
+  :root{
+    --w3-text-xs: 14px;
+    --w3-text-sm: 16px;
+    --w3-text-md: 18px;
+    --w3-text-lg: 22px;
+    --w3-text-xxl: 38px;
+  }
+  .w3-exCard{ padding: 18px; }
+  .w3-setRow{ padding: 12px; }
+  .w3-chip{ padding: 8px 14px; }
+}
+
+
+/* ===== Empty state: plus is the button ===== */
+.w3-emptyInner{
+  width: 100%;
+  height: 100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+.w3-emptyIconBtn{
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display:grid;
+  place-items:center;
+  font-size: 36px;
+  font-weight: 800;
+  color: rgba(255,255,255,.92);
+  background: rgba(99,102,241,.16);
+  border: 1px solid rgba(99,102,241,.35);
+  box-shadow:
+    0 16px 40px rgba(0,0,0,.35),
+    0 0 0 6px rgba(99,102,241,.10);
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+}
+
+.w3-emptyInner:hover .w3-emptyIconBtn{ filter: brightness(1.08); }
+.w3-emptyInner:active .w3-emptyIconBtn,
+.w3-emptyInner.isPressed .w3-emptyIconBtn{
+  transform: translateY(1px) scale(.97);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.35),
+    0 0 0 6px rgba(99,102,241,.14);
+}
+
+/* subtle pulse to hint it's clickable */
+@keyframes w3Pulse {
+  0%{ box-shadow: 0 16px 40px rgba(0,0,0,.35), 0 0 0 6px rgba(99,102,241,.10); }
+  50%{ box-shadow: 0 18px 46px rgba(0,0,0,.38), 0 0 0 10px rgba(99,102,241,.14); }
+  100%{ box-shadow: 0 16px 40px rgba(0,0,0,.35), 0 0 0 6px rgba(99,102,241,.10); }
+}
+.w3-emptyIconBtn{ animation: w3Pulse 2.4s ease-in-out infinite; }
+
+.w3-kbdPlus{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  margin: 0 2px;
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+/* ===== In-app modal (habits-like) ===== */
+.w3-modalOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+@media (min-width: 700px){
+  .w3-modalOverlay{ align-items:center; }
+}
+
+.w3-modalCard{
+  width: min(560px, 100%);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(20,24,42,.92);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 30px 80px rgba(0,0,0,.55);
+  backdrop-filter: blur(18px);
+  animation: w3ModalIn .18s ease-out;
+}
+
+@keyframes w3ModalIn{
+  from{ opacity:0; transform: translateY(10px) scale(.98); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+
+.w3-modalTop{
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.w3-modalTitle{
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.w3-modalClose{
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  font-size: 20px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor:pointer;
+  flex: 0 0 auto;
+}
+.w3-modalClose:hover{
+  background: rgba(255,255,255,.10);
+}
+.w3-modalClose:active{
+  transform: translateY(1px);
+}
+.w3-modalClose:focus{
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(124,124,255,0.35);
+}
+
+
+.w3-modalLabel{
+  display:block;
+  font-size: 13px;
+  color: rgba(255,255,255,.78);
+  margin: 8px 0 6px;
+}
+
+.w3-modalInput{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  outline: none;
+}
+
+.w3-modalInput:focus{
+  border-color: rgba(99,102,241,.55);
+  box-shadow: 0 0 0 4px rgba(99,102,241,.18);
+}
+
+.w3-modalActions{
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.w3-modalBtn{
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  cursor:pointer;
+  font-weight: 700;
+}
+
+.w3-modalBtn.primary{
+  border: none;
+  background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(129,140,248,.92));
+  box-shadow: 0 12px 30px rgba(99,102,241,.28);
+}
+
+
+/* ===== Empty CTA: plus is the button (final) ===== */
+.w3-empty{
+  cursor:pointer;
+  user-select:none;
+  outline:none;
+}
+.w3-emptyIconBtn{
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  display:grid;
+  place-items:center;
+  font-size: 40px;
+  font-weight: 900;
+  color: rgba(255,255,255,.92);
+  background: rgba(99,102,241,.16);
+  border: 1px solid rgba(99,102,241,.35);
+  box-shadow:
+    0 18px 46px rgba(0,0,0,.38),
+    0 0 0 8px rgba(99,102,241,.10);
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+  animation: w3Pulse 2.4s ease-in-out infinite;
+}
+.w3-empty:hover .w3-emptyIconBtn{ filter: brightness(1.08); }
+.w3-empty:active .w3-emptyIconBtn,
+.w3-empty.isPressed .w3-emptyIconBtn{
+  transform: translateY(1px) scale(.97);
+  box-shadow:
+    0 12px 30px rgba(0,0,0,.40),
+    0 0 0 10px rgba(99,102,241,.14);
+}
+
+
+/* Ensure modal stays hidden when [hidden] is set */
+.w3-modalOverlay[hidden]{display:none !important;}
+
+/* ===== Purple plus CTA (final polish) ===== */
+.w3-emptyIconBtn{
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  border: 1px solid rgba(124,58,237,.65);
+  color: #f5f3ff;
+  box-shadow:
+    0 18px 46px rgba(124,58,237,.45),
+    0 0 0 10px rgba(124,58,237,.22);
+}
+.w3-emptyIconBtn::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:26px;
+  background: radial-gradient(circle at 50% 50%, rgba(124,58,237,.35), transparent 60%);
+  pointer-events:none;
+}
+
+
+/* ===== Right panel cards (Desktop) ===== */
+.w3-rpStack{ display:flex; flex-direction:column; gap:12px; }
+.w3-rpCard{
+  border:1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 14px 14px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.30);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Make Today summary feel like a shortcut */
+.w3-rpCard.is-clickable{ cursor:pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.w3-rpCard.is-clickable:hover{ transform: translateY(-1px); box-shadow: 0 18px 42px rgba(0,0,0,.34); }
+.w3-rpCard.is-clickable:active{ transform: translateY(0px); }
+.w3-rpCardTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 10px; }
+.w3-rpTitle{ font-weight: 800; letter-spacing:-0.01em; }
+.w3-rpHint{ font-size: 12px; color: rgba(255,255,255,0.68); }
+.w3-rpPill{
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(52,211,153,0.35);
+  color: rgba(167,243,208,0.95);
+  background: rgba(16,185,129,0.12);
+}
+.w3-rpGrid{ display:grid; grid-template-columns: 1fr; gap: 10px; }
+.w3-rpStat{ display:flex; align-items:baseline; justify-content:space-between; gap: 10px; }
+.w3-rpStatLabel{ font-size: 12px; color: rgba(255,255,255,0.68); }
+.w3-rpStatVal{ font-size: 22px; font-weight: 850; letter-spacing:-0.02em; }
+.w3-rpUnit{ font-size: 12px; color: rgba(255,255,255,0.68); margin-left: 4px; }
+
+.w3-rpNextName{ font-size: 18px; font-weight: 850; letter-spacing:-0.02em; margin: 2px 0 4px; }
+.w3-rpMuted{ font-size: 12px; color: rgba(255,255,255,0.68); }
+.w3-rpRow{ display:flex; gap:10px; margin-top: 12px; }
+.w3-rpBtn{
+  flex:1;
+  border:1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 850;
+  cursor:pointer;
+  transition: transform .14s ease, background .14s ease, border-color .14s ease;
+}
+.w3-rpBtn:hover{ transform: translateY(-1px); border-color: rgba(129,140,248,0.35); background: rgba(129,140,248,0.10); }
+.w3-rpBtn.ghost{ background: rgba(255,255,255,0.05); }
+.w3-rpSection{ margin-top: 8px; }
+.w3-rpSectionTitle{ font-size: 12px; font-weight: 900; letter-spacing: 0.02em; color: rgba(255,255,255,0.82); margin-bottom: 4px; }
+
+.w3-rpActions{ display:flex; flex-direction:column; gap: 12px; }
+
+/* Hide right panel cards on mobile; keep actions only */
+@media (max-width: 899px){
+  #w3RightPanel .w3-rpCard{ display:none; }
+  #w3RightPanel .w3-sideTiles{ display:none; }
+}
+
+/* Desktop: do NOT show the legacy bottom bar container.
+   Today summary lives in the dedicated dock (w3-todayDock). */
+@media (min-width: 900px){
+  .w3-bottomBar{ display:none !important; }
+}
+
+
+
+@media (min-width: 1400px){
+  /* Make Today summary more compact on wide screens */
+  #w3RpToday.w3-rpCard{
+    border-radius: 14px;
+  }
+  #w3RpToday .w3-rpCardTop{ margin-bottom: 8px; }
+  #w3RpToday .w3-rpTitle{ font-size: 13px; opacity: .9; }
+  #w3RpToday .w3-rpGrid{ gap: 8px 12px; }
+  #w3RpToday .w3-rpStatLabel{ font-size: 11px; opacity: .7; }
+  #w3RpToday .w3-rpStatVal{ font-size: 20px; }
+}
+
+/* =========================================================
+   Desktop dock layout should activate earlier.
+   The app has a persistent left sidebar, so many "big screen"
+   windows still end up below 900px viewport width.
+   Enable the 2-column (canvas + dock) layout from 760px up.
+   This overrides the mobile rules (max-width: 899px) below.
+   ========================================================= */
+@media (min-width: 640px){
+  .w3-page{
+    max-width: 1600px;
+    padding: 0 18px 24px;
   }
 
-  function listSets(exerciseId) {
-    return sets
-      .filter(s => s.exerciseId === exerciseId)
-      .slice()
-      .sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  /* Desktop canvas: content left, dock right (works for both empty + non-empty). */
+  .w3-mainGrid{
+    display: grid;
+    grid-template-columns: minmax(520px, 1fr) 360px;
+    gap: 28px;
+    align-items: start;
   }
 
+  /* Tabs are mobile-only. On desktop, navigation comes from the dock cards. */
+  .w3-tabs{ display:none !important; }
 
-  function addExercise(workoutId, input = {}) {
-    if (!getWorkout(workoutId)) throw new Error("Workout not found");
-    const order = (typeof input.order === "number")
-      ? input.order
-      : exercises.filter(e => e.workoutId === workoutId).length;
+  /* Hide the mobile bottom bar in dock mode */
+  .w3-bottomBar{ display:none !important; }
 
-    const ex = {
-      id: uuid(),
-      workoutId,
-      name: String(input.name || "Exercise").trim(),
-      order,
-      notes: input.notes || ""
-    };
-    exercises.push(ex);
-    saveAll();
-    return ex;
+  /* Right dock column */
+  .w3-todayDock{
+    display:flex;
+    flex-direction:column;
+    gap: 16px;
+    grid-column: 2;
+    align-self: start;
+    position: sticky;
+    top: 110px;
   }
 
-  function updateExercise(id, patch = {}) {
-    const e = exercises.find(x => x.id === id);
-    if (!e) throw new Error("Exercise not found");
-    Object.assign(e, patch);
-    saveAll();
-    return e;
+  /* Empty state: keep dock aligned with the hero card */
+  .w3-page.is-empty .w3-todayDock{
+    position: relative;
+    top: 0;
+    margin-top: 0;
   }
+}
 
-  function removeExercise(id) {
-    exercises = exercises.filter(e => e.id !== id);
-    sets = sets.filter(s => s.exerciseId !== id);
-    saveAll();
+
+/* Weekly plan card */
+.w3-weekPlanList{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.w3-weekRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);cursor:pointer}
+.w3-weekRow:hover{background:rgba(255,255,255,0.08)}
+.w3-weekLeft{display:flex;flex-direction:column;gap:2px;min-width:0}
+.w3-weekDate{font-size:12px;opacity:.85}
+.w3-weekName{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w3-weekBadge{font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.10);white-space:nowrap}
+.w3-weekBadge.empty{opacity:.75}
+
+
+/* App-styled select (custom dropdown) for consistent dark UI */
+.w3-hiddenNative{
+  position:absolute!important;
+  left:-10000px!important;
+  width:1px!important;
+  height:1px!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+#w3PlanModal .w3-appSelect{ position: relative; }
+
+#w3PlanModal .w3-appSelectBtn{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+#w3PlanModal .w3-appSelectBtn::after{
+  content:"▾";
+  font-size: 12px;
+  opacity: .8;
+}
+
+#w3PlanModal .w3-appSelectList{
+  position:absolute;
+  left:0; right:0;
+  top: calc(100% + 8px);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(12,14,24,0.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  display:none;
+  z-index: 1000;
+  max-height: 240px;
+  overflow:auto;
+}
+
+#w3PlanModal .w3-appSelect.open .w3-appSelectList{ display:block; }
+
+#w3PlanModal .w3-appSelectOption{
+  padding: 10px 10px;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.92);
+  cursor:pointer;
+  user-select:none;
+}
+
+#w3PlanModal .w3-appSelectOption:hover{
+  background: rgba(255,255,255,0.07);
+}
+
+#w3PlanModal .w3-appSelectOption[aria-selected="true"]{
+  background: rgba(124,124,255,0.18);
+  border: 1px solid rgba(124,124,255,0.22);
+}
+
+/* -------------------- Week planner page (Workouts) -------------------- */
+
+.workouts-header{
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(10, 12, 20, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+main.content h1{
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.subtle{
+  margin-top: 4px;
+  opacity: 0.72;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.week-controls{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+}
+
+.week-controls button{
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 44px;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.week-controls button:hover{
+  background: rgba(255,255,255,0.09);
+}
+
+.week-controls button:active{
+  transform: translateY(0.5px);
+}
+
+.week-grid{
+  display:grid;
+  grid-template-columns: repeat(7, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 18px 20px 28px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+}
+
+.day-column{
+  scroll-snap-align: start;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 12px;
+  display:flex;
+  flex-direction:column;
+  min-height: 360px;
+}
+
+.day-column.is-dropTarget{
+  border-color: rgba(124,124,255,0.55);
+  box-shadow: 0 0 0 2px rgba(124,124,255,0.18);
+}
+
+.day-column.today{
+  border-color: rgba(124,124,255,0.55);
+  box-shadow: 0 0 0 1px rgba(124,124,255,0.35);
+}
+
+.day-head{
+  display:flex;
+  flex-direction:column;
+  gap: 2px;
+  padding: 6px 2px 10px;
+  text-align: left;
+}
+
+.day-name{
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.day-date{
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  opacity: 0.72;
+}
+
+.day-badge{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.05);
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.workout-list{ display:flex; flex-direction:column; gap: 8px; }
+
+.workout-card{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 10px 10px;
+  cursor: grab;
+  user-select: none;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+
+.workout-card:hover{
+  background: rgba(255,255,255,.08);
+  transform: translateY(-1px);
+}
+
+.workout-card:active{ cursor: grabbing; transform: translateY(0px); }
+
+.workout-title{
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.workout-sub{
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.72;
+}
+
+.workout-card.is-completed{ opacity: 0.7; }
+.workout-card.is-completed .workout-title::after{
+  content: "  ✓";
+  opacity: 0.8;
+}
+
+.add-workout{
+  margin-top: auto;
+  padding: 12px;
+  border: 1px dashed rgba(255,255,255,.18);
+  border-radius: 14px;
+  text-align:center;
+  opacity: .78;
+  cursor:pointer;
+  background: rgba(255,255,255,0.03);
+}
+
+.add-workout:hover{
+  opacity: 1;
+  background: rgba(255,255,255,0.05);
+}
+
+.drop-placeholder{
+  height: 56px;
+  border-radius: 14px;
+  border: 1px dashed rgba(124,124,255,0.40);
+  background: rgba(124,124,255,0.10);
+}
+
+@media (max-width: 980px){
+  .week-grid{
+    grid-template-columns: repeat(7, minmax(220px, 1fr));
   }
+}
 
-  function reorderExercises(workoutId, orderedIds) {
-    const map = new Map(orderedIds.map((id, idx) => [id, idx]));
-    exercises.forEach(e => {
-      if (e.workoutId === workoutId && map.has(e.id)) e.order = map.get(e.id);
-    });
-    saveAll();
+
+
+/* ---------------- Month calendar (v3) ---------------- */
+.month-grid{
+  display:grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 18px 20px 28px;
+}
+
+@media (max-width: 1100px){
+  .month-grid{ grid-template-columns: repeat(7, minmax(130px, 1fr)); }
+}
+@media (max-width: 900px){
+  .month-grid{
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 16px 14px 24px;
+    overflow-x:auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
   }
+}
 
-  function addSet(exerciseId, input = {}) {
-    if (!exercises.find(x => x.id === exerciseId)) throw new Error("Exercise not found");
-    const order = sets.filter(s => s.exerciseId === exerciseId).length;
-    const s = {
-      id: uuid(),
-      exerciseId,
-      order,
-      kind: input.kind || "work",
-      targetReps: input.targetReps,
-      targetWeightKg: input.targetWeightKg,
-      reps: input.reps,
-      weightKg: input.weightKg,
-      rpe: input.rpe,
-      restSec: (input.restSec ?? 90),
-      completed: !!input.completed
-    };
-    sets.push(s);
-    saveAll();
-    return s;
+.month-cell{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 10px 10px 12px;
+  min-height: 170px;
+  position: relative;
+  overflow: hidden;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  scroll-snap-align: start;
+}
+
+.month-cell > *{ position: relative; z-index: 1; }
+
+.month-cell.is-empty{
+  opacity: .45;
+}
+
+.month-cell.today{
+  border-color: rgba(124,124,255,0.55);
+  box-shadow: 0 0 0 1px rgba(124,124,255,0.35);
+}
+
+.month-cell.is-selected{
+  /* Keep selection subtle: range highlight is the primary indicator.
+     (Avoid strong purple outlines on the big calendar tiles.) */
+  border-color: rgba(255,255,255,.10);
+  box-shadow: none;
+}
+
+/* Range highlight (selected period)
+   Disabled: no inner bars/arcs. */
+
+/* Keep content above range visuals */
+.month-head, .month-list, .month-add{ position: relative; z-index: 2; }
+
+.month-cell.is-dropTarget{
+  border-color: rgba(124,124,255,0.55);
+  box-shadow: 0 0 0 2px rgba(124,124,255,0.18);
+}
+
+.month-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap: 8px;
+  padding: 2px 2px 0;
+}
+
+.month-daynum{
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.month-dow{
+  font-size: 12px;
+  color: rgba(255,255,255,.65);
+}
+
+.month-list{
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+  flex: 1;
+  min-height: 60px;
+}
+
+.month-add{
+  margin-top:auto;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,.18);
+  background: rgba(255,255,255,.02);
+  color: rgba(255,255,255,.85);
+  cursor:pointer;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.month-add:hover{
+  transform: translateY(-1px);
+  border-color: rgba(124,124,255,0.45);
+  background: rgba(124,124,255,0.08);
+}
+
+
+/* --- Month calendar: touch-friendly panning on small screens --- */
+@media (max-width: 900px){
+  body{ overflow:hidden; }
+  .content{ overflow:hidden; }
+
+  /* Plan workout needs vertical scrolling on small screens */
+  body.pwPage{ overflow:auto; }
+  body.pwPage .content{ overflow:auto; }
+  body.pwPage .pwWrap{ padding-bottom: calc(120px + env(safe-area-inset-bottom) + var(--kb, 0px)); }
+  .month-grid{
+    overflow: auto;
+    height: calc(100vh - 140px - var(--kb, 0px)); /* topbar + padding estimate */
+    padding-bottom: calc(24px + 84px); /* make room for bottom nav */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    touch-action: pan-x pan-y;
   }
+  .month-grid::-webkit-scrollbar{ display:none; }
 
-  function updateSet(id, patch = {}) {
-    const s = sets.find(x => x.id === id);
-    if (!s) throw new Error("Set not found");
-    Object.assign(s, patch);
-    saveAll();
-    return s;
+  /* Keep bottom nav always clickable */
+  .bottomNav{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
   }
+  .month-grid{ position: relative; z-index: 1; }
+}
 
-  function removeSet(id) {
-    sets = sets.filter(s => s.id !== id);
-    saveAll();
+/* Tap / click micro-interaction (Notion-ish) */
+.tap{
+  transition: transform .12s ease-out, filter .12s ease-out;
+}
+.tap:active{
+  transform: scale(.97);
+  filter: brightness(1.05);
+}
+.month-add.tap{
+  width: 100%;
+}
+
+/* When panning, prevent accidental text selection */
+.month-grid.is-panning{ user-select:none; cursor: grabbing; }
+
+
+/* --- Calendar cell text safety (no bleed) --- */
+.month-cell{
+  height: 190px;          /* slightly taller so multiple workouts can be shown */
+  max-height: 190px;
+  overflow: hidden;       /* critical: prevents text/children from bleeding out */
+  box-sizing: border-box;
+}
+
+.month-cell *{ min-width: 0; box-sizing: border-box; }
+
+.month-list{
+  overflow: auto;         /* allow scrolling when there are many workouts */
+  min-width: 0;
+  padding-right: 6px;     /* breathing room for scrollbar */
+  scrollbar-width: thin;
+}
+
+.month-list::-webkit-scrollbar{ width: 6px; }
+.month-list::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,.18);
+  border-radius: 999px;
+}
+.month-list::-webkit-scrollbar-track{ background: transparent; }
+
+/* “+N more” indicator inside a day cell */
+.month-more{
+  font-size: 12px;
+  color: rgba(255,255,255,.72);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255,255,255,.14);
+  background: rgba(255,255,255,.03);
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.month-more:hover{
+  border-color: rgba(124,124,255,0.35);
+  background: rgba(124,124,255,0.08);
+}
+
+/* Workout cards inside month cells */
+.wCard{
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.wCard:hover{ border-color: rgba(124,124,255,0.28); }
+
+.wCard.is-dragging{ opacity: .65; }
+
+.wTitle,
+.wMeta{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;    /* single-line only in calendar cells */
+}
+
+.wTitle{
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.wMeta{
+  font-size: 12px;
+  opacity: .68;
+}
+
+/* Month action button should never wrap */
+.month-add{
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Workouts header: pretty date controls (only near Workouts) --- */
+.workoutsTitleRow{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.workoutsDateControls{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rangeWrap{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.datePill{
+  position: relative;
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+
+/* Unified period picker button */
+.periodPill{
+  cursor: pointer;
+  user-select: none;
+  font: inherit;
+  color: inherit;
+  border: none;
+}
+
+/* Mobile: give the period control its own row so it never gets squeezed */
+@media (max-width: 520px){
+  .workoutsDateControls{
+    width: 100%;
+    flex-wrap: wrap;
   }
-
-  function reorderSets(exerciseId, orderedIds) {
-    const map = new Map(orderedIds.map((id, idx) => [id, idx]));
-    sets.forEach(s => {
-      if (s.exerciseId === exerciseId && map.has(s.id)) s.order = map.get(s.id);
-    });
-    saveAll();
+  .periodPill{
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: space-between;
   }
+}
 
-  // -------------------- Workflow --------------------
-  function startWorkout(workoutId) {
-    return updateWorkout(workoutId, { status: "in_progress", startedAt: nowIso() });
+.pillCaret{
+  opacity: .75;
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+/* Period picker popover */
+.periodOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 80;
+}
+
+.periodPop{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(820px, calc(100vw - 32px));
+  max-height: min(82vh, 760px);
+  border-radius: 18px;
+  background: rgba(18, 20, 30, 0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  z-index: 81;
+  overflow: hidden;
+}
+
+.periodBody{ overflow: auto; }
+
+.periodHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.periodTitle{
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.periodBody{ padding: 12px; display:flex; flex-direction:column; gap: 10px; }
+.periodRow{ display:flex; flex-direction:column; gap: 6px; }
+
+.dateField{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: inherit;
+  outline: none;
+}
+
+.dateField:focus{ border-color: rgba(120,130,255,0.70); box-shadow: 0 0 0 3px rgba(120,130,255,0.18); }
+
+.periodHint{
+  font-size: 12px;
+  opacity: .78;
+}
+
+.periodDivider{ height: 1px; background: rgba(255,255,255,0.08); margin: 2px 0; }
+
+.periodPreview{
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.periodPreviewLabel{ font-size: 12px; opacity: .85; margin-bottom: 8px; }
+
+.periodPreviewBar{
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+
+.periodPreviewBar > span{
+  display:block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(120,130,255,0.55), rgba(120,130,255,0.95));
+  box-shadow: 0 0 0 1px rgba(120,130,255,0.25);
+}
+
+.periodFoot{
+  display:flex;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.periodFoot .btn{ flex: 1; }
+
+@media (max-width: 720px){
+  .periodPop{
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100vw - 20px);
+    max-height: 86vh;
   }
-  function finishWorkout(workoutId) {
-    return updateWorkout(workoutId, { status: "completed", finishedAt: nowIso() });
+}
+
+/* Full-size range picker inside the modal */
+.rangePicker{
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 12px;
+  padding: 10px 0 0;
+}
+
+.rangePresets{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 10px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.presetBtn{
+  width: 100%;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: inherit;
+  cursor: pointer;
+}
+
+.presetBtn:hover{ border-color: rgba(120,130,255,0.35); background: rgba(255,255,255,0.06); }
+.presetBtn.active{ border-color: rgba(120,130,255,0.70); box-shadow: 0 0 0 3px rgba(120,130,255,0.14); }
+
+.rangeCal{ display:flex; flex-direction:column; gap: 10px; }
+
+.rangeCalHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 4px 0 0;
+}
+
+.calNav{
+  width: 38px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: inherit;
+  cursor: pointer;
+}
+
+.calNav:hover{ border-color: rgba(120,130,255,0.35); background: rgba(255,255,255,0.06); }
+
+.calHeadLabel{ font-size: 12px; opacity: .75; }
+
+.rangeMonths{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.monthPane{
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.monthTitle{ font-weight: 700; margin-bottom: 8px; }
+
+.dowRow{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 11px;
+  opacity: .65;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dowRow span{ text-align:center; }
+
+.monthGridSm{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.rpDay{
+  height: 34px;
+  border-radius: 12px;
+  display:grid;
+  place-items:center;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  user-select:none;
+}
+
+.rpDay.off{ opacity: .35; }
+.rpDay:hover{ border-color: rgba(120,130,255,0.35); background: rgba(255,255,255,0.05); }
+
+.rpDay.inRange{ background: rgba(120,130,255,0.18); border-color: rgba(120,130,255,0.25); }
+.rpDay.edge{ background: rgba(120,130,255,0.55); border-color: rgba(120,130,255,0.75); font-weight: 700; }
+
+.rangeHint{ font-size: 12px; opacity: .75; }
+
+@media (max-width: 820px){
+  /* keep presets as a left sidebar (no wrapping) */
+  .rangePicker{ grid-template-columns: 150px minmax(0, 1fr); }
+  .rangePresets{
+    flex-direction: column;
+    flex-wrap: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    border-bottom: none;
+    padding-right: 10px;
+    padding-bottom: 0;
+    max-height: 52vh;
+    overflow-y: auto;
   }
-  function skipWorkout(workoutId, reason) {
-    const w = getWorkout(workoutId);
-    if (!w) throw new Error("Workout not found");
-    const notes = (w.notes || "").trim();
-    const extra = reason ? `Skipped: ${reason}` : "Skipped";
-    return updateWorkout(workoutId, { status: "skipped", notes: (notes ? notes + "\n" : "") + extra });
-  }
-  function duplicateWorkout(workoutId, opts = {}) {
-    const src = getWorkout(workoutId);
-    if (!src) throw new Error("Workout not found");
-    const newW = createWorkout({
-      name: src.name,
-      date: opts.date || isoDate(),
-      templateId: src.templateId,
-      notes: src.notes || ""
-    });
-
-    const srcExercises = exercises
-      .filter(e => e.workoutId === src.id)
-      .sort((a, b) => a.order - b.order);
-
-    const exMap = new Map();
-    srcExercises.forEach(e => {
-      const ne = addExercise(newW.id, { name: e.name, order: e.order, notes: e.notes || "" });
-      exMap.set(e.id, ne.id);
-    });
-
-    srcExercises.forEach(e => {
-      const srcSets = sets.filter(s => s.exerciseId === e.id).sort((a, b) => a.order - b.order);
-      srcSets.forEach(s => {
-        addSet(exMap.get(e.id), {
-          kind: s.kind,
-          targetReps: s.targetReps,
-          targetWeightKg: s.targetWeightKg,
-          restSec: (s.restSec ?? 90),
-          completed: false
-        });
-      });
-    });
-
-    return newW;
-  }
-
-  // -------------------- Quick actions --------------------
-  function toggleSetCompleted(setId, completed) {
-    const s = sets.find(x => x.id === setId);
-    if (!s) throw new Error("Set not found");
-    s.completed = (typeof completed === "boolean") ? completed : !s.completed;
-    saveAll();
-    if (s.completed && (s.restSec || 0) > 0) startRestTimer(s.restSec);
-    return s;
-  }
-
-  function addSets(exerciseId, count, defaults = {}) {
-    const out = [];
-    for (let i = 0; i < count; i++) out.push(addSet(exerciseId, defaults));
-    return out;
-  }
-
-  function clonePreviousSet(exerciseId) {
-    const prev = sets.filter(s => s.exerciseId === exerciseId).sort((a, b) => b.order - a.order)[0];
-    if (!prev) return addSet(exerciseId, {});
-    return addSet(exerciseId, {
-      kind: prev.kind,
-      targetReps: (prev.reps ?? prev.targetReps),
-      targetWeightKg: (prev.weightKg ?? prev.targetWeightKg),
-      restSec: (prev.restSec ?? 90)
-    });
-  }
-
-  function nudgeSet(setId, delta = {}) {
-    const s = sets.find(x => x.id === setId);
-    if (!s) throw new Error("Set not found");
-    if (delta.weightKg) s.weightKg = (Number(s.weightKg || 0) + Number(delta.weightKg));
-    if (delta.reps) s.reps = (Number(s.reps || 0) + Number(delta.reps));
-    saveAll();
-    return s;
-  }
-
-  function computeWorkoutSummary(workoutId) {
-    const exs = exercises.filter(e => e.workoutId === workoutId);
-    const setList = exs.flatMap(e => sets.filter(s => s.exerciseId === e.id));
-    const totalSets = setList.length;
-    const completedSets = setList.filter(s => s.completed).length;
-
-    let totalReps = 0;
-    let totalVolumeKg = 0;
-    setList.forEach(s => {
-      const reps = Number(s.reps || 0);
-      const weight = Number(s.weightKg || 0);
-      totalReps += reps;
-      totalVolumeKg += reps * weight;
-    });
-
-    const w = getWorkout(workoutId);
-    let durationSec;
-    if (w?.startedAt && w?.finishedAt) {
-      durationSec = Math.max(0, Math.floor((new Date(w.finishedAt) - new Date(w.startedAt)) / 1000));
-    }
-
-    const prs = [];
-    exs.forEach(e => {
-      const maxW = Math.max(0, ...sets.filter(s => s.exerciseId === e.id).map(s => Number(s.weightKg || 0)));
-      if (maxW > 0) prs.push({ exerciseName: e.name, type: "weight", value: maxW });
-    });
-
-    return { totalSets, completedSets, totalReps, totalVolumeKg, durationSec, prs };
-  }
-
-  function getExerciseHistory(exerciseName, limit = 30) {
-    const name = String(exerciseName || "").trim().toLowerCase();
-    const points = [];
-
-    workouts
-      .filter(w => w.status === "completed")
-      .sort((a, b) => (a.date < b.date ? 1 : -1))
-      .forEach(w => {
-        const exs = exercises.filter(e => e.workoutId === w.id && e.name.trim().toLowerCase() === name);
-        if (!exs.length) return;
-
-        const setList = exs.flatMap(e => sets.filter(s => s.exerciseId === e.id));
-        const topSetWeightKg = Math.max(0, ...setList.map(s => Number(s.weightKg || 0)));
-        const topSetReps = Math.max(0, ...setList.map(s => Number(s.reps || 0)));
-        const totalVolumeKg = setList.reduce((acc, s) => acc + Number(s.weightKg || 0) * Number(s.reps || 0), 0);
-
-        points.push({ date: w.date, topSetWeightKg, topSetReps, totalVolumeKg });
-      });
-
-    return points.slice(0, limit);
-  }
-
-  function getExercisePRs(exerciseName) {
-    const hist = getExerciseHistory(exerciseName, 5000);
-    const maxWeightKg = hist.reduce((m, p) => Math.max(m, Number(p.topSetWeightKg || 0)), 0) || undefined;
-    const maxVolumeKg = hist.reduce((m, p) => Math.max(m, Number(p.totalVolumeKg || 0)), 0) || undefined;
-    const maxReps = hist.reduce((m, p) => Math.max(m, Number(p.topSetReps || 0)), 0) || undefined;
-    return { maxWeightKg, maxReps, maxVolumeKg };
-  }
-
-  function validateWorkout(workoutId) {
-    const w = getWorkout(workoutId);
-    if (!w) return { ok: false, errors: ["Workout not found"] };
-    const exs = exercises.filter(e => e.workoutId === workoutId);
-    const errs = [];
-    if (!w.name) errs.push("Missing workout name");
-    if (!w.date) errs.push("Missing date");
-    if (exs.some(e => !e.name)) errs.push("One or more exercises missing name");
-    return errs.length ? { ok: false, errors: errs } : { ok: true };
-  }
-
-  function canFinishWorkout(workoutId) {
-    const exs = exercises.filter(e => e.workoutId === workoutId);
-    const setList = exs.flatMap(e => sets.filter(s => s.exerciseId === e.id));
-    const missing = [];
-    if (setList.some(s => s.completed && (s.reps == null || s.weightKg == null))) {
-      missing.push("Some completed sets are missing reps/weight");
-    }
-    return { canFinish: missing.length === 0, missing };
-  }
-
-  // -------------------- Templates (planner.js compatible) --------------------
-  function listTemplates() {
-    const t = jget(TPL_KEY, {});
-    return Object.keys(t).sort().map(k => ({
-      id: k,
-      name: t[k].name || k,
-      exercises: (t[k].exercises || []).slice()
-    }));
-  }
-
-  function createWorkoutFromTemplate(templateId, date) {
-    const all = jget(TPL_KEY, {});
-    const tpl = all[templateId];
-    if (!tpl) throw new Error("Template not found");
-
-    const w = createWorkout({ name: tpl.name || templateId, date: date || isoDate(), templateId });
-    (tpl.exercises || []).forEach((exName, idx) => {
-      const ex = addExercise(w.id, { name: exName, order: idx });
-      addSets(ex.id, 3, { kind: "work", restSec: 90, completed: false });
-    });
-    return w;
-  }
-
-  function createTemplateFromWorkout(workoutId, name) {
-    const w = getWorkout(workoutId);
-    if (!w) throw new Error("Workout not found");
-
-    const exs = exercises.filter(e => e.workoutId === workoutId).sort((a, b) => a.order - b.order);
-    const tplName = String(name || w.name || "Template").trim();
-
-    const all = jget(TPL_KEY, {});
-    all[tplName] = { name: tplName, exercises: exs.map(e => e.name) };
-    jset(TPL_KEY, all);
-
-    return { id: tplName, name: tplName, exercises: exs.map(e => ({ name: e.name, sets: [] })) };
-  }
-
-  function deleteTemplate(templateId) {
-    const all = jget(TPL_KEY, {});
-    delete all[templateId];
-    jset(TPL_KEY, all);
-  }
-
-  // -------------------- Rest timer --------------------
-  function startRestTimer(seconds) {
-    const sec = clamp(seconds, 0, 60 * 60);
-    const end = new Date(Date.now() + sec * 1000).toISOString();
-    restTimer = { running: true, endAt: end, remainingSec: sec, totalSec: sec };
-    saveAll();
-    renderRestTimer();
-    return restTimer;
-  }
-
-  function stopRestTimer() {
-    restTimer = { running: false, remainingSec: 0, totalSec: 0 };
-    saveAll();
-    renderRestTimer();
-    return restTimer;
-  }
-
-  function tickRestTimer(nowIsoStr) {
-    if (!restTimer.running || !restTimer.endAt) return restTimer;
-    const now = nowIsoStr ? new Date(nowIsoStr) : new Date();
-    const end = new Date(restTimer.endAt);
-    const remaining = Math.max(0, Math.round((end - now) / 1000));
-    restTimer.remainingSec = remaining;
-    if (!restTimer.totalSec || restTimer.totalSec < remaining) restTimer.totalSec = remaining;
-    if (remaining <= 0) {
-      restTimer.running = false;
-      restTimer.endAt = undefined;
-      if (typeof showToast === "function") showToast("Rest done");
-    }
-    saveAll();
-    renderRestTimer();
-    return restTimer;
-  }
-
-  // -------------------- Import/Export --------------------
-  function exportWorkoutsToJSON(range) {
-    const ws = listWorkouts(range);
-    const wIds = new Set(ws.map(w => w.id));
-    const ex = exercises.filter(e => wIds.has(e.workoutId));
-    const exIds = new Set(ex.map(e => e.id));
-    const ss = sets.filter(s => exIds.has(s.exerciseId));
-    return JSON.stringify({ version: 2, workouts: ws, exercises: ex, sets: ss, legacyLog }, null, 2);
-  }
-
-  function importWorkoutsFromJSON(json, opts = {}) {
-    const merge = (opts.merge !== false);
-    const parsed = JSON.parse(json);
-    if (!parsed || (parsed.version !== 2 && !parsed.workouts)) throw new Error("Unsupported format");
-
-    const inW = parsed.workouts || [];
-    const inE = parsed.exercises || [];
-    const inS = parsed.sets || [];
-    const inLegacy = parsed.legacyLog || [];
-
-    let imported = 0, skipped = 0;
-
-    if (!merge) {
-      workouts = inW.slice();
-      exercises = inE.slice();
-      sets = inS.slice();
-      legacyLog = inLegacy.slice();
-      saveAll();
-      return { imported: inW.length, skipped: 0 };
-    }
-
-    const haveW = new Set(workouts.map(w => w.id));
-    inW.forEach(w => { if (haveW.has(w.id)) skipped++; else { workouts.push(w); imported++; } });
-
-    const haveE = new Set(exercises.map(e => e.id));
-    inE.forEach(e => { if (haveE.has(e.id)) skipped++; else { exercises.push(e); imported++; } });
-
-    const haveS = new Set(sets.map(s => s.id));
-    inS.forEach(s => { if (haveS.has(s.id)) skipped++; else { sets.push(s); imported++; } });
-
-    const sig = x => `${x.date}|${x.ex}|${x.sets}|${x.reps}|${x.weight}`;
-    const haveL = new Set(legacyLog.map(sig));
-    inLegacy.forEach(l => { if (haveL.has(sig(l))) skipped++; else { legacyLog.push(l); imported++; } });
-
-    saveAll();
-    return { imported, skipped };
-  }
-
-  // -------------------- Legacy log + PR box --------------------
-  function legacyLogSet() {
-    const exEl = document.getElementById("ex");
-    const setsEl = document.getElementById("sets");
-    const repsEl = document.getElementById("reps");
-    const weightEl = document.getElementById("weight");
-    if (!exEl || !setsEl || !repsEl || !weightEl) return;
-
-    if (!exEl.value || !setsEl.value || !repsEl.value) return;
-
-    const entry = {
-      ex: exEl.value.trim(),
-      sets: +setsEl.value,
-      reps: +repsEl.value,
-      weight: +weightEl.value || 0,
-      date: isoDate()
-    };
-
-    legacyLog.unshift(entry);
-
-    // Attach to today's active workout if any
-    const today = isoDate();
-    const w = workouts.find(x => x.date === today && x.status === "in_progress");
-    if (w) {
-      let e = exercises.find(x =>
-        x.workoutId === w.id && x.name.trim().toLowerCase() === entry.ex.toLowerCase()
-      );
-      if (!e) e = addExercise(w.id, { name: entry.ex });
-      addSet(e.id, { kind: "work", reps: entry.reps, weightKg: entry.weight, completed: true });
-    }
-
-    saveAll();
-    render();
-    if (typeof showToast === "function") showToast("Set logged");
-
-    exEl.value = "";
-    setsEl.value = "";
-    repsEl.value = "";
-    weightEl.value = "";
-  }
-
-  // -------------------- Minimal UI enhancements --------------------
-  function ensureEnhancements() {
-  // Disabled legacy Today's workout panel injection
-  return;
-    const main = document.querySelector("main.content");
-    if (!main) return;
-    if (document.getElementById("todayWorkoutCard")) return;
-
-    const topbar = main.querySelector(".topbar");
-    const anchor = topbar ? topbar.nextElementSibling : null;
-
-    const wrap = document.createElement("div");
-    wrap.innerHTML = `
-      <div id="todayWorkoutCard" class="card soft" style="margin-top:18px">
-        <div class="cardHeader">
-          <h3 class="cardTitle">Today's workout</h3>
-          <span class="badge" id="todayWorkoutBadge">Plan</span>
-        </div>
-        <div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div>
-            <div id="todayWorkoutLine" class="small">Loading…</div>
-            <div id="todayWorkoutMeta" class="small" style="opacity:.8;margin-top:6px"></div>
-          </div>
-          <div class="actionsRow" style="margin:0">
-            <button id="btnCreateFromPlan">Create</button>
-            <button id="btnStartWorkout" class="secondary">Start</button>
-            <button id="btnFinishWorkout" class="secondary">Finish</button>
-          </div>
-        </div>
-        <div class="hr"></div>
-        <div id="restTimerBar" class="row" style="justify-content:space-between;align-items:center">
-          <div><strong>Rest timer</strong> <span id="restTimerText" class="small" style="margin-left:8px">Off</span></div>
-          <div class="actionsRow" style="margin:0">
-            <button id="btnRest60" class="secondary">60s</button>
-            <button id="btnRest90" class="secondary">90s</button>
-            <button id="btnRestStop" class="secondary">Stop</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const card = wrap.firstElementChild;
-    if (anchor) main.insertBefore(card, anchor);
-    else main.insertBefore(card, main.firstChild);
-
-    document.getElementById("btnCreateFromPlan").onclick = () => {
-      const plan = jget(PLAN_KEY, {});
-      const today = isoDate();
-      const tpl = plan[today]?.template;
-      if (!tpl) { showToast?.("No template planned today"); return; }
-      createWorkoutFromTemplate(tpl, today);
-      showToast?.("Workout created");
-      render();
-    };
-
-    document.getElementById("btnStartWorkout").onclick = () => {
-      const today = isoDate();
-      let w = workouts.find(x => x.date === today && (x.status === "planned" || x.status === "in_progress"));
-      if (!w) {
-        const plan = jget(PLAN_KEY, {});
-        const tpl = plan[today]?.template;
-        w = tpl ? createWorkoutFromTemplate(tpl, today) : createWorkout({ name: "Workout", date: today });
-      }
-      startWorkout(w.id);
-      showToast?.("Workout started");
-      render();
-    };
-
-    document.getElementById("btnFinishWorkout").onclick = () => {
-      const today = isoDate();
-      const w = workouts.find(x => x.date === today && x.status === "in_progress");
-      if (!w) { showToast?.("No workout in progress"); return; }
-      const gate = canFinishWorkout(w.id);
-      if (!gate.canFinish) {
-        alert("Can't finish yet:\n" + gate.missing.join("\n"));
-        return;
-      }
-      finishWorkout(w.id);
-      showToast?.("Workout completed");
-      render();
-    };
-
-    document.getElementById("btnRest60").onclick = () => startRestTimer(60);
-    document.getElementById("btnRest90").onclick = () => startRestTimer(90);
-    document.getElementById("btnRestStop").onclick = () => stopRestTimer();
-  }
-
-  function renderRestTimer() {
-    const el = document.getElementById("restTimerText");
-    if (!el) return;
-    if (!restTimer.running) { el.textContent = "Off"; return; }
-    const s = Math.max(0, restTimer.remainingSec | 0);
-    const mm = String(Math.floor(s / 60)).padStart(2, "0");
-    const ss = String(s % 60).padStart(2, "0");
-    el.textContent = `${mm}:${ss}`;
-  }
-
-  function renderActiveWorkout() {
-    const box = document.getElementById("workoutList");
-    if (!box) return;
-
-    const today = isoDate();
-    const active = workouts.find(w => w.date === today && w.status === "in_progress");
-    const planned = workouts.find(w => w.date === today && w.status === "planned");
-
-    const badge = document.getElementById("todayWorkoutBadge");
-    const line = document.getElementById("todayWorkoutLine");
-    const meta = document.getElementById("todayWorkoutMeta");
-
-    const plan = jget(PLAN_KEY, {});
-    const tplName = plan[today]?.template;
-    const done = plan[today]?.done;
-
-    if (line) {
-      if (tplName) line.innerHTML = `Planned: <strong>${tplName}</strong> ${done ? '<span class="badge ok" style="margin-left:8px">Done</span>' : ""}`;
-      else line.textContent = "No template planned today (use Weekly Planner below).";
-    }
-    if (meta) {
-      if (active) meta.innerHTML = `Status: <strong>In progress</strong> • Started: ${active.startedAt ? new Date(active.startedAt).toLocaleTimeString() : "—"}`;
-      else if (planned) meta.innerHTML = `Status: <strong>Planned</strong>`;
-      else meta.innerHTML = `Status: <strong>—</strong>`;
-    }
-    if (badge) {
-      badge.textContent = active ? "In progress" : (tplName ? "Planned" : "Free");
-      badge.className = "badge" + (active ? " warn" : "");
-    }
-
-    if (!active) return;
-
-    const exs = exercises
-      .filter(e => e.workoutId === active.id)
-      .sort((a, b) => a.order - b.order);
-
-    const summary = computeWorkoutSummary(active.id);
-    const summaryHtml = `
-      <div class="card soft" style="margin-top:12px">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>${active.name}</strong>
-          <span class="badge">${summary.completedSets}/${summary.totalSets} sets</span>
-        </div>
-        <div class="small" style="margin-top:8px">Volume: <strong>${Math.round(summary.totalVolumeKg)}</strong> kg • Reps: <strong>${summary.totalReps}</strong></div>
-      </div>
-    `;
-
-    const exHtml = exs.map(e => {
-      const ss = sets.filter(s => s.exerciseId === e.id).sort((a, b) => a.order - b.order);
-      const rows = ss.map(s => {
-        const checked = s.completed ? "checked" : "";
-        const repsVal = (s.reps ?? "");
-        const wVal = (s.weightKg ?? "");
-        return `
-          <div class="row" style="justify-content:space-between;gap:10px;align-items:center;margin-top:10px">
-            <label class="row" style="gap:10px;align-items:center">
-              <input type="checkbox" ${checked} onchange="Workouts.toggleSetCompleted('${s.id}', this.checked); Workouts.render()">
-              <span class="small">Set ${s.order + 1}</span>
-            </label>
-            <div class="row" style="gap:10px;align-items:center">
-              <input style="width:90px" type="number" placeholder="reps" value="${repsVal}"
-                     onchange="Workouts.updateSet('${s.id}', { reps: +this.value || 0 }); Workouts.render()">
-              <input style="width:110px" type="number" placeholder="kg" value="${wVal}"
-                     onchange="Workouts.updateSet('${s.id}', { weightKg: +this.value || 0 }); Workouts.render()">
-              <button class="secondary" onclick="Workouts.clonePreviousSet('${e.id}'); Workouts.render()">+Set</button>
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      return `
-        <div class="card soft" style="margin-top:12px">
-          <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
-            <strong>${e.name}</strong>
-            <span class="badge">${ss.filter(x => x.completed).length}/${ss.length} done</span>
-          </div>
-          ${rows}
-        </div>
-      `;
-    }).join("");
-
-    // Prepend active workout section above legacy list
-    box.innerHTML = summaryHtml + exHtml + box.innerHTML;
-  }
-
-  function renderLegacyPRs() {
-    const prBox = document.getElementById("prBox");
-    if (!prBox) return;
-
-    const prs = {};
-    legacyLog.forEach(d => { prs[d.ex] = Math.max(prs[d.ex] || 0, Number(d.weight || 0)); });
-
-    workouts.filter(w => w.status === "completed").forEach(w => {
-      exercises.filter(e => e.workoutId === w.id).forEach(e => {
-        const maxW = Math.max(0, ...sets.filter(s => s.exerciseId === e.id).map(s => Number(s.weightKg || 0)));
-        if (maxW > 0) prs[e.name] = Math.max(prs[e.name] || 0, maxW);
-      });
-    });
-
-    const prLines = Object.entries(prs)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([k, v]) => `<div class="row" style="justify-content:space-between"><span>${k}</span><strong>${v} kg</strong></div>`)
-      .join("");
-
-    prBox.innerHTML = `<h3>Personal Records</h3>${prLines || '<p class="empty">No PRs yet.</p>'}`;
-  }
-
-  function renderLegacyList() {
-    const box = document.getElementById("workoutList");
-    if (!box) return;
-
-    if (!legacyLog.length) {
-      box.innerHTML = '<p class="empty">No sets logged yet.</p>';
-      return;
-    }
-
-    const items = legacyLog.slice(0, 30).map(d => `
-      <div class="card">
-        <strong>${d.ex}</strong><br>
-        ${d.sets}×${d.reps} @ ${d.weight}kg<br>
-        <span class="small">${d.date}</span>
-      </div>
-    `).join("");
-
-    box.innerHTML = items;
-  }
-
-  function render() {
-    legacyLog = jget(LEGACY_KEY, []);
-    workouts = jget(W_KEY, []);
-    exercises = jget(EX_KEY, []);
-    sets = jget(SET_KEY, []);
-    restTimer = jget(TIMER_KEY, { running: false, remainingSec: 0, totalSec: 0 });
-
-    const workoutList = document.getElementById("workoutList");
-    if (workoutList) workoutList.innerHTML = "";
-
-    renderLegacyPRs();
-    renderLegacyList();
-    renderActiveWorkout();
-    renderRestTimer();
-  }
-
-  // -------------------- Expose API to window --------------------
-  window.Workouts = {
-    // CRUD
-    createWorkout, updateWorkout, deleteWorkout, getWorkout, listWorkouts, listExercises, listSets,
-    addExercise, updateExercise, removeExercise, reorderExercises,
-    addSet, updateSet, removeSet, reorderSets,
-
-    // Flow
-    startWorkout, finishWorkout, skipWorkout, duplicateWorkout,
-
-    // Quick actions
-    toggleSetCompleted, addSets, clonePreviousSet, nudgeSet,
-
-    // Analytics
-    computeWorkoutSummary, getExerciseHistory, getExercisePRs,
-
-    // Templates
-    listTemplates, createTemplateFromWorkout, createWorkoutFromTemplate, deleteTemplate,
-
-    // Validation
-    validateWorkout, canFinishWorkout,
-
-    // Rest timer
-    startRestTimer, stopRestTimer, tickRestTimer,
-
-    // Import/Export
-    exportWorkoutsToJSON, importWorkoutsFromJSON,
-
-    // UI
-    render
-  };
-
-  // matches workouts.html onclick
-  window.logSet = legacyLogSet;
-
-  // -------------------- Boot --------------------
-  ensureEnhancements();
-  render();
-
-  setInterval(() => {
-    if (restTimer.running) tickRestTimer();
-  }, 1000);
-})();
+  .presetBtn{ width: 100%; }
+  /* on smaller screens show 1 month, but keep sidebar */
+  .rangeMonths{ grid-template-columns: 1fr; }
+  .monthPane[data-pane="1"]{ display:none; }
+  .rangeCalHead{ justify-content: space-between; }
+}
+
+.datePill.small{ padding: 9px 11px; }
+
+.datePill:hover{
+  background: rgba(255,255,255,0.055);
+  border-color: rgba(120,130,255,0.40);
+  transform: translateY(-1px);
+}
+
+.datePill:focus-within{
+  border-color: rgba(120,130,255,0.70);
+  box-shadow: 0 0 0 3px rgba(120,130,255,0.18), 0 10px 24px rgba(0,0,0,0.25);
+}
+
+.pillIcon{
+  width: 22px;
+  height: 22px;
+  display:grid;
+  place-items:center;
+  opacity: .95;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+}
+
+.pillText{
+  font-size: 12px;
+  letter-spacing: .02em;
+  opacity: .85;
+  user-select:none;
+}
+
+.dateInput{
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 0;
+  min-width: 132px;
+}
+
+/* Make native picker indicator subtle */
+.dateInput::-webkit-calendar-picker-indicator{
+  opacity: .45;
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.btn.mini{
+  padding: 9px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px){
+  .dateInput{ min-width: 124px; }
+  .workoutsTitleRow{ align-items:flex-start; }
+}

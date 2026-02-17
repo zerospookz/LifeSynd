@@ -1,126 +1,82 @@
-
-const TPL_KEY="workoutTemplates";
-const PLAN_KEY="plannedWorkouts";
-
-function loadTemplates(){
-  const t=JSON.parse(localStorage.getItem(TPL_KEY)||"{}");
-  if(!t.Push && !t.Pull && !t.Legs){
-    t.Push={name:"Push", exercises:["Bench Press","Overhead Press","Triceps Pushdown"]};
-    t.Pull={name:"Pull", exercises:["Deadlift","Row","Lat Pulldown","Biceps Curl"]};
-    t.Legs={name:"Legs", exercises:["Squat","Leg Press","Hamstring Curl","Calf Raises"]};
-    localStorage.setItem(TPL_KEY,JSON.stringify(t));
-  }
-  return t;
-}
-function saveTemplates(t){ localStorage.setItem(TPL_KEY,JSON.stringify(t)); }
-function loadPlan(){ return JSON.parse(localStorage.getItem(PLAN_KEY)||"{}"); }
-function savePlan(p){ localStorage.setItem(PLAN_KEY,JSON.stringify(p)); }
-
-let templates=loadTemplates();
-let plan=loadPlan();
-
-const tplName = document.getElementById("tplName");
-const tplList = document.getElementById("tplList");
-const weekList = document.getElementById("weekList");
-const weekSummary = document.getElementById("weekSummary");
-
-
-function saveTemplate(){
-  if(!tplName) return;
-  if(!tplName.value) return;
-  const name=tplName.value.trim();
-  templates[name]={name, exercises:[]};
-  saveTemplates(templates);
-  tplName.value="";
-  render(); showToast("Template saved");
-}
-
-function startOfWeek(d){
-  const x=new Date(d);
-  const day=(x.getDay()+6)%7;
-  x.setDate(x.getDate()-day);
-  x.setHours(0,0,0,0);
-  return x;
-}
-function iso(d){ return d.toISOString().slice(0,10); }
-function label(d){ return d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}); }
-
-function setDayTemplate(dateIso, tpl){
-  if(!tpl){ delete plan[dateIso]; }
-  else{
-    plan[dateIso]=plan[dateIso]||{template:tpl,done:false};
-    plan[dateIso].template=tpl;
-  }
-  savePlan(plan);
-  render(); showToast("Plan updated");
-}
-function toggleDone(dateIso){
-  if(!plan[dateIso]) return;
-  plan[dateIso].done=!plan[dateIso].done;
-  savePlan(plan);
-  render(); showToast(plan[dateIso].done ? "Marked done" : "Marked planned");
-}
-
-function renderTemplates(){
-  if(!tplList) return;
-  const names=Object.keys(templates).sort();
-  tplList.innerHTML = names.map(n=>{
-    const ex=(templates[n].exercises||[]).slice(0,3).join(", ");
-    return `<div class="card" style="margin:12px 0 0">
-      <div class="row" style="justify-content:space-between">
-        <strong>${n}</strong>
-        <span class="badge">${(templates[n].exercises||[]).length} exercises</span>
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0f1a">
+<title>Settings</title>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="logoMark" src="icons/brand-mark-128.png" alt="LifeSync logo">
+      <div>
+        <div class="brandTitle">LifeSync</div>
+        <div class="brandSub">Command center</div>
       </div>
-      <div class="small">${ex || "No exercises listed (you can extend later)."}</div>
-    </div>`;
-  }).join("");
-}
+    </div>
 
-function renderWeek(){
-  if(!weekList || !weekSummary) return;
-  const now=new Date();
-  const start=startOfWeek(now);
-  const names=Object.keys(templates).sort();
-  weekList.innerHTML="";
-  let planned=0, done=0;
+    <nav class="nav">
+      <a href="dashboard.html"><span class="left">🏠 <span>Dashboard</span></span><span class="pill">Today</span></a>
+      <a href="habits.html"><span class="left"><span class="iconWrap"><img class="navIcon" src="icons/habits.png?v=6" alt="Habits"></span> <span>Habits</span></span><span class="pill">Streaks</span></a>
+      <a href="workouts.html"><span class="left">🏋️ <span>Workouts</span></span><span class="pill">PRs</span></a>
+      <a href="nutrition.html"><span class="left">🍎 <span>Nutrition</span></span><span class="pill">Log</span></a>
+      <a href="finances.html"><span class="left">💰 <span>Finances</span></span><span class="pill">Budget</span></a>
+      <a href="settings.html"><span class="left">⚙️ <span>Settings</span></span><span class="pill">Data</span></a>
+    </nav>
 
-  for(let i=0;i<7;i++){
-    const d=new Date(start); d.setDate(d.getDate()+i);
-    const dIso=iso(d);
-    const entry=plan[dIso];
-    if(entry) planned++;
-    if(entry?.done) done++;
-    const current = entry?.template || "";
-    const opts = ['<option value="">—</option>']
-      .concat(names.map(n=>`<option value="${n}" ${n===current?'selected':''}>${n}</option>`))
-      .join("");
-    const status = entry ? (entry.done ? '<span class="badge ok">Done</span>' : '<span class="badge warn">Planned</span>') : '<span class="badge">Free</span>';
-    weekList.innerHTML += `
-      <div class="card" style="margin:12px 0 0">
-        <div class="row" style="justify-content:space-between">
-          <div><strong>${label(d)}</strong> <span class="small">${dIso}</span></div>
-          ${status}
-        </div>
-        <div class="row" style="margin-top:10px">
-          <select onchange="setDayTemplate('${dIso}', this.value)">${opts}</select>
-          <button onclick="toggleDone('${dIso}')" ${!entry?'disabled':''} style="${!entry?'opacity:.45;cursor:not-allowed':''}">Done</button>
-        </div>
-        ${entry ? `<div class="small" style="margin-top:8px">Template: <strong>${entry.template}</strong></div>` : ""}
-      </div>`;
-  }
-  weekSummary.innerHTML=`<h3>This week</h3>
-    <p><strong>${planned}</strong> planned • <strong>${done}</strong> done</p>
-    <p class="small">Goal: keep planned ≈ done.</p>`;
-}
+    <div class="sidebarFooter">Tip: Export data in Settings before big updates.</div>
+  </aside>
 
-window.setDayTemplate=setDayTemplate;
-window.toggleDone=toggleDone;
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <div class="pageTitleRow"><img class="topbarLogo" src="icons/brand-mark-128.png" alt="LifeSync"><h1 class="pageTitle">Settings</h1></div>
+        <p class="subtitle">Backup and restore your local data.</p>
+      </div>
+      <div class="actionsRow">
+        <a class="btn secondary" href="dashboard.html">Home</a>
+      </div>
+    </div>
 
-function render(){
-  // planner.js is loaded on multiple pages; only render when containers exist
-  templates=loadTemplates();
-  plan=loadPlan();
-  renderTemplates();
-  renderWeek();
-}
-if (tplList || weekList || weekSummary || tplName) { render(); }
+    
+
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Habits reminder</h3><span class="badge">Daily</span></div>
+  <p class="small">Get a reminder if today’s completion is below your target at the chosen time. When Push is enabled (and a server is connected), reminders can arrive in the background.</p>
+  <div class="formRow" style="display:flex; gap:12px; flex-wrap:wrap; align-items:end">
+    <label style="display:flex; gap:8px; align-items:center">
+      <input id="hr_enabled" type="checkbox">
+      <span class="small">Enabled</span>
+    </label>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <span class="small">Time</span>
+      <input id="hr_time" type="time" value="20:00">
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <span class="small">Target %</span>
+      <input id="hr_pct" type="number" min="0" max="100" step="1" value="50" style="width:110px">
+    </div>
+    <button id="hr_perm" class="btn secondary" type="button">Enable notifications</button>
+    <span id="hr_status" class="small" style="opacity:.8"></span>
+  </div>
+</div>
+
+
+<div class="card soft">
+  <div class="cardHeader"><h3 class="cardTitle">Data</h3><span class="badge">Backup</span></div>
+  <p class="small">Everything is stored locally in your browser. Export before switching devices.</p>
+  <div class="actionsRow">
+    <button onclick="exportData()">Export JSON</button>
+    <input id="importFile" type="file" accept="application/json">
+    <button class="btn secondary" onclick="importData()">Import</button>
+  </div>
+  <div class="badges" style="margin-top:12px">
+    <span class="badge">Habits</span><span class="badge">Workouts</span><span class="badge">Planner</span><span class="badge">Nutrition</span><span class="badge">Finances</span>
+  </div>
+</div>
+
+  </main>
+</div>
+<script src="app.js"></script>
+<script src="ui.js"></script><script src="settings.js"></script>
+</body></html>
