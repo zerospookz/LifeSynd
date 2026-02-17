@@ -7552,3 +7552,71 @@ html, body{
   .atCard.big, .atCard.wide{ grid-column: span 1; }
   .allTimeTop{ align-items:stretch; }
 }
+
+
+
+/* =========================
+   ALL TIME - Radial progress
+   ========================= */
+.atCard.big{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.atRadialWrap{
+  position:relative;
+  width: 132px;
+  height: 132px;
+  margin: 6px 0 2px 0;
+  display:grid;
+  place-items:center;
+}
+
+.atRingSvg{
+  width: 132px;
+  height: 132px;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
+}
+
+.atRingBg{
+  fill: none;
+  stroke: rgba(255,255,255,.10);
+  stroke-width: 12;
+}
+
+.atRingFg{
+  fill: none;
+  stroke: var(--habit-accent, rgba(120,170,255,.85));
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset .35s ease;
+}
+
+.atRingText{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  pointer-events:none;
+}
+
+.atRingPct{
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 1.05;
+}
+
+.atRingLab{
+  margin-top: 2px;
+  font-size: 12px;
+  opacity: .70;
+}
+
+@media (max-width: 520px){
+  .atRadialWrap, .atRingSvg{ width: 120px; height: 120px; }
+  .atRingPct{ font-size: 26px; }
+}
