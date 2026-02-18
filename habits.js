@@ -995,9 +995,8 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
   const accent = `hsl(${habitHue(selected.id)} 70% 55%)`;
 
   // All-time view mode is fixed to Insights in this build.
-// (No Heatmap/Insights toggle in All Time.)
-let allMode = "insights";
-  }
+  // (No Heatmap/Insights toggle in All Time.)
+  const allMode = "insights";
 
   function clampWindowForAllTime(){
     const todayIso2 = todayIso;
@@ -5072,4 +5071,3 @@ function renderHero(){
     openAddHabit(fab);
   });
 })();
-
