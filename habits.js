@@ -3459,6 +3459,69 @@ function renderListInAnalytics(){
   // Cap the end at today for current/future periods.
   const browseEndIso = (periodEndIso < todayIso) ? periodEndIso : todayIso;
 
+  // ----- List View: Today Focus + smart ordering -----
+  const todayDoneSet = (h)=> new Set(h.datesDone||[]);
+  const yesterdayIso = (()=>{
+    const d = new Date(todayIso+"T00:00:00");
+    d.setDate(d.getDate()-1);
+    return isoDate(d);
+  })();
+
+  function getStreakToContinue(h){
+    // streak ending yesterday (so "at risk" means: you have a streak you can continue today)
+    const createdIso = (h && typeof h.created === 'string' && h.created.length===10) ? h.created : yesterdayIso;
+    const startIso = (createdIso < yesterdayIso) ? createdIso : yesterdayIso;
+    if(startIso > yesterdayIso) return 0;
+    try{
+      return calcStreaksInWindow(h, startIso, yesterdayIso).current || 0;
+    }catch(_e){ return 0; }
+  }
+
+  function computeTodayMeta(h){
+    const set = todayDoneSet(h);
+    const doneToday = set.has(todayIso);
+    const streakToContinue = doneToday ? 0 : getStreakToContinue(h);
+    const atRisk = (!doneToday && streakToContinue > 0);
+    return { doneToday, atRisk, streakToContinue };
+  }
+
+  function smartOrder(habits){
+    const arr = habits.map(h=>({ h, meta: computeTodayMeta(h) }));
+    arr.sort((a,b)=>{
+      // 1) due first (not done today)
+      if(a.meta.doneToday !== b.meta.doneToday) return a.meta.doneToday ? 1 : -1;
+      // 2) at risk first among due
+      if(a.meta.atRisk !== b.meta.atRisk) return a.meta.atRisk ? -1 : 1;
+      // 3) higher streak-to-continue first
+      if(a.meta.streakToContinue !== b.meta.streakToContinue) return b.meta.streakToContinue - a.meta.streakToContinue;
+      // 4) name
+      const an = (a.h.name||'').toLowerCase();
+      const bn = (b.h.name||'').toLowerCase();
+      return an.localeCompare(bn);
+    });
+    return arr;
+  }
+
+  const ordered = smartOrder(H);
+  const doneTodayCount = ordered.reduce((acc,x)=> acc + (x.meta.doneToday?1:0), 0);
+  const totalCount = ordered.length;
+  const nextUp = ordered.filter(x=>!x.meta.doneToday).slice(0,3).map(x=>x.h);
+
+  function renderTodayFocus(){
+    const pct = totalCount ? Math.round((doneTodayCount/totalCount)*100) : 0;
+    const nextNames = nextUp.length ? nextUp.map(h=>escapeHtml(h.name||'Habit')).join(', ') : 'All done — nice.';
+    return `
+      <div class="listFocusCard">
+        <div class="lfTop">
+          <div class="lfTitle">Today focus</div>
+          <div class="lfCount"><b>${doneTodayCount}</b> / ${totalCount} done</div>
+        </div>
+        <div class="lfBar" aria-hidden="true"><div class="lfFill" style="width:${pct}%"></div></div>
+        <div class="lfNext small"><span class="muted">Next up:</span> ${nextNames}</div>
+      </div>
+    `;
+  }
+
   // ----- All-time list view: lifetime cards + sorting + badges -----
   const allSortKey = (()=>{
     try{ return localStorage.getItem('habitsAllListSort') || 'consistency'; }catch(_){ return 'consistency'; }
@@ -3545,6 +3608,7 @@ function renderListInAnalytics(){
     const h = m.h;
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     const streaks = calcStreaksInWindow(h, m.life.startIso, m.life.endIso);
+    const meta = computeTodayMeta(h);
 
     // Badge assignment
     const badge = (()=>{
@@ -3566,7 +3630,7 @@ function renderListInAnalytics(){
         <div class="lifeTop">
           <div class="lifeTitle">
             <strong>${escapeHtml(h.name||'Habit')}</strong>
-            ${badge ? `<span class="lifeBadge ${badge.cls}">${escapeHtml(badge.t)}</span>` : ''}
+            ${badge ? `<span class="lifeBadge ${badge.cls}">${escapeHtml(badge.t)}</span>` : ''}${meta && meta.atRisk ? ` <span class="lifeBadge bWarn">At risk</span>` : ''}
           </div>
           <div class="lifePct">${m.life.pct}%</div>
         </div>
@@ -3589,7 +3653,9 @@ function renderListInAnalytics(){
         </div>
       </div>
     `;
-  }).join('') : H.map((h)=>{
+  }).join('') : ordered.map((o)=>{
+    const h = o.h;
+    const meta = o.meta;
     const accent = `hsl(${habitHue(h.id)} 70% 55%)`;
     const createdIso = (h && typeof h.created === "string" && h.created.length===10) ? h.created : periodStartIso;
     const startIso = (createdIso > periodStartIso) ? createdIso : periodStartIso;
@@ -3658,7 +3724,7 @@ function renderListInAnalytics(){
           <div class="hyrTop">
             <div class="hyrTitle">
               <strong>${escapeHtml(h.name||"Habit")}</strong>
-              <span class="badge">${escapeHtml(period.label||"")}</span>
+              <span class="badge">${escapeHtml(period.label||"")}</span>${meta && meta.atRisk ? `<span class="badge warn">At risk</span>` : ``}
             </div>
             <div class="hyrCount">${doneCount} / ${eligible}</div>
           </div>
@@ -3684,7 +3750,7 @@ function renderListInAnalytics(){
         <div class="htrMain">
           <div class="htrTitleRow">
             <strong>${escapeHtml(h.name||"Habit")}</strong>
-            <span class="badge">${escapeHtml(period.label||"")}</span>
+            <span class="badge">${escapeHtml(period.label||"")}</span>${meta && meta.atRisk ? `<span class="badge warn">At risk</span>` : ``}
           </div>
           <div class="monthProg" aria-hidden="true"><div class="monthFill" style="width:${pct}%"></div></div>
           <div class="htrMeta small">${habitKind(h)==='negative' ? 'Avoidance' : 'Completion'} • ${pct}%</div>
@@ -3698,7 +3764,7 @@ function renderListInAnalytics(){
   }).join(""));
 
   if(period.kind === 'all'){
-    habitListEl.innerHTML = `
+    habitListEl.innerHTML = `${renderTodayFocus()}
       <div class="allListHeader">
         <div class="allListMeta">
           <div class="small">All‑time habits</div>
@@ -3722,7 +3788,7 @@ function renderListInAnalytics(){
       });
     }
   } else {
-    habitListEl.innerHTML = `<div class="habitTable">${rows}</div>`;
+    habitListEl.innerHTML = `${renderTodayFocus()}<div class="habitTable">${rows}</div>`;
   }
 }
 
