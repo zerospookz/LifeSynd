@@ -3507,20 +3507,36 @@ function renderListInAnalytics(){
   const totalCount = ordered.length;
   const nextUp = ordered.filter(x=>!x.meta.doneToday).slice(0,3).map(x=>x.h);
 
-  function renderTodayFocus(){
+  
+function renderTodayFocus(){
     const pct = totalCount ? Math.round((doneTodayCount/totalCount)*100) : 0;
     const nextNames = nextUp.length ? nextUp.map(h=>escapeHtml(h.name||'Habit')).join(', ') : 'All done — nice.';
+
+    // Motivation + Perfect Day (kept subtle, fits bento UI)
+    const atRiskHabits = ordered.filter(x=>x.meta && x.meta.atRisk).map(x=>x.h);
+    const motivation = (typeof renderMotivation === 'function')
+      ? renderMotivation(doneTodayCount, totalCount, atRiskHabits, nextUp)
+      : (pct===100 ? "Momentum locked in. See you tomorrow."
+         : (totalCount-doneTodayCount===1 ? "You’re 1 habit away from a Perfect Day."
+         : (doneTodayCount===0 ? "Start with one small win." : "Keep going — consistency compounds.")));
+
+    const perfect = (totalCount>0 && doneTodayCount===totalCount);
+
+    // We animate lfFill after render using data-pct (so width transitions even after rerenders)
     return `
-      <div class="listFocusCard">
+      <div class="listFocusCard" data-focus-pct="${pct}">
         <div class="lfTop">
           <div class="lfTitle">Today focus</div>
           <div class="lfCount"><b>${doneTodayCount}</b> / ${totalCount} done</div>
         </div>
-        <div class="lfBar" aria-hidden="true"><div class="lfFill" style="width:${pct}%"></div></div>
+        <div class="lfBar" aria-hidden="true"><div class="lfFill" style="width:0%"></div></div>
         <div class="lfNext small"><span class="muted">Next up:</span> ${nextNames}</div>
+        ${motivation ? `<div class="motivationLine">${escapeHtml(motivation)}</div>` : ''}
+        ${perfect ? `<div class="perfectDayBadge">🎉 Perfect Day<div class="small">All habits completed.</div></div>` : ''}
       </div>
     `;
   }
+
 
   // ----- All-time list view: lifetime cards + sorting + badges -----
   const allSortKey = (()=>{
@@ -3584,7 +3600,8 @@ function renderListInAnalytics(){
     prevEnd.setDate(prevEnd.getDate()-30);
     const prev30 = pctInLastDays(h, 30, isoDate(prevEnd));
     const improvement = last30 - prev30;
-    return { h, life, last30, prev30, improvement, timeline: buildMiniTimeline(h, 12) };
+    const meta = computeTodayMeta(h);
+    return { h, life, last30, prev30, improvement, meta, timeline: buildMiniTimeline(h, 12) };
   });
 
   // Badges
@@ -3592,15 +3609,49 @@ function renderListInAnalytics(){
   const bestImproved = metrics.reduce((a,b)=> (b.improvement > a.improvement ? b : a), metrics[0]);
   const needsAttention = metrics.reduce((a,b)=> (b.last30 < a.last30 ? b : a), metrics[0]);
 
-  function sortMetrics(list){
+  
+function sortMetrics(list){
     const arr = list.slice();
     const key = String(allSortKey||'consistency');
-    if(key==='name') arr.sort((a,b)=> String(a.h.name||'').localeCompare(String(b.h.name||'')));
-    else if(key==='streak') arr.sort((a,b)=> (calcStreaksInWindow(b.h, b.life.startIso, b.life.endIso).best - calcStreaksInWindow(a.h, a.life.startIso, a.life.endIso).best));
-    else if(key==='improvement') arr.sort((a,b)=> (b.improvement - a.improvement));
-    else arr.sort((a,b)=> (b.life.pct - a.life.pct));
+
+    if(key==='name'){
+      arr.sort((a,b)=> String(a.h.name||'').localeCompare(String(b.h.name||'')));
+    } else if(key==='streak'){
+      // compute once per element to avoid repeated heavy work
+      arr.forEach(x=>{ if(typeof x._bestStreak!=='number'){ try{ x._bestStreak = calcStreaksInWindow(x.h, x.life.startIso, x.life.endIso).best; }catch(_){ x._bestStreak = 0; } } });
+      arr.sort((a,b)=> (b._bestStreak - a._bestStreak));
+    } else if(key==='improvement' || key==='momentum'){
+      arr.sort((a,b)=> (b.improvement - a.improvement));
+    } else if(key==='risk'){
+      arr.sort((a,b)=>{
+        const ar = a.meta && a.meta.atRisk ? 1 : 0;
+        const br = b.meta && b.meta.atRisk ? 1 : 0;
+        if(ar !== br) return br - ar; // at risk first
+        const as = a.meta ? (a.meta.streakToContinue||0) : 0;
+        const bs = b.meta ? (b.meta.streakToContinue||0) : 0;
+        if(as !== bs) return bs - as;
+        return (b.life.pct - a.life.pct);
+      });
+    } else if(key==='smart'){
+      // due first, then at-risk, then streak-to-continue, then consistency
+      arr.sort((a,b)=>{
+        const ad = a.meta && a.meta.doneToday ? 1 : 0;
+        const bd = b.meta && b.meta.doneToday ? 1 : 0;
+        if(ad !== bd) return ad - bd; // not done today first (0 before 1)
+        const ar = a.meta && a.meta.atRisk ? 1 : 0;
+        const br = b.meta && b.meta.atRisk ? 1 : 0;
+        if(ar !== br) return br - ar;
+        const as = a.meta ? (a.meta.streakToContinue||0) : 0;
+        const bs = b.meta ? (b.meta.streakToContinue||0) : 0;
+        if(as !== bs) return bs - as;
+        return (b.life.pct - a.life.pct);
+      });
+    } else {
+      arr.sort((a,b)=> (b.life.pct - a.life.pct));
+    }
     return arr;
   }
+
 
   const sorted = (period.kind==='all') ? sortMetrics(metrics) : null;
 
@@ -3771,26 +3822,83 @@ function renderListInAnalytics(){
           <div class="small muted">Sorted by</div>
         </div>
         <div class="selectWrap"><select id="allListSort" class="premiumSelect">
+          <option value="smart" ${allSortKey==='smart'?'selected':''}>Smart</option>
           <option value="consistency" ${allSortKey==='consistency'?'selected':''}>Consistency</option>
-          <option value="improvement" ${allSortKey==='improvement'?'selected':''}>Most improved (30d)</option>
+          <option value="momentum" ${allSortKey==='momentum'?'selected':''}>Momentum</option>
+          <option value="risk" ${allSortKey==='risk'?'selected':''}>At risk</option>
           <option value="streak" ${allSortKey==='streak'?'selected':''}>Best streak</option>
           <option value="name" ${allSortKey==='name'?'selected':''}>Name</option>
         </select></div>
       </div>
-      <div class="lifeGrid">${rows}</div>
+      <div class="sortChips" aria-label="Sort toggles">
+        <button class="chip sortChip" data-sort="smart">Smart</button>
+        <button class="chip sortChip" data-sort="consistency">Consistency</button>
+        <button class="chip sortChip" data-sort="momentum">Momentum</button>
+        <button class="chip sortChip" data-sort="risk">At risk</button>
+      </div>
+      <div class="lifeGrid lifeGridEnter">${rows}</div>
     `;
 
     const sel = habitListEl.querySelector('#allListSort');
+    const grid = habitListEl.querySelector('.lifeGrid');
+    const chips = Array.from(habitListEl.querySelectorAll('.sortChip[data-sort]'));
+    function syncChips(){
+      chips.forEach(b=>{
+        if(!sel) return;
+        b.classList.toggle('active', b.dataset.sort === sel.value);
+      });
+    }
+    function animateGridEnter(){
+      if(!grid) return;
+      grid.classList.remove('lifeGridEnter');
+      // force reflow
+      void grid.offsetWidth;
+      grid.classList.add('lifeGridEnter');
+    }
+
     if(sel){
+      syncChips();
       sel.addEventListener('change', ()=>{
         try{ localStorage.setItem('habitsAllListSort', sel.value); }catch(_){ }
+        animateGridEnter();
         renderListInAnalytics();
       });
+      chips.forEach(b=> b.addEventListener('click', ()=>{
+        if(!b.dataset.sort) return;
+        sel.value = b.dataset.sort;
+        sel.dispatchEvent(new Event('change'));
+      }));
     }
   } else {
     habitListEl.innerHTML = `${renderTodayFocus()}<div class="habitTable">${rows}</div>`;
   }
+  // Animate Today Focus progress bar smoothly after render
+  (function animateTodayFocusBar(){
+    const card = habitListEl.querySelector('.listFocusCard[data-focus-pct]');
+    if(!card) return;
+    const pct = parseInt(card.getAttribute('data-focus-pct')||'0',10) || 0;
+    const fill = card.querySelector('.lfFill');
+    if(!fill) return;
+    // set previous pct if available (keeps animation between rerenders)
+    const prev = window.__lastFocusPct;
+    if(typeof prev === 'number'){
+      fill.style.width = Math.max(0, Math.min(100, prev)) + '%';
+      // next frame -> new width
+      requestAnimationFrame(()=>{ fill.style.width = pct + '%'; });
+    } else {
+      requestAnimationFrame(()=>{ fill.style.width = pct + '%'; });
+    }
+    window.__lastFocusPct = pct;
+    // subtle count pulse
+    const countEl = card.querySelector('.lfCount');
+    if(countEl){
+      countEl.classList.remove('pulse');
+      void countEl.offsetWidth;
+      countEl.classList.add('pulse');
+    }
+  })();
 }
+
 
 
 
@@ -5137,3 +5245,87 @@ function renderHero(){
     openAddHabit(fab);
   });
 })();
+
+
+function renderMotivation(completed, total, atRiskHabits, dueHabits) {
+  if (total === 0) return "";
+
+  if (completed === total) {
+    return "Momentum locked in. See you tomorrow.";
+  }
+
+  const remaining = total - completed;
+
+  if (remaining === 1) {
+    return "You’re 1 habit away from a Perfect Day.";
+  }
+
+  if (remaining <= 3) {
+    return `Finish strong — just ${remaining} habits left.`;
+  }
+
+  if (atRiskHabits && atRiskHabits.length > 0) {
+    return `Don’t lose your streak on ${atRiskHabits[0].name}.`;
+  }
+
+  if (completed === 0) {
+    return "Start with one small win.";
+  }
+
+  return "Keep going — consistency compounds.";
+}
+
+
+// ---- Perfect Day + Motivation injection ----
+if (typeof completedToday !== "undefined" && typeof totalHabits !== "undefined") {
+  const motivation = renderMotivation(completedToday, totalHabits, atRiskHabits || [], dueHabits || []);
+
+  if (completedToday === totalHabits && totalHabits > 0) {
+    const badge = document.createElement("div");
+    badge.className = "perfectDayBadge";
+    badge.innerHTML = "🎉 Perfect Day<div class='small'>All habits completed.</div>";
+    const focusCard = document.querySelector(".todayFocus");
+    if (focusCard) focusCard.appendChild(badge);
+  }
+
+  if (motivation) {
+    const line = document.createElement("div");
+    line.className = "motivationLine";
+    line.textContent = motivation;
+    const focusCard = document.querySelector(".todayFocus");
+    if (focusCard) focusCard.appendChild(line);
+  }
+}
+// ---- End injection ----
+
+
+function renderLifetimeSummary(habits) {
+  const container = document.getElementById("lifetimeSummaryBar");
+  if (!container || !habits || habits.length === 0) return;
+
+  let totalCompletions = 0;
+  let totalDays = 0;
+  let longestStreakEver = 0;
+
+  habits.forEach(h => {
+    if (h.history) {
+      const entries = Object.values(h.history);
+      totalCompletions += entries.filter(v => v === true).length;
+      totalDays += entries.length;
+    }
+    if (h.bestStreak && h.bestStreak > longestStreakEver) {
+      longestStreakEver = h.bestStreak;
+    }
+  });
+
+  const avgConsistency = totalDays > 0 ? Math.round((totalCompletions / totalDays) * 100) : 0;
+
+  container.innerHTML = `
+    <div class="lifetimeSummaryInner">
+      <div><strong>${habits.length}</strong> habits tracked</div>
+      <div><strong>${totalCompletions}</strong> total completions</div>
+      <div><strong>${avgConsistency}%</strong> avg consistency</div>
+      <div><strong>${longestStreakEver}</strong> longest streak</div>
+    </div>
+  `;
+}

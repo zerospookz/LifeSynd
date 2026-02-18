@@ -7568,3 +7568,82 @@ html, body{
   .atCard.big, .atCard.wide{ grid-column: span 1; }
   .allTimeTop{ align-items:stretch; }
 }
+
+/* ---- Perfect Day + Motivation styles ---- */
+
+.perfectDayBadge {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(0,200,120,.15), rgba(0,200,120,.05));
+  border: 1px solid rgba(0,200,120,.25);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.motivationLine {
+  margin-top: 8px;
+  font-size: 13px;
+  opacity: .8;
+}
+
+/* ---- End styles ---- */
+
+/* ---- Lifetime Summary Bar ---- */
+
+.lifetimeSummaryBar {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.08);
+  font-size: 14px;
+}
+
+.lifetimeSummaryInner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.lifetimeSummaryInner div {
+  opacity: 0.9;
+}
+
+/* ---- Interactivity: sorting + live focus reactions ---- */
+
+.lfFill{
+  transition: width 360ms ease;
+}
+
+.lfCount.pulse{
+  animation: lfPulse 260ms ease;
+}
+@keyframes lfPulse{
+  from{ transform: scale(1); }
+  50%{ transform: scale(1.03); }
+  to{ transform: scale(1); }
+}
+
+.sortChips{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin: 10px 0 14px;
+}
+
+.sortChip.active{
+  border-color: rgba(255,255,255,.22);
+  background: rgba(255,255,255,.08);
+}
+
+.lifeGridEnter{
+  animation: gridEnter 260ms ease;
+}
+@keyframes gridEnter{
+  from{ opacity: .55; transform: translateY(4px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* ---- End interactivity ---- */
