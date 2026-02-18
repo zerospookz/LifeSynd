@@ -3668,7 +3668,18 @@ function sortMetrics(list){
     const meta = computeTodayMeta(h);
 
     // Badge assignment
+    
+    function getTierBadge(pct){
+      if(pct >= 90) return {label:'Elite', cls:'tierElite'};
+      if(pct >= 75) return {label:'Strong', cls:'tierStrong'};
+      if(pct >= 60) return {label:'Solid', cls:'tierSolid'};
+      return {label:'Volatile', cls:'tierVolatile'};
+    }
+
+    const tier = getTierBadge(m.life.pct);
+
     const badge = (()=>{
+
       if(bestConsistency && h.id===bestConsistency.h.id) return { t:'Most consistent', cls:'bGood' };
       if(bestImproved && h.id===bestImproved.h.id && bestImproved.improvement>0) return { t:'Most improved', cls:'bUp' };
       if(needsAttention && h.id===needsAttention.h.id) return { t:'Needs attention', cls:'bWarn' };
@@ -3686,7 +3697,7 @@ function sortMetrics(list){
       <div class="lifeCard" style="--accent:${accent}">
         <div class="lifeTop">
           <div class="lifeTitle">
-            <strong>${escapeHtml(h.name||'Habit')}</strong>
+            <strong>${escapeHtml(h.name||'Habit')}</strong> <span class="tierBadge ${tier.cls}">${tier.label}</span>
             ${badge ? `<span class="lifeBadge ${badge.cls}">${escapeHtml(badge.t)}</span>` : ''}${meta && meta.atRisk ? ` <span class="lifeBadge bWarn">At risk</span>` : ''}
           </div>
           <div class="lifePct">${m.life.pct}%</div>
@@ -3875,9 +3886,22 @@ function sortMetrics(list){
     // Collapsible life cards (All-time)
     function toggleLifeCard(card){
       if(!card) return;
-      const expanded = card.classList.toggle('expanded');
+      const already = card.classList.contains('expanded');
+      // Accordion: collapse others
+      habitListEl.querySelectorAll('.lifeCard.expanded').forEach(c=>{
+        if(c === card) return;
+        c.classList.remove('expanded');
+        const d = c.querySelector('.lifeDetails');
+        if(d) d.setAttribute('aria-hidden','true');
+      });
+      // Toggle current
+      if(already){
+        card.classList.remove('expanded');
+      } else {
+        card.classList.add('expanded');
+      }
       const details = card.querySelector('.lifeDetails');
-      if(details) details.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+      if(details) details.setAttribute('aria-hidden', card.classList.contains('expanded') ? 'false' : 'true');
     }
     habitListEl.querySelectorAll('.lifeCard').forEach(card=>{
       card.addEventListener('click', (e)=>{
