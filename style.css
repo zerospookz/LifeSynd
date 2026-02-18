@@ -7831,3 +7831,53 @@ html, body{
 }
 
 /* ==== End Executive upgrade ==== */
+
+
+/* ==== Clean fix: chips + badges (no overlap) ==== */
+
+.sortChips{
+  gap: 8px;
+}
+
+.sortChip{
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 12px;
+  line-height: 1;
+}
+
+.sortChip.active{
+  background: rgba(120,140,255,.18);
+  border-color: rgba(120,140,255,.35);
+}
+
+.lifeTitle{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap: 6px;
+}
+
+.tierBadge{
+  margin-left: 6px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+.lifeBadge{
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  line-height: 1.1;
+  opacity: .78;
+}
+
+.lifeCard{
+  overflow: hidden;
+}
+
+/* ==== End clean fix ==== */
