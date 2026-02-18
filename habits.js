@@ -994,14 +994,9 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
 
   const accent = `hsl(${habitHue(selected.id)} 70% 55%)`;
 
-  // All-time view mode (heatmap vs insights)
-  let allMode = "heatmap";
-  try{ allMode = (localStorage.getItem('habitsAllMode') || 'heatmap'); }catch(e){ allMode = 'heatmap'; }
-  if(allMode !== 'heatmap' && allMode !== 'insights') allMode = 'heatmap';
-
-  function setAllMode(m){
-    allMode = (m==='insights') ? 'insights' : 'heatmap';
-    try{ localStorage.setItem('habitsAllMode', allMode); }catch(e){}
+  // All-time view mode is fixed to Insights in this build.
+// (No Heatmap/Insights toggle in All Time.)
+let allMode = "insights";
   }
 
   function clampWindowForAllTime(){
@@ -1254,10 +1249,6 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
       <div class="allTimeTitle">
         <div class="kicker">All time</div>
         <div class="headline">${escapeHtml(selected.name||'Habit')}</div>
-        <div class="allTimeMode" role="tablist" aria-label="All time view">
-          <button class="segBtn ${allMode==='heatmap'?'active':''}" type="button" data-mode="heatmap">Heatmap</button>
-          <button class="segBtn ${allMode==='insights'?'active':''}" type="button" data-mode="insights">Insights</button>
-        </div>
       </div>
       <label class="allTimePick">
         <span class="small">Habit</span>
@@ -1297,16 +1288,6 @@ function renderAllTimeYearsGrid(gridEl, cardEl, habitsList){
       renderListInAnalytics();
     });
   }
-
-  // Mode toggle (heatmap / insights)
-  const modeBtns = Array.from(gridEl.querySelectorAll('.segBtn[data-mode]'));
-  modeBtns.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const m = btn.getAttribute('data-mode') || 'heatmap';
-      setAllMode(m);
-      renderAnalytics();
-      renderListInAnalytics();
-    });
   });
 
   // All-time grid is view-only
