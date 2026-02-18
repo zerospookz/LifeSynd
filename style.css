@@ -7647,3 +7647,115 @@ html, body{
 }
 
 /* ---- End interactivity ---- */
+
+/* ---- v2: Stronger Today Focus ---- */
+.listFocusCard{
+  padding: 18px 18px 16px;
+  border-radius: 20px;
+}
+.lfTop{
+  align-items: flex-end;
+}
+.lfTitle{
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: 12px;
+  opacity: .85;
+}
+.lfCount{
+  font-size: 14px;
+}
+.lfBar{
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.lfFill{
+  border-radius: 999px;
+}
+/* ---- End Today Focus ---- */
+
+/* ---- All-time header v2 ---- */
+.allHeaderV2{
+  margin-top: 14px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.08);
+}
+.allHeaderKicker{
+  font-size: 12px;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  opacity: .75;
+  margin-bottom: 10px;
+}
+.allHeaderRow{
+  display:flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.allKpi{
+  display:flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.allKpiNum{
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+}
+.allKpiMeta{
+  display:flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.allKpiLabel{
+  font-size: 13px;
+  opacity: .85;
+}
+.allKpiDelta{
+  font-size: 12px;
+  opacity: .8;
+}
+.allHeaderRight .selectWrap{
+  min-width: 180px;
+}
+/* ---- End header ---- */
+
+/* ---- Collapsible life cards ---- */
+.lifeCard{
+  cursor: pointer;
+}
+.lifeCaret{
+  margin-left: 10px;
+  font-size: 12px;
+  opacity: .7;
+  display: inline-block;
+  transform: translateY(-1px);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+.lifeCard.expanded .lifeCaret{
+  transform: rotate(180deg) translateY(1px);
+  opacity: .9;
+}
+.lifePrimary{
+  display:flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+.lifeDetails{
+  margin-top: 10px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 260ms ease, opacity 220ms ease;
+  opacity: .0;
+}
+.lifeCard.expanded .lifeDetails{
+  max-height: 220px;
+  opacity: 1;
+}
+/* ---- End collapsible ---- */

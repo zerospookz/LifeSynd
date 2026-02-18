@@ -3604,6 +3604,12 @@ function renderTodayFocus(){
     return { h, life, last30, prev30, improvement, meta, timeline: buildMiniTimeline(h, 12) };
   });
 
+  // All-time KPIs
+  const avgLifePct = metrics.length ? Math.round(metrics.reduce((s,m)=>s + (m.life.pct||0), 0)/metrics.length) : 0;
+  const avgLast30 = metrics.length ? Math.round(metrics.reduce((s,m)=>s + (m.last30||0), 0)/metrics.length) : 0;
+  const avgPrev30 = metrics.length ? Math.round(metrics.reduce((s,m)=>s + (m.prev30||0), 0)/metrics.length) : 0;
+  const delta30 = avgLast30 - avgPrev30;
+
   // Badges
   const bestConsistency = metrics.reduce((a,b)=> (b.life.pct > a.life.pct ? b : a), metrics[0]);
   const bestImproved = metrics.reduce((a,b)=> (b.improvement > a.improvement ? b : a), metrics[0]);
@@ -3698,10 +3704,6 @@ function sortMetrics(list){
 
         <div class="miniTimeline" aria-hidden="true">${segs}</div>
 
-        <div class="lifeFoot">
-          <div class="small">Last 30d: <b>${m.last30}%</b></div>
-          <div class="small">Δ vs prev 30d: <b class="${m.improvement>=0?'up':'down'}">${m.improvement>=0?'+':''}${m.improvement}%</b></div>
-        </div>
       </div>
     `;
   }).join('') : ordered.map((o)=>{
@@ -3869,6 +3871,23 @@ function sortMetrics(list){
         sel.dispatchEvent(new Event('change'));
       }));
     }
+
+    // Collapsible life cards (All-time)
+    function toggleLifeCard(card){
+      if(!card) return;
+      const expanded = card.classList.toggle('expanded');
+      const details = card.querySelector('.lifeDetails');
+      if(details) details.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+    }
+    habitListEl.querySelectorAll('.lifeCard').forEach(card=>{
+      card.addEventListener('click', (e)=>{
+        // prevent toggling when clicking sort controls
+        const t = e.target;
+        if(t && (t.closest('#allListSort') || t.closest('.sortChips'))) return;
+        toggleLifeCard(card);
+      });
+    });
+
   } else {
     habitListEl.innerHTML = `${renderTodayFocus()}<div class="habitTable">${rows}</div>`;
   }
