@@ -1288,7 +1288,6 @@ let allMode = "insights";
       renderListInAnalytics();
     });
   }
-  });
 
   // All-time grid is view-only
   const help = cardEl?.querySelector('.matrixHelp');
